@@ -76,6 +76,8 @@
 			<a href="/about#privacy" class="underline hover:text-zinc-300 transition-colors">Privacy</a>
 			<span class="mx-1 text-zinc-700">·</span>
 			<a href="/about#disclaimer" class="underline hover:text-zinc-300 transition-colors">Disclaimer</a>
+			<span class="mx-1 text-zinc-700">·</span>
+			<a href="https://github.com/BreakableHoodie/filltheholedotca" target="_blank" rel="noopener noreferrer" class="underline hover:text-zinc-300 transition-colors">GitHub</a>
 		</p>
 	</footer>
 </div>
