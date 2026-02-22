@@ -1,7 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	let visible = $state(false);
+	let dialogRef = $state<HTMLDivElement | null>(null);
+	let primaryButtonRef = $state<HTMLButtonElement | null>(null);
+	let previousFocus: HTMLElement | null = null;
 
 	onMount(() => {
 		if (!localStorage.getItem('fth-welcomed')) {
@@ -9,9 +12,45 @@
 		}
 	});
 
+	// Focus management: move focus into modal on open, restore on close
+	$effect(() => {
+		if (visible) {
+			previousFocus = document.activeElement as HTMLElement | null;
+			tick().then(() => primaryButtonRef?.focus());
+		} else {
+			previousFocus?.focus();
+			previousFocus = null;
+		}
+	});
+
 	function dismiss() {
 		localStorage.setItem('fth-welcomed', '1');
 		visible = false;
+	}
+
+	// Trap focus inside the modal and handle Escape
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			dismiss();
+			return;
+		}
+		if (e.key !== 'Tab' || !dialogRef) return;
+
+		const focusable = Array.from(
+			dialogRef.querySelectorAll<HTMLElement>('button, a, [tabindex]:not([tabindex="-1"])')
+		).filter((el) => !el.hasAttribute('disabled'));
+		if (focusable.length === 0) return;
+
+		const first = focusable[0];
+		const last = focusable[focusable.length - 1];
+
+		if (e.shiftKey && document.activeElement === first) {
+			e.preventDefault();
+			last.focus();
+		} else if (!e.shiftKey && document.activeElement === last) {
+			e.preventDefault();
+			first.focus();
+		}
 	}
 </script>
 
@@ -22,6 +61,9 @@
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="welcome-title"
+		tabindex="-1"
+		onkeydown={handleKeydown}
+		bind:this={dialogRef}
 	>
 		<div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
 			<div class="text-center space-y-1">
@@ -64,6 +106,7 @@
 
 			<div class="flex flex-col gap-2">
 				<button
+					bind:this={primaryButtonRef}
 					onclick={dismiss}
 					class="w-full py-3 bg-sky-700 hover:bg-sky-600 text-white font-bold rounded-xl transition-colors"
 				>

@@ -1,24 +1,12 @@
 <script lang="ts">
-	import WelcomeModal from '$lib/components/WelcomeModal.svelte';
-	import { supabase } from '$lib/supabase';
-	import { onMount } from 'svelte';
-	import { Toaster } from 'svelte-sonner';
 	import '../app.css';
+	import { Toaster } from 'svelte-sonner';
+	import WelcomeModal from '$lib/components/WelcomeModal.svelte';
+	import type { Snippet } from 'svelte';
+	import type { LayoutData } from './$types';
 
-	let counts = $state({ reported: 0, flagged: 0, filled: 0 });
-
-	async function fetchCounts() {
-		const { data } = await supabase.from('potholes').select('status');
-		if (data) {
-			counts.reported = data.filter((p) => p.status === 'reported').length;
-			counts.flagged = data.filter((p) => p.status === 'wanksyd').length;
-			counts.filled = data.filter((p) => p.status === 'filled').length;
-		}
-	}
-
-	onMount(fetchCounts);
-
-	let { children } = $props();
+	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+	let counts = $derived(data.counts);
 </script>
 
 <svelte:head>
@@ -29,7 +17,7 @@
 	<!-- Skip link: must be the first focusable element for keyboard/screen reader users -->
 	<a
 		href="#maincontent"
-		class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-sky-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:font-semibold"
+		class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-sky-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:font-semibold focus:outline-none"
 	>
 		Skip to main content
 	</a>
