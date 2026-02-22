@@ -7,24 +7,24 @@
 	let previousFocus: HTMLElement | null = null;
 
 	onMount(() => {
-		if (!localStorage.getItem('fth-welcomed')) {
-			visible = true;
-		}
-	});
-
-	// Focus management: move focus into modal on open, restore on close
-	$effect(() => {
-		if (visible) {
-			previousFocus = document.activeElement as HTMLElement | null;
-			tick().then(() => primaryButtonRef?.focus());
-		} else {
-			previousFocus?.focus();
-			previousFocus = null;
+		try {
+			if (!localStorage.getItem('fth-welcomed')) {
+				visible = true;
+			}
+		} catch (e) {
+			console.error('Failed to access localStorage:', e);
+			// Fallback: show modal if we can't determine state, or suppress error
+			// Safety first: better to show it again than crash
+			visible = true; 
 		}
 	});
 
 	function dismiss() {
-		localStorage.setItem('fth-welcomed', '1');
+		try {
+			localStorage.setItem('fth-welcomed', '1');
+		} catch (e) {
+			console.error('Failed to save to localStorage:', e);
+		}
 		visible = false;
 	}
 
