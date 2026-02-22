@@ -19,6 +19,17 @@
 		}
 	});
 
+	// Focus management: move focus into modal on open, restore on close
+	$effect(() => {
+		if (visible) {
+			previousFocus = document.activeElement as HTMLElement | null;
+			tick().then(() => primaryButtonRef?.focus());
+		} else {
+			previousFocus?.focus();
+			previousFocus = null;
+		}
+	});
+
 	function dismiss() {
 		try {
 			localStorage.setItem('fth-welcomed', '1');
