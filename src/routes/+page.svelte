@@ -4,6 +4,7 @@
 	import type { PageData } from './$types';
 	import type { Pothole } from '$lib/types';
 	import { COUNCILLORS } from '$lib/wards';
+	import { inWardFeature } from '$lib/geo';
 
 	let { data }: { data: PageData } = $props();
 
@@ -58,23 +59,6 @@
 			},
 			{ enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
 		);
-	}
-
-	function pipRing(lng: number, lat: number, ring: number[][]): boolean {
-		let inside = false;
-		for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-			const [xi, yi] = ring[i], [xj, yj] = ring[j];
-			if (yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi)
-				inside = !inside;
-		}
-		return inside;
-	}
-
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	function inWardFeature(lng: number, lat: number, geometry: any): boolean {
-		if (geometry.type === 'Polygon') return pipRing(lng, lat, geometry.coordinates[0]);
-		if (geometry.type === 'MultiPolygon') return geometry.coordinates.some((p: number[][][]) => pipRing(lng, lat, p[0]));
-		return false;
 	}
 
 	async function toggleWardHeatmap() {

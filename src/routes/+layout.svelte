@@ -59,6 +59,9 @@
 				</div>
 
 				<nav class="flex items-center gap-3 text-sm">
+					<a href="/stats" class="text-zinc-400 hover:text-white transition-colors">
+						Stats
+					</a>
 					<a href="/about" class="text-zinc-400 hover:text-white transition-colors">
 						About
 					</a>
