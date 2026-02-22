@@ -5,9 +5,9 @@
 
 	const SEVERITY_OPTIONS = [
 		{ value: 'Spilled my coffee', emoji: '🟡', label: 'Spilled my coffee', sub: 'barely there' },
-		{ value: 'Bent a rim', emoji: '🟠', label: 'Bent a rim', sub: 'you felt that' },
-		{ value: 'Lost a tire', emoji: '🔴', label: 'Lost a tire', sub: 'genuine damage' },
-		{ value: 'RIP', emoji: '☠️', label: 'RIP', sub: 'suspension, alignment, will to live' }
+		{ value: 'Bent a rim', emoji: '🟠', label: 'Bent a rim', sub: 'car or bike — you felt that' },
+		{ value: 'Caused real damage', emoji: '🔴', label: 'Caused real damage', sub: 'tire, wheel, or worse' },
+		{ value: 'RIP', emoji: '☠️', label: 'RIP', sub: 'suspension, wheel, will to live' }
 	] as const;
 
 	let lat = $state<number | null>(null);

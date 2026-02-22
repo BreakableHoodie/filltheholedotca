@@ -11,9 +11,10 @@
 	<section class="space-y-4 text-zinc-300 leading-relaxed">
 		<h2 class="text-xl font-bold text-white">Why this exists</h2>
 		<p>
-			Potholes damage cars, flatten tires, and injure cyclists. They're expensive to ignore —
-			for drivers and for cities. But reporting them through official channels often feels
-			like shouting into a void. Forms get submitted. Nothing happens. The hole stays.
+			Potholes damage cars, bend bike wheels, and throw cyclists. They're a hazard for
+			everyone — drivers, riders, and pedestrians alike. But reporting them through official
+			channels often feels like shouting into a void. Forms get submitted. Nothing happens.
+			The hole stays.
 		</p>
 		<p>
 			fillthehole.ca makes the problem visible. Every reported pothole goes on a public map.
@@ -64,11 +65,18 @@
 				🌊 Region of Waterloo — Roads & Traffic →
 			</a>
 		</div>
-		<div class="bg-zinc-800 rounded-lg p-3 text-xs text-zinc-400 leading-relaxed">
-			<strong class="text-zinc-300">Not sure who maintains the road?</strong> Major roads like
-			King St, Victoria St, Weber St, and Erb St are <em>Regional roads</em> maintained by the
-			Region of Waterloo — not your local city. Local residential streets belong to whichever
-			city you're in. When in doubt, report to both.
+		<div class="bg-zinc-800 rounded-lg p-3 text-xs text-zinc-400 leading-relaxed space-y-2">
+			<p>
+				<strong class="text-zinc-300">Not sure who maintains the road?</strong> Major roads like
+				King St, Victoria St, Weber St, and Erb St are <em>Regional roads</em> maintained by the
+				Region of Waterloo — not your local city. Local residential streets belong to whichever
+				city you're in. When in doubt, report to both.
+			</p>
+			<p>
+				<strong class="text-zinc-300">Provincial highways (401, 7/8, 85) are MTO's responsibility</strong>,
+				not the city or Region. Report those to the
+				<a href="https://www.ontario.ca/page/report-problem-provincial-highway" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline">Ministry of Transportation Ontario</a>.
+			</p>
 		</div>
 	</section>
 
