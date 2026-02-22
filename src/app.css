@@ -1,5 +1,20 @@
 @import 'tailwindcss';
 
+/**
+ * Global keyboard focus ring — WCAG 2.4.7 Focus Visible / 2.4.11 Focus Appearance.
+ * Applied via :focus-visible so mouse/touch users never see it.
+ * Use focus:outline-none on elements that define their own focus treatment.
+ */
+:focus-visible {
+  outline: 2px solid #0ea5e9; /* sky-500 */
+  outline-offset: 2px;
+}
+
+/* Hard reset for elements with custom focus treatment (stats sort buttons, skip link, etc.) */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 @theme {
   --color-pink-hot: #ff1f8e;
   --color-asphalt: #1a1a1a;
