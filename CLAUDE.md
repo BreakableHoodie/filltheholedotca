@@ -118,16 +118,18 @@ Run `schema.sql` for initial setup, `schema_update.sql` for the confirmation sys
 
 ## Status Flow
 ```
-pending → reported → wanksyd → filled
-  (1 report)  (3 confirmations) (flagged) (city fixed it)
+pending → reported → flagged → filled
+  (1 report)  (3 confirmations) (city notified) (city fixed it)
 ```
+
+> **Internal naming note**: the DB status value and column are named `wanksyd` / `wanksy_at` and the API route is `/api/wanksy` — legacy names from early development. All user-facing copy uses "flagged". A future migration should rename these to `flagged` / `flagged_at`.
 
 ## Key Business Rules
 - **Geofence**: Waterloo Region only — lat 43.32–43.53, lng -80.59 to -80.22
 - **Merge radius**: 50m — nearby pending reports are merged, not duplicated
 - **3 confirmations** from distinct IPs required to go live on the public map
 - **IP hashing**: SHA-256, never store raw IPs
-- **`wanksyd`** = Wanksy-inspired status — someone physically flagged/reported to the city
+- **"flagged"** = someone physically visited the pothole, confirmed it, and submitted an official city service request
 
 ## Svelte 5 Patterns (important — don't use Svelte 4 syntax)
 ```svelte
