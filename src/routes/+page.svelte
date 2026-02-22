@@ -24,7 +24,10 @@
 	let locationMarker: Marker | null = null;
 
 	function locateMe() {
-		if (!mapRef || !LRef) return;
+		const map = mapRef;
+		const L = LRef;
+		if (!map || !L) return;
+
 		if (!navigator.geolocation) {
 			toast.error('Geolocation is not supported by your browser.');
 			return;
@@ -36,20 +39,20 @@
 				const { latitude: lat, longitude: lng, accuracy } = coords;
 
 				// Remove previous location marker if any
-				if (locationMarker) mapRef.removeLayer(locationMarker);
+				if (locationMarker) map.removeLayer(locationMarker);
 
 				// Pulsing blue dot
-				const icon = LRef.divIcon({
+				const icon = L.divIcon({
 					html: '<div class="location-dot"></div>',
 					className: '',
 					iconSize: [20, 20],
 					iconAnchor: [10, 10]
 				});
-				locationMarker = LRef.marker([lat, lng], { icon, zIndexOffset: 500 })
+				locationMarker = L.marker([lat, lng], { icon, zIndexOffset: 500 })
 					.bindPopup(`<div class="popup-content"><strong>📍 You are here</strong><br/><span style="color:#888;font-size:11px">±${Math.round(accuracy)}m accuracy</span></div>`)
-					.addTo(mapRef);
+					.addTo(map);
 
-				mapRef.flyTo([lat, lng], 16, { duration: 1.2 });
+				map.flyTo([lat, lng], 16, { duration: 1.2 });
 			},
 			(err) => {
 				locating = false;
@@ -62,12 +65,15 @@
 	}
 
 	async function toggleWardHeatmap() {
-		if (!mapRef || !LRef) return;
+		const map = mapRef;
+		const L = LRef;
+		if (!map || !L) return;
+
 		if (wardLayerRef) {
 				if (showWards) {
-					mapRef.removeLayer(wardLayerRef);
+					map.removeLayer(wardLayerRef);
 				} else {
-					mapRef.addLayer(wardLayerRef);
+					map.addLayer(wardLayerRef);
 				}
 			showWards = !showWards;
 			return;
@@ -98,7 +104,7 @@
 			}
 			const maxCount = Math.max(...Object.values(counts), 1);
 
-			wardLayerRef = LRef.geoJSON(geojson, {
+			wardLayerRef = L.geoJSON(geojson, {
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				style: (f: any) => {
 					const city = String(f?.properties?.CITY ?? '');
@@ -118,7 +124,7 @@
 						{ sticky: true }
 					);
 				}
-			}).addTo(mapRef);
+			}).addTo(map);
 			
 			if (wardLayerRef) wardLayerRef.bringToBack();
 			showWards = true;
