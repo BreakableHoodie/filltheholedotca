@@ -63,7 +63,17 @@ Transfer these to **Netlify Site Settings > Build & Deploy > Environment**:
 2.  **Build Command:** `npm run build`
 3.  **Publish Directory:** `build` (Netlify adapter default)
 
-## 5. DNS & Domains
+## 5. Troubleshooting: "Secrets scanning found leaked values"
+If your build fails with a "Secrets scanning found leaked values" error pointing to `PUBLIC_SUPABASE_ANON_KEY`, this is expected behavior for SvelteKit. The key is *intended* to be public in the client bundle, but Netlify's scanner flags it.
+
+**Solution:**
+1.  Go to **Site settings > Build & deploy > Environment**.
+2.  Add a new variable:
+    *   **Key:** `SECRETS_SCAN_OMIT_KEYS`
+    *   **Value:** `PUBLIC_SUPABASE_ANON_KEY`
+3.  Redeploy.
+
+## 6. DNS & Domains
 1.  Add `fillthehole.ca` to Netlify Custom Domains.
 2.  Update DNS (Netlify will provide nameservers or A/CNAME records).
 
