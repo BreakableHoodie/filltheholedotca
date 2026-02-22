@@ -2,10 +2,22 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test.describe('Accessibility — Home (map page)', () => {
+	// Suppress WelcomeModal by pre-seeding localStorage at the browser-context level.
+	// storageState is applied before any navigation, eliminating the race between
+	// addInitScript and Svelte 5's async tick()-based focus management in the modal.
+	test.use({
+		storageState: {
+			cookies: [],
+			origins: [
+				{
+					origin: 'http://localhost:4173',
+					localStorage: [{ name: 'fth-welcomed', value: '1' }]
+				}
+			]
+		}
+	});
+
 	test.beforeEach(async ({ page }) => {
-		// Suppress the WelcomeModal so its auto-focus doesn't interfere with skip-link
-		// and axe tests. Must be set before goto() so onMount sees it immediately.
-		await page.addInitScript(() => localStorage.setItem('fth-welcomed', '1'));
 		await page.goto('/');
 	});
 
@@ -136,10 +148,20 @@ test.describe('Accessibility — About page', () => {
 });
 
 test.describe('Accessibility — narrow viewport (320px reflow)', () => {
-	test.use({ viewport: { width: 320, height: 568 } });
+	test.use({
+		viewport: { width: 320, height: 568 },
+		storageState: {
+			cookies: [],
+			origins: [
+				{
+					origin: 'http://localhost:4173',
+					localStorage: [{ name: 'fth-welcomed', value: '1' }]
+				}
+			]
+		}
+	});
 
 	test('home page does not scroll horizontally at 320px', async ({ page }) => {
-		await page.addInitScript(() => localStorage.setItem('fth-welcomed', '1'));
 		await page.goto('/');
 		const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
 		const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
