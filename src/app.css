@@ -5,3 +5,13 @@
   --color-asphalt: #1a1a1a;
   --color-asphalt-light: #2a2a2a;
 }
+
+/* iOS safe area support — header accounts for notch/Dynamic Island in portrait
+   and home indicator/notch in landscape */
+.safe-header {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-header-inner {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}

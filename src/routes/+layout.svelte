@@ -26,8 +26,8 @@
 </svelte:head>
 
 <div class="flex flex-col min-h-screen">
-	<header class="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50">
-		<div class="max-w-6xl mx-auto px-4 py-3">
+	<header class="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50 safe-header">
+		<div class="max-w-6xl mx-auto py-3 safe-header-inner">
 			<div class="flex items-center justify-between gap-3 flex-wrap">
 				<a href="/" class="flex items-center gap-2 group">
 					<span class="text-2xl">🕳️</span>

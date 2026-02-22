@@ -247,7 +247,7 @@
 				class:border-orange-600={showWards}
 				class:text-orange-400={showWards}
 			>
-				{wardLoading ? '⏳' : '🗺️'} {showWards ? 'Hide wards' : 'Ward heat'}
+				{wardLoading ? '⏳' : '🗺️'} {showWards ? 'Hide heatmap' : 'Ward heatmap'}
 			</button>
 		</div>
 	{/if}
