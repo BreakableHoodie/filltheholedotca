@@ -66,7 +66,7 @@
 						href="https://github.com/BreakableHoodie/filltheholedotca"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-zinc-400 hover:text-white transition-colors"
+						class="hidden sm:inline-flex text-zinc-400 hover:text-white transition-colors"
 						aria-label="View source on GitHub"
 					>
 						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
