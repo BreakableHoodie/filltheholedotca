@@ -52,6 +52,7 @@ When in doubt about whether something belongs in the repo, leave it out.
 - **Leaflet** + `leaflet.markercluster` — always client-only, dynamically imported in `onMount`
 - **svelte-sonner** for toasts, **date-fns** for formatting, **zod** for API validation
 - Deployed to **Vercel** (`@sveltejs/adapter-vercel`, Node 22.x runtime)
+- **License**: GNU Affero General Public License v3.0 (AGPL-3.0)
 
 ## Dev Server
 

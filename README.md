@@ -62,12 +62,12 @@ App runs at `http://localhost:5173`.
 
 ## Environment variables
 
-| Variable | Description |
-|---|---|
-| `PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (public) |
-| `SIGHTENGINE_API_USER` | Image moderation — optional |
-| `SIGHTENGINE_API_SECRET` | Image moderation — optional |
+| Variable                   | Description                 |
+| -------------------------- | --------------------------- |
+| `PUBLIC_SUPABASE_URL`      | Supabase project URL        |
+| `PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (public)  |
+| `SIGHTENGINE_API_USER`     | Image moderation — optional |
+| `SIGHTENGINE_API_SECRET`   | Image moderation — optional |
 
 See `.env.example` for the full list.
 
@@ -119,4 +119,6 @@ Issues and PRs welcome. If you're adding a feature, open an issue first to discu
 
 ## License
 
-MIT
+[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0)
+
+Open source. Anyone can use, modify, and run this — but if you distribute a modified version or run it as a hosted service, you must also publish your source code under the same license.
