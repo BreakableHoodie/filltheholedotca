@@ -4,6 +4,7 @@
 *Objective: Increase report credibility and social sharability.*
 
 - [ ] **Photo Uploads:** Allow users to attach a photo when reporting or flagging.
+  - *Constraint: Must include automated AND manual moderation before public display.*
   - [ ] Supabase Storage bucket configuration (`pothole-photos`).
   - [ ] Frontend upload component with client-side compression/resizing.
   - [ ] Integration with SightEngine for automated nudity/violence detection.

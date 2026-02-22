@@ -16,6 +16,7 @@ Security is critical at every juncture. This app accepts untrusted public input 
 - **Admin routes require auth** — any endpoint under `/api/admin/` must validate a secret token or session. Do not make admin operations publicly accessible.
 - **Supabase RLS is the last line of defence** — all tables have Row Level Security enabled. Never disable it, and review policies when adding new tables.
 - **Dependencies** — don't add packages without checking for known CVEs. Keep dependencies minimal.
+- **User-Generated Content (UGC)** — any image uploads must pass automated moderation (e.g. SightEngine) AND be reviewable by admins. Never display unmoderated binaries.
 
 When in doubt, refuse the operation and ask rather than implementing something that could introduce a vulnerability.
 
