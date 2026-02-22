@@ -1,6 +1,18 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Navigation — core routes load', () => {
+	test.use({
+		storageState: {
+			cookies: [],
+			origins: [
+				{
+					origin: 'http://localhost:4173',
+					localStorage: [{ name: 'fth-welcomed', value: '1' }]
+				}
+			]
+		}
+	});
+
 	test('home page loads with map heading and nav', async ({ page }) => {
 		await page.goto('/');
 
