@@ -22,4 +22,5 @@ export const load: LayoutServerLoad = async () => {
 		console.error('Supabase load exception:', e);
 		return { counts: { reported: 0, flagged: 0, filled: 0 } };
 	}
+
 };
