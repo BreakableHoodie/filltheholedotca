@@ -58,3 +58,82 @@ jobs:
           fi
 
       - run: npm run build
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: cp .env.example .env
+
+      - run: npm run lint
+
+  lint-a11y:
+    name: A11y static analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # svelte-check a11y requires env vars for svelte-kit sync
+      - run: cp .env.example .env
+
+      - run: npm run lint:a11y
+
+  test-a11y:
+    name: A11y runtime tests (Playwright/axe)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install chromium --with-deps
+
+      - run: cp .env.example .env
+
+      - name: Override with real env vars
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -n "$PUBLIC_SUPABASE_URL" ]; then
+            sed -i "s|PUBLIC_SUPABASE_URL=.*|PUBLIC_SUPABASE_URL=$PUBLIC_SUPABASE_URL|" .env
+          fi
+          if [ -n "$PUBLIC_SUPABASE_ANON_KEY" ]; then
+            sed -i "s|PUBLIC_SUPABASE_ANON_KEY=.*|PUBLIC_SUPABASE_ANON_KEY=$PUBLIC_SUPABASE_ANON_KEY|" .env
+          fi
+          if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            sed -i "s|SUPABASE_SERVICE_ROLE_KEY=.*|SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY|" .env
+          fi
+
+      - name: Run axe accessibility tests
+        run: npm run test:a11y
+
+      - name: Upload Playwright report on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

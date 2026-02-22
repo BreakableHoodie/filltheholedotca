@@ -36,7 +36,7 @@
 				href="https://www.kitchener.ca/en/transportation-and-parking/report-a-road-concern.aspx"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+				class="flex items-center gap-2 bg-sky-700 hover:bg-sky-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
 			>
 				🏙️ City of Kitchener — Report a Road Concern →
 			</a>
@@ -75,7 +75,7 @@
 			<p>
 				<strong class="text-zinc-300">Provincial highways (401, 7/8, 85) are MTO's responsibility</strong>,
 				not the city or Region. Report those to the
-				<a href="https://www.ontario.ca/page/report-problem-provincial-highway" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline">Ministry of Transportation Ontario</a>.
+				<a href="https://www.ontario.ca/page/report-problem-provincial-highway" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">Ministry of Transportation Ontario</a>.
 			</p>
 		</div>
 	</section>
@@ -154,18 +154,18 @@
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
 				<div class="text-sm font-semibold text-white">🌐 Third-party services</div>
 				<p class="text-sm text-zinc-400">
-					Map tiles are loaded from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline">OpenStreetMap</a>.
-					When you report a pothole, your coordinates are sent to
-					<a href="https://nominatim.org" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline">Nominatim</a> (OpenStreetMap's geocoder)
-					to look up the street address. Report data is stored in
-					<a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline">Supabase</a>.
+			Map tiles are loaded from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">OpenStreetMap</a>.
+				When you report a pothole, your coordinates are sent to
+				<a href="https://nominatim.org" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">Nominatim</a> (OpenStreetMap's geocoder)
+				to look up the street address. Report data is stored in
+				<a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">Supabase</a>.
 					Each of these services has its own privacy policy.
 				</p>
 			</div>
 		</div>
 
-		<p class="text-sm text-zinc-500">
-			Questions? This is an <a href="https://github.com/BreakableHoodie/filltheholedotca" target="_blank" rel="noopener noreferrer" class="underline hover:text-zinc-300 transition-colors">open-source civic project</a> with no commercial interest in your data.
+		<p class="text-sm text-zinc-400">
+			Questions? This is an <a href="https://github.com/BreakableHoodie/filltheholedotca" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors">open-source civic project</a> with no commercial interest in your data.
 		</p>
 	</section>
 
@@ -210,6 +210,6 @@
 	</section>
 
 	<div class="text-center pt-4">
-		<a href="/" class="text-zinc-500 hover:text-zinc-300 text-sm">← Back to the map</a>
+		<a href="/" class="text-zinc-400 hover:text-white text-sm">← Back to the map</a>
 	</div>
 </div>
