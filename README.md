@@ -25,7 +25,7 @@ Each pothole page shows the ward councillor's contact info so you can apply dire
 - **[Tailwind CSS v4](https://tailwindcss.com)** via `@tailwindcss/vite`
 - **[Supabase](https://supabase.com)** — Postgres with Row Level Security
 - **[Leaflet](https://leafletjs.com)** + `leaflet.markercluster` for the map
-- **[Vercel](https://vercel.com)** for deployment
+- **[Netlify](https://netlify.com)** for deployment
 
 ---
 
