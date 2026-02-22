@@ -3,6 +3,9 @@ import AxeBuilder from '@axe-core/playwright';
 
 test.describe('Accessibility — Home (map page)', () => {
 	test.beforeEach(async ({ page }) => {
+		// Suppress the WelcomeModal so its auto-focus doesn't interfere with skip-link
+		// and axe tests. Must be set before goto() so onMount sees it immediately.
+		await page.addInitScript(() => localStorage.setItem('fth-welcomed', '1'));
 		await page.goto('/');
 	});
 
@@ -136,6 +139,7 @@ test.describe('Accessibility — narrow viewport (320px reflow)', () => {
 	test.use({ viewport: { width: 320, height: 568 } });
 
 	test('home page does not scroll horizontally at 320px', async ({ page }) => {
+		await page.addInitScript(() => localStorage.setItem('fth-welcomed', '1'));
 		await page.goto('/');
 		const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
 		const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
