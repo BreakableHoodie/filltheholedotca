@@ -1,27 +1,27 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import type { Map, Layer, Marker, DivIcon, MarkerClusterGroup } from 'leaflet';
+	import type * as Leaflet from 'leaflet';
 	import type { PageData } from './$types';
 	import type { Pothole } from '$lib/types';
 	import { COUNCILLORS } from '$lib/wards';
 	import { inWardFeature } from '$lib/geo';
+	import { STATUS_CONFIG } from '$lib/constants';
 
 	let { data }: { data: PageData } = $props();
 
 	let mapEl: HTMLDivElement;
 	let mapReady = $state(false);
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let mapRef: any = null;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let LRef: any = null;
+	let mapRef: Map | null = null;
+	let LRef: typeof Leaflet | null = null;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let wardLayerRef: any = null;
 	let showWards = $state(false);
 	let wardLoading = $state(false);
 	let locating = $state(false);
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let locationMarker: any = null;
+	let locationMarker: Marker | null = null;
 
 	function locateMe() {
 		if (!mapRef || !LRef) return;
@@ -82,6 +82,7 @@
 			// Count active (reported + wanksyd) potholes per ward, keyed by "city-wardNum"
 			const active = (data.potholes as Pothole[]).filter(p => p.status === 'reported' || p.status === 'wanksyd');
 			const counts: Record<string, number> = {};
+			
 			for (const ph of active) {
 				for (const f of geojson.features) {
 					if (inWardFeature(ph.lng, ph.lat, f.geometry)) {
@@ -118,7 +119,8 @@
 					);
 				}
 			}).addTo(mapRef);
-			wardLayerRef.bringToBack();
+			
+			if (wardLayerRef) wardLayerRef.bringToBack();
 			showWards = true;
 		} catch (err) {
 			toast.error('Could not load ward boundaries. Try again later.');
@@ -131,12 +133,6 @@
 	function escapeHtml(str: string): string {
 		return str.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c] ?? c));
 	}
-
-	const STATUS_ICONS: Record<string, { emoji: string; color: string; label: string }> = {
-		reported: { emoji: '📍', color: '#f97316', label: 'Reported' },
-		wanksyd:  { emoji: '🚩', color: '#0ea5e9', label: 'Flagged' },
-		filled:   { emoji: '✅', color: '#22c55e', label: 'Filled' }
-	};
 
 	onMount(async () => {
 		// Leaflet must be imported client-side only
@@ -170,8 +166,9 @@
 			spiderfyOnMaxZoom: true
 		});
 
-		for (const pothole of data.potholes as Pothole[]) {
-			const info = STATUS_ICONS[pothole.status] ?? STATUS_ICONS.reported;
+		const potholes = data.potholes as Pothole[];
+		for (const pothole of potholes) {
+			const info = STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported;
 
 			const icon = L.divIcon({
 				html: `<div class="pothole-marker pothole-marker--${pothole.status}" title="${info.label}">${info.emoji}</div>`,
@@ -246,7 +243,8 @@
 	<!-- Legend -->
 	<div class="absolute safe-bottom right-4 bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl p-3 text-xs space-y-1.5 z-[1000]">
 		<div class="text-zinc-400 font-semibold mb-2 uppercase tracking-wider text-[10px]">Status</div>
-			{#each Object.entries(STATUS_ICONS) as [status, info] (status)}
+			{#each ['reported', 'wanksyd', 'filled'] as status (status)}
+			{@const info = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]}
 			<div class="flex items-center gap-2 text-zinc-300">
 				<span>{info.emoji}</span>
 				<span>{info.label}</span>

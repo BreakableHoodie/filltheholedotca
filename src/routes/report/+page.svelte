@@ -131,7 +131,7 @@
 			</button>
 
 			{#if gpsStatus === 'error'}
-				<p class="text-xs text-red-400">
+				<p class="text-xs text-red-400" role="alert">
 					Location access is required to report a pothole. Please enable it in your browser settings and try again.
 				</p>
 			{/if}
@@ -144,30 +144,36 @@
 		</div>
 
 		<!-- Severity -->
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<div class="text-sm font-semibold text-zinc-300">💥 How bad is it? (optional)</div>
+		<fieldset class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+			<legend class="text-sm font-semibold text-zinc-300 mb-2">💥 How bad is it? (optional)</legend>
 			<div class="grid grid-cols-2 gap-2">
 				{#each SEVERITY_OPTIONS as opt (opt.value)}
-					<button
-						type="button"
-						onclick={() => severity = severity === opt.value ? null : opt.value}
-						class="flex flex-col items-start gap-0.5 p-3 rounded-lg border text-left transition-colors
+					<label
+						class="flex flex-col items-start gap-0.5 p-3 rounded-lg border text-left cursor-pointer transition-colors
 							{severity === opt.value
 								? 'border-sky-500 bg-sky-500/10'
 								: 'border-zinc-700 hover:border-zinc-500'}"
 					>
-						<span class="text-xl">{opt.emoji}</span>
+						<input
+							type="radio"
+							name="severity"
+							value={opt.value}
+							checked={severity === opt.value}
+							onchange={() => severity = opt.value}
+							class="sr-only"
+						/>
+						<span class="text-xl" aria-hidden="true">{opt.emoji}</span>
 						<span class="text-sm font-semibold text-white">{opt.label}</span>
 						<span class="text-xs text-zinc-400">{opt.sub}</span>
-					</button>
+					</label>
 				{/each}
 			</div>
-		</div>
+		</fieldset>
 
 		<button
 			type="submit"
-			aria-disabled={submitting || gpsStatus !== 'got'}
-			class="w-full py-4 font-bold text-lg rounded-xl transition-colors {submitting || gpsStatus !== 'got' ? 'bg-zinc-700 text-zinc-300 cursor-not-allowed' : 'bg-sky-700 hover:bg-sky-600 text-white'}"
+			disabled={submitting || gpsStatus !== 'got'}
+			class="w-full py-4 font-bold text-lg rounded-xl transition-colors disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed bg-sky-700 hover:bg-sky-600 text-white"
 		>
 			{submitting ? '⏳ Submitting...' : '📍 Report this hole'}
 		</button>

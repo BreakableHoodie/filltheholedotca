@@ -29,3 +29,9 @@ CREATE POLICY "Public insert confirmations"
 CREATE POLICY "Public read confirmations"
   ON pothole_confirmations FOR SELECT
   USING (true);
+
+-- Optimize for geospatial queries (status + bounding box)
+create index if not exists potholes_geo_idx on potholes (status, lat, lng);
+
+-- Optimize for feed/map loading (status != pending, order by created_at)
+create index if not exists potholes_feed_idx on potholes (created_at desc) where status != 'pending';

@@ -2,24 +2,19 @@
 	import { toast } from 'svelte-sonner';
 	import { invalidateAll } from '$app/navigation';
 	import { format } from 'date-fns';
+	import { STATUS_CONFIG } from '$lib/constants';
 	import type { PageData } from './$types';
 	import type { Pothole, PotholeStatus } from '$lib/types';
 	import type { Councillor } from '$lib/wards';
 
 	let { data }: { data: PageData } = $props();
 	let pothole = $derived(data.pothole as Pothole);
+	let info = $derived(STATUS_CONFIG[pothole.status]);
 	let councillor = $derived(data.councillor as Councillor | null);
 
 	let submitting = $state(false);
 	let showFlagForm = $state(false);
 	let showFilledForm = $state(false);
-
-	const STATUS_INFO: Record<PotholeStatus, { emoji: string; label: string; color: string }> = {
-		pending:  { emoji: '⏳', label: 'Pending confirmation', color: 'text-zinc-400' },
-		reported: { emoji: '📍', label: 'Reported',             color: 'text-orange-400' },
-		wanksyd:  { emoji: '🚩', label: 'Flagged',              color: 'text-sky-400' },
-		filled:   { emoji: '✅', label: 'Filled',               color: 'text-green-400' }
-	};
 
 	async function flagPothole() {
 		submitting = true;
@@ -89,6 +84,21 @@
 			toast.success('Link copied!');
 		}
 	}
+
+	function getEmailUrl(councillor: Councillor, pothole: Pothole) {
+		const subject = `Pothole at ${pothole.address || 'my location'}`;
+		const body = `Hi ${councillor.name},
+
+I'd like to report an unfilled pothole in Ward ${councillor.ward}.
+
+Location: ${pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
+Tracked at: https://fillthehole.ca/hole/${pothole.id}
+
+This pothole has been reported and is awaiting city action. Please help get it on the city's radar.
+
+Thank you.`;
+		return `mailto:${councillor.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+	}
 </script>
 
 <svelte:head>
@@ -103,10 +113,9 @@
 			{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
 		</h1>
 		<div class="flex items-center gap-2 mt-1">
-			{#if STATUS_INFO[pothole.status]}
-				{@const info = STATUS_INFO[pothole.status]}
+			{#if info}
 				<span class="text-xl">{info.emoji}</span>
-				<span class="font-semibold {info.color}">{info.label}</span>
+				<span class="font-semibold {info.colorClass}">{info.label}</span>
 			{/if}
 			<span class="text-zinc-600">·</span>
 			<span class="text-zinc-500 text-sm">Reported {fmt(pothole.created_at)}</span>
@@ -131,17 +140,19 @@
 	{#if pothole.status !== 'pending'}
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
 			<div class="flex items-center justify-between text-sm">
-						{#each [['reported', '📍', 'Reported'], ['wanksyd', '🚩', 'Flagged'], ['filled', '✅', 'Filled']] as [s, emoji, label] (s)}
-					{@const isCurrent = pothole.status === s}
-					{@const isPast = s === 'reported' || (s === 'wanksyd' && pothole.status !== 'reported') || (s === 'filled' && pothole.status === 'filled')}
+				{#each ['reported', 'wanksyd', 'filled'] as s (s)}
+					{@const status = s as PotholeStatus}
+					{@const info = STATUS_CONFIG[status]}
+					{@const isCurrent = pothole.status === status}
+					{@const isPast = status === 'reported' || (status === 'wanksyd' && pothole.status !== 'reported') || (status === 'filled' && pothole.status === 'filled')}
 					<div class="flex flex-col items-center gap-1 flex-1">
-						<span class="text-2xl {isPast ? 'opacity-100' : 'opacity-30'}">{emoji}</span>
-						<span class="{isCurrent ? 'text-white font-semibold' : isPast ? 'text-zinc-400' : 'text-zinc-600'} text-xs">{label}</span>
+						<span class="text-2xl {isPast ? 'opacity-100' : 'opacity-30'}">{info.emoji}</span>
+						<span class="{isCurrent ? 'text-white font-semibold' : isPast ? 'text-zinc-400' : 'text-zinc-600'} text-xs">{info.label}</span>
 						{#if isCurrent}
 							<div class="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
 						{/if}
 					</div>
-					{#if s !== 'filled'}
+					{#if status !== 'filled'}
 						<div class="flex-1 h-px bg-zinc-700 self-center mb-4 max-w-12"></div>
 					{/if}
 				{/each}
@@ -254,7 +265,7 @@
 			</p>
 			<div class="flex flex-wrap gap-2">
 				<a
-					href="mailto:{councillor.email}?subject={encodeURIComponent('Pothole at ' + (pothole.address || 'my location'))}&body={encodeURIComponent('Hi ' + councillor.name + ',\n\nI\'d like to report an unfilled pothole in Ward ' + councillor.ward + '.\n\nLocation: ' + (pothole.address || (pothole.lat.toFixed(4) + ', ' + pothole.lng.toFixed(4))) + '\nTracked at: https://fillthehole.ca/hole/' + pothole.id + '\n\nThis pothole has been reported and is awaiting city action. Please help get it on the city\'s radar.\n\nThank you.')}"
+					href={getEmailUrl(councillor, pothole)}
 					class="flex-1 text-center py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg transition-colors"
 				>
 					✉️ Email {councillor.name.split(' ')[0]}
