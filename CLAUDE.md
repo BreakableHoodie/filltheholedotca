@@ -37,7 +37,7 @@ The repo is public. Treat every commit as permanent.
 
 - **No secrets, ever** — `.env` is gitignored. Certificates (`*.pem`), credentials, and keys must never be committed. If something sensitive lands in history, rotate the credential immediately and scrub the history.
 - **No generated artifacts** — `.svelte-kit/`, `node_modules/`, `build/`, `logs/`, `.playwright-mcp/` stay out of the repo. If a tool dumps files into the project root, add them to `.gitignore` before committing.
-- **Meaningful commits** — every commit message explains *why*, not just *what*. Atomic commits over giant dumps. No "fix", "update", or "wip" messages.
+- **Meaningful commits** — every commit message explains _why_, not just _what_. Atomic commits over giant dumps. No "fix", "update", or "wip" messages.
 - **No debug leftovers** — don't commit `console.log`, temporary scripts, commented-out code, or test files dropped in the root.
 - **No binary assets in git** — photos, screenshots, and large static files belong in Supabase storage or a CDN, not the repo.
 - **Keep `main` clean** — feature work goes on a branch. `main` should always build and deploy cleanly.
@@ -45,6 +45,7 @@ The repo is public. Treat every commit as permanent.
 When in doubt about whether something belongs in the repo, leave it out.
 
 ## Stack
+
 - **SvelteKit** + TypeScript, **Svelte 5 runes** (`$state`, `$derived`, `$props`, `$effect`)
 - **Tailwind CSS v4** (no config file — uses `@tailwindcss/vite` plugin, not PostCSS)
 - **Supabase** — Postgres + RLS + storage bucket `pothole-photos`
@@ -53,25 +54,31 @@ When in doubt about whether something belongs in the repo, leave it out.
 - Deployed to **Vercel** (`@sveltejs/adapter-vercel`, Node 22.x runtime)
 
 ## Dev Server
+
 ```bash
 npm run dev          # http://localhost:5173
 ```
+
 Running as a macOS LaunchAgent (`ca.fillthehole.dev`) — auto-starts on login.
 Logs: `logs/fillthehole.log`
 
 To restart the service:
+
 ```bash
 launchctl unload ~/Library/LaunchAgents/ca.fillthehole.dev.plist
 launchctl load   ~/Library/LaunchAgents/ca.fillthehole.dev.plist
 ```
 
 ## Environment
+
 Copy `.env.example` → `.env` with real values:
+
 - `PUBLIC_SUPABASE_URL` — Supabase project URL
 - `PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key
 - `SIGHTENGINE_API_USER` / `SIGHTENGINE_API_SECRET` — image moderation (optional)
 
 ## Project Structure
+
 ```
 src/
   routes/
@@ -80,6 +87,9 @@ src/
     +layout.server.ts         # Server layout loader
     +page.server.ts           # Loads potholes for map
     about/+page.svelte        # About page
+    stats/
+      +page.server.ts         # SSR load — potholes for metrics
+      +page.svelte            # Metrics dashboard (resolution time, ward leaderboards, trends, fill rate)
     report/+page.svelte       # GPS report form with severity selector
     hole/[id]/
       +page.svelte            # Pothole detail (status, councillor contact, share)
@@ -93,6 +103,7 @@ src/
       admin/pothole/[id]/+server.ts  # DELETE/PATCH — admin moderation
   lib/
     types.ts                  # Pothole, PotholeStatus types
+    geo.ts                    # Shared geo utilities (pipRing, inWardFeature)
     wards.ts                  # COUNCILLORS array (ward/name/email/url)
     supabase.ts               # Supabase client (public anon)
     components/
@@ -100,6 +111,7 @@ src/
 ```
 
 ## Database Schema
+
 ```sql
 potholes (
   id uuid PK, created_at, lat float8, lng float8,
@@ -114,15 +126,18 @@ pothole_confirmations (
   UNIQUE(pothole_id, ip_hash)
 )
 ```
+
 Run `schema.sql` for initial setup, `schema_update.sql` for the confirmation system.
 
 ## Status Flow
+
 ```
 pending → reported → wanksyd → filled
   (1 report)  (3 confirmations) (flagged) (city fixed it)
 ```
 
 ## Key Business Rules
+
 - **Geofence**: Waterloo Region only — lat 43.32–43.53, lng -80.59 to -80.22
 - **Merge radius**: 50m — nearby pending reports are merged, not duplicated
 - **3 confirmations** from distinct IPs required to go live on the public map
@@ -130,6 +145,7 @@ pending → reported → wanksyd → filled
 - **`wanksyd`** = Wanksy-inspired status — someone physically flagged/reported to the city
 
 ## Svelte 5 Patterns (important — don't use Svelte 4 syntax)
+
 ```svelte
 let count = $state(0)              // NOT: let count = writable(0)
 let doubled = $derived(count * 2)  // NOT: $: doubled = count * 2
@@ -138,6 +154,7 @@ $effect(() => { ... })             // NOT: $: { ... } for side effects
 ```
 
 ## Coding Conventions
+
 - Dark zinc palette, sky-500 accent colour
 - Tailwind v4 utility classes (not v3 — no `@apply` in components)
 - API routes validate with zod, return `json()` or throw `error()`
