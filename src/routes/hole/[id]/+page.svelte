@@ -131,7 +131,7 @@
 	{#if pothole.status !== 'pending'}
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
 			<div class="flex items-center justify-between text-sm">
-				{#each [['reported', '📍', 'Reported'], ['wanksyd', '🚩', 'Flagged'], ['filled', '✅', 'Filled']] as [s, emoji, label]}
+						{#each [['reported', '📍', 'Reported'], ['wanksyd', '🚩', 'Flagged'], ['filled', '✅', 'Filled']] as [s, emoji, label] (s)}
 					{@const isCurrent = pothole.status === s}
 					{@const isPast = s === 'reported' || (s === 'wanksyd' && pothole.status !== 'reported') || (s === 'filled' && pothole.status === 'filled')}
 					<div class="flex flex-col items-center gap-1 flex-1">

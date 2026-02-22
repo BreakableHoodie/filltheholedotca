@@ -80,7 +80,11 @@
 	async function toggleWardHeatmap() {
 		if (!mapRef || !LRef) return;
 		if (wardLayerRef) {
-			showWards ? mapRef.removeLayer(wardLayerRef) : mapRef.addLayer(wardLayerRef);
+				if (showWards) {
+					mapRef.removeLayer(wardLayerRef);
+				} else {
+					mapRef.addLayer(wardLayerRef);
+				}
 			showWards = !showWards;
 			return;
 		}
@@ -255,7 +259,7 @@
 	<!-- Legend -->
 	<div class="absolute safe-bottom right-4 bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl p-3 text-xs space-y-1.5 z-[1000]">
 		<div class="text-zinc-400 font-semibold mb-2 uppercase tracking-wider text-[10px]">Status</div>
-		{#each Object.entries(STATUS_ICONS) as [status, info]}
+			{#each Object.entries(STATUS_ICONS) as [status, info] (status)}
 			<div class="flex items-center gap-2 text-zinc-300">
 				<span>{info.emoji}</span>
 				<span>{info.label}</span>

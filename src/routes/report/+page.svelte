@@ -147,7 +147,7 @@
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
 			<div class="text-sm font-semibold text-zinc-300">💥 How bad is it? (optional)</div>
 			<div class="grid grid-cols-2 gap-2">
-				{#each SEVERITY_OPTIONS as opt}
+				{#each SEVERITY_OPTIONS as opt (opt.value)}
 					<button
 						type="button"
 						onclick={() => severity = severity === opt.value ? null : opt.value}
