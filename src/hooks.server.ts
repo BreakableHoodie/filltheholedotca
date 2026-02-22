@@ -60,11 +60,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 		'Content-Security-Policy',
 		[
 			"default-src 'self'",
-			"script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-* required by Vite/SvelteKit + Leaflet
+			"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com", // unsafe-* required by Vite/SvelteKit + Leaflet
 			"style-src 'self' 'unsafe-inline'",
 			"img-src 'self' data: https: blob:",
 			"font-src 'self' data:",
-			"connect-src 'self' https://*.supabase.co https://nominatim.openstreetmap.org",
+			"connect-src 'self' https://*.supabase.co https://nominatim.openstreetmap.org https://cloudflareinsights.com",
 			"frame-ancestors 'none'"
 		].join('; ')
 	);

@@ -5,6 +5,30 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 		<meta name="description" content="Track potholes in Kitchener, Waterloo, and Cambridge. Report, flag, and hold the city accountable." />
 		<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕳️</text></svg>" />
+		<script>
+			// Svelte 5 caches Node.prototype.firstChild/.nextSibling getters at startup via
+			// Object.getOwnPropertyDescriptor. On certain iOS Safari versions the descriptor is a
+			// data descriptor (no .get), leaving the cache undefined and crashing hydration. Walk
+			// the prototype chain to find and re-seat the real getter before the bundle loads.
+			(function () {
+				if (typeof Node === 'undefined') return;
+				['firstChild', 'nextSibling'].forEach(function (prop) {
+					var proto = Node.prototype;
+					var d = Object.getOwnPropertyDescriptor(proto, prop);
+					if (d && !d.get) {
+						var p = Object.getPrototypeOf(proto);
+						while (p) {
+							var pd = Object.getOwnPropertyDescriptor(p, prop);
+							if (pd && pd.get) {
+								Object.defineProperty(proto, prop, { get: pd.get, configurable: true, enumerable: false });
+								break;
+							}
+							p = Object.getPrototypeOf(p);
+						}
+					}
+				});
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover" class="bg-zinc-950 text-zinc-100 min-h-screen">
