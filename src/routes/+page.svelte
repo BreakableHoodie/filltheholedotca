@@ -222,6 +222,9 @@
 	<title>fillthehole.ca — Waterloo Region Pothole Map</title>
 </svelte:head>
 
+<!-- Visually hidden page heading for screen readers (WCAG 2.4.6) -->
+<h1 class="sr-only">Waterloo Region Pothole Map</h1>
+
 <div class="relative w-full" style="height: calc(100dvh - 57px - env(safe-area-inset-top))">
 	<div bind:this={mapEl} class="w-full h-full bg-zinc-900"></div>
 

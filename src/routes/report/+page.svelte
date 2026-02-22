@@ -139,7 +139,7 @@
 			{#if address}
 				<p class="text-xs text-zinc-400">📌 {address}</p>
 			{:else if gpsStatus === 'got'}
-				<p class="text-xs text-zinc-600">Looking up address...</p>
+				<p class="text-xs text-zinc-400">Looking up address...</p>
 			{/if}
 		</div>
 
@@ -158,7 +158,7 @@
 					>
 						<span class="text-xl">{opt.emoji}</span>
 						<span class="text-sm font-semibold text-white">{opt.label}</span>
-						<span class="text-xs text-zinc-500">{opt.sub}</span>
+						<span class="text-xs text-zinc-400">{opt.sub}</span>
 					</button>
 				{/each}
 			</div>
@@ -166,17 +166,17 @@
 
 		<button
 			type="submit"
-			disabled={submitting || gpsStatus !== 'got'}
-			class="w-full py-4 bg-sky-600 hover:bg-sky-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-bold text-lg rounded-xl transition-colors"
+			aria-disabled={submitting || gpsStatus !== 'got'}
+			class="w-full py-4 font-bold text-lg rounded-xl transition-colors {submitting || gpsStatus !== 'got' ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed' : 'bg-sky-600 hover:bg-sky-500 text-white'}"
 		>
 			{submitting ? '⏳ Submitting...' : '📍 Report this hole'}
 		</button>
 
-		<p class="text-xs text-zinc-600 text-center">
+		<p class="text-xs text-zinc-400 text-center">
 			Reports require GPS. Three independent reports from the same location are needed before a pothole appears on the map.
 		</p>
-		<p class="text-xs text-zinc-700 text-center">
-			On a major road? It may be maintained by the Region of Waterloo, not the City. <a href="/about" class="underline hover:text-zinc-500">Learn more →</a>
+		<p class="text-xs text-zinc-400 text-center">
+			On a major road? It may be maintained by the Region of Waterloo, not the City. <a href="/about" class="underline hover:text-white">Learn more →</a>
 		</p>
 	</form>
 </div>

@@ -72,7 +72,7 @@
 				<a
 					href="/about"
 					onclick={dismiss}
-					class="text-center text-zinc-500 hover:text-zinc-300 text-xs transition-colors"
+					class="text-center text-zinc-400 hover:text-white text-xs transition-colors"
 				>
 					Learn more →
 				</a>

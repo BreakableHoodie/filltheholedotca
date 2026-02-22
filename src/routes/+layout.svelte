@@ -25,9 +25,17 @@
 	<title>FillTheHole.ca — Waterloo Region Pothole Tracker</title>
 </svelte:head>
 
-<div class="flex flex-col min-h-screen">
+<div class="flex flex-col min-h-screen bg-zinc-950">
+	<!-- Skip link: must be the first focusable element for keyboard/screen reader users -->
+	<a
+		href="#maincontent"
+		class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-sky-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:font-semibold"
+	>
+		Skip to main content
+	</a>
+
 	<header class="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50 safe-header">
-		<div class="max-w-6xl mx-auto py-3 safe-header-inner">
+			<div class="max-w-6xl mx-auto py-3 safe-header-inner">
 			<div class="flex items-center justify-between gap-3 flex-wrap">
 				<a href="/" class="flex items-center gap-2 group">
 					<span class="text-2xl">🕳️</span>
@@ -36,15 +44,15 @@
 					</span>
 				</a>
 
-				<div class="hidden sm:flex items-center gap-3 text-sm">
+				<div class="hidden sm:flex items-center gap-3 text-sm" aria-label="Pothole statistics">
 					<span class="text-zinc-400">
 						🕳️ <span class="text-white font-semibold">{counts.reported + counts.flagged + counts.filled}</span> reported
 					</span>
-					<span class="text-zinc-600">·</span>
+					<span class="text-zinc-600" aria-hidden="true">·</span>
 					<span class="text-zinc-400">
 						🚩 <span class="text-white font-semibold">{counts.flagged}</span> flagged
 					</span>
-					<span class="text-zinc-600">·</span>
+					<span class="text-zinc-600" aria-hidden="true">·</span>
 					<span class="text-zinc-400">
 						✅ <span class="text-white font-semibold">{counts.filled}</span> filled
 					</span>
@@ -65,19 +73,19 @@
 		</div>
 	</header>
 
-	<main class="flex-1">
+	<main id="maincontent" tabindex="-1" class="flex-1">
 		{@render children()}
 	</main>
 
-	<footer class="bg-zinc-900 border-t border-zinc-800 py-5 text-center text-zinc-500 text-xs px-4 space-y-1.5">
+	<footer class="bg-zinc-900 border-t border-zinc-800 py-5 text-center text-zinc-400 text-xs px-4 space-y-1.5">
 		<p>Track potholes. Contact your councillor. Hold the city accountable.</p>
 		<p>
 			Community-sourced data — not official. Use at your own risk.
-			<a href="/about#privacy" class="underline hover:text-zinc-300 transition-colors">Privacy</a>
-			<span class="mx-1 text-zinc-700">·</span>
-			<a href="/about#disclaimer" class="underline hover:text-zinc-300 transition-colors">Disclaimer</a>
-			<span class="mx-1 text-zinc-700">·</span>
-			<a href="https://github.com/BreakableHoodie/filltheholedotca" target="_blank" rel="noopener noreferrer" class="underline hover:text-zinc-300 transition-colors">GitHub</a>
+			<a href="/about#privacy" class="underline hover:text-white transition-colors">Privacy</a>
+			<span class="mx-1 text-zinc-600" aria-hidden="true">·</span>
+			<a href="/about#disclaimer" class="underline hover:text-white transition-colors">Disclaimer</a>
+			<span class="mx-1 text-zinc-600" aria-hidden="true">·</span>
+			<a href="https://github.com/BreakableHoodie/filltheholedotca" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors">GitHub</a>
 		</p>
 	</footer>
 </div>
