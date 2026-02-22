@@ -218,7 +218,7 @@
 	<title>fillthehole.ca — Waterloo Region Pothole Map</title>
 </svelte:head>
 
-<div class="relative w-full" style="height: calc(100vh - 57px)">
+<div class="relative w-full" style="height: calc(100dvh - 57px - env(safe-area-inset-top))">
 	<div bind:this={mapEl} class="w-full h-full bg-zinc-900"></div>
 
 	{#if !mapReady}
@@ -232,7 +232,7 @@
 
 	<!-- Bottom-left controls -->
 	{#if mapReady}
-		<div class="absolute bottom-6 left-4 z-[1000] flex flex-col gap-2">
+		<div class="absolute safe-bottom left-4 z-[1000] flex flex-col gap-2">
 			<button
 				onclick={locateMe}
 				disabled={locating}
@@ -253,7 +253,7 @@
 	{/if}
 
 	<!-- Legend -->
-	<div class="absolute bottom-6 right-4 bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl p-3 text-xs space-y-1.5 z-[1000]">
+	<div class="absolute safe-bottom right-4 bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl p-3 text-xs space-y-1.5 z-[1000]">
 		<div class="text-zinc-400 font-semibold mb-2 uppercase tracking-wider text-[10px]">Status</div>
 		{#each Object.entries(STATUS_ICONS) as [status, info]}
 			<div class="flex items-center gap-2 text-zinc-300">
