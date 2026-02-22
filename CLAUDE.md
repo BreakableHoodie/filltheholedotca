@@ -19,6 +19,31 @@ Security is critical at every juncture. This app accepts untrusted public input 
 
 When in doubt, refuse the operation and ask rather than implementing something that could introduce a vulnerability.
 
+## Documentation — Keep It Current
+
+Documentation that's wrong is worse than no documentation. Update it in the same commit as the code change.
+
+- **CLAUDE.md** — update whenever the stack, architecture, status flow, DB schema, or key rules change. If you add a new env var, API route, or library, it goes here.
+- **README.md** — reflects what a new contributor needs to know. If setup steps change or new scripts are added, update it immediately.
+- **`.env.example`** — must stay in sync with every env var the app actually uses. Adding a new `$env/static/*` import? Add the var to `.env.example` in the same commit or CI will break.
+- **`schema.sql`** — the canonical source of truth for the DB. Any migration applied to Supabase must be reflected here so the schema is always reproducible from scratch.
+- **Code comments** — only where the logic isn't obvious. Prefer clear code over stale comments. Delete comments when the code they describe changes.
+
+If a PR touches infrastructure, routes, or the DB schema without updating the relevant docs, treat it as incomplete.
+
+## Repo Hygiene — Non-Negotiable
+
+The repo is public. Treat every commit as permanent.
+
+- **No secrets, ever** — `.env` is gitignored. Certificates (`*.pem`), credentials, and keys must never be committed. If something sensitive lands in history, rotate the credential immediately and scrub the history.
+- **No generated artifacts** — `.svelte-kit/`, `node_modules/`, `build/`, `logs/`, `.playwright-mcp/` stay out of the repo. If a tool dumps files into the project root, add them to `.gitignore` before committing.
+- **Meaningful commits** — every commit message explains *why*, not just *what*. Atomic commits over giant dumps. No "fix", "update", or "wip" messages.
+- **No debug leftovers** — don't commit `console.log`, temporary scripts, commented-out code, or test files dropped in the root.
+- **No binary assets in git** — photos, screenshots, and large static files belong in Supabase storage or a CDN, not the repo.
+- **Keep `main` clean** — feature work goes on a branch. `main` should always build and deploy cleanly.
+
+When in doubt about whether something belongs in the repo, leave it out.
+
 ## Stack
 - **SvelteKit** + TypeScript, **Svelte 5 runes** (`$state`, `$derived`, `$props`, `$effect`)
 - **Tailwind CSS v4** (no config file — uses `@tailwindcss/vite` plugin, not PostCSS)
