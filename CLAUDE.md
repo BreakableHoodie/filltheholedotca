@@ -69,7 +69,8 @@ launchctl load   ~/Library/LaunchAgents/ca.fillthehole.dev.plist
 Copy `.env.example` → `.env` with real values:
 - `PUBLIC_SUPABASE_URL` — Supabase project URL
 - `PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key
-- `SIGHTENGINE_API_USER` / `SIGHTENGINE_API_SECRET` — image moderation (optional)
+- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (server-only; used by admin routes to bypass RLS — never expose to client)
+- `ADMIN_SECRET` — Bearer token for admin API endpoints
 
 ## Project Structure
 ```
