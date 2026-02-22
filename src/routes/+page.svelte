@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import type { Map, Layer, Marker, DivIcon, MarkerClusterGroup } from 'leaflet';
+	import type { Map, Marker } from 'leaflet';
 	import type * as Leaflet from 'leaflet';
 	import type { PageData } from './$types';
 	import type { Pothole } from '$lib/types';
