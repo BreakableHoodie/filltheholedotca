@@ -93,9 +93,11 @@ test.describe('Accessibility — Report form', () => {
 			const ariaLabel = await input.getAttribute('aria-label');
 			const ariaLabelledBy = await input.getAttribute('aria-labelledby');
 
-			const hasLabel = id
+			const parentLabel = await input.locator('xpath=..').evaluate((el) => el.tagName === 'LABEL');
+
+			const hasLabel = (id
 				? (await page.locator(`label[for="${id}"]`).count()) > 0
-				: false;
+				: false) || parentLabel;
 
 			expect(
 				hasLabel || ariaLabel || ariaLabelledBy,

@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { ADMIN_SECRET } from '$env/static/private';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
 const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
@@ -12,8 +13,17 @@ export const DELETE: RequestHandler = async ({ request, params }) => {
 		throw error(401, 'Unauthorized');
 	}
 
-	const { id } = params;
-	if (!id?.match(/^[0-9a-f-]{36}$/)) throw error(400, 'Invalid ID');
+	const paramsSchema = z.object({
+		id: z.string().uuid()
+	});
+
+	const parsed = paramsSchema.safeParse(params);
+
+	if (!parsed.success) {
+		throw error(400, 'Invalid ID');
+	}
+
+	const { id } = parsed.data;
 
 	// Confirmations cascade-delete via FK, but be explicit
 	await supabase.from('pothole_confirmations').delete().eq('pothole_id', id);
