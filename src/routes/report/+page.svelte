@@ -167,7 +167,7 @@
 		<button
 			type="submit"
 			aria-disabled={submitting || gpsStatus !== 'got'}
-			class="w-full py-4 font-bold text-lg rounded-xl transition-colors {submitting || gpsStatus !== 'got' ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed' : 'bg-sky-600 hover:bg-sky-500 text-white'}"
+			class="w-full py-4 font-bold text-lg rounded-xl transition-colors {submitting || gpsStatus !== 'got' ? 'bg-zinc-700 text-zinc-300 cursor-not-allowed' : 'bg-sky-700 hover:bg-sky-600 text-white'}"
 		>
 			{submitting ? '⏳ Submitting...' : '📍 Report this hole'}
 		</button>

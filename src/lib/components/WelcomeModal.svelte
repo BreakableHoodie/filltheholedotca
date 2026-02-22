@@ -65,7 +65,7 @@
 			<div class="flex flex-col gap-2">
 				<button
 					onclick={dismiss}
-					class="w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-colors"
+					class="w-full py-3 bg-sky-700 hover:bg-sky-600 text-white font-bold rounded-xl transition-colors"
 				>
 					Show me the map
 				</button>

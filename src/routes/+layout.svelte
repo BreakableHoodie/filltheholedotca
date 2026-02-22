@@ -64,7 +64,7 @@
 					</a>
 					<a
 						href="/report"
-						class="bg-sky-600 hover:bg-sky-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+						class="bg-sky-700 hover:bg-sky-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
 					>
 						+ Report a pothole
 					</a>

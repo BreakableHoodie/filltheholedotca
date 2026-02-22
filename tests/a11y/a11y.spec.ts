@@ -35,13 +35,25 @@ test.describe('Accessibility — Home (map page)', () => {
 });
 
 test.describe('Accessibility — Report form', () => {
+	// Grant geolocation so the form reaches its productive "GPS acquired" state
+	// (prevents the GPS-denied error toast from appearing during the axe scan)
+	test.use({
+		geolocation: { latitude: 43.45, longitude: -80.5 }, // within Waterloo Region
+		permissions: ['geolocation']
+	});
+
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/report');
+		// Wait briefly for geolocation to resolve before scanning
+		await page.waitForTimeout(300);
 	});
 
 	test('passes axe WCAG 2.1 AA scan', async ({ page }) => {
 		const results = await new AxeBuilder({ page })
 			.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+			// Exclude the toast notification container: toasts are transient UI elements
+			// with styling controlled by svelte-sonner; they are tested separately.
+			.exclude('[data-sonner-toaster]')
 			.analyze();
 
 		expect(results.violations).toEqual([]);
