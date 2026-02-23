@@ -2,7 +2,9 @@ import type { Handle } from '@sveltejs/kit';
 import { error, redirect } from '@sveltejs/kit';
 
 // In-memory rate limit store: ip -> { count, resetAt }
-// NOTE: on Vercel serverless this resets per cold start — it's a deterrent, not a wall.
+// NOTE: on Netlify serverless this resets per cold start — it's a deterrent, not a wall.
+// For persistent rate limiting, use Upstash Redis (@upstash/ratelimit) or a Supabase
+// rate_limits table. See docs/code-review/2026-02-22-api-security-review.md (M-03).
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute

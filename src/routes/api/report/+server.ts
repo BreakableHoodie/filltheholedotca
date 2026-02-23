@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { hashIp } from '$lib/hash';
 
 const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
@@ -23,6 +24,10 @@ const reportSchema = z.object({
 	address: z.string().max(255).nullable().optional(),
 	description: z.string().max(500).nullable().optional()
 });
+
+type ConfirmationResult =
+	| { duplicate: true }
+	| { duplicate: false; confirmed_count: number; status: string };
 
 function haversineMetres(lat1: number, lng1: number, lat2: number, lng2: number): number {
 	const R = 6371000;
@@ -47,16 +52,18 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Geofence check
 	if (
-		lat < GEOFENCE.latMin || lat > GEOFENCE.latMax ||
-		lng < GEOFENCE.lngMin || lng > GEOFENCE.lngMax
+		lat < GEOFENCE.latMin ||
+		lat > GEOFENCE.latMax ||
+		lng < GEOFENCE.lngMin ||
+		lng > GEOFENCE.lngMax
 	) {
-		throw error(422, "That location isn't in the Waterloo Region. This tool covers Kitchener, Waterloo, and Cambridge.");
+		throw error(
+			422,
+			"That location isn't in the Waterloo Region. This tool covers Kitchener, Waterloo, and Cambridge."
+		);
 	}
 
-	// Hash the client IP for deduplication (never store raw IP)
-	const ip = getClientAddress();
-	const ipHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip))
-		.then((buf) => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''));
+	const ipHash = await hashIp(getClientAddress());
 
 	// Search for existing pending potholes nearby using a bounding box
 	const delta = 0.0005;
@@ -78,46 +85,37 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.sort((a, b) => a.dist - b.dist)[0];
 
 	if (match) {
-		// Check if this IP already confirmed this pothole
-		const { data: existing } = await supabase
-			.from('pothole_confirmations')
-			.select('id')
-			.eq('pothole_id', match.id)
-			.eq('ip_hash', ipHash)
-			.maybeSingle();
+		// Atomically insert confirmation and increment count via RPC.
+		// The RPC handles duplicate IPs (ON CONFLICT DO NOTHING) and the
+		// confirmed_count increment in a single statement, preventing race conditions.
+		const { data: result, error: rpcError } = await supabase.rpc('increment_confirmation', {
+			p_pothole_id: match.id,
+			p_ip_hash: ipHash
+		});
 
-		if (existing) {
+		if (rpcError) throw error(500, 'Failed to update report');
+
+		const rpc = result as ConfirmationResult;
+
+		if (rpc.duplicate) {
 			return json({
 				id: match.id,
 				confirmed: false,
-				message: '📍 You\'ve already reported this one. Thanks though!'
+				message: "📍 You've already reported this one. Thanks though!"
 			});
 		}
 
-		// Log this confirmation
-		await supabase.from('pothole_confirmations').insert({ pothole_id: match.id, ip_hash: ipHash });
-
-		const newCount = match.confirmed_count + 1;
-		const newStatus = newCount >= CONFIRMATIONS_REQUIRED ? 'reported' : 'pending';
-
-		const { error: updateError } = await supabase
-			.from('potholes')
-			.update({ confirmed_count: newCount, status: newStatus })
-			.eq('id', match.id);
-
-		if (updateError) throw error(500, 'Failed to update report');
-
 		return json({
 			id: match.id,
-			confirmed: newStatus === 'reported',
+			confirmed: rpc.status === 'reported',
 			message:
-				newStatus === 'reported'
+				rpc.status === 'reported'
 					? '✅ Confirmed — pothole is now live on the map!'
-					: `📍 Confirmation noted (${newCount}/${CONFIRMATIONS_REQUIRED} needed).`
+					: `📍 Confirmation noted (${rpc.confirmed_count}/${CONFIRMATIONS_REQUIRED} needed).`
 		});
 	}
 
-	// First report — log confirmation and insert as pending
+	// First report — insert as pending with count 1
 	const { data, error: insertError } = await supabase
 		.from('potholes')
 		.insert({
@@ -133,12 +131,13 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	if (insertError) throw error(500, 'Failed to submit report');
 
-	// Log the first confirmation
+	// Record the first confirmation — no conflict possible for a brand-new pothole
 	await supabase.from('pothole_confirmations').insert({ pothole_id: data.id, ip_hash: ipHash });
 
 	return json({
 		id: data.id,
 		confirmed: false,
-		message: '📍 Pothole logged. More independent reports from this location will put it on the map.'
+		message:
+			'📍 Pothole logged. More independent reports from this location will put it on the map.'
 	});
 };
