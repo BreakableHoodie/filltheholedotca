@@ -61,16 +61,6 @@ When in doubt about whether something belongs in the repo, leave it out.
 npm run dev          # http://localhost:5173
 ```
 
-Running as a macOS LaunchAgent (`ca.fillthehole.dev`) — auto-starts on login.
-Logs: `logs/fillthehole.log`
-
-To restart the service:
-
-```bash
-launchctl unload ~/Library/LaunchAgents/ca.fillthehole.dev.plist
-launchctl load   ~/Library/LaunchAgents/ca.fillthehole.dev.plist
-```
-
 ## Environment
 
 Copy `.env.example` → `.env` with real values:
