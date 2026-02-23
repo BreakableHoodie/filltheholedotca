@@ -19,11 +19,12 @@ const SOURCES = [
 	}
 ];
 
-let cached: unknown = null;
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+let cached: { data: unknown; expiresAt: number } | null = null;
 
 export const GET: RequestHandler = async () => {
-	if (cached) {
-		return json(cached, { headers: { 'Cache-Control': 'public, max-age=86400' } });
+	if (cached && Date.now() < cached.expiresAt) {
+		return json(cached.data, { headers: { 'Cache-Control': 'public, max-age=86400' } });
 	}
 
 	const results = await Promise.allSettled(
@@ -46,7 +47,7 @@ export const GET: RequestHandler = async () => {
 	const features = results.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
 	if (!features.length) throw error(502, 'Ward boundary data unavailable');
 
-	cached = { type: 'FeatureCollection', features };
+	cached = { data: { type: 'FeatureCollection', features }, expiresAt: Date.now() + CACHE_TTL_MS };
 
-	return json(cached, { headers: { 'Cache-Control': 'public, max-age=86400' } });
+	return json(cached.data, { headers: { 'Cache-Control': 'public, max-age=86400' } });
 };

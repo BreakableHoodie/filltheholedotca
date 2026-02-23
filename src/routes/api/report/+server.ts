@@ -5,6 +5,14 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 
+/** Encode HTML entities in user-supplied strings before persistence. */
+function sanitize(s: string): string {
+	return s.replace(
+		/[&<>"']/g,
+		(c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[c] ?? c
+	);
+}
+
 const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
 // Kitchener–Waterloo–Cambridge (Waterloo Region), ON bounding box
@@ -121,8 +129,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.insert({
 			lat,
 			lng,
-			address: address?.trim() || null,
-			description: description?.trim() || null,
+			address: address ? sanitize(address.trim()) : null,
+			description: description ? sanitize(description.trim()) : null,
 			status: 'pending',
 			confirmed_count: 1
 		})
