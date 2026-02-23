@@ -1,6 +1,17 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Stats page', () => {
+	test.use({
+		storageState: {
+			cookies: [],
+			origins: [
+				{
+					origin: 'http://localhost:4173',
+					localStorage: [{ name: 'fth-welcomed', value: '1' }]
+				}
+			]
+		}
+	});
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/stats');
 	});
