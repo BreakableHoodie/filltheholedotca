@@ -11,14 +11,16 @@ module.exports = {
 				'http://localhost:4173/stats'
 			],
 			numberOfRuns: 1,
+			// puppeteerScript is an LHCI collect option (not a Lighthouse setting) —
+			// it must live here, not inside `settings`.
+			puppeteerScript: './lighthouse-setup.cjs',
 			settings: {
 				// Required for headless Chrome in CI
 				chromeFlags: '--no-sandbox --disable-setuid-sandbox',
 				// Preserve the localStorage set by the puppeteer setup script so the
 				// WelcomeModal is suppressed. Without this, Lighthouse clears storage
 				// before auditing and the script's work is undone.
-				disableStorageReset: true,
-				puppeteerScript: './lighthouse-setup.cjs'
+				disableStorageReset: true
 			}
 		},
 		assert: {
