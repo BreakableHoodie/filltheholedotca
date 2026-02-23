@@ -1,0 +1,49 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  lighthouse:
+    name: Lighthouse
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Start with placeholders, then overlay real public vars from secrets if present
+      - run: cp .env.example .env
+
+      - name: Override with real env vars
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -n "$PUBLIC_SUPABASE_URL" ]; then
+            sed -i "s|PUBLIC_SUPABASE_URL=.*|PUBLIC_SUPABASE_URL=$PUBLIC_SUPABASE_URL|" .env
+          fi
+          if [ -n "$PUBLIC_SUPABASE_ANON_KEY" ]; then
+            sed -i "s|PUBLIC_SUPABASE_ANON_KEY=.*|PUBLIC_SUPABASE_ANON_KEY=$PUBLIC_SUPABASE_ANON_KEY|" .env
+          fi
+          if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            sed -i "s|SUPABASE_SERVICE_ROLE_KEY=.*|SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY|" .env
+          fi
+
+      - run: npm run build
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: ./lighthouserc.cjs
+          temporaryPublicStorage: true
+          uploadArtifacts: true
