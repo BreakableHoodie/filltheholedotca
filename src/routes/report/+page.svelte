@@ -2,6 +2,7 @@
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 
 	const SEVERITY_OPTIONS = [
 		{ value: 'Spilled my coffee', emoji: '🟡', label: 'Spilled my coffee', sub: 'barely there' },
@@ -17,7 +18,19 @@
 	let severity = $state<string | null>(null);
 	let submitting = $state(false);
 
-	onMount(() => getLocation());
+	onMount(() => {
+		const urlLat = Number($page.url.searchParams.get('lat'));
+		const urlLng = Number($page.url.searchParams.get('lng'));
+
+		if (urlLat && urlLng) {
+			lat = urlLat;
+			lng = urlLng;
+			reverseGeocode(urlLat, urlLng);
+			return;
+		}
+
+		getLocation();
+	});
 
 	async function reverseGeocode(lat: number, lng: number) {
 		try {
@@ -65,7 +78,7 @@
 
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
-		if (gpsStatus !== 'got') return;
+		if (lat === null || lng === null) return;
 
 		submitting = true;
 		try {
@@ -172,7 +185,7 @@
 
 		<button
 			type="submit"
-			disabled={submitting || gpsStatus !== 'got'}
+			disabled={submitting || lat === null || lng === null}
 			class="w-full py-4 font-bold text-lg rounded-xl transition-colors disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed bg-sky-700 hover:bg-sky-600 text-white"
 		>
 			{submitting ? '⏳ Submitting...' : '📍 Report this hole'}

@@ -158,6 +158,26 @@ await expect(page.locator('[data-sonner-toaster]')).toContainText(
 });
 });
 
+test.describe('Report form — URL pre-fill', () => {
+	test('pre-fills location from ?lat=&lng= URL params', async ({ page }) => {
+		await page.route('*nominatim.openstreetmap.org/reverse*', async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ address: { road: 'King St N', suburb: 'Waterloo' } })
+			});
+		});
+
+		await page.goto('/report?lat=43.45&lng=-80.5');
+
+		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
+		if (await modalBtn.isVisible()) await modalBtn.click();
+
+		const submit = page.getByRole('button', { name: /Report this hole/i });
+		await expect(submit).not.toBeDisabled({ timeout: 3000 });
+	});
+});
+
 test.describe('Report form — GPS denied', () => {
 test.use({
 geolocation: undefined,
