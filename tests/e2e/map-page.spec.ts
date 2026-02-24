@@ -187,6 +187,7 @@ test.describe('Map page smoke test', () => {
 		await expect(mapContainer).toBeVisible({ timeout: 10000 });
 
 		// Focus the map container
+
 		await mapContainer.focus();
 		await expect(mapContainer).toBeFocused();
 
@@ -203,5 +204,35 @@ test.describe('Map page smoke test', () => {
 
 		// Map should still be visible and functional after keyboard interaction
 		await expect(mapContainer).toBeVisible();
+	});
+});
+
+test.describe('Main map — report here mode', () => {
+	test.use({
+		storageState: {
+			cookies: [],
+			origins: [{ origin: 'http://localhost:4173', localStorage: [{ name: 'fth-welcomed', value: '1' }] }]
+		}
+	});
+
+	test.beforeEach(async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 5000 });
+	});
+
+	test('shows Report here button', async ({ page }) => {
+		await expect(page.getByRole('button', { name: /Report here/i })).toBeVisible();
+	});
+
+	test('clicking Report here shows cancel banner', async ({ page }) => {
+		await page.getByRole('button', { name: /Report here/i }).click();
+		await expect(page.getByText(/Tap the map where the pothole is/i)).toBeVisible();
+		await expect(page.getByRole('button', { name: /Cancel/i })).toBeVisible();
+	});
+
+	test('cancel exits report mode', async ({ page }) => {
+		await page.getByRole('button', { name: /Report here/i }).click();
+		await page.getByRole('button', { name: /Cancel/i }).click();
+		await expect(page.getByText(/Tap the map where the pothole is/i)).toBeHidden();
 	});
 });
