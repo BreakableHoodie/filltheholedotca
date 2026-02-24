@@ -4,7 +4,7 @@
 	import { format } from 'date-fns';
 	import { STATUS_CONFIG } from '$lib/constants';
 	import type { PageData } from './$types';
-	import type { Pothole, PotholeStatus } from '$lib/types';
+	import type { Pothole } from '$lib/types';
 	import type { Councillor } from '$lib/wards';
 
 	let { data }: { data: PageData } = $props();
