@@ -66,6 +66,61 @@
 		addressSuggestions = [];
 	}
 
+	// Mini map state
+	let miniMapEl = $state<HTMLDivElement | undefined>(undefined);
+	let miniMapRef: import('leaflet').Map | null = null;
+	let miniPinRef: import('leaflet').Marker | null = null;
+
+	$effect(() => {
+		if (locationMode !== 'map') return;
+
+		const timer = setTimeout(async () => {
+			if (miniMapRef || !miniMapEl) return;
+
+			const leafletModule = await import('leaflet');
+			const L = leafletModule.default ?? leafletModule;
+
+			const center: [number, number] = lat !== null && lng !== null ? [lat, lng] : [43.425, -80.42];
+			const map = L.map(miniMapEl, { center, zoom: lat !== null ? 16 : 13 });
+			miniMapRef = map;
+
+			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+				attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+				maxZoom: 19
+			}).addTo(map);
+
+			if (lat !== null && lng !== null) {
+				miniPinRef = L.marker([lat, lng], { draggable: true }).addTo(map);
+				miniPinRef.on('dragend', () => {
+					const pos = miniPinRef!.getLatLng();
+					lat = pos.lat;
+					lng = pos.lng;
+					reverseGeocode(pos.lat, pos.lng);
+				});
+			}
+
+			map.on('click', (e) => {
+				lat = e.latlng.lat;
+				lng = e.latlng.lng;
+				reverseGeocode(e.latlng.lat, e.latlng.lng);
+
+				if (miniPinRef) {
+					miniPinRef.setLatLng(e.latlng);
+				} else {
+					miniPinRef = L.marker(e.latlng, { draggable: true }).addTo(map);
+					miniPinRef.on('dragend', () => {
+						const pos = miniPinRef!.getLatLng();
+						lat = pos.lat;
+						lng = pos.lng;
+						reverseGeocode(pos.lat, pos.lng);
+					});
+				}
+			});
+		}, 50);
+
+		return () => clearTimeout(timer);
+	});
+
 	onMount(() => {
 		const urlLat = Number($page.url.searchParams.get('lat'));
 		const urlLng = Number($page.url.searchParams.get('lng'));
@@ -259,9 +314,16 @@
 				{/if}
 			{/if}
 
-			<!-- Map panel — placeholder for Task 4 -->
+			<!-- Map pin-drop panel -->
 			{#if locationMode === 'map'}
-				<p class="text-xs text-zinc-500">Tap the map to place a pin</p>
+				<div bind:this={miniMapEl} class="w-full rounded-lg overflow-hidden" style="height: 260px;"></div>
+				{#if lat !== null}
+					<p class="text-xs text-zinc-400">
+						📌 {address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
+					</p>
+				{:else}
+					<p class="text-xs text-zinc-500">Tap the map to place a pin</p>
+				{/if}
 			{/if}
 		</div>
 

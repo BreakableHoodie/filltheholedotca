@@ -158,6 +158,41 @@ await expect(page.locator('[data-sonner-toaster]')).toContainText(
 });
 });
 
+test.describe('Report form — mini map tab', () => {
+	test('shows a map element when Pick on map tab is active', async ({ page }) => {
+		await page.goto('/report');
+		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
+		if (await modalBtn.isVisible()) {
+			await modalBtn.click();
+			await expect(page.locator('[aria-labelledby="welcome-title"]')).toBeHidden({ timeout: 5000 });
+		}
+
+		await page.getByRole('tab', { name: /Pick on map/i }).click();
+		await expect(page.locator('.leaflet-container').last()).toBeVisible({ timeout: 5000 });
+	});
+
+	test('map tab pre-shows pin when navigated from main map with URL params', async ({ page }) => {
+		await page.route(/nominatim\.openstreetmap\.org\/reverse/, async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ address: { road: 'Weber St', suburb: 'Kitchener' } })
+			});
+		});
+
+		await page.goto('/report?lat=43.45&lng=-80.5');
+		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
+		if (await modalBtn.isVisible()) {
+			await modalBtn.click();
+			await expect(page.locator('[aria-labelledby="welcome-title"]')).toBeHidden({ timeout: 5000 });
+		}
+
+		await expect(page.getByRole('tab', { name: /Pick on map/i }))
+			.toHaveAttribute('aria-selected', 'true', { timeout: 3000 });
+		await expect(page.locator('.leaflet-container').last()).toBeVisible({ timeout: 5000 });
+	});
+});
+
 test.describe('Report form — location tabs', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/report');
