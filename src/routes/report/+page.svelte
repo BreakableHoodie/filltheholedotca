@@ -30,30 +30,53 @@
 	let addressSuggestions = $state<Array<{ lat: string; lon: string; display_name: string }>>([]);
 	let addressSearching = $state(false);
 	let addressDebounce: ReturnType<typeof setTimeout> | null = null;
+	let addressAbortController: AbortController | null = null;
 
 	// Waterloo Region bounding box for Nominatim: minLon,minLat,maxLon,maxLat
 	const WR_VIEWBOX = '-80.59,43.32,-80.22,43.53';
 
 	async function searchAddress(query: string) {
-		if (query.trim().length < 3) {
+		const trimmedQuery = query.trim();
+		if (trimmedQuery.length < 3) {
 			addressSuggestions = [];
+			addressSearching = false;
+			if (addressAbortController) {
+				addressAbortController.abort();
+				addressAbortController = null;
+			}
 			return;
 		}
+
+		if (addressAbortController) {
+			addressAbortController.abort();
+		}
+		addressAbortController = new AbortController();
+		const controller = addressAbortController;
+
 		addressSearching = true;
 		try {
 			const params = new URLSearchParams({
-				q: query,
+				q: trimmedQuery,
 				format: 'json',
 				limit: '5',
 				viewbox: WR_VIEWBOX,
 				bounded: '1'
 			});
-			const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
-			addressSuggestions = await res.json();
-		} catch {
+			const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
+				signal: controller.signal
+			});
+			if (!res.ok) throw new Error(`Address search failed: ${res.status}`);
+			const suggestions = await res.json();
+			if (controller.signal.aborted || addressAbortController !== controller) return;
+			addressSuggestions = Array.isArray(suggestions) ? suggestions : [];
+		} catch (error) {
+			if (error instanceof DOMException && error.name === 'AbortError') return;
 			addressSuggestions = [];
 		} finally {
-			addressSearching = false;
+			if (addressAbortController === controller) {
+				addressSearching = false;
+				addressAbortController = null;
+			}
 		}
 	}
 
@@ -183,6 +206,10 @@
 			if (addressDebounce) {
 				clearTimeout(addressDebounce);
 			}
+			if (addressAbortController) {
+				addressAbortController.abort();
+				addressAbortController = null;
+			}
 			if (miniMapRef) {
 				miniMapRef.remove();
 				miniMapRef = null;
@@ -295,99 +322,111 @@
 			</div>
 
 			<!-- GPS panel -->
-			{#if locationMode === 'gps'}
-				<div role="tabpanel" id="location-panel-gps" aria-labelledby="location-tab-gps" class="space-y-2">
-					<button
-						type="button"
-						onclick={getLocation}
-						disabled={gpsStatus === 'loading'}
-						class="w-full py-3 rounded-lg border-2 border-dashed font-semibold text-sm transition-colors
-							{gpsStatus === 'got'
-								? 'border-green-500 bg-green-500/10 text-green-400'
-								: gpsStatus === 'error'
-								? 'border-red-500 bg-red-500/10 text-red-400'
-								: 'border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400'}"
-					>
-						{#if gpsStatus === 'loading'}
-							⏳ Getting your location...
-						{:else if gpsStatus === 'got'}
-							✓ GPS locked
-						{:else if gpsStatus === 'error'}
-							⚠️ GPS failed — tap to retry
-						{:else}
-							📍 Use my current location
-						{/if}
-					</button>
-
-					{#if gpsStatus === 'error'}
-						<p class="text-xs text-red-400" role="alert">
-							Location access is required to report a pothole. Please enable it in your browser settings and try again.
-						</p>
-					{/if}
-
-					{#if address}
-						<p class="text-xs text-zinc-400">📌 {address}</p>
+			<div
+				role="tabpanel"
+				id="location-panel-gps"
+				aria-labelledby="location-tab-gps"
+				hidden={locationMode !== 'gps'}
+				class="space-y-2"
+			>
+				<button
+					type="button"
+					onclick={getLocation}
+					disabled={gpsStatus === 'loading'}
+					class="w-full py-3 rounded-lg border-2 border-dashed font-semibold text-sm transition-colors
+						{gpsStatus === 'got'
+							? 'border-green-500 bg-green-500/10 text-green-400'
+							: gpsStatus === 'error'
+							? 'border-red-500 bg-red-500/10 text-red-400'
+							: 'border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400'}"
+				>
+					{#if gpsStatus === 'loading'}
+						⏳ Getting your location...
 					{:else if gpsStatus === 'got'}
-						<p class="text-xs text-zinc-400">Looking up address...</p>
+						✓ GPS locked
+					{:else if gpsStatus === 'error'}
+						⚠️ GPS failed — tap to retry
+					{:else}
+						📍 Use my current location
 					{/if}
-				</div>
-			{/if}
+				</button>
+
+				{#if gpsStatus === 'error'}
+					<p class="text-xs text-red-400" role="alert">
+						Location access is required to report a pothole. Please enable it in your browser settings and try again.
+					</p>
+				{/if}
+
+				{#if address}
+					<p class="text-xs text-zinc-400">📌 {address}</p>
+				{:else if gpsStatus === 'got'}
+					<p class="text-xs text-zinc-400">Looking up address...</p>
+				{/if}
+			</div>
 
 			<!-- Address panel -->
-			{#if locationMode === 'address'}
-				<div role="tabpanel" id="location-panel-address" aria-labelledby="location-tab-address" class="space-y-2">
-					<label for="address-search-input" class="block text-xs font-medium text-zinc-300">Address or intersection</label>
-					<div class="relative">
-						<input
-							id="address-search-input"
-							type="text"
-							placeholder="Enter an address or intersection…"
-							bind:value={addressQuery}
-							oninput={onAddressInput}
-							class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500"
-							autocomplete="off"
-						/>
-						{#if addressSearching}
-							<p class="text-xs text-zinc-500 mt-1">Searching…</p>
-						{/if}
-						{#if addressSuggestions.length > 0}
-							<ul
-								data-testid="address-suggestions"
-								class="absolute z-10 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl overflow-hidden"
-							>
-								{#each addressSuggestions as s (s.display_name)}
-									<li>
-										<button
-											type="button"
-											class="w-full text-left px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-700"
-											onclick={() => selectSuggestion(s)}
-										>
-											{s.display_name}
-										</button>
-									</li>
-								{/each}
-							</ul>
-						{/if}
-					</div>
-					{#if lat !== null && addressQuery && addressSuggestions.length === 0}
-						<p class="text-xs text-zinc-400">📌 {address}</p>
+			<div
+				role="tabpanel"
+				id="location-panel-address"
+				aria-labelledby="location-tab-address"
+				hidden={locationMode !== 'address'}
+				class="space-y-2"
+			>
+				<label for="address-search-input" class="block text-xs font-medium text-zinc-300">Address or intersection</label>
+				<div class="relative">
+					<input
+						id="address-search-input"
+						type="text"
+						placeholder="Enter an address or intersection…"
+						bind:value={addressQuery}
+						oninput={onAddressInput}
+						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500"
+						autocomplete="off"
+					/>
+					{#if addressSearching}
+						<p class="text-xs text-zinc-500 mt-1">Searching…</p>
+					{/if}
+					{#if addressSuggestions.length > 0}
+						<ul
+							data-testid="address-suggestions"
+							class="absolute z-10 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl overflow-hidden"
+						>
+							{#each addressSuggestions as s (s.display_name)}
+								<li>
+									<button
+										type="button"
+										class="w-full text-left px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-700"
+										onclick={() => selectSuggestion(s)}
+									>
+										{s.display_name}
+									</button>
+								</li>
+							{/each}
+						</ul>
 					{/if}
 				</div>
-			{/if}
+				{#if lat !== null && addressQuery && addressSuggestions.length === 0}
+					<p class="text-xs text-zinc-400">📌 {address}</p>
+				{/if}
+			</div>
 
 			<!-- Map pin-drop panel -->
-			{#if locationMode === 'map'}
-				<div role="tabpanel" id="location-panel-map" aria-labelledby="location-tab-map" class="space-y-2">
-					<div bind:this={miniMapEl} class="w-full rounded-lg overflow-hidden" style="height: 260px;"></div>
-					{#if lat !== null}
-						<p class="text-xs text-zinc-400">
-							📌 {address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
-						</p>
-					{:else}
-						<p class="text-xs text-zinc-500">Tap the map to place a pin</p>
-					{/if}
-				</div>
-			{/if}
+			<div
+				role="tabpanel"
+				id="location-panel-map"
+				aria-labelledby="location-tab-map"
+				hidden={locationMode !== 'map'}
+				class="space-y-2"
+			>
+				<div bind:this={miniMapEl} class="w-full rounded-lg overflow-hidden" style="height: 260px;"></div>
+				{#if lat !== null}
+					<p class="text-xs text-zinc-400">
+						📌 {address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
+					</p>
+				{:else}
+					<p class="text-xs text-zinc-500">Tap the map to place a pin</p>
+				{/if}
+			</div>
 		</div>
 
 		<!-- Severity -->

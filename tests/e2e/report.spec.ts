@@ -1,20 +1,20 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
-async function dismissWelcomeModalIfPresent(page: Page) {
-	const modal = page.locator('[aria-labelledby="welcome-title"]');
-	try {
-		await expect(modal).toBeVisible({ timeout: 1200 });
-	} catch {
-		return;
-	}
-	await page.getByRole('button', { name: /Show me the map/i }).click();
-	await expect(modal).toBeHidden({ timeout: 5000 });
-}
+const REPORT_STORAGE_STATE = {
+	cookies: [],
+	origins: [
+		{
+			origin: 'http://localhost:4173',
+			localStorage: [{ name: 'fth-welcomed', value: '1' }]
+		}
+	]
+};
+
+test.use({ storageState: REPORT_STORAGE_STATE });
 
 test.describe('Report form — no GPS', () => {
 	test.beforeEach(async ({ page }) => {
 	await page.goto('/report');
-	await dismissWelcomeModalIfPresent(page);
 	});
 
 test('starts with loading state due to auto-location', async ({ page }) => {
@@ -78,9 +78,8 @@ suburb: 'Waterloo'
 });
 });
 
-	await page.goto('/report');
-	await dismissWelcomeModalIfPresent(page);
-	});
+		await page.goto('/report');
+		});
 
 test('GPS button shows locked state after geolocation resolves', async ({ page }) => {
 // Debug visibility
@@ -160,7 +159,6 @@ await expect(page.locator('[data-sonner-toaster]')).toContainText(
 test.describe('Report form — mini map tab', () => {
 		test('shows a map element when Pick on map tab is active', async ({ page }) => {
 			await page.goto('/report');
-			await dismissWelcomeModalIfPresent(page);
 
 		await page.getByRole('tab', { name: /Pick on map/i }).click();
 		await expect(page.locator('.leaflet-container').last()).toBeVisible({ timeout: 5000 });
@@ -179,7 +177,6 @@ test.describe('Report form — mini map tab', () => {
 		);
 
 			await page.goto('/report?lat=43.45&lng=-80.5');
-			await dismissWelcomeModalIfPresent(page);
 
 		await expect(page.getByRole('tab', { name: /Pick on map/i }))
 			.toHaveAttribute('aria-selected', 'true', { timeout: 3000 });
@@ -188,10 +185,9 @@ test.describe('Report form — mini map tab', () => {
 });
 
 test.describe('Report form — location tabs', () => {
-	test.beforeEach(async ({ page }) => {
-		await page.goto('/report');
-		await dismissWelcomeModalIfPresent(page);
-	});
+		test.beforeEach(async ({ page }) => {
+			await page.goto('/report');
+		});
 
 	test('shows three location tabs', async ({ page }) => {
 		await expect(page.getByRole('tab', { name: /GPS/i })).toBeVisible();
@@ -227,7 +223,6 @@ test.describe('Report form — address search', () => {
 		);
 
 		await page.goto('/report');
-		await dismissWelcomeModalIfPresent(page);
 		await page.getByRole('tab', { name: /Address/i }).click();
 	});
 
@@ -262,7 +257,6 @@ test.describe('Report form — URL pre-fill', () => {
 		});
 
 		await page.goto('/report?lat=43.45&lng=-80.5');
-		await dismissWelcomeModalIfPresent(page);
 
 		const submit = page.getByRole('button', { name: /Report this hole/i });
 		await expect(submit).not.toBeDisabled({ timeout: 3000 });

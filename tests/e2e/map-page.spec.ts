@@ -235,4 +235,17 @@ test.describe('Main map — report here mode', () => {
 		await page.getByRole('button', { name: /Cancel/i }).click();
 		await expect(page.getByText(/Tap the map where the pothole is/i)).toBeHidden();
 	});
+
+	test('map click enables confirm and navigates to prefilled report URL', async ({ page }) => {
+		await page.getByRole('button', { name: /Report here/i }).click();
+		await expect(page.getByText(/Tap the map where the pothole is/i)).toBeVisible();
+
+		await page.locator('.leaflet-container').click({ position: { x: 260, y: 220 } });
+
+		const confirm = page.getByRole('button', { name: /Confirm location/i });
+		await expect(confirm).toBeVisible();
+		await confirm.click();
+
+		await expect(page).toHaveURL(/\/report\?lat=-?\d+(\.\d+)?&lng=-?\d+(\.\d+)?/, { timeout: 10000 });
+	});
 });

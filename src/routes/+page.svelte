@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import type { Map, Marker } from 'leaflet';
@@ -25,20 +25,24 @@
 	let reportPin: Marker | null = null;
 	// Non-reactive mirror for use inside Leaflet closures
 	let reportModeRef = false;
-	$effect(() => { reportModeRef = reportMode; });
+	let cancelReportModeButton = $state<HTMLButtonElement | null>(null);
 
-	function enterReportMode() {
+	async function enterReportMode() {
 		reportMode = true;
+		reportModeRef = true;
 		reportLatLng = null;
 		if (reportPin && mapRef) {
 			mapRef.removeLayer(reportPin);
 			reportPin = null;
 		}
 		if (mapRef) mapRef.getContainer().style.cursor = 'crosshair';
+		await tick();
+		cancelReportModeButton?.focus();
 	}
 
 	function exitReportMode() {
 		reportMode = false;
+		reportModeRef = false;
 		reportLatLng = null;
 		if (mapRef) mapRef.getContainer().style.cursor = '';
 		if (reportPin && mapRef) {
@@ -341,10 +345,16 @@
 
 	<!-- Report-here banner -->
 	{#if reportMode}
-		<div class="absolute top-4 left-1/2 -translate-x-1/2 z-[1001] flex items-center gap-3 bg-zinc-900/95 backdrop-blur border border-sky-600 rounded-xl px-4 py-2.5 shadow-xl">
+		<div
+			role="status"
+			aria-live="polite"
+			aria-atomic="true"
+			class="absolute top-4 left-1/2 -translate-x-1/2 z-[1001] flex items-center gap-3 bg-zinc-900/95 backdrop-blur border border-sky-600 rounded-xl px-4 py-2.5 shadow-xl"
+		>
 			<span class="text-sm text-white">Tap the map where the pothole is</span>
 			{#if reportLatLng}
 				<button
+					type="button"
 					onclick={confirmReportLocation}
 					class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
 				>
@@ -352,6 +362,8 @@
 				</button>
 			{/if}
 			<button
+				bind:this={cancelReportModeButton}
+				type="button"
 				onclick={exitReportMode}
 				class="text-zinc-400 hover:text-white text-xs px-2 py-1 rounded transition-colors"
 				aria-label="Cancel"
@@ -374,7 +386,9 @@
 
 			<!-- Report here button -->
 			<button
+				type="button"
 				onclick={enterReportMode}
+				aria-pressed={reportMode}
 				disabled={reportMode}
 				class="bg-sky-700/90 backdrop-blur border border-sky-600 hover:border-sky-400 rounded-xl px-3 py-2 text-xs text-white font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
 			>
