@@ -17,7 +17,13 @@
 	let address = $state<string | null>(null);
 	let severity = $state<string | null>(null);
 	let submitting = $state(false);
-	let locationMode = $state<'gps' | 'address' | 'map'>('gps');
+	const LOCATION_TABS = [
+		{ mode: 'gps', label: '📍 GPS' },
+		{ mode: 'address', label: '🔍 Address' },
+		{ mode: 'map', label: '🗺️ Pick on map' }
+	] as const;
+	type LocationMode = (typeof LOCATION_TABS)[number]['mode'];
+	let locationMode = $state<LocationMode>('gps');
 
 	// Address search state
 	let addressQuery = $state('');
@@ -42,9 +48,7 @@
 				viewbox: WR_VIEWBOX,
 				bounded: '1'
 			});
-			const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
-				headers: { 'User-Agent': 'fillthehole.ca' }
-			});
+			const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
 			addressSuggestions = await res.json();
 		} catch {
 			addressSuggestions = [];
@@ -71,12 +75,45 @@
 	let miniMapRef: import('leaflet').Map | null = null;
 	let miniPinRef: import('leaflet').Marker | null = null;
 
+	function handleLocationTabKeydown(event: KeyboardEvent, mode: LocationMode) {
+		const currentIndex = LOCATION_TABS.findIndex((tab) => tab.mode === mode);
+		if (currentIndex === -1) return;
+
+		let nextIndex: number | null = null;
+		if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+			nextIndex = (currentIndex + 1) % LOCATION_TABS.length;
+		} else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+			nextIndex = (currentIndex - 1 + LOCATION_TABS.length) % LOCATION_TABS.length;
+		} else if (event.key === 'Home') {
+			nextIndex = 0;
+		} else if (event.key === 'End') {
+			nextIndex = LOCATION_TABS.length - 1;
+		}
+
+		if (nextIndex === null || nextIndex === currentIndex) return;
+		event.preventDefault();
+		const nextMode = LOCATION_TABS[nextIndex].mode;
+		locationMode = nextMode;
+		queueMicrotask(() => {
+			const tab = document.getElementById(`location-tab-${nextMode}`) as HTMLButtonElement | null;
+			tab?.focus();
+		});
+	}
+
 	$effect(() => {
-		if (locationMode !== 'map') return;
+		if (locationMode !== 'map') {
+			if (miniMapRef) {
+				miniMapRef.remove();
+				miniMapRef = null;
+				miniPinRef = null;
+			}
+			return;
+		}
 
 		const timer = setTimeout(async () => {
-			if (miniMapRef || !miniMapEl) return;
+			if (!miniMapEl || miniMapRef) return;
 
+			await import('leaflet/dist/leaflet.css');
 			const leafletModule = await import('leaflet');
 			const L = leafletModule.default ?? leafletModule;
 
@@ -116,32 +153,47 @@
 					});
 				}
 			});
+			map.invalidateSize();
 		}, 50);
 
 		return () => clearTimeout(timer);
 	});
 
 	onMount(() => {
-		const urlLat = Number($page.url.searchParams.get('lat'));
-		const urlLng = Number($page.url.searchParams.get('lng'));
-
-		if (urlLat && urlLng) {
-			lat = urlLat;
-			lng = urlLng;
-			locationMode = 'map';
-			reverseGeocode(urlLat, urlLng);
-			return;
+		const searchParams = $page.url.searchParams;
+		const hasLatParam = searchParams.has('lat');
+		const hasLngParam = searchParams.has('lng');
+		if (hasLatParam && hasLngParam) {
+			const latParam = searchParams.get('lat');
+			const lngParam = searchParams.get('lng');
+			const urlLat = latParam !== null ? Number(latParam) : NaN;
+			const urlLng = lngParam !== null ? Number(lngParam) : NaN;
+			if (Number.isFinite(urlLat) && Number.isFinite(urlLng)) {
+				lat = urlLat;
+				lng = urlLng;
+				locationMode = 'map';
+				reverseGeocode(urlLat, urlLng);
+				return;
+			}
 		}
 
 		getLocation();
+
+		return () => {
+			if (addressDebounce) {
+				clearTimeout(addressDebounce);
+			}
+			if (miniMapRef) {
+				miniMapRef.remove();
+				miniMapRef = null;
+				miniPinRef = null;
+			}
+		};
 	});
 
 	async function reverseGeocode(lat: number, lng: number) {
 		try {
-			const res = await fetch(
-				`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-				{ headers: { 'User-Agent': 'fillthehole.ca' } }
-			);
+			const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
 			const data = await res.json();
 			const a = data.address ?? {};
 			const parts = [a.house_number, a.road, a.suburb].filter(Boolean);
@@ -221,109 +273,120 @@
 			<div class="text-sm font-semibold text-zinc-300">📍 Location</div>
 
 			<!-- Tab bar -->
-			<div role="tablist" class="flex gap-1 bg-zinc-800 rounded-lg p-1">
-				{#each ([['gps', '📍 GPS'], ['address', '🔍 Address'], ['map', '🗺️ Pick on map']] as const) as [mode, label] (mode)}
+			<div role="tablist" aria-label="Choose a location source" class="flex gap-1 bg-zinc-800 rounded-lg p-1">
+				{#each LOCATION_TABS as tab (tab.mode)}
 					<button
+						id={`location-tab-${tab.mode}`}
 						role="tab"
-						aria-selected={locationMode === mode}
+						aria-selected={locationMode === tab.mode}
+						aria-controls={`location-panel-${tab.mode}`}
+						tabindex={locationMode === tab.mode ? 0 : -1}
 						type="button"
-						onclick={() => (locationMode = mode)}
+						onclick={() => (locationMode = tab.mode)}
+						onkeydown={(event) => handleLocationTabKeydown(event, tab.mode)}
 						class="flex-1 py-1.5 px-2 rounded-md text-xs font-semibold transition-colors
-							{locationMode === mode
+							{locationMode === tab.mode
 								? 'bg-zinc-700 text-white'
 								: 'text-zinc-400 hover:text-zinc-200'}"
 					>
-						{label}
+						{tab.label}
 					</button>
 				{/each}
 			</div>
 
 			<!-- GPS panel -->
 			{#if locationMode === 'gps'}
-				<button
-					type="button"
-					onclick={getLocation}
-					disabled={gpsStatus === 'loading'}
-					class="w-full py-3 rounded-lg border-2 border-dashed font-semibold text-sm transition-colors
-						{gpsStatus === 'got'
-							? 'border-green-500 bg-green-500/10 text-green-400'
-							: gpsStatus === 'error'
-							? 'border-red-500 bg-red-500/10 text-red-400'
-							: 'border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400'}"
-				>
-					{#if gpsStatus === 'loading'}
-						⏳ Getting your location...
-					{:else if gpsStatus === 'got'}
-						✓ GPS locked
-					{:else if gpsStatus === 'error'}
-						⚠️ GPS failed — tap to retry
-					{:else}
-						📍 Use my current location
+				<div role="tabpanel" id="location-panel-gps" aria-labelledby="location-tab-gps" class="space-y-2">
+					<button
+						type="button"
+						onclick={getLocation}
+						disabled={gpsStatus === 'loading'}
+						class="w-full py-3 rounded-lg border-2 border-dashed font-semibold text-sm transition-colors
+							{gpsStatus === 'got'
+								? 'border-green-500 bg-green-500/10 text-green-400'
+								: gpsStatus === 'error'
+								? 'border-red-500 bg-red-500/10 text-red-400'
+								: 'border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400'}"
+					>
+						{#if gpsStatus === 'loading'}
+							⏳ Getting your location...
+						{:else if gpsStatus === 'got'}
+							✓ GPS locked
+						{:else if gpsStatus === 'error'}
+							⚠️ GPS failed — tap to retry
+						{:else}
+							📍 Use my current location
+						{/if}
+					</button>
+
+					{#if gpsStatus === 'error'}
+						<p class="text-xs text-red-400" role="alert">
+							Location access is required to report a pothole. Please enable it in your browser settings and try again.
+						</p>
 					{/if}
-				</button>
 
-				{#if gpsStatus === 'error'}
-					<p class="text-xs text-red-400" role="alert">
-						Location access is required to report a pothole. Please enable it in your browser settings and try again.
-					</p>
-				{/if}
-
-				{#if address}
-					<p class="text-xs text-zinc-400">📌 {address}</p>
-				{:else if gpsStatus === 'got'}
-					<p class="text-xs text-zinc-400">Looking up address...</p>
-				{/if}
+					{#if address}
+						<p class="text-xs text-zinc-400">📌 {address}</p>
+					{:else if gpsStatus === 'got'}
+						<p class="text-xs text-zinc-400">Looking up address...</p>
+					{/if}
+				</div>
 			{/if}
 
 			<!-- Address panel -->
 			{#if locationMode === 'address'}
-				<div class="relative">
-					<input
-						type="text"
-						placeholder="Enter an address or intersection…"
-						bind:value={addressQuery}
-						oninput={onAddressInput}
-						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500"
-						autocomplete="off"
-					/>
-					{#if addressSearching}
-						<p class="text-xs text-zinc-500 mt-1">Searching…</p>
-					{/if}
-					{#if addressSuggestions.length > 0}
-						<ul
-							role="listbox"
-							class="absolute z-10 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl overflow-hidden"
-						>
-							{#each addressSuggestions as s (s.display_name)}
-								<li
-									role="option"
-									aria-selected={address === s.display_name}
-									class="px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-700 cursor-pointer"
-									onclick={() => selectSuggestion(s)}
-									onkeydown={(e) => e.key === 'Enter' && selectSuggestion(s)}
-									tabindex="0"
-								>
-									{s.display_name}
-								</li>
-							{/each}
-						</ul>
+				<div role="tabpanel" id="location-panel-address" aria-labelledby="location-tab-address" class="space-y-2">
+					<label for="address-search-input" class="block text-xs font-medium text-zinc-300">Address or intersection</label>
+					<div class="relative">
+						<input
+							id="address-search-input"
+							type="text"
+							placeholder="Enter an address or intersection…"
+							bind:value={addressQuery}
+							oninput={onAddressInput}
+							class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500"
+							autocomplete="off"
+						/>
+						{#if addressSearching}
+							<p class="text-xs text-zinc-500 mt-1">Searching…</p>
+						{/if}
+						{#if addressSuggestions.length > 0}
+							<ul
+								data-testid="address-suggestions"
+								class="absolute z-10 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl overflow-hidden"
+							>
+								{#each addressSuggestions as s (s.display_name)}
+									<li>
+										<button
+											type="button"
+											class="w-full text-left px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-700"
+											onclick={() => selectSuggestion(s)}
+										>
+											{s.display_name}
+										</button>
+									</li>
+								{/each}
+							</ul>
+						{/if}
+					</div>
+					{#if lat !== null && addressQuery && addressSuggestions.length === 0}
+						<p class="text-xs text-zinc-400">📌 {address}</p>
 					{/if}
 				</div>
-				{#if lat !== null && addressQuery && addressSuggestions.length === 0}
-					<p class="text-xs text-zinc-400">📌 {address}</p>
-				{/if}
 			{/if}
 
 			<!-- Map pin-drop panel -->
 			{#if locationMode === 'map'}
-				<div bind:this={miniMapEl} class="w-full rounded-lg overflow-hidden" style="height: 260px;"></div>
-				{#if lat !== null}
-					<p class="text-xs text-zinc-400">
-						📌 {address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
-					</p>
-				{:else}
-					<p class="text-xs text-zinc-500">Tap the map to place a pin</p>
-				{/if}
+				<div role="tabpanel" id="location-panel-map" aria-labelledby="location-tab-map" class="space-y-2">
+					<div bind:this={miniMapEl} class="w-full rounded-lg overflow-hidden" style="height: 260px;"></div>
+					{#if lat !== null}
+						<p class="text-xs text-zinc-400">
+							📌 {address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
+						</p>
+					{:else}
+						<p class="text-xs text-zinc-500">Tap the map to place a pin</p>
+					{/if}
+				</div>
 			{/if}
 		</div>
 

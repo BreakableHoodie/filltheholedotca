@@ -30,6 +30,10 @@
 	function enterReportMode() {
 		reportMode = true;
 		reportLatLng = null;
+		if (reportPin && mapRef) {
+			mapRef.removeLayer(reportPin);
+			reportPin = null;
+		}
 		if (mapRef) mapRef.getContainer().style.cursor = 'crosshair';
 	}
 
@@ -371,7 +375,8 @@
 			<!-- Report here button -->
 			<button
 				onclick={enterReportMode}
-				class="bg-sky-700/90 backdrop-blur border border-sky-600 hover:border-sky-400 rounded-xl px-3 py-2 text-xs text-white font-semibold transition-colors flex items-center gap-1.5"
+				disabled={reportMode}
+				class="bg-sky-700/90 backdrop-blur border border-sky-600 hover:border-sky-400 rounded-xl px-3 py-2 text-xs text-white font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
 			>
 				📍 Report here
 			</button>

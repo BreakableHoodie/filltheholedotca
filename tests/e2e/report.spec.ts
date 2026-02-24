@@ -1,16 +1,21 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+async function dismissWelcomeModalIfPresent(page: Page) {
+	const modal = page.locator('[aria-labelledby="welcome-title"]');
+	try {
+		await expect(modal).toBeVisible({ timeout: 1200 });
+	} catch {
+		return;
+	}
+	await page.getByRole('button', { name: /Show me the map/i }).click();
+	await expect(modal).toBeHidden({ timeout: 5000 });
+}
 
 test.describe('Report form — no GPS', () => {
-test.beforeEach(async ({ page }) => {
-await page.goto('/report');
-
-// Close welcome modal if present
-const modalBtn = page.getByRole('button', { name: /Show me the map/i });
-if (await modalBtn.isVisible()) {
-await modalBtn.click();
-await expect(modalBtn).toBeHidden();
-}
-});
+	test.beforeEach(async ({ page }) => {
+	await page.goto('/report');
+	await dismissWelcomeModalIfPresent(page);
+	});
 
 test('starts with loading state due to auto-location', async ({ page }) => {
 // Since onMount triggers getLocation, it should show loading or error
@@ -73,15 +78,9 @@ suburb: 'Waterloo'
 });
 });
 
-await page.goto('/report');
-
-// Close welcome modal if present
-const modalBtn = page.getByRole('button', { name: /Show me the map/i });
-if (await modalBtn.isVisible()) {
-await modalBtn.click();
-await expect(modalBtn).toBeHidden();
-}
-});
+	await page.goto('/report');
+	await dismissWelcomeModalIfPresent(page);
+	});
 
 test('GPS button shows locked state after geolocation resolves', async ({ page }) => {
 // Debug visibility
@@ -159,13 +158,9 @@ await expect(page.locator('[data-sonner-toaster]')).toContainText(
 });
 
 test.describe('Report form — mini map tab', () => {
-	test('shows a map element when Pick on map tab is active', async ({ page }) => {
-		await page.goto('/report');
-		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
-		if (await modalBtn.isVisible()) {
-			await modalBtn.click();
-			await expect(page.locator('[aria-labelledby="welcome-title"]')).toBeHidden({ timeout: 5000 });
-		}
+		test('shows a map element when Pick on map tab is active', async ({ page }) => {
+			await page.goto('/report');
+			await dismissWelcomeModalIfPresent(page);
 
 		await page.getByRole('tab', { name: /Pick on map/i }).click();
 		await expect(page.locator('.leaflet-container').last()).toBeVisible({ timeout: 5000 });
@@ -183,12 +178,8 @@ test.describe('Report form — mini map tab', () => {
 			}
 		);
 
-		await page.goto('/report?lat=43.45&lng=-80.5');
-		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
-		if (await modalBtn.isVisible()) {
-			await modalBtn.click();
-			await expect(page.locator('[aria-labelledby="welcome-title"]')).toBeHidden({ timeout: 5000 });
-		}
+			await page.goto('/report?lat=43.45&lng=-80.5');
+			await dismissWelcomeModalIfPresent(page);
 
 		await expect(page.getByRole('tab', { name: /Pick on map/i }))
 			.toHaveAttribute('aria-selected', 'true', { timeout: 3000 });
@@ -199,8 +190,7 @@ test.describe('Report form — mini map tab', () => {
 test.describe('Report form — location tabs', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/report');
-		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
-		if (await modalBtn.isVisible()) await modalBtn.click();
+		await dismissWelcomeModalIfPresent(page);
 	});
 
 	test('shows three location tabs', async ({ page }) => {
@@ -237,11 +227,7 @@ test.describe('Report form — address search', () => {
 		);
 
 		await page.goto('/report');
-		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
-		if (await modalBtn.isVisible()) {
-			await modalBtn.click();
-			await expect(page.locator('[aria-labelledby="welcome-title"]')).toBeHidden({ timeout: 5000 });
-		}
+		await dismissWelcomeModalIfPresent(page);
 		await page.getByRole('tab', { name: /Address/i }).click();
 	});
 
@@ -251,14 +237,14 @@ test.describe('Report form — address search', () => {
 
 	test('typing shows suggestions dropdown', async ({ page }) => {
 		await page.getByPlaceholder(/Enter an address/i).fill('King St');
-		await expect(page.getByRole('listbox')).toBeVisible({ timeout: 1000 });
-		await expect(page.getByRole('option').first()).toContainText('King St N');
+		await expect(page.locator('[data-testid="address-suggestions"]')).toBeVisible({ timeout: 1000 });
+		await expect(page.locator('[data-testid="address-suggestions"] button').first()).toContainText('King St N');
 	});
 
 	test('selecting a suggestion enables submit button', async ({ page }) => {
 		await page.getByPlaceholder(/Enter an address/i).fill('King St');
-		await expect(page.getByRole('listbox')).toBeVisible({ timeout: 1000 });
-		await page.getByRole('option').first().click();
+		await expect(page.locator('[data-testid="address-suggestions"]')).toBeVisible({ timeout: 1000 });
+		await page.locator('[data-testid="address-suggestions"] button').first().click();
 
 		const submit = page.getByRole('button', { name: /Report this hole/i });
 		await expect(submit).not.toBeDisabled();
@@ -276,9 +262,7 @@ test.describe('Report form — URL pre-fill', () => {
 		});
 
 		await page.goto('/report?lat=43.45&lng=-80.5');
-
-		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
-		if (await modalBtn.isVisible()) await modalBtn.click();
+		await dismissWelcomeModalIfPresent(page);
 
 		const submit = page.getByRole('button', { name: /Report this hole/i });
 		await expect(submit).not.toBeDisabled({ timeout: 3000 });
