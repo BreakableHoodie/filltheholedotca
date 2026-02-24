@@ -19,6 +19,53 @@
 	let submitting = $state(false);
 	let locationMode = $state<'gps' | 'address' | 'map'>('gps');
 
+	// Address search state
+	let addressQuery = $state('');
+	let addressSuggestions = $state<Array<{ lat: string; lon: string; display_name: string }>>([]);
+	let addressSearching = $state(false);
+	let addressDebounce: ReturnType<typeof setTimeout> | null = null;
+
+	// Waterloo Region bounding box for Nominatim: minLon,minLat,maxLon,maxLat
+	const WR_VIEWBOX = '-80.59,43.32,-80.22,43.53';
+
+	async function searchAddress(query: string) {
+		if (query.trim().length < 3) {
+			addressSuggestions = [];
+			return;
+		}
+		addressSearching = true;
+		try {
+			const params = new URLSearchParams({
+				q: query,
+				format: 'json',
+				limit: '5',
+				viewbox: WR_VIEWBOX,
+				bounded: '1'
+			});
+			const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
+				headers: { 'User-Agent': 'fillthehole.ca' }
+			});
+			addressSuggestions = await res.json();
+		} catch {
+			addressSuggestions = [];
+		} finally {
+			addressSearching = false;
+		}
+	}
+
+	function onAddressInput() {
+		if (addressDebounce) clearTimeout(addressDebounce);
+		addressDebounce = setTimeout(() => searchAddress(addressQuery), 300);
+	}
+
+	function selectSuggestion(s: { lat: string; lon: string; display_name: string }) {
+		lat = parseFloat(s.lat);
+		lng = parseFloat(s.lon);
+		address = s.display_name;
+		addressQuery = s.display_name;
+		addressSuggestions = [];
+	}
+
 	onMount(() => {
 		const urlLat = Number($page.url.searchParams.get('lat'));
 		const urlLng = Number($page.url.searchParams.get('lng'));
@@ -173,14 +220,43 @@
 				{/if}
 			{/if}
 
-			<!-- Address panel — placeholder for Task 3 -->
+			<!-- Address panel -->
 			{#if locationMode === 'address'}
-				<input
-					type="text"
-					placeholder="Enter an address or intersection…"
-					disabled
-					class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500"
-				/>
+				<div class="relative">
+					<input
+						type="text"
+						placeholder="Enter an address or intersection…"
+						bind:value={addressQuery}
+						oninput={onAddressInput}
+						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500"
+						autocomplete="off"
+					/>
+					{#if addressSearching}
+						<p class="text-xs text-zinc-500 mt-1">Searching…</p>
+					{/if}
+					{#if addressSuggestions.length > 0}
+						<ul
+							role="listbox"
+							class="absolute z-10 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl overflow-hidden"
+						>
+							{#each addressSuggestions as s (s.display_name)}
+								<li
+									role="option"
+									aria-selected={address === s.display_name}
+									class="px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-700 cursor-pointer"
+									onclick={() => selectSuggestion(s)}
+									onkeydown={(e) => e.key === 'Enter' && selectSuggestion(s)}
+									tabindex="0"
+								>
+									{s.display_name}
+								</li>
+							{/each}
+						</ul>
+					{/if}
+				</div>
+				{#if lat !== null && addressQuery && addressSuggestions.length === 0}
+					<p class="text-xs text-zinc-400">📌 {address}</p>
+				{/if}
 			{/if}
 
 			<!-- Map panel — placeholder for Task 4 -->

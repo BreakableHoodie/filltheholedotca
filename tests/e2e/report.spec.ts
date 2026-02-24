@@ -182,6 +182,48 @@ test.describe('Report form — location tabs', () => {
 	});
 });
 
+test.describe('Report form — address search', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.route(/nominatim\.openstreetmap\.org\/search/, async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify([
+					{ lat: '43.45', lon: '-80.50', display_name: '123 King St N, Waterloo, ON' },
+					{ lat: '43.46', lon: '-80.51', display_name: '456 King St N, Waterloo, ON' }
+				])
+			});
+		});
+
+		await page.goto('/report');
+		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
+		if (await modalBtn.isVisible()) {
+			await modalBtn.click();
+			await expect(page.locator('[aria-labelledby="welcome-title"]')).toBeHidden({ timeout: 5000 });
+		}
+		await page.getByRole('tab', { name: /Address/i }).click();
+	});
+
+	test('shows address input on Address tab', async ({ page }) => {
+		await expect(page.getByPlaceholder(/Enter an address/i)).toBeVisible();
+	});
+
+	test('typing shows suggestions dropdown', async ({ page }) => {
+		await page.getByPlaceholder(/Enter an address/i).fill('King St');
+		await expect(page.getByRole('listbox')).toBeVisible({ timeout: 1000 });
+		await expect(page.getByRole('option').first()).toContainText('King St N');
+	});
+
+	test('selecting a suggestion enables submit button', async ({ page }) => {
+		await page.getByPlaceholder(/Enter an address/i).fill('King St');
+		await expect(page.getByRole('listbox')).toBeVisible({ timeout: 1000 });
+		await page.getByRole('option').first().click();
+
+		const submit = page.getByRole('button', { name: /Report this hole/i });
+		await expect(submit).not.toBeDisabled();
+	});
+});
+
 test.describe('Report form — URL pre-fill', () => {
 	test('pre-fills location from ?lat=&lng= URL params', async ({ page }) => {
 		await page.route('*nominatim.openstreetmap.org/reverse*', async (route) => {
