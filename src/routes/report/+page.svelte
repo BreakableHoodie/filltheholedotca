@@ -363,7 +363,7 @@
 		</button>
 
 		<p class="text-xs text-zinc-400 text-center">
-			Reports require GPS. Three independent reports from the same location are needed before a pothole appears on the map.
+			Three independent reports from the same location are needed before a pothole appears on the map.
 		</p>
 		<p class="text-xs text-zinc-400 text-center">
 			On a major road? It may be maintained by the Region of Waterloo, not the City. <a href="/about" class="underline hover:text-white">Learn more →</a>
