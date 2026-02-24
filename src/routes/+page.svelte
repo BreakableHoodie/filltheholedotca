@@ -8,6 +8,7 @@
 	import { COUNCILLORS } from '$lib/wards';
 	import { inWardFeature } from '$lib/geo';
 	import { STATUS_CONFIG } from '$lib/constants';
+	import { escapeHtml } from '$lib/escape';
 
 	let { data }: { data: PageData } = $props();
 
@@ -155,10 +156,6 @@
 		} finally {
 			wardLoading = false;
 		}
-	}
-
-	function escapeHtml(str: string): string {
-		return str.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c] ?? c));
 	}
 
 	onMount(async () => {

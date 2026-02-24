@@ -29,8 +29,8 @@ const CONFIRMATIONS_REQUIRED = 3;
 const reportSchema = z.object({
 	lat: z.number().finite().min(-90).max(90),
 	lng: z.number().finite().min(-180).max(180),
-	address: z.string().max(255).nullable().optional(),
-	description: z.string().max(500).nullable().optional()
+	address: z.string().trim().max(255).nullable().optional(),
+	description: z.string().trim().max(500).nullable().optional()
 });
 
 type ConfirmationResult =
