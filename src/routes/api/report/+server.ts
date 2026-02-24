@@ -23,7 +23,7 @@ const GEOFENCE = {
 	lngMax: -80.22
 };
 
-const MERGE_RADIUS_M = 50;
+const MERGE_RADIUS_M = 25;
 const CONFIRMATIONS_REQUIRED = 3;
 
 const reportSchema = z.object({
