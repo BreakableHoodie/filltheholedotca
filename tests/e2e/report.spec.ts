@@ -172,13 +172,16 @@ test.describe('Report form — mini map tab', () => {
 	});
 
 	test('map tab pre-shows pin when navigated from main map with URL params', async ({ page }) => {
-		await page.route(/nominatim\.openstreetmap\.org\/reverse/, async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({ address: { road: 'Weber St', suburb: 'Kitchener' } })
-			});
-		});
+		await page.route(
+			(url) => url.hostname === 'nominatim.openstreetmap.org' && url.pathname === '/reverse',
+			async (route) => {
+				await route.fulfill({
+					status: 200,
+					contentType: 'application/json',
+					body: JSON.stringify({ address: { road: 'Weber St', suburb: 'Kitchener' } })
+				});
+			}
+		);
 
 		await page.goto('/report?lat=43.45&lng=-80.5');
 		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
@@ -219,16 +222,19 @@ test.describe('Report form — location tabs', () => {
 
 test.describe('Report form — address search', () => {
 	test.beforeEach(async ({ page }) => {
-		await page.route(/nominatim\.openstreetmap\.org\/search/, async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify([
-					{ lat: '43.45', lon: '-80.50', display_name: '123 King St N, Waterloo, ON' },
-					{ lat: '43.46', lon: '-80.51', display_name: '456 King St N, Waterloo, ON' }
-				])
-			});
-		});
+		await page.route(
+			(url) => url.hostname === 'nominatim.openstreetmap.org' && url.pathname === '/search',
+			async (route) => {
+				await route.fulfill({
+					status: 200,
+					contentType: 'application/json',
+					body: JSON.stringify([
+						{ lat: '43.45', lon: '-80.50', display_name: '123 King St N, Waterloo, ON' },
+						{ lat: '43.46', lon: '-80.51', display_name: '456 King St N, Waterloo, ON' }
+					])
+				});
+			}
+		);
 
 		await page.goto('/report');
 		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
