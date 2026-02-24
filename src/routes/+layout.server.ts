@@ -14,13 +14,12 @@ export const load: LayoutServerLoad = async () => {
 		}
 
 		const reported = data?.filter((p) => p.status === 'reported').length ?? 0;
-		const flagged = data?.filter((p) => p.status === 'wanksyd').length ?? 0;
 		const filled = data?.filter((p) => p.status === 'filled').length ?? 0;
 
-		return { counts: { reported, flagged, filled } };
+		return { counts: { reported, filled } };
 	} catch (e) {
 		console.error('Supabase load exception:', e);
-		return { counts: { reported: 0, flagged: 0, filled: 0 } };
+		return { counts: { reported: 0, filled: 0 } };
 	}
 
 };

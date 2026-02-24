@@ -17,8 +17,9 @@ function isAuthorized(authHeader: string | null): boolean {
 	return expected.length === provided.length && timingSafeEqual(expected, provided);
 }
 
-export const DELETE: RequestHandler = async ({ request, params }) => {
+export const DELETE: RequestHandler = async ({ request, params, getClientAddress }) => {
 	if (!isAuthorized(request.headers.get('Authorization'))) {
+		console.warn(`[admin] Unauthorized DELETE attempt from ${getClientAddress()}`);
 		throw error(401, 'Unauthorized');
 	}
 
@@ -29,6 +30,8 @@ export const DELETE: RequestHandler = async ({ request, params }) => {
 	}
 
 	const { id } = parsed.data;
+
+	console.info(`[admin] DELETE pothole ${id}`);
 
 	// Confirmations cascade-delete via FK, but be explicit
 	await adminSupabase.from('pothole_confirmations').delete().eq('pothole_id', id);

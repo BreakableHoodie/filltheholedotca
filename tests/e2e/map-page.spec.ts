@@ -152,6 +152,34 @@ test.describe('Map page smoke test', () => {
 		await expect(page.getByRole('link', { name: /about/i })).toBeVisible();
 	});
 
+	test.describe('Map layer panel', () => {
+		test('shows a Layers panel', async ({ page }) => {
+			await page.goto('/');
+			await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 5000 });
+			await expect(page.getByText(/Layers/i)).toBeVisible();
+		});
+
+		test('Reported layer is on by default', async ({ page }) => {
+			await page.goto('/');
+			await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 5000 });
+			const toggle = page.getByRole('checkbox', { name: /Reported/i });
+			await expect(toggle).toBeChecked();
+		});
+
+		test('Expired and Filled layers are off by default', async ({ page }) => {
+			await page.goto('/');
+			await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 5000 });
+			await expect(page.getByRole('checkbox', { name: /Expired/i })).not.toBeChecked();
+			await expect(page.getByRole('checkbox', { name: /Filled/i })).not.toBeChecked();
+		});
+
+		test('Ward heatmap toggle is in the layers panel', async ({ page }) => {
+			await page.goto('/');
+			await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 5000 });
+			await expect(page.getByRole('checkbox', { name: /Ward heatmap/i })).toBeVisible();
+		});
+	});
+
 	test('map page responds to keyboard navigation', async ({ page }) => {
 		await page.goto('/');
 
