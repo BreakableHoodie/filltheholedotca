@@ -5,29 +5,12 @@ import { test, expect } from '@playwright/test';
 // The "valid UUID" tests confirm schema acceptance; downstream DB behaviour
 // (409 wrong status, 500 no connection) is intentionally outside scope here.
 
-test.describe('Wanksy API (/api/wanksy)', () => {
-	test('rejects request with missing id', async ({ request }) => {
-		const response = await request.post('/api/wanksy', { data: {} });
-		expect(response.status()).toBe(400);
-		const body = await response.json();
-		expect(body.message).toMatch(/Invalid request/i);
-	});
-
-	test('rejects request with a non-UUID id', async ({ request }) => {
-		const response = await request.post('/api/wanksy', { data: { id: 'not-a-uuid' } });
-		expect(response.status()).toBe(400);
-		const body = await response.json();
-		expect(body.message).toMatch(/Invalid request/i);
-	});
-
-	test('accepts a valid UUID — zod validation passes, DB is not exercised', async ({
-		request
-	}) => {
+test.describe('Wanksy API — removed', () => {
+	test('/api/wanksy returns 404 after removal', async ({ request }) => {
 		const response = await request.post('/api/wanksy', {
 			data: { id: '550e8400-e29b-41d4-a716-446655440000' }
 		});
-		// Not 400 means the schema accepted the input
-		expect(response.status()).not.toBe(400);
+		expect(response.status()).toBe(404);
 	});
 });
 
