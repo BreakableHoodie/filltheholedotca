@@ -343,16 +343,15 @@
 		</div>
 	{/if}
 
-	<!-- Report-here banner -->
-	{#if reportMode}
-		<div
-			role="status"
-			aria-live="polite"
-			aria-atomic="true"
-			class="absolute top-4 left-1/2 -translate-x-1/2 z-[1001] flex items-center gap-3 bg-zinc-900/95 backdrop-blur border border-sky-600 rounded-xl px-4 py-2.5 shadow-xl"
-		>
-			<span class="text-sm text-white">Tap the map where the pothole is</span>
-			{#if reportLatLng}
+		<!-- Report-here banner -->
+		{#if reportMode}
+			<div
+				class="absolute top-4 left-1/2 -translate-x-1/2 z-[1001] flex items-center gap-3 bg-zinc-900/95 backdrop-blur border border-sky-600 rounded-xl px-4 py-2.5 shadow-xl"
+			>
+				<span class="text-sm text-white" aria-live="polite" aria-atomic="true">
+					Tap the map where the pothole is
+				</span>
+				{#if reportLatLng}
 				<button
 					type="button"
 					onclick={confirmReportLocation}
