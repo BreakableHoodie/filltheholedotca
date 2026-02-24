@@ -34,11 +34,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.from('potholes')
 		.update({ status: 'filled', filled_at: new Date().toISOString() })
 		.eq('id', parsed.data.id)
-		.eq('status', 'wanksyd') // Only transition from wanksyd
+		.in('status', ['reported', 'wanksyd']) // Accept reported or legacy wanksyd
 		.select('id');
 
 	if (updateError) throw error(500, 'Failed to update status');
-	if (!updated || updated.length === 0) throw error(409, 'Pothole is not in wanksyd state');
+	if (!updated || updated.length === 0) throw error(409, 'Pothole is not in a fillable state');
 
 	return json({ ok: true });
 };

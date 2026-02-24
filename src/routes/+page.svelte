@@ -249,7 +249,7 @@
 	<!-- Legend -->
 	<div class="absolute safe-bottom right-4 bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl p-3 text-xs space-y-1.5 z-[1000]">
 		<div class="text-zinc-400 font-semibold mb-2 uppercase tracking-wider text-[10px]">Status</div>
-			{#each ['reported', 'wanksyd', 'filled'] as status (status)}
+			{#each ['reported', 'expired', 'filled'] as status (status)}
 			{@const info = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]}
 			<div class="flex items-center gap-2 text-zinc-300">
 				<span>{info.emoji}</span>
