@@ -158,6 +158,30 @@ await expect(page.locator('[data-sonner-toaster]')).toContainText(
 });
 });
 
+test.describe('Report form — location tabs', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto('/report');
+		const modalBtn = page.getByRole('button', { name: /Show me the map/i });
+		if (await modalBtn.isVisible()) await modalBtn.click();
+	});
+
+	test('shows three location tabs', async ({ page }) => {
+		await expect(page.getByRole('tab', { name: /GPS/i })).toBeVisible();
+		await expect(page.getByRole('tab', { name: /Address/i })).toBeVisible();
+		await expect(page.getByRole('tab', { name: /Pick on map/i })).toBeVisible();
+	});
+
+	test('GPS tab is active by default', async ({ page }) => {
+		const gpsTab = page.getByRole('tab', { name: /GPS/i });
+		await expect(gpsTab).toHaveAttribute('aria-selected', 'true');
+	});
+
+	test('switching to Address tab shows address input', async ({ page }) => {
+		await page.getByRole('tab', { name: /Address/i }).click();
+		await expect(page.getByPlaceholder(/Enter an address/i)).toBeVisible();
+	});
+});
+
 test.describe('Report form — URL pre-fill', () => {
 	test('pre-fills location from ?lat=&lng= URL params', async ({ page }) => {
 		await page.route('*nominatim.openstreetmap.org/reverse*', async (route) => {

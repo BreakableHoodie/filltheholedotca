@@ -17,6 +17,7 @@
 	let address = $state<string | null>(null);
 	let severity = $state<string | null>(null);
 	let submitting = $state(false);
+	let locationMode = $state<'gps' | 'address' | 'map'>('gps');
 
 	onMount(() => {
 		const urlLat = Number($page.url.searchParams.get('lat'));
@@ -25,6 +26,7 @@
 		if (urlLat && urlLng) {
 			lat = urlLat;
 			lng = urlLng;
+			locationMode = 'map';
 			reverseGeocode(urlLat, urlLng);
 			return;
 		}
@@ -114,45 +116,76 @@
 	<form onsubmit={handleSubmit} class="space-y-5">
 		<!-- Location -->
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<div class="flex items-center justify-between">
-				<div class="text-sm font-semibold text-zinc-300">📍 Location</div>
-				{#if gpsStatus === 'got'}
-					<span class="text-xs text-green-400 font-medium">GPS locked ✓</span>
-				{/if}
+			<div class="text-sm font-semibold text-zinc-300">📍 Location</div>
+
+			<!-- Tab bar -->
+			<div role="tablist" class="flex gap-1 bg-zinc-800 rounded-lg p-1">
+				{#each ([['gps', '📍 GPS'], ['address', '🔍 Address'], ['map', '🗺️ Pick on map']] as const) as [mode, label] (mode)}
+					<button
+						role="tab"
+						aria-selected={locationMode === mode}
+						type="button"
+						onclick={() => (locationMode = mode)}
+						class="flex-1 py-1.5 px-2 rounded-md text-xs font-semibold transition-colors
+							{locationMode === mode
+								? 'bg-zinc-700 text-white'
+								: 'text-zinc-400 hover:text-zinc-200'}"
+					>
+						{label}
+					</button>
+				{/each}
 			</div>
 
-			<button
-				type="button"
-				onclick={getLocation}
-				disabled={gpsStatus === 'loading'}
-				class="w-full py-3 rounded-lg border-2 border-dashed font-semibold text-sm transition-colors
-					{gpsStatus === 'got'
-						? 'border-green-500 bg-green-500/10 text-green-400'
-						: gpsStatus === 'error'
-						? 'border-red-500 bg-red-500/10 text-red-400'
-						: 'border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400'}"
-			>
-				{#if gpsStatus === 'loading'}
-					⏳ Getting your location...
-				{:else if gpsStatus === 'got'}
-					✓ GPS locked
-				{:else if gpsStatus === 'error'}
-					⚠️ GPS failed — tap to retry
-				{:else}
-					📍 Use my current location
-				{/if}
-			</button>
+			<!-- GPS panel -->
+			{#if locationMode === 'gps'}
+				<button
+					type="button"
+					onclick={getLocation}
+					disabled={gpsStatus === 'loading'}
+					class="w-full py-3 rounded-lg border-2 border-dashed font-semibold text-sm transition-colors
+						{gpsStatus === 'got'
+							? 'border-green-500 bg-green-500/10 text-green-400'
+							: gpsStatus === 'error'
+							? 'border-red-500 bg-red-500/10 text-red-400'
+							: 'border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400'}"
+				>
+					{#if gpsStatus === 'loading'}
+						⏳ Getting your location...
+					{:else if gpsStatus === 'got'}
+						✓ GPS locked
+					{:else if gpsStatus === 'error'}
+						⚠️ GPS failed — tap to retry
+					{:else}
+						📍 Use my current location
+					{/if}
+				</button>
 
-			{#if gpsStatus === 'error'}
-				<p class="text-xs text-red-400" role="alert">
-					Location access is required to report a pothole. Please enable it in your browser settings and try again.
-				</p>
+				{#if gpsStatus === 'error'}
+					<p class="text-xs text-red-400" role="alert">
+						Location access is required to report a pothole. Please enable it in your browser settings and try again.
+					</p>
+				{/if}
+
+				{#if address}
+					<p class="text-xs text-zinc-400">📌 {address}</p>
+				{:else if gpsStatus === 'got'}
+					<p class="text-xs text-zinc-400">Looking up address...</p>
+				{/if}
 			{/if}
 
-			{#if address}
-				<p class="text-xs text-zinc-400">📌 {address}</p>
-			{:else if gpsStatus === 'got'}
-				<p class="text-xs text-zinc-400">Looking up address...</p>
+			<!-- Address panel — placeholder for Task 3 -->
+			{#if locationMode === 'address'}
+				<input
+					type="text"
+					placeholder="Enter an address or intersection…"
+					disabled
+					class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500"
+				/>
+			{/if}
+
+			<!-- Map panel — placeholder for Task 4 -->
+			{#if locationMode === 'map'}
+				<p class="text-xs text-zinc-500">Tap the map to place a pin</p>
 			{/if}
 		</div>
 
