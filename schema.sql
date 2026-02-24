@@ -7,9 +7,10 @@ create table if not exists potholes (
   lng         float8 not null,
   address     text,
   description text,
-  status      text default 'reported',  -- 'reported' | 'wanksyd' | 'filled'
-  wanksy_at   timestamptz,
+  status      text default 'reported',  -- 'pending' | 'reported' | 'filled' | 'expired' (legacy: 'wanksyd')
+  wanksy_at   timestamptz,             -- kept for historical rows
   filled_at   timestamptz,
+  expired_at  timestamptz,
   confirmed_count int default 1
 );
 
@@ -66,7 +67,7 @@ create table if not exists pothole_actions (
   id          uuid primary key default gen_random_uuid(),
   pothole_id  uuid not null references potholes(id) on delete cascade,
   ip_hash     text not null,
-  action      text not null check (action in ('wanksy', 'filled')),
+  action      text not null check (action in ('filled')),
   created_at  timestamptz not null default now(),
   unique (pothole_id, ip_hash, action)
 );
@@ -114,6 +115,28 @@ begin
   );
 end;
 $$;
+
+-- ============================================================
+-- Migration: run these once in the Supabase SQL editor
+-- ============================================================
+-- ALTER TABLE potholes ADD COLUMN IF NOT EXISTS expired_at timestamptz;
+-- ALTER TABLE potholes DROP CONSTRAINT IF EXISTS potholes_status_check;
+-- ALTER TABLE potholes ADD CONSTRAINT potholes_status_check
+--   CHECK (status IN ('pending', 'reported', 'wanksyd', 'filled', 'expired'));
+-- Note: 'wanksyd' kept in constraint for historical rows.
+
+-- pg_cron: nightly expiry job (run once in Supabase SQL editor)
+-- CREATE EXTENSION IF NOT EXISTS pg_cron;
+-- SELECT cron.schedule(
+--   'expire-old-potholes',
+--   '0 3 * * *',
+--   $$
+--     UPDATE potholes
+--     SET status = 'expired', expired_at = NOW()
+--     WHERE status = 'reported'
+--       AND created_at < NOW() - INTERVAL '6 months';
+--   $$
+-- );
 
 -- Storage bucket: create a public bucket called 'pothole-photos'
 -- In Supabase dashboard: Storage → New Bucket → Name: pothole-photos → Public: ON
