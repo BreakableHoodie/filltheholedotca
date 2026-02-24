@@ -152,7 +152,7 @@ Thank you.`;
 	{/if}
 
 	<!-- Mark as fixed action -->
-	{#if pothole.status === 'reported'}
+	{#if pothole.status === 'reported' || (pothole.status as string) === 'wanksyd'}
 		{#if !showFilledForm}
 			<button
 				onclick={() => (showFilledForm = true)}

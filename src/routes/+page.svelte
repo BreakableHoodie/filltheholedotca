@@ -251,12 +251,14 @@
 					map.closePopup();
 					toast.success(result.ok ? '✅ Marked as fixed!' : result.message);
 
-					// Move marker from reported layer to filled layer
+					// Move marker from reported layer to filled layer.
+					// Always add to the filled cluster — its map visibility is controlled
+					// by the layer toggle, not by whether the layer is currently active.
 					if (result.ok) {
 						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						const marker = (e as any).popup._source;
 						clusterGroups['reported']?.removeLayer(marker);
-						if (layers.filled) clusterGroups['filled']?.addLayer(marker);
+						clusterGroups['filled']?.addLayer(marker);
 					}
 				} catch (err: unknown) {
 					toast.error(err instanceof Error ? err.message : 'Something went wrong');
