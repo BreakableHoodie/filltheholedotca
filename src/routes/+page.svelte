@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import type { Map, Marker } from 'leaflet';
 	import type * as Leaflet from 'leaflet';
@@ -17,6 +18,43 @@
 
 	let mapRef: Map | null = null;
 	let LRef: typeof Leaflet | null = null;
+
+	// Report-here pin-drop mode
+	let reportMode = $state(false);
+	let reportLatLng = $state<{ lat: number; lng: number } | null>(null);
+	let reportPin: Marker | null = null;
+	// Non-reactive mirror for use inside Leaflet closures
+	let reportModeRef = false;
+	let cancelReportModeButton = $state<HTMLButtonElement | null>(null);
+
+	async function enterReportMode() {
+		reportMode = true;
+		reportModeRef = true;
+		reportLatLng = null;
+		if (reportPin && mapRef) {
+			mapRef.removeLayer(reportPin);
+			reportPin = null;
+		}
+		if (mapRef) mapRef.getContainer().style.cursor = 'crosshair';
+		await tick();
+		cancelReportModeButton?.focus();
+	}
+
+	function exitReportMode() {
+		reportMode = false;
+		reportModeRef = false;
+		reportLatLng = null;
+		if (mapRef) mapRef.getContainer().style.cursor = '';
+		if (reportPin && mapRef) {
+			mapRef.removeLayer(reportPin);
+			reportPin = null;
+		}
+	}
+
+	function confirmReportLocation() {
+		if (!reportLatLng) return;
+		goto(`/report?lat=${reportLatLng.lat}&lng=${reportLatLng.lng}`);
+	}
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let wardLayerRef: any = null;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -266,6 +304,22 @@
 			});
 		});
 
+		// Report-here click handler — uses reportModeRef to avoid stale closure
+		map.on('click', (e) => {
+			if (!reportModeRef) return;
+			reportLatLng = { lat: e.latlng.lat, lng: e.latlng.lng };
+			const L = LRef!;
+			if (reportPin) {
+				reportPin.setLatLng(e.latlng);
+			} else {
+				reportPin = L.marker(e.latlng, { draggable: true, zIndexOffset: 1000 }).addTo(map);
+				reportPin.on('dragend', () => {
+					const pos = reportPin!.getLatLng();
+					reportLatLng = { lat: pos.lat, lng: pos.lng };
+				});
+			}
+		});
+
 		mapReady = true;
 	});
 </script>
@@ -289,6 +343,35 @@
 		</div>
 	{/if}
 
+		<!-- Report-here banner -->
+		{#if reportMode}
+			<div
+				class="absolute top-4 left-1/2 -translate-x-1/2 z-[1001] flex items-center gap-3 bg-zinc-900/95 backdrop-blur border border-sky-600 rounded-xl px-4 py-2.5 shadow-xl"
+			>
+				<span class="text-sm text-white" aria-live="polite" aria-atomic="true">
+					Tap the map where the pothole is
+				</span>
+				{#if reportLatLng}
+				<button
+					type="button"
+					onclick={confirmReportLocation}
+					class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+				>
+					Confirm location →
+				</button>
+			{/if}
+			<button
+				bind:this={cancelReportModeButton}
+				type="button"
+				onclick={exitReportMode}
+				class="text-zinc-400 hover:text-white text-xs px-2 py-1 rounded transition-colors"
+				aria-label="Cancel"
+			>
+				✕ Cancel
+			</button>
+		</div>
+	{/if}
+
 	{#if mapReady}
 		<div class="absolute safe-bottom left-4 z-[1000] flex flex-col gap-2">
 			<!-- Find me stays standalone -->
@@ -298,6 +381,17 @@
 				class="bg-zinc-900/90 backdrop-blur border border-zinc-700 hover:border-zinc-500 rounded-xl px-3 py-2 text-xs text-zinc-300 transition-colors flex items-center gap-1.5 disabled:opacity-50"
 			>
 				{locating ? '⏳' : '📍'} {locating ? 'Locating…' : 'Find me'}
+			</button>
+
+			<!-- Report here button -->
+			<button
+				type="button"
+				onclick={enterReportMode}
+				aria-pressed={reportMode}
+				disabled={reportMode}
+				class="bg-sky-700/90 backdrop-blur border border-sky-600 hover:border-sky-400 rounded-xl px-3 py-2 text-xs text-white font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+			>
+				📍 Report here
 			</button>
 
 			<!-- Layers panel -->

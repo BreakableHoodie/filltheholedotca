@@ -1,16 +1,21 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Report form — no GPS', () => {
-test.beforeEach(async ({ page }) => {
-await page.goto('/report');
+const REPORT_STORAGE_STATE = {
+	cookies: [],
+	origins: [
+		{
+			origin: 'http://localhost:4173',
+			localStorage: [{ name: 'fth-welcomed', value: '1' }]
+		}
+	]
+};
 
-// Close welcome modal if present
-const modalBtn = page.getByRole('button', { name: /Show me the map/i });
-if (await modalBtn.isVisible()) {
-await modalBtn.click();
-await expect(modalBtn).toBeHidden();
-}
-});
+test.use({ storageState: REPORT_STORAGE_STATE });
+
+test.describe('Report form — no GPS', () => {
+	test.beforeEach(async ({ page }) => {
+	await page.goto('/report');
+	});
 
 test('starts with loading state due to auto-location', async ({ page }) => {
 // Since onMount triggers getLocation, it should show loading or error
@@ -73,15 +78,8 @@ suburb: 'Waterloo'
 });
 });
 
-await page.goto('/report');
-
-// Close welcome modal if present
-const modalBtn = page.getByRole('button', { name: /Show me the map/i });
-if (await modalBtn.isVisible()) {
-await modalBtn.click();
-await expect(modalBtn).toBeHidden();
-}
-});
+		await page.goto('/report');
+		});
 
 test('GPS button shows locked state after geolocation resolves', async ({ page }) => {
 // Debug visibility
@@ -156,6 +154,113 @@ await expect(page.locator('[data-sonner-toaster]')).toContainText(
 { timeout: 10000 }
 );
 });
+});
+
+test.describe('Report form — mini map tab', () => {
+		test('shows a map element when Pick on map tab is active', async ({ page }) => {
+			await page.goto('/report');
+
+		await page.getByRole('tab', { name: /Pick on map/i }).click();
+		await expect(page.locator('.leaflet-container').last()).toBeVisible({ timeout: 5000 });
+	});
+
+	test('map tab pre-shows pin when navigated from main map with URL params', async ({ page }) => {
+		await page.route(
+			(url) => url.hostname === 'nominatim.openstreetmap.org' && url.pathname === '/reverse',
+			async (route) => {
+				await route.fulfill({
+					status: 200,
+					contentType: 'application/json',
+					body: JSON.stringify({ address: { road: 'Weber St', suburb: 'Kitchener' } })
+				});
+			}
+		);
+
+			await page.goto('/report?lat=43.45&lng=-80.5');
+
+		await expect(page.getByRole('tab', { name: /Pick on map/i }))
+			.toHaveAttribute('aria-selected', 'true', { timeout: 3000 });
+		await expect(page.locator('.leaflet-container').last()).toBeVisible({ timeout: 5000 });
+	});
+});
+
+test.describe('Report form — location tabs', () => {
+		test.beforeEach(async ({ page }) => {
+			await page.goto('/report');
+		});
+
+	test('shows three location tabs', async ({ page }) => {
+		await expect(page.getByRole('tab', { name: /GPS/i })).toBeVisible();
+		await expect(page.getByRole('tab', { name: /Address/i })).toBeVisible();
+		await expect(page.getByRole('tab', { name: /Pick on map/i })).toBeVisible();
+	});
+
+	test('GPS tab is active by default', async ({ page }) => {
+		const gpsTab = page.getByRole('tab', { name: /GPS/i });
+		await expect(gpsTab).toHaveAttribute('aria-selected', 'true');
+	});
+
+	test('switching to Address tab shows address input', async ({ page }) => {
+		await page.getByRole('tab', { name: /Address/i }).click();
+		await expect(page.getByPlaceholder(/Enter an address/i)).toBeVisible();
+	});
+});
+
+test.describe('Report form — address search', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.route(
+			(url) => url.hostname === 'nominatim.openstreetmap.org' && url.pathname === '/search',
+			async (route) => {
+				await route.fulfill({
+					status: 200,
+					contentType: 'application/json',
+					body: JSON.stringify([
+						{ lat: '43.45', lon: '-80.50', display_name: '123 King St N, Waterloo, ON' },
+						{ lat: '43.46', lon: '-80.51', display_name: '456 King St N, Waterloo, ON' }
+					])
+				});
+			}
+		);
+
+		await page.goto('/report');
+		await page.getByRole('tab', { name: /Address/i }).click();
+	});
+
+	test('shows address input on Address tab', async ({ page }) => {
+		await expect(page.getByPlaceholder(/Enter an address/i)).toBeVisible();
+	});
+
+	test('typing shows suggestions dropdown', async ({ page }) => {
+		await page.getByPlaceholder(/Enter an address/i).fill('King St');
+		await expect(page.locator('[data-testid="address-suggestions"]')).toBeVisible({ timeout: 1000 });
+		await expect(page.locator('[data-testid="address-suggestions"] button').first()).toContainText('King St N');
+	});
+
+	test('selecting a suggestion enables submit button', async ({ page }) => {
+		await page.getByPlaceholder(/Enter an address/i).fill('King St');
+		await expect(page.locator('[data-testid="address-suggestions"]')).toBeVisible({ timeout: 1000 });
+		await page.locator('[data-testid="address-suggestions"] button').first().click();
+
+		const submit = page.getByRole('button', { name: /Report this hole/i });
+		await expect(submit).not.toBeDisabled();
+	});
+});
+
+test.describe('Report form — URL pre-fill', () => {
+	test('pre-fills location from ?lat=&lng= URL params', async ({ page }) => {
+		await page.route('*nominatim.openstreetmap.org/reverse*', async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ address: { road: 'King St N', suburb: 'Waterloo' } })
+			});
+		});
+
+		await page.goto('/report?lat=43.45&lng=-80.5');
+
+		const submit = page.getByRole('button', { name: /Report this hole/i });
+		await expect(submit).not.toBeDisabled({ timeout: 3000 });
+	});
 });
 
 test.describe('Report form — GPS denied', () => {
