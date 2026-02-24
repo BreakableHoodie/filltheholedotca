@@ -34,11 +34,7 @@
 
 				<div class="hidden sm:flex items-center gap-3 text-sm" aria-label="Pothole statistics">
 					<span class="text-zinc-400">
-						🕳️ <span class="text-white font-semibold">{counts.reported + counts.flagged + counts.filled}</span> reported
-					</span>
-					<span class="text-zinc-600" aria-hidden="true">·</span>
-					<span class="text-zinc-400">
-						🚩 <span class="text-white font-semibold">{counts.flagged}</span> flagged
+						📍 <span class="text-white font-semibold">{counts.reported}</span> reported
 					</span>
 					<span class="text-zinc-600" aria-hidden="true">·</span>
 					<span class="text-zinc-400">
