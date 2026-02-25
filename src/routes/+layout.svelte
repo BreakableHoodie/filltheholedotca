@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-	<title>FillTheHole.ca — Waterloo Region Pothole Tracker</title>
+	<title>Waterloo Region Pothole Tracker — FillTheHole.ca</title>
 </svelte:head>
 
 <div class="flex flex-col min-h-screen bg-zinc-950">

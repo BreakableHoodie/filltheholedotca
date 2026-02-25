@@ -336,7 +336,7 @@
 </script>
 
 <svelte:head>
-	<title>FillTheHole.ca — Waterloo Region Pothole Map</title>
+	<title>Waterloo Region Pothole Map — FillTheHole.ca</title>
 </svelte:head>
 
 <h1 class="sr-only">Waterloo Region Pothole Map</h1>
