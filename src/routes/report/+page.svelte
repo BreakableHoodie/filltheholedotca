@@ -293,7 +293,7 @@
 <div class="max-w-lg mx-auto px-4 py-8">
 	<div class="mb-6">
 		<h1 class="font-brand font-bold text-3xl text-white mb-1">Report a pothole</h1>
-		<p class="text-zinc-400 text-sm">Standing next to one? Lock your GPS and submit.</p>
+		<p class="text-zinc-400 text-sm">Standing next to one? Share its location and submit.</p>
 	</div>
 
 	<form onsubmit={handleSubmit} class="space-y-5">
