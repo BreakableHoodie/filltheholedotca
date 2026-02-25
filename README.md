@@ -1,6 +1,6 @@
 # 🕳️ fillthehole.ca
 
-**Waterloo Region pothole tracker.** Report a pothole, confirm others, flag it to the city, celebrate when it's filled.
+**Waterloo Region pothole tracker.** Report a pothole, confirm others, and track it through to resolution.
 
 Live at **[fillthehole.ca](https://fillthehole.ca)**
 
@@ -10,12 +10,12 @@ Live at **[fillthehole.ca](https://fillthehole.ca)**
 
 Potholes in Kitchener, Waterloo, and Cambridge often sit unfilled for weeks. This app gives residents a way to:
 
-1. **Report** a pothole at their GPS location
-2. **Confirm** reports from others (3 independent confirmations required before it goes live)
-3. **Flag** it — go to the location, verify it, submit an official city service request, then mark it flagged here
+1. **Report** a pothole at their GPS location (or search by address / drop a pin)
+2. **Confirm** reports from others — 3 independent confirmations required before it goes live
+3. **Watch** potholes you care about — saved locally in your browser
 4. **Celebrate** when the city finally fills it
 
-Each pothole page shows the ward councillor's contact info so you can apply direct pressure.
+Each pothole page shows the ward councillor's contact info, any matching city repair requests, and a direct link to submit a service request.
 
 ---
 
@@ -62,12 +62,14 @@ App runs at `http://localhost:5173`.
 
 ## Environment variables
 
-| Variable                   | Description                 |
-| -------------------------- | --------------------------- |
-| `PUBLIC_SUPABASE_URL`      | Supabase project URL        |
-| `PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (public)  |
-| `SIGHTENGINE_API_USER`     | Image moderation — optional |
-| `SIGHTENGINE_API_SECRET`   | Image moderation — optional |
+| Variable                     | Description                          |
+| ---------------------------- | ------------------------------------ |
+| `PUBLIC_SUPABASE_URL`        | Supabase project URL                 |
+| `PUBLIC_SUPABASE_ANON_KEY`   | Supabase anon key (public)           |
+| `SUPABASE_SERVICE_ROLE_KEY`  | Supabase service role key (server)   |
+| `ADMIN_SECRET`               | Token for admin moderation endpoints |
+| `SIGHTENGINE_API_USER`       | Image moderation — optional          |
+| `SIGHTENGINE_API_SECRET`     | Image moderation — optional          |
 
 See `.env.example` for the full list.
 
@@ -81,17 +83,32 @@ To prevent spam, a new report starts as `pending` and only becomes public after 
 
 ### Status pipeline
 
-```
+```text
 pending → reported → filled
+              ↓
+           expired  (auto after 90 days with no action)
 ```
 
 - **pending** — awaiting 3 confirmations
 - **reported** — live on the map, needs city attention
 - **filled** — city patched it
+- **expired** — no action taken within 90 days; removed from the active map
 
 ### Ward heatmap
 
 The map includes an optional ward heatmap showing pothole density by ward across all three cities. Hovering a ward shows the councillor's name and the active hole count. Clicking through the pothole detail page lets you email the councillor directly.
+
+### City repair requests
+
+The pothole detail page surfaces matching repair requests from the city's open data, so you can see if the city is already aware of the issue.
+
+### Watchlist
+
+Potholes can be added to a personal watchlist stored in your browser's local storage — no account needed.
+
+### Stats
+
+The `/stats` page shows resolution time, ward leaderboards, fill rate trends, and other metrics across the dataset.
 
 ### Geofence
 
