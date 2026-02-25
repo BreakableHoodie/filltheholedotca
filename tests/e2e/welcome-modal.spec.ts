@@ -124,10 +124,7 @@ test.describe('WelcomeModal first-visit behaviour', () => {
 	test('modal handles localStorage errors gracefully', async ({ page }) => {
 		// Simulate localStorage being unavailable (e.g., in private browsing mode)
 		await page.addInitScript(() => {
-			// Mock localStorage to throw errors
-			const originalGetItem = localStorage.getItem;
-			const originalSetItem = localStorage.setItem;
-			
+			// Mock localStorage to throw errors (simulates private browsing / storage disabled)
 			localStorage.getItem = () => {
 				throw new Error('localStorage disabled');
 			};
