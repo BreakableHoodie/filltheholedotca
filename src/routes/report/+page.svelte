@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import { ICONS } from '$lib/icons';
 	import { page } from '$app/stores';
 
 	const SEVERITY_OPTIONS = [
@@ -151,8 +152,15 @@
 				maxZoom: 19
 			}).addTo(map);
 
+			const pinIcon = L.divIcon({
+				html: `<div style="display:flex;align-items:center;justify-content:center;color:#f97316;width:32px;height:32px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS['map-pin']}</svg></div>`,
+				className: '',
+				iconSize: [32, 32],
+				iconAnchor: [16, 32]
+			});
+
 			if (lat !== null && lng !== null) {
-				miniPinRef = L.marker([lat, lng], { draggable: true }).addTo(map);
+				miniPinRef = L.marker([lat, lng], { draggable: true, icon: pinIcon }).addTo(map);
 				miniPinRef.on('dragend', () => {
 					const pos = miniPinRef!.getLatLng();
 					lat = pos.lat;
@@ -169,7 +177,7 @@
 				if (miniPinRef) {
 					miniPinRef.setLatLng(e.latlng);
 				} else {
-					miniPinRef = L.marker(e.latlng, { draggable: true }).addTo(map);
+					miniPinRef = L.marker(e.latlng, { draggable: true, icon: pinIcon }).addTo(map);
 					miniPinRef.on('dragend', () => {
 						const pos = miniPinRef!.getLatLng();
 						lat = pos.lat;
