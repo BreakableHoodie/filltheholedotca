@@ -2,6 +2,7 @@
 	import '../app.css';
 	import { Toaster } from 'svelte-sonner';
 	import WelcomeModal from '$lib/components/WelcomeModal.svelte';
+	import Icon from '$lib/components/Icon.svelte';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
@@ -23,26 +24,39 @@
 	</a>
 
 	<header class="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50 safe-header">
-			<div class="max-w-6xl mx-auto py-3 safe-header-inner">
+		<div class="max-w-6xl mx-auto py-3 safe-header-inner">
 			<div class="flex items-center justify-between gap-3 flex-wrap">
-				<a href="/" class="flex items-center gap-2 group">
-					<span class="text-2xl">🕳️</span>
-					<span class="font-bold text-xl tracking-tight text-white group-hover:text-sky-400 transition-colors">
+				<!-- Logo mark + wordmark -->
+				<a href="/" class="flex items-center gap-2.5 group">
+					<!-- Pothole icon: concentric rings suggest depth/crater -->
+					<svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+						<circle cx="13" cy="13" r="12" fill="#f97316"/>
+						<circle cx="13" cy="13" r="7.5" fill="#09090b"/>
+						<circle cx="13" cy="13" r="4" fill="rgba(249,115,22,0.15)"/>
+					</svg>
+					<span class="font-brand font-bold text-xl leading-none text-white group-hover:text-sky-400 transition-colors">
 						FillTheHole<span class="text-sky-500">.ca</span>
 					</span>
 				</a>
 
+				<!-- Live stat dots -->
 				<div class="hidden sm:flex items-center gap-3 text-sm" aria-label="Pothole statistics">
-					<span class="text-zinc-400">
-						🕳️ <span class="text-white font-semibold">{counts.reported + counts.flagged + counts.filled}</span> reported
+					<span class="flex items-center gap-1.5 text-zinc-400">
+						<span class="w-2 h-2 rounded-full bg-orange-500 shrink-0"></span>
+						<span class="text-white font-semibold tabular-nums">{counts.reported + counts.flagged + counts.filled}</span>
+						reported
 					</span>
-					<span class="text-zinc-600" aria-hidden="true">·</span>
-					<span class="text-zinc-400">
-						🚩 <span class="text-white font-semibold">{counts.flagged}</span> flagged
+					<span class="text-zinc-700" aria-hidden="true">·</span>
+					<span class="flex items-center gap-1.5 text-zinc-400">
+						<span class="w-2 h-2 rounded-full bg-sky-500 shrink-0"></span>
+						<span class="text-white font-semibold tabular-nums">{counts.flagged}</span>
+						flagged
 					</span>
-					<span class="text-zinc-600" aria-hidden="true">·</span>
-					<span class="text-zinc-400">
-						✅ <span class="text-white font-semibold">{counts.filled}</span> filled
+					<span class="text-zinc-700" aria-hidden="true">·</span>
+					<span class="flex items-center gap-1.5 text-zinc-400">
+						<span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
+						<span class="text-white font-semibold tabular-nums">{counts.filled}</span>
+						filled
 					</span>
 				</div>
 
@@ -60,15 +74,14 @@
 						class="hidden sm:inline-flex text-zinc-400 hover:text-white transition-colors"
 						aria-label="View source on GitHub"
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
-							<path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-						</svg>
+						<Icon name="github" size={18} />
 					</a>
 					<a
 						href="/report"
-						class="bg-sky-700 hover:bg-sky-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+						class="inline-flex items-center gap-1.5 bg-sky-700 hover:bg-sky-600 text-white font-semibold px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap text-sm"
 					>
-						+ Report a pothole
+						<Icon name="plus" size={14} strokeWidth={2.5} />
+						Report a hole
 					</a>
 				</nav>
 			</div>

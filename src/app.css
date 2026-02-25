@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Outfit:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 
 /**
@@ -16,9 +17,14 @@
 }
 
 @theme {
-  --color-pink-hot: #ff1f8e;
-  --color-asphalt: #1a1a1a;
-  --color-asphalt-light: #2a2a2a;
+  --font-sans:  'Outfit', system-ui, sans-serif;
+  --font-brand: 'Barlow Condensed', system-ui, sans-serif;
+  --color-asphalt:       #0f0f0f;
+  --color-asphalt-light: #1a1a1a;
+}
+
+body {
+  font-family: var(--font-sans);
 }
 
 /* iOS safe area support — accounts for notch/Dynamic Island and home indicator */

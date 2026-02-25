@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
+	import Icon from '$lib/components/Icon.svelte';
 
 	let visible = $state(false);
 	let dialogRef = $state<HTMLDivElement | null>(null);
@@ -13,13 +14,10 @@
 			}
 		} catch (e) {
 			console.error('Failed to access localStorage:', e);
-			// Fallback: show modal if we can't determine state, or suppress error
-			// Safety first: better to show it again than crash
-			visible = true; 
+			visible = true;
 		}
 	});
 
-	// Focus management: move focus into modal on open, restore on close
 	$effect(() => {
 		if (visible) {
 			previousFocus = document.activeElement as HTMLElement | null;
@@ -39,7 +37,6 @@
 		visible = false;
 	}
 
-	// Trap focus inside the modal and handle Escape
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
 			dismiss();
@@ -63,12 +60,35 @@
 			first.focus();
 		}
 	}
+
+	const STEPS = [
+		{
+			icon: 'map-pin' as const,
+			iconClass: 'text-orange-400',
+			bgClass: 'bg-orange-500/10',
+			title: 'Report',
+			desc: 'Standing next to a pothole? Open the app, lock your GPS, and submit. Three independent reports puts it on the map.',
+		},
+		{
+			icon: 'flag' as const,
+			iconClass: 'text-sky-400',
+			bgClass: 'bg-sky-500/10',
+			title: 'Flag',
+			desc: 'Verify a pothole is still there and file an official report with the city. Then mark it flagged here.',
+		},
+		{
+			icon: 'check-circle' as const,
+			iconClass: 'text-green-400',
+			bgClass: 'bg-green-500/10',
+			title: 'Filled',
+			desc: 'Once the city fills it, mark it done. Public accountability, one hole at a time.',
+		},
+	] as const;
 </script>
 
 {#if visible}
-	<!-- Backdrop -->
 	<div
-		class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000] flex items-center justify-center p-4"
+		class="fixed inset-0 bg-black/75 backdrop-blur-sm z-[2000] flex items-center justify-center p-4"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="welcome-title"
@@ -76,10 +96,17 @@
 		onkeydown={handleKeydown}
 		bind:this={dialogRef}
 	>
-		<div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
-			<div class="text-center space-y-1">
-				<div class="text-4xl mb-2">🕳️</div>
-				<h2 id="welcome-title" class="text-xl font-bold text-white">Welcome to fillthehole.ca</h2>
+		<div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+			<!-- Logo + heading -->
+			<div class="text-center space-y-2">
+				<div class="flex justify-center mb-3">
+					<svg width="48" height="48" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+						<circle cx="13" cy="13" r="12" fill="#f97316"/>
+						<circle cx="13" cy="13" r="7.5" fill="#09090b"/>
+						<circle cx="13" cy="13" r="4" fill="rgba(249,115,22,0.15)"/>
+					</svg>
+				</div>
+				<h2 id="welcome-title" class="font-brand font-bold text-2xl text-white">Welcome to FillTheHole.ca</h2>
 				<p class="text-zinc-400 text-sm">Waterloo Region Pothole Tracker</p>
 			</div>
 
@@ -91,27 +118,17 @@
 				</p>
 
 				<div class="grid gap-2">
-					<div class="flex items-start gap-3 bg-zinc-800/60 rounded-lg p-3">
-						<span class="text-lg mt-0.5">📍</span>
-						<div>
-							<div class="font-semibold text-white text-xs mb-0.5">Report</div>
-							<p class="text-zinc-400 text-xs">Standing next to a pothole? Open the app, lock your GPS, and submit. Three independent reports puts it on the map.</p>
+					{#each STEPS as step}
+						<div class="flex items-start gap-3 bg-zinc-800/60 rounded-lg p-3">
+							<div class="shrink-0 mt-0.5 p-1.5 rounded-md {step.bgClass}">
+								<Icon name={step.icon} size={15} class={step.iconClass} />
+							</div>
+							<div>
+								<div class="font-semibold text-white text-xs mb-0.5">{step.title}</div>
+								<p class="text-zinc-400 text-xs">{step.desc}</p>
+							</div>
 						</div>
-					</div>
-					<div class="flex items-start gap-3 bg-zinc-800/60 rounded-lg p-3">
-						<span class="text-lg mt-0.5">🚩</span>
-						<div>
-							<div class="font-semibold text-white text-xs mb-0.5">Flag</div>
-							<p class="text-zinc-400 text-xs">Verify a pothole is still there and file an official report with the city. Then mark it flagged here.</p>
-						</div>
-					</div>
-					<div class="flex items-start gap-3 bg-zinc-800/60 rounded-lg p-3">
-						<span class="text-lg mt-0.5">✅</span>
-						<div>
-							<div class="font-semibold text-white text-xs mb-0.5">Filled</div>
-							<p class="text-zinc-400 text-xs">Once the city fills it, mark it done. Public accountability, one hole at a time.</p>
-						</div>
-					</div>
+					{/each}
 				</div>
 			</div>
 

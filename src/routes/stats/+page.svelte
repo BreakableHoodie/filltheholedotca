@@ -5,6 +5,7 @@
 	import type { Pothole } from '$lib/types';
 	import { COUNCILLORS } from '$lib/wards';
 	import { inWardFeature } from '$lib/geo';
+	import Icon from '$lib/components/Icon.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let allPotholes = $derived(data.potholes as Pothole[]);
@@ -224,7 +225,10 @@
 	<!-- Page header + time filter -->
 	<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
 		<div>
-			<h1 class="text-3xl font-bold text-white">By the numbers 📊</h1>
+			<h1 class="font-brand font-bold text-3xl text-white flex items-center gap-2.5">
+				<Icon name="bar-chart-2" size={26} class="text-sky-400 shrink-0" />
+				By the numbers
+			</h1>
 			<p class="text-zinc-400 mt-1">Pothole accountability data for Waterloo Region.</p>
 		</div>
 
@@ -462,13 +466,15 @@
 
 	<!-- ── Worst offenders ────────────────────────────────────────────────────── -->
 	<section aria-labelledby="offenders-heading">
-		<h2 id="offenders-heading" class="text-lg font-semibold text-white mb-4">
-			Longest-open unfilled holes 🔴
+		<h2 id="offenders-heading" class="flex items-center gap-2 text-lg font-semibold text-white mb-4">
+			<Icon name="alert-triangle" size={18} class="text-red-400 shrink-0" />
+			Longest-open unfilled holes
 		</h2>
 
 		{#if offenders.length === 0}
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-green-400 text-sm font-semibold">
-				🎉 No open potholes in this time window!
+			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-green-400 text-sm font-semibold flex items-center justify-center gap-2">
+				<Icon name="check-circle" size={16} class="shrink-0" />
+				No open potholes in this time window!
 			</div>
 		{:else}
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
@@ -500,9 +506,15 @@
 								</td>
 								<td class="px-4 py-3 text-right">
 									{#if p.status === 'wanksyd'}
-										<span class="text-sky-400 text-xs">🚩 Flagged</span>
+										<span class="inline-flex items-center gap-1 text-sky-400 text-xs">
+											<Icon name="flag" size={11} class="shrink-0" />
+											Flagged
+										</span>
 									{:else}
-										<span class="text-orange-400 text-xs">📍 Reported</span>
+										<span class="inline-flex items-center gap-1 text-orange-400 text-xs">
+											<Icon name="map-pin" size={11} class="shrink-0" />
+											Reported
+										</span>
 									{/if}
 								</td>
 							</tr>
