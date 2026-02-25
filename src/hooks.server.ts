@@ -1,5 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import { error, redirect } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 
 // In-memory rate limit store: ip -> { count, resetAt }
 // NOTE: on Netlify serverless this resets per cold start — it's a deterrent, not a wall.
@@ -9,6 +10,7 @@ const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX = 10; // requests per window per IP
+const DISABLE_API_RATE_LIMIT = env.DISABLE_API_RATE_LIMIT === 'true';
 
 function checkRateLimit(ip: string): void {
 	const now = Date.now();
@@ -42,8 +44,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		throw redirect(301, url.toString());
 	}
 
-	// Rate limit all /api/* routes
-	if (event.url.pathname.startsWith('/api/')) {
+	// Rate limit all /api/* routes unless explicitly disabled for test runs.
+	if (!DISABLE_API_RATE_LIMIT && event.url.pathname.startsWith('/api/')) {
 		const ip = event.getClientAddress();
 		checkRateLimit(ip);
 	}

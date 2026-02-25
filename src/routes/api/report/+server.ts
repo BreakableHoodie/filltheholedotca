@@ -85,7 +85,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	let supabase;
 	try {
 		supabase = getSupabaseClient();
-	} catch (err) {
+	} catch {
 		throw error(500, 'Database connection failed');
 	}
 
