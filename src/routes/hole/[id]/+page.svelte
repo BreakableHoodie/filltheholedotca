@@ -15,6 +15,7 @@
 	let info = $derived(STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported);
 	let councillor = $derived(data.councillor as Councillor | null);
 	let origin = $derived(data.origin as string);
+	let cityRepairRequests = $derived(data.cityRepairRequests ?? []);
 
 	let ogDescription = $derived(
 		pothole.status === 'filled'
@@ -271,6 +272,32 @@ Thank you.`;
 				Reported <span class="text-orange-400 font-semibold tabular-nums">{days} day{days === 1 ? '' : 's'} ago</span> — still unfilled.
 			</p>
 		{/if}
+	{/if}
+
+	<!-- City repair requests (Kitchener CCC data) -->
+	{#if cityRepairRequests.length > 0}
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+				<Icon name="flag" size={14} class="text-sky-400 shrink-0" />
+				City repair {cityRepairRequests.length === 1 ? 'request' : 'requests'} on file
+			</div>
+			<p class="text-zinc-400 text-sm">
+				Kitchener's 311 system has
+				<span class="text-white font-semibold">{cityRepairRequests.length} official pothole repair {cityRepairRequests.length === 1 ? 'request' : 'requests'}</span>
+				logged within 200 m of this location.
+			</p>
+			<ul class="space-y-1.5">
+				{#each cityRepairRequests as req (req.date + req.intersection)}
+					<li class="flex items-start gap-2 text-xs text-zinc-400">
+						<Icon name="clock" size={12} class="text-zinc-600 shrink-0 mt-0.5" />
+						<span>
+							<span class="text-zinc-300">{req.intersection}</span>
+							<span class="text-zinc-600 ml-1.5 tabular-nums">{fmt(req.date)}</span>
+						</span>
+					</li>
+				{/each}
+			</ul>
+		</div>
 	{/if}
 
 	<!-- Councillor contact -->
