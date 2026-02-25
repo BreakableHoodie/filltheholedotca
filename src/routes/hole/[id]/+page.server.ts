@@ -1,7 +1,7 @@
 import { supabase } from '$lib/supabase';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import type { Pothole } from '$lib/types';
+import type { Pothole, PotholePhoto } from '$lib/types';
 import { lookupWard } from '$lib/wards';
 
 const CCC_URL = 'https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Corporate_Contact_Centre_Requests/FeatureServer/0/query';
@@ -57,10 +57,24 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	}
 
 	const pothole = data as Pothole;
-	const [councillor, cityRepairRequests] = await Promise.all([
+	const [councillor, cityRepairRequests, photosResult] = await Promise.all([
 		lookupWard(pothole.lat, pothole.lng),
-		fetchCityRepairRequests(pothole.lat, pothole.lng)
+		fetchCityRepairRequests(pothole.lat, pothole.lng),
+		supabase
+			.from('pothole_photos')
+			.select('id, storage_path, created_at')
+			.eq('pothole_id', params.id)
+			.eq('moderation_status', 'approved')
+			.order('created_at', { ascending: true })
 	]);
 
-	return { pothole, councillor, cityRepairRequests, origin: url.origin };
+	const photos: PotholePhoto[] = (photosResult.data ?? []).map((p) => ({
+		...p,
+		pothole_id: params.id,
+		moderation_status: 'approved' as const,
+		moderation_score: null,
+		url: supabase.storage.from('pothole-photos').getPublicUrl(p.storage_path).data.publicUrl
+	}));
+
+	return { pothole, councillor, cityRepairRequests, photos, origin: url.origin };
 };

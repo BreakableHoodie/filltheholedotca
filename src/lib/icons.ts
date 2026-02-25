@@ -31,6 +31,7 @@ export const ICONS = {
 	'chevron-down':    '<polyline points="6 9 12 15 18 9"/>',
 	// X/Twitter uses fill, not stroke — inline overrides handled in path attributes
 	'x-twitter':      '<path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>',
+	'camera':         '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

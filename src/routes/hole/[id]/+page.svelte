@@ -16,6 +16,7 @@
 	let councillor = $derived(data.councillor as Councillor | null);
 	let origin = $derived(data.origin as string);
 	let cityRepairRequests = $derived(data.cityRepairRequests ?? []);
+	let photos = $derived(data.photos ?? []);
 
 	let ogDescription = $derived(
 		pothole.status === 'filled'
@@ -184,6 +185,28 @@ Thank you.`;
 					{#if s !== 'filled'}
 						<div class="flex-1 h-px bg-zinc-700 self-center mb-6 max-w-12"></div>
 					{/if}
+				{/each}
+			</div>
+		</div>
+	{/if}
+
+	<!-- Photo gallery (approved photos only) -->
+	{#if photos.length > 0}
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+				<Icon name="camera" size={14} class="text-sky-400 shrink-0" />
+				{photos.length === 1 ? 'Photo' : 'Photos'}
+			</div>
+			<div class="grid grid-cols-2 gap-2">
+				{#each photos as photo (photo.id)}
+					<a href={photo.url} target="_blank" rel="noopener noreferrer" class="block rounded-lg overflow-hidden ring-1 ring-zinc-700 hover:ring-sky-500 transition-shadow">
+						<img
+							src={photo.url}
+							alt="Pothole at {pothole.address || 'this location'}"
+							class="w-full object-cover aspect-video"
+							loading="lazy"
+						/>
+					</a>
 				{/each}
 			</div>
 		</div>
