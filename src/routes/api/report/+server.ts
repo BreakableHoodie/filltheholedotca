@@ -13,7 +13,15 @@ function sanitize(s: string): string {
 	);
 }
 
-const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+// Create Supabase client only when needed, not at module level
+function getSupabaseClient() {
+	try {
+		return createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+	} catch (error) {
+		console.error('Failed to create Supabase client:', error);
+		throw new Error('Database connection failed');
+	}
+}
 
 // Kitchener–Waterloo–Cambridge (Waterloo Region), ON bounding box
 const GEOFENCE = {
@@ -72,6 +80,14 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	const ipHash = await hashIp(getClientAddress());
+
+	// Initialize Supabase client after geofence validation
+	let supabase;
+	try {
+		supabase = getSupabaseClient();
+	} catch {
+		throw error(500, 'Database connection failed');
+	}
 
 	// Search for existing pending potholes nearby using a bounding box
 	const delta = 0.0005;

@@ -1,4 +1,4 @@
-name: Lighthouse CI
+name: E2E Tests
 
 on:
   pull_request:
@@ -6,12 +6,16 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
-  lighthouse:
-    name: Lighthouse
+  e2e:
+    name: Playwright E2E
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -23,6 +27,8 @@ jobs:
 
       - run: npm ci
 
+      - run: npx playwright install chromium --with-deps
+
       # Start with placeholders, then overlay real public vars from secrets if present
       - run: cp .env.example .env
 
@@ -31,6 +37,7 @@ jobs:
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
         run: |
           if [ -n "$PUBLIC_SUPABASE_URL" ]; then
             sed -i "s|PUBLIC_SUPABASE_URL=.*|PUBLIC_SUPABASE_URL=$PUBLIC_SUPABASE_URL|" .env
@@ -41,12 +48,19 @@ jobs:
           if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
             sed -i "s|SUPABASE_SERVICE_ROLE_KEY=.*|SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY|" .env
           fi
+          if [ -n "$ADMIN_SECRET" ]; then
+            sed -i "s|ADMIN_SECRET=.*|ADMIN_SECRET=$ADMIN_SECRET|" .env
+          fi
 
       - run: npm run build
 
-      - name: Run Lighthouse CI
-        uses: treosh/lighthouse-ci-action@fcd65974f7c4c2bf0ee9d09b84d2489183c29726 # v12
+      - name: Run E2E tests
+        run: npx playwright test tests/e2e
+
+      - name: Upload Playwright report on failure
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: failure()
         with:
-          configPath: ./lighthouserc.cjs
-          temporaryPublicStorage: true
-          uploadArtifacts: true
+          name: playwright-e2e-report
+          path: playwright-report/
+          retention-days: 7
