@@ -12,6 +12,13 @@
 	let pothole = $derived(data.pothole as Pothole);
 	let info = $derived(STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported);
 	let councillor = $derived(data.councillor as Councillor | null);
+	let origin = $derived(data.origin as string);
+
+	let ogDescription = $derived(
+		pothole.status === 'filled'
+			? `This pothole at ${pothole.address || 'this location'} has been filled. Accountability worked.`
+			: `Unfilled pothole at ${pothole.address || 'this location'} in Waterloo Region. Help get it filled.`
+	);
 
 	let submitting = $state(false);
 	let showFilledForm = $state(false);
@@ -49,12 +56,6 @@
 		return `https://www.google.com/maps?q=&layer=c&cbll=${lat},${lng}`;
 	}
 
-	function tweetUrl(address: string | null, lat: number, lng: number, id: string): string {
-		const loc = address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-		const text = `There's an unfilled pothole at ${loc} in the Waterloo Region. Help get it filled! fillthehole.ca/hole/${id}`;
-		return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
-	}
-
 	function share(address: string | null, lat: number, lng: number) {
 		const loc = address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 		const text = `There's an unfilled pothole at ${loc} in the Waterloo Region — help get it on the map!`;
@@ -84,6 +85,13 @@ Thank you.`;
 
 <svelte:head>
 	<title>Pothole at {pothole.address || 'Unknown location'} — FillTheHole.ca</title>
+	<meta property="og:title" content="Pothole at {pothole.address || 'Unknown location'} — FillTheHole.ca" />
+	<meta property="og:description" content={ogDescription} />
+	<meta property="og:image" content="{origin}/api/og/{pothole.id}" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:url" content="{origin}/hole/{pothole.id}" />
+	<meta property="og:type" content="website" />
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
@@ -279,15 +287,6 @@ Thank you.`;
 			>
 				<Icon name="map" size={13} class="shrink-0" />
 				Street View
-			</a>
-			<a
-				href={tweetUrl(pothole.address, pothole.lat, pothole.lng, pothole.id)}
-				target="_blank"
-				rel="noopener noreferrer"
-				class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg transition-colors"
-			>
-				<Icon name="x-twitter" size={13} class="shrink-0" />
-				Share on X
 			</a>
 			<button
 				onclick={() => share(pothole.address, pothole.lat, pothole.lng)}
