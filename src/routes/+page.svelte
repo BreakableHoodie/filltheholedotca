@@ -317,7 +317,13 @@
 			if (reportPin) {
 				reportPin.setLatLng(e.latlng);
 			} else {
-				reportPin = L.marker(e.latlng, { draggable: true, zIndexOffset: 1000 }).addTo(map);
+				const reportIcon = L.divIcon({
+					html: `<div class="pothole-marker pothole-marker--reported">${makeSvgIcon('map-pin')}</div>`,
+					className: '',
+					iconSize: [32, 32],
+					iconAnchor: [16, 32]
+				});
+				reportPin = L.marker(e.latlng, { draggable: true, zIndexOffset: 1000, icon: reportIcon }).addTo(map);
 				reportPin.on('dragend', () => {
 					const pos = reportPin!.getLatLng();
 					reportLatLng = { lat: pos.lat, lng: pos.lng };
