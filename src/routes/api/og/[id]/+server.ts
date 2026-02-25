@@ -1,8 +1,11 @@
 import type { RequestHandler } from './$types';
 import { supabase } from '$lib/supabase';
 import { error } from '@sveltejs/kit';
+import { z } from 'zod';
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
+
+const paramsSchema = z.object({ id: z.string().uuid() });
 
 // Cache font at module level — reused across warm Lambda invocations
 let fontCache: ArrayBuffer | null = null;
@@ -17,31 +20,37 @@ async function loadFont(): Promise<ArrayBuffer> {
 		);
 	} catch (e) {
 		// Network error or timeout — don't cache so the next request retries
-		throw new Error(`Font fetch failed: ${e instanceof Error ? e.message : 'network error'}`);
+		throw error(500, `Font fetch failed: ${e instanceof Error ? e.message : 'network error'}`);
 	}
-	if (!res.ok) throw new Error(`Font fetch failed: HTTP ${res.status}`);
+	if (!res.ok) throw error(500, `Font fetch failed: HTTP ${res.status}`);
 	fontCache = await res.arrayBuffer();
 	return fontCache;
 }
 
-// Lightweight satori element helper — avoids React dependency
+// Lightweight satori element helper — avoids React dependency.
+// props intentionally typed as any: satori's CSS style values are mixed types
+// and the return must satisfy satori's internal ReactNode-compatible signature.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function el(type: string, props: Record<string, any>, ...children: any[]): any {
 	return { type, props: { ...props, children: children.length === 1 ? children[0] : children } };
 }
 
+// Colours kept in sync with STATUS_CONFIG hex values in src/lib/constants.ts
 const STATUS_STYLES = {
-	reported: { label: 'Unfilled', dot: '#fb923c', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)' },
-	filled: { label: 'Filled', dot: '#4ade80', bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.3)' },
-	pending: { label: 'Pending', dot: '#a1a1aa', bg: 'rgba(161,161,170,0.12)', border: 'rgba(161,161,170,0.3)' },
-	expired: { label: 'Expired', dot: '#71717a', bg: 'rgba(113,113,122,0.12)', border: 'rgba(113,113,122,0.3)' },
+	reported: { label: 'Unfilled', dot: '#f97316', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)' },
+	filled:   { label: 'Filled',   dot: '#22c55e', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.3)'  },
+	pending:  { label: 'Pending',  dot: '#a1a1aa', bg: 'rgba(161,161,170,0.12)', border: 'rgba(161,161,170,0.3)' },
+	expired:  { label: 'Expired',  dot: '#71717a', bg: 'rgba(113,113,122,0.12)', border: 'rgba(113,113,122,0.3)' },
 } as const;
 
 export const GET: RequestHandler = async ({ params }) => {
+	const parsed = paramsSchema.safeParse(params);
+	if (!parsed.success) throw error(400, 'Invalid ID');
+
 	const { data: pothole, error: dbError } = await supabase
 		.from('potholes')
 		.select('id, address, lat, lng, status, created_at, filled_at')
-		.eq('id', params.id)
+		.eq('id', parsed.data.id)
 		.single();
 
 	if (dbError && dbError.code !== 'PGRST116') throw error(500, 'Database error');
@@ -208,7 +217,7 @@ export const GET: RequestHandler = async ({ params }) => {
 	return new Response(png, {
 		headers: {
 			'Content-Type': 'image/png',
-			'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400',
+			'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=3600',
 		},
 	});
 };
