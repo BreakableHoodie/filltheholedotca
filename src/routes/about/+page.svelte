@@ -162,8 +162,9 @@
 				</div>
 				<p class="text-sm text-zinc-400">
 					Your IP address is used only to prevent duplicate reports from the same device.
-					It is immediately converted to a one-way SHA-256 hash before being stored — the raw IP
-					is never written to disk or logged. The hash cannot be reversed back to your IP.
+					It is immediately converted to an HMAC-SHA-256 hash with a server-side secret before being
+					stored — the raw IP is never written to disk or logged. The hash cannot be reversed back to
+					your IP without the secret.
 				</p>
 			</div>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">

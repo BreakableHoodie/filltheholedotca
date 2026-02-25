@@ -3,6 +3,7 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import type { Pothole, PotholePhoto } from '$lib/types';
 import { lookupWard } from '$lib/wards';
+import { decodeHtmlEntities } from '$lib/escape';
 
 const CCC_URL = 'https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Corporate_Contact_Centre_Requests/FeatureServer/0/query';
 const CCC_RADIUS_M = 200;
@@ -48,7 +49,7 @@ async function fetchCityRepairRequests(lat: number, lng: number): Promise<CityRe
 export const load: PageServerLoad = async ({ params, url }) => {
 	const { data, error: dbError } = await supabase
 		.from('potholes')
-		.select('*')
+		.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at, expired_at')
 		.eq('id', params.id)
 		.single();
 
@@ -56,7 +57,11 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		throw error(404, 'Hole not found');
 	}
 
-	const pothole = data as Pothole;
+	const pothole = {
+		...data,
+		address: data.address ? decodeHtmlEntities(data.address) : null,
+		description: data.description ? decodeHtmlEntities(data.description) : null
+	} as Pothole;
 	const [councillor, cityRepairRequests, photosResult] = await Promise.all([
 		lookupWard(pothole.lat, pothole.lng),
 		fetchCityRepairRequests(pothole.lat, pothole.lng),

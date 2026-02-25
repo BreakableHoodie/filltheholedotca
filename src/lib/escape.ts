@@ -13,3 +13,16 @@ export function escapeHtml(str: string): string {
 		(c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[c] ?? c
 	);
 }
+
+/**
+ * Decode a narrow set of HTML entities used by older write-time sanitization.
+ * This restores human-readable strings; escaping must still happen at render time.
+ */
+export function decodeHtmlEntities(str: string): string {
+	return str
+		.replace(/&quot;/g, '"')
+		.replace(/&#0?39;/g, "'")
+		.replace(/&lt;/g, '<')
+		.replace(/&gt;/g, '>')
+		.replace(/&amp;/g, '&');
+}
