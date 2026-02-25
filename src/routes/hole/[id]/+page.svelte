@@ -12,6 +12,13 @@
 	let pothole = $derived(data.pothole as Pothole);
 	let info = $derived(STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported);
 	let councillor = $derived(data.councillor as Councillor | null);
+	let origin = $derived(data.origin as string);
+
+	let ogDescription = $derived(
+		pothole.status === 'filled'
+			? `This pothole at ${pothole.address || 'this location'} has been filled. Accountability worked.`
+			: `Unfilled pothole at ${pothole.address || 'this location'} in Waterloo Region. Help get it filled.`
+	);
 
 	let submitting = $state(false);
 	let showFilledForm = $state(false);
@@ -84,6 +91,15 @@ Thank you.`;
 
 <svelte:head>
 	<title>Pothole at {pothole.address || 'Unknown location'} — FillTheHole.ca</title>
+	<meta property="og:title" content="Pothole at {pothole.address || 'Unknown location'} — FillTheHole.ca" />
+	<meta property="og:description" content={ogDescription} />
+	<meta property="og:image" content="{origin}/api/og/{pothole.id}" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:url" content="{origin}/hole/{pothole.id}" />
+	<meta property="og:type" content="website" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:image" content="{origin}/api/og/{pothole.id}" />
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
