@@ -33,7 +33,9 @@ export default defineConfig({
 			PUBLIC_SUPABASE_URL: process.env.PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:65432', // Use a closed port to fail fast
 			PUBLIC_SUPABASE_ANON_KEY: process.env.PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder_anon_key',
 			SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'placeholder_service_role_key',
-			ADMIN_SECRET: process.env.ADMIN_SECRET ?? 'placeholder_admin_secret'
+			ADMIN_SECRET: process.env.ADMIN_SECRET ?? 'placeholder_admin_secret',
+			// Pass flag to tests indicating whether Supabase is properly configured
+			SUPABASE_CONFIGURED: process.env.PUBLIC_SUPABASE_URL?.startsWith('http') ? 'true' : 'false'
 		}
 	}
 });
