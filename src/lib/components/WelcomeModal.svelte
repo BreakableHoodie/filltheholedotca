@@ -70,11 +70,11 @@
 			desc: 'Standing next to a pothole? Open the app, lock your GPS, and submit. Three independent reports puts it on the map.',
 		},
 		{
-			icon: 'flag' as const,
+			icon: 'mail' as const,
 			iconClass: 'text-sky-400',
 			bgClass: 'bg-sky-500/10',
-			title: 'Flag',
-			desc: 'Verify a pothole is still there and file an official report with the city. Then mark it flagged here.',
+			title: 'Contact',
+			desc: 'Share the link or email your ward councillor directly from the pothole page. The more people who see it, the harder it is to ignore.',
 		},
 		{
 			icon: 'check-circle' as const,

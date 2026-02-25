@@ -75,7 +75,7 @@
 						class="inline-flex items-center gap-1.5 bg-sky-700 hover:bg-sky-600 text-white font-semibold px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap text-sm"
 					>
 						<Icon name="plus" size={14} strokeWidth={2.5} />
-						Report a hole
+						Report a pothole
 					</a>
 				</nav>
 			</div>

@@ -10,7 +10,7 @@
 
 	let { data }: { data: PageData } = $props();
 	let pothole = $derived(data.pothole as Pothole);
-	let info = $derived(STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG]);
+	let info = $derived(STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported);
 	let councillor = $derived(data.councillor as Councillor | null);
 
 	let submitting = $state(false);
@@ -160,8 +160,8 @@ Thank you.`;
 		</div>
 	{/if}
 
-	<!-- Mark as fixed action (reported or legacy wanksyd rows) -->
-	{#if pothole.status === 'reported' || (pothole.status as string) === 'wanksyd'}
+	<!-- Mark as filled action -->
+	{#if pothole.status === 'reported'}
 		{#if !showFilledForm}
 			<button
 				onclick={() => (showFilledForm = true)}

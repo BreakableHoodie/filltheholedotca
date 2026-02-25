@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 // The "valid UUID" tests confirm schema acceptance; downstream DB behaviour
 // (409 wrong status, 500 no connection) is intentionally outside scope here.
 
-test.describe('Wanksy API — removed', () => {
+test.describe('Removed API endpoints', () => {
 	test('/api/wanksy returns 404 after removal', async ({ request }) => {
 		const response = await request.post('/api/wanksy', {
 			data: { id: '550e8400-e29b-41d4-a716-446655440000' }

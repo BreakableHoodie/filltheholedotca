@@ -111,14 +111,14 @@
 
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex gap-4 items-start">
 				<div class="shrink-0 mt-0.5 p-2 rounded-lg bg-sky-500/10">
-					<Icon name="flag" size={20} class="text-sky-400" />
+					<Icon name="mail" size={20} class="text-sky-400" />
 				</div>
 				<div>
-					<div class="font-semibold text-white mb-1">2. Flag it</div>
+					<div class="font-semibold text-white mb-1">2. Contact</div>
 					<p class="text-sm text-zinc-400">
-						Go to a reported pothole, confirm it's still there, and file an official complaint
-						through the city's service request system. Then come back and mark it flagged here.
-						The more official reports, the harder it is to ignore.
+						Share the pothole link with your ward councillor or on social media.
+						The detail page shows your councillor's contact info and a direct email link.
+						The more people who see it, the harder it is to ignore.
 					</p>
 				</div>
 			</div>
