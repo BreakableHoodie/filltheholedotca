@@ -9,6 +9,8 @@
 	import { COUNCILLORS } from '$lib/wards';
 	import { inWardFeature } from '$lib/geo';
 	import { STATUS_CONFIG } from '$lib/constants';
+	import { ICONS } from '$lib/icons';
+	import Icon from '$lib/components/Icon.svelte';
 	import { escapeHtml } from '$lib/escape';
 
 	let { data }: { data: PageData } = $props();
@@ -94,7 +96,7 @@
 					iconAnchor: [10, 10]
 				});
 				locationMarker = L.marker([lat, lng], { icon, zIndexOffset: 500 })
-					.bindPopup(`<div class="popup-content"><strong>📍 You are here</strong><br/><span style="color:#888;font-size:11px">±${Math.round(accuracy)}m accuracy</span></div>`)
+					.bindPopup(`<div class="popup-content"><strong>You are here</strong><br/><span style="color:#71717a;font-size:11px">±${Math.round(accuracy)}m accuracy</span></div>`)
 					.addTo(map);
 
 				map.flyTo([lat, lng], 16, { duration: 1.2 });
@@ -196,6 +198,10 @@
 		}
 	}
 
+	function makeSvgIcon(iconKey: keyof typeof ICONS): string {
+		return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[iconKey]}</svg>`;
+	}
+
 	onMount(async () => {
 		await import('leaflet/dist/leaflet.css');
 		const leafletModule = await import('leaflet');
@@ -236,25 +242,26 @@
 			if (!(layerKey in clusterGroups)) continue;
 
 			const info = STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported;
+			const svgContent = makeSvgIcon(info.icon);
 			const icon = L.divIcon({
-				html: `<div class="pothole-marker pothole-marker--${pothole.status}" title="${info.label}">${info.emoji}</div>`,
+				html: `<div class="pothole-marker pothole-marker--${pothole.status}" title="${info.label}">${svgContent}</div>`,
 				className: '',
-				iconSize: [36, 36],
-				iconAnchor: [18, 18]
+				iconSize: [32, 32],
+				iconAnchor: [16, 16]
 			});
 			const marker = L.marker([pothole.lat, pothole.lng], { icon });
 
 			const address = escapeHtml(pothole.address || `${pothole.lat.toFixed(5)}, ${pothole.lng.toFixed(5)}`);
 			const description = pothole.description ? escapeHtml(pothole.description) : null;
 
-			// "Fixed" button only for reported potholes (Task 9)
+			// "Fixed" button only for reported potholes
 			const fixedBtn = pothole.status === 'reported'
 				? `<button class="popup-fix-btn" data-action="mark-filled" data-pothole-id="${pothole.id}">✓ Fixed</button>`
 				: '';
 
 			marker.bindPopup(
 				`<div class="popup-content">
-					<strong>${info.emoji} ${address}</strong><br/>
+					<strong>${address}</strong>
 					<span class="popup-status popup-status--${pothole.status}">${info.label}</span>
 					${description ? `<br/><em>${description}</em>` : ''}
 					<br/><a href="/hole/${pothole.id}" class="popup-link">View details →</a>
@@ -266,7 +273,7 @@
 			clusterGroups[layerKey].addLayer(marker);
 		}
 
-		// Delegated listener for popup Fixed button (Task 9)
+		// Delegated listener for popup Fixed button
 		map.on('popupopen', (e) => {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const container = (e as any).popup.getElement();
@@ -287,11 +294,9 @@
 					if (!res.ok && res.status !== 409) throw new Error(result.message || 'Failed');
 
 					map.closePopup();
-					toast.success(result.ok ? '✅ Marked as fixed!' : result.message);
+					toast.success(result.ok ? 'Marked as fixed!' : result.message);
 
 					// Move marker from reported layer to filled layer.
-					// Always add to the filled cluster — its map visibility is controlled
-					// by the layer toggle, not by whether the layer is currently active.
 					if (result.ok) {
 						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						const marker = (e as any).popup._source;
@@ -328,17 +333,16 @@
 	<title>fillthehole.ca — Waterloo Region Pothole Map</title>
 </svelte:head>
 
-<!-- Visually hidden page heading for screen readers (WCAG 2.4.6) -->
 <h1 class="sr-only">Waterloo Region Pothole Map</h1>
 
 <div class="relative w-full isolate" style="height: calc(100dvh - 57px - env(safe-area-inset-top))">
 	<div bind:this={mapEl} class="w-full h-full bg-zinc-900"></div>
 
 	{#if !mapReady}
-		<div class="absolute inset-0 flex items-center justify-center bg-zinc-900 text-zinc-400">
+		<div class="absolute inset-0 flex items-center justify-center bg-zinc-900">
 			<div class="text-center">
-				<div class="text-4xl mb-3">🕳️</div>
-				<div class="text-sm">Loading the holes...</div>
+				<div class="mx-auto w-9 h-9 rounded-full border-2 border-zinc-700 border-t-sky-500 animate-spin mb-4"></div>
+				<div class="text-sm text-zinc-500">Loading the map…</div>
 			</div>
 		</div>
 	{/if}
@@ -380,7 +384,13 @@
 				disabled={locating}
 				class="bg-zinc-900/90 backdrop-blur border border-zinc-700 hover:border-zinc-500 rounded-xl px-3 py-2 text-xs text-zinc-300 transition-colors flex items-center gap-1.5 disabled:opacity-50"
 			>
-				{locating ? '⏳' : '📍'} {locating ? 'Locating…' : 'Find me'}
+				{#if locating}
+					<Icon name="loader" size={12} class="animate-spin shrink-0" />
+					Locating…
+				{:else}
+					<Icon name="crosshair" size={12} class="shrink-0" />
+					Find me
+				{/if}
 			</button>
 
 			<!-- Report here button -->
@@ -391,17 +401,18 @@
 				disabled={reportMode}
 				class="bg-sky-700/90 backdrop-blur border border-sky-600 hover:border-sky-400 rounded-xl px-3 py-2 text-xs text-white font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
 			>
-				📍 Report here
+				<Icon name="map-pin" size={12} class="shrink-0" />
+				Report here
 			</button>
 
 			<!-- Layers panel -->
 			<div class="bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl p-3 space-y-2 text-xs">
-				<div class="text-zinc-400 font-semibold uppercase tracking-wider text-[10px] mb-1">🗂 Layers</div>
+				<div class="text-zinc-400 font-semibold uppercase tracking-wider text-[10px] mb-1">Layers</div>
 
 				{#each ([
-					['reported', '📍 Reported'],
-					['expired',  '🕰️ Expired'],
-					['filled',   '✅ Filled'],
+					['reported', 'Reported'],
+					['expired',  'Expired'],
+					['filled',   'Filled'],
 				] as const) as [key, label] (key)}
 					<label class="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
 						<input
@@ -423,14 +434,27 @@
 							disabled={wardLoading}
 							class="accent-orange-500"
 						/>
-						{wardLoading ? '⏳ Loading…' : '🗺️ Ward heatmap'}
+						{wardLoading ? 'Loading…' : 'Ward heatmap'}
 					</label>
 				</div>
 			</div>
 		</div>
 	{/if}
 
-	<!-- Pothole count bubble -->
+	<!-- Legend -->
+	{#if mapReady}
+		<div class="absolute safe-bottom right-4 bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl p-3 text-xs space-y-1.5 z-[1000]">
+			<div class="text-zinc-400 font-semibold mb-2 uppercase tracking-wider text-[10px]">Status</div>
+			{#each ['reported', 'expired', 'filled'] as status (status)}
+				{@const info = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]}
+				<div class="flex items-center gap-2 text-zinc-300">
+					<Icon name={info.icon} size={12} class={info.colorClass} />
+					<span>{info.label}</span>
+				</div>
+			{/each}
+		</div>
+	{/if}
+
 	{#if (data.potholes as Pothole[]).length === 0}
 		<div class="absolute top-4 left-1/2 -translate-x-1/2 bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl px-4 py-2 text-sm text-zinc-400 z-[1000]">
 			No potholes yet —&nbsp;<a href="/report" class="text-sky-400 hover:text-sky-300 underline">be the first to report one!</a>
@@ -440,15 +464,14 @@
 
 <style>
 	:global(.pothole-marker) {
-		font-size: 22px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 36px;
-		height: 36px;
+		width: 32px;
+		height: 32px;
 		border-radius: 50%;
-		background: rgba(0, 0, 0, 0.6);
-		border: 2px solid rgba(255, 255, 255, 0.2);
+		background: rgba(0, 0, 0, 0.65);
+		border: 2px solid rgba(255, 255, 255, 0.15);
 		cursor: pointer;
 		transition: transform 0.15s;
 	}
@@ -458,18 +481,21 @@
 	}
 
 	:global(.pothole-marker--reported) {
+		color: #f97316;
 		border-color: #f97316;
-		box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+		box-shadow: 0 0 8px rgba(249, 115, 22, 0.4);
 	}
 
 	:global(.pothole-marker--expired) {
+		color: #71717a;
 		border-color: #71717a;
 		box-shadow: 0 0 8px rgba(113, 113, 122, 0.4);
 	}
 
 	:global(.pothole-marker--filled) {
-		border-color: #22c55e;
-		box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+		color: #4ade80;
+		border-color: #4ade80;
+		box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
 	}
 
 	:global(.popup-content) {
@@ -486,6 +512,7 @@
 		border-radius: 4px;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
+		margin-top: 2px;
 	}
 
 	:global(.popup-status--reported) { background: #f9731620; color: #f97316; }

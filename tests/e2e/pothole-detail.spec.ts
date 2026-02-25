@@ -47,7 +47,7 @@ test.describe('Pothole detail page', () => {
 		await expect(page.getByRole('button', { name: /Copy link/i })).toBeVisible();
 	});
 
-	test('shows "I flagged this one" button when status is reported', async ({ page, request }) => {
+	test('shows "Mark as filled" button when status is reported', async ({ page, request }) => {
 		const feedRes = await request.get('/api/feed.json');
 		const { potholes } = (await feedRes.json()) as { potholes: FeedPothole[] };
 		const reported = potholes?.find((p) => p.status === 'reported');
@@ -58,7 +58,7 @@ test.describe('Pothole detail page', () => {
 		}
 
 		await page.goto(`/hole/${reported.id}`);
-		await expect(page.getByRole('button', { name: /I flagged this one/i })).toBeVisible();
+		await expect(page.getByRole('button', { name: /Mark as filled/i })).toBeVisible();
 	});
 
 	test('shows councillor contact block for non-filled open potholes', async ({ page, request }) => {

@@ -1,10 +1,14 @@
+<script lang="ts">
+	import Icon from '$lib/components/Icon.svelte';
+</script>
+
 <svelte:head>
 	<title>About — fillthehole.ca</title>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-12 space-y-10">
 	<div>
-		<h1 class="text-4xl font-bold text-white mb-2">About 🕳️</h1>
+		<h1 class="font-brand font-bold text-4xl text-white mb-2">About</h1>
 		<p class="text-zinc-400 text-lg">Civic accountability, one pothole at a time.</p>
 	</div>
 
@@ -26,7 +30,10 @@
 	</section>
 
 	<section class="bg-zinc-900 border border-zinc-700 rounded-xl p-6 space-y-4">
-		<h2 class="text-xl font-bold text-white">📋 Report it officially too</h2>
+		<h2 class="flex items-center gap-2 text-xl font-bold text-white">
+			<Icon name="external-link" size={18} class="text-sky-400 shrink-0" />
+			Report it officially too
+		</h2>
 		<p class="text-zinc-400 text-sm">
 			This map creates public pressure — but an official report creates a paper trail the city
 			is legally required to respond to. Do both.
@@ -38,7 +45,8 @@
 				rel="noopener noreferrer"
 				class="flex items-center gap-2 bg-sky-700 hover:bg-sky-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
 			>
-				🏙️ City of Kitchener — Report a Road Concern →
+				<Icon name="external-link" size={14} class="shrink-0" />
+				City of Kitchener — Report a Road Concern
 			</a>
 			<a
 				href="https://www.waterloo.ca/roads-and-cycling/report-a-road-trail-or-sidewalk-issue/"
@@ -46,7 +54,8 @@
 				rel="noopener noreferrer"
 				class="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
 			>
-				🏙️ City of Waterloo — Report a Road Issue →
+				<Icon name="external-link" size={14} class="shrink-0" />
+				City of Waterloo — Report a Road Issue
 			</a>
 			<a
 				href="https://maps.cambridge.ca/gis/ServiceRequests/Pothole/"
@@ -54,7 +63,8 @@
 				rel="noopener noreferrer"
 				class="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
 			>
-				🏙️ City of Cambridge — Report a Pothole →
+				<Icon name="external-link" size={14} class="shrink-0" />
+				City of Cambridge — Report a Pothole
 			</a>
 			<a
 				href="https://www.regionofwaterloo.ca/en/living-here/roads-and-traffic.aspx"
@@ -62,7 +72,8 @@
 				rel="noopener noreferrer"
 				class="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
 			>
-				🌊 Region of Waterloo — Roads & Traffic →
+				<Icon name="external-link" size={14} class="shrink-0" />
+				Region of Waterloo — Roads &amp; Traffic
 			</a>
 		</div>
 		<div class="bg-zinc-800 rounded-lg p-3 text-xs text-zinc-400 leading-relaxed space-y-2">
@@ -85,7 +96,9 @@
 
 		<div class="grid gap-4">
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex gap-4 items-start">
-				<span class="text-3xl mt-1">📍</span>
+				<div class="shrink-0 mt-0.5 p-2 rounded-lg bg-orange-500/10">
+					<Icon name="map-pin" size={20} class="text-orange-400" />
+				</div>
 				<div>
 					<div class="font-semibold text-white mb-1">1. Report</div>
 					<p class="text-sm text-zinc-400">
@@ -97,19 +110,23 @@
 			</div>
 
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex gap-4 items-start">
-				<span class="text-3xl mt-1">🚩</span>
+				<div class="shrink-0 mt-0.5 p-2 rounded-lg bg-sky-500/10">
+					<Icon name="mail" size={20} class="text-sky-400" />
+				</div>
 				<div>
-					<div class="font-semibold text-white mb-1">2. Flag it</div>
+					<div class="font-semibold text-white mb-1">2. Contact</div>
 					<p class="text-sm text-zinc-400">
-						Go to a reported pothole, confirm it's still there, and file an official complaint
-						through the city's service request system. Then come back and mark it flagged here.
-						The more official reports, the harder it is to ignore.
+						Share the pothole link with your ward councillor or on social media.
+						The detail page shows your councillor's contact info and a direct email link.
+						The more people who see it, the harder it is to ignore.
 					</p>
 				</div>
 			</div>
 
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex gap-4 items-start">
-				<span class="text-3xl mt-1">✅</span>
+				<div class="shrink-0 mt-0.5 p-2 rounded-lg bg-green-500/10">
+					<Icon name="check-circle" size={20} class="text-green-400" />
+				</div>
 				<div>
 					<div class="font-semibold text-white mb-1">3. Watch it get filled</div>
 					<p class="text-sm text-zinc-400">
@@ -129,14 +146,20 @@
 
 		<div class="space-y-3">
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
-				<div class="text-sm font-semibold text-white">📍 GPS coordinates</div>
+				<div class="flex items-center gap-2 text-sm font-semibold text-white">
+					<Icon name="crosshair" size={14} class="text-zinc-400 shrink-0" />
+					GPS coordinates
+				</div>
 				<p class="text-sm text-zinc-400">
 					When you report a pothole, your GPS coordinates are stored to place the pin on the map.
 					That's their only purpose. They are never sold, shared with third parties, or tied to any identity.
 				</p>
 			</div>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
-				<div class="text-sm font-semibold text-white">🔒 IP addresses</div>
+				<div class="flex items-center gap-2 text-sm font-semibold text-white">
+					<Icon name="info" size={14} class="text-zinc-400 shrink-0" />
+					IP addresses
+				</div>
 				<p class="text-sm text-zinc-400">
 					Your IP address is used only to prevent duplicate reports from the same device.
 					It is immediately converted to a one-way SHA-256 hash before being stored — the raw IP
@@ -144,7 +167,10 @@
 				</p>
 			</div>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
-				<div class="text-sm font-semibold text-white">🍪 Cookies & local storage</div>
+				<div class="flex items-center gap-2 text-sm font-semibold text-white">
+					<Icon name="info" size={14} class="text-zinc-400 shrink-0" />
+					Cookies &amp; local storage
+				</div>
 				<p class="text-sm text-zinc-400">
 					This site sets no cookies. A single entry (<code class="text-zinc-300 bg-zinc-800 px-1 rounded text-xs">fth-welcomed</code>)
 					is stored in your browser's local storage to remember that you've seen the welcome screen.
@@ -152,13 +178,16 @@
 				</p>
 			</div>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
-				<div class="text-sm font-semibold text-white">🌐 Third-party services</div>
+				<div class="flex items-center gap-2 text-sm font-semibold text-white">
+					<Icon name="globe" size={14} class="text-zinc-400 shrink-0" />
+					Third-party services
+				</div>
 				<p class="text-sm text-zinc-400">
-			Map tiles are loaded from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">OpenStreetMap</a>.
-				When you report a pothole, your coordinates are sent to
-				<a href="https://nominatim.org" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">Nominatim</a> (OpenStreetMap's geocoder)
-				to look up the street address. Report data is stored in
-				<a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">Supabase</a>.
+					Map tiles are loaded from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">OpenStreetMap</a>.
+					When you report a pothole, your coordinates are sent to
+					<a href="https://nominatim.org" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">Nominatim</a> (OpenStreetMap's geocoder)
+					to look up the street address. Report data is stored in
+					<a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">Supabase</a>.
 					Each of these services has its own privacy policy.
 				</p>
 			</div>
@@ -202,14 +231,15 @@
 			rel="noopener noreferrer"
 			class="inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
 		>
-			<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-				<path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
-			</svg>
+			<Icon name="github" size={16} class="shrink-0" />
 			BreakableHoodie/filltheholedotca
 		</a>
 	</section>
 
 	<div class="text-center pt-4">
-		<a href="/" class="text-zinc-400 hover:text-white text-sm">← Back to the map</a>
+		<a href="/" class="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm transition-colors">
+			<Icon name="arrow-left" size={14} />
+			Back to the map
+		</a>
 	</div>
 </div>

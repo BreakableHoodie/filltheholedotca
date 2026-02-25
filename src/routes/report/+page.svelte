@@ -2,13 +2,14 @@
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import Icon from '$lib/components/Icon.svelte';
 	import { page } from '$app/stores';
 
 	const SEVERITY_OPTIONS = [
-		{ value: 'Spilled my coffee', emoji: '🟡', label: 'Spilled my coffee', sub: 'barely there' },
-		{ value: 'Bent a rim', emoji: '🟠', label: 'Bent a rim', sub: 'car or bike — you felt that' },
-		{ value: 'Caused real damage', emoji: '🔴', label: 'Caused real damage', sub: 'tire, wheel, or worse' },
-		{ value: 'RIP', emoji: '☠️', label: 'RIP', sub: 'suspension, wheel, will to live' }
+		{ value: 'Spilled my coffee',  level: 1, label: 'Spilled my coffee',  sub: 'barely there',                    barColor: 'bg-yellow-400' },
+		{ value: 'Bent a rim',         level: 2, label: 'Bent a rim',         sub: 'car or bike — you felt that',     barColor: 'bg-orange-400' },
+		{ value: 'Caused real damage', level: 3, label: 'Caused real damage', sub: 'tire, wheel, or worse',           barColor: 'bg-red-400'    },
+		{ value: 'RIP',                level: 4, label: 'RIP',                sub: 'suspension, wheel, will to live', barColor: 'bg-rose-400'   },
 	] as const;
 
 	let lat = $state<number | null>(null);
@@ -17,10 +18,11 @@
 	let address = $state<string | null>(null);
 	let severity = $state<string | null>(null);
 	let submitting = $state(false);
+
 	const LOCATION_TABS = [
-		{ mode: 'gps', label: '📍 GPS' },
-		{ mode: 'address', label: '🔍 Address' },
-		{ mode: 'map', label: '🗺️ Pick on map' }
+		{ mode: 'gps',     label: 'GPS' },
+		{ mode: 'address', label: 'Address' },
+		{ mode: 'map',     label: 'Pin on map' }
 	] as const;
 	type LocationMode = (typeof LOCATION_TABS)[number]['mode'];
 	let locationMode = $state<LocationMode>('gps');
@@ -242,7 +244,7 @@
 				lat = pos.coords.latitude;
 				lng = pos.coords.longitude;
 				gpsStatus = 'got';
-				toast.success('📍 Location locked in');
+				toast.success('Location locked in');
 				reverseGeocode(pos.coords.latitude, pos.coords.longitude);
 			},
 			(err) => {
@@ -290,14 +292,17 @@
 
 <div class="max-w-lg mx-auto px-4 py-8">
 	<div class="mb-6">
-		<h1 class="text-3xl font-bold text-white mb-1">Report a pothole 🕳️</h1>
-		<p class="text-zinc-400 text-sm">Standing next to a pothole? Lock your GPS and submit.</p>
+		<h1 class="font-brand font-bold text-3xl text-white mb-1">Report a pothole</h1>
+		<p class="text-zinc-400 text-sm">Standing next to one? Share its location and submit.</p>
 	</div>
 
 	<form onsubmit={handleSubmit} class="space-y-5">
 		<!-- Location -->
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<div class="text-sm font-semibold text-zinc-300">📍 Location</div>
+			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+				<Icon name="crosshair" size={14} class="text-sky-400" />
+				Location
+			</div>
 
 			<!-- Tab bar -->
 			<div role="tablist" aria-label="Choose a location source" class="flex gap-1 bg-zinc-800 rounded-lg p-1">
@@ -333,7 +338,7 @@
 					type="button"
 					onclick={getLocation}
 					disabled={gpsStatus === 'loading'}
-					class="w-full py-3 rounded-lg border-2 border-dashed font-semibold text-sm transition-colors
+					class="w-full py-3 rounded-lg border-2 border-dashed font-semibold text-sm transition-colors flex items-center justify-center gap-2
 						{gpsStatus === 'got'
 							? 'border-green-500 bg-green-500/10 text-green-400'
 							: gpsStatus === 'error'
@@ -341,13 +346,17 @@
 							: 'border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400'}"
 				>
 					{#if gpsStatus === 'loading'}
-						⏳ Getting your location...
+						<Icon name="loader" size={15} class="animate-spin shrink-0" />
+						Getting your location…
 					{:else if gpsStatus === 'got'}
-						✓ GPS locked
+						<Icon name="check" size={15} strokeWidth={2.5} class="shrink-0" />
+						GPS locked
 					{:else if gpsStatus === 'error'}
-						⚠️ GPS failed — tap to retry
+						<Icon name="alert-triangle" size={15} class="shrink-0" />
+						GPS failed — tap to retry
 					{:else}
-						📍 Use my current location
+						<Icon name="crosshair" size={15} class="shrink-0" />
+						Use my current location
 					{/if}
 				</button>
 
@@ -358,9 +367,12 @@
 				{/if}
 
 				{#if address}
-					<p class="text-xs text-zinc-400">📌 {address}</p>
+					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
+						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-500" />
+						{address}
+					</p>
 				{:else if gpsStatus === 'got'}
-					<p class="text-xs text-zinc-400">Looking up address...</p>
+					<p class="text-xs text-zinc-500">Looking up address…</p>
 				{/if}
 			</div>
 
@@ -406,7 +418,10 @@
 					{/if}
 				</div>
 				{#if lat !== null && addressQuery && addressSuggestions.length === 0}
-					<p class="text-xs text-zinc-400">📌 {address}</p>
+					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
+						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-500" />
+						{address}
+					</p>
 				{/if}
 			</div>
 
@@ -420,8 +435,9 @@
 			>
 				<div bind:this={miniMapEl} class="w-full rounded-lg overflow-hidden" style="height: 260px;"></div>
 				{#if lat !== null}
-					<p class="text-xs text-zinc-400">
-						📌 {address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
+					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
+						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-500" />
+						{address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
 					</p>
 				{:else}
 					<p class="text-xs text-zinc-500">Tap the map to place a pin</p>
@@ -431,11 +447,14 @@
 
 		<!-- Severity -->
 		<fieldset class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<legend class="text-sm font-semibold text-zinc-300 mb-2">💥 How bad is it? (optional)</legend>
+			<legend class="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-2">
+				<Icon name="alert-triangle" size={14} class="text-zinc-400" />
+				How bad is it? <span class="text-zinc-400 font-normal">(optional)</span>
+			</legend>
 			<div class="grid grid-cols-2 gap-2">
 				{#each SEVERITY_OPTIONS as opt (opt.value)}
 					<label
-						class="flex flex-col items-start gap-0.5 p-3 rounded-lg border text-left cursor-pointer transition-colors
+						class="flex flex-col items-start gap-1.5 p-3 rounded-lg border text-left cursor-pointer transition-colors
 							{severity === opt.value
 								? 'border-sky-500 bg-sky-500/10'
 								: 'border-zinc-700 hover:border-zinc-500'}"
@@ -448,9 +467,17 @@
 							onchange={() => severity = opt.value}
 							class="sr-only"
 						/>
-						<span class="text-xl" aria-hidden="true">{opt.emoji}</span>
-						<span class="text-sm font-semibold text-white">{opt.label}</span>
-						<span class="text-xs text-zinc-400">{opt.sub}</span>
+						<!-- Signal-strength damage indicator -->
+						<div class="flex items-end gap-0.5 h-4" aria-hidden="true">
+							{#each [1, 2, 3, 4] as i (i)}
+								<div
+									class="w-1.5 rounded-t-sm transition-colors {i <= opt.level ? opt.barColor : 'bg-zinc-700'}"
+									style="height: {i * 25}%"
+								></div>
+							{/each}
+						</div>
+						<span class="text-sm font-semibold text-white leading-tight">{opt.label}</span>
+						<span class="text-xs text-zinc-400 leading-tight">{opt.sub}</span>
 					</label>
 				{/each}
 			</div>
@@ -459,9 +486,15 @@
 		<button
 			type="submit"
 			disabled={submitting || lat === null || lng === null}
-			class="w-full py-4 font-bold text-lg rounded-xl transition-colors disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed bg-sky-700 hover:bg-sky-600 text-white"
+			class="w-full py-4 font-bold text-lg rounded-xl transition-colors flex items-center justify-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed bg-sky-700 hover:bg-sky-600 text-white"
 		>
-			{submitting ? '⏳ Submitting...' : '📍 Report this hole'}
+			{#if submitting}
+				<Icon name="loader" size={16} class="animate-spin shrink-0" />
+				Submitting…
+			{:else}
+				<Icon name="map-pin" size={16} class="shrink-0" />
+				Report this hole
+			{/if}
 		</button>
 
 		<p class="text-xs text-zinc-400 text-center">
