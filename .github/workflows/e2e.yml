@@ -1,0 +1,55 @@
+name: E2E Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install chromium --with-deps
+
+      # Start with placeholders, then overlay real public vars from secrets if present
+      - run: cp .env.example .env
+
+      - name: Override with real env vars
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -n "$PUBLIC_SUPABASE_URL" ]; then
+            sed -i "s|PUBLIC_SUPABASE_URL=.*|PUBLIC_SUPABASE_URL=$PUBLIC_SUPABASE_URL|" .env
+          fi
+          if [ -n "$PUBLIC_SUPABASE_ANON_KEY" ]; then
+            sed -i "s|PUBLIC_SUPABASE_ANON_KEY=.*|PUBLIC_SUPABASE_ANON_KEY=$PUBLIC_SUPABASE_ANON_KEY|" .env
+          fi
+          if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            sed -i "s|SUPABASE_SERVICE_ROLE_KEY=.*|SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY|" .env
+          fi
+
+      - run: npm run build
+
+      - name: Run E2E tests
+        run: npx playwright test tests/e2e
+
+      - name: Upload Playwright report on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-e2e-report
+          path: playwright-report/
+          retention-days: 7
