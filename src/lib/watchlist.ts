@@ -58,12 +58,16 @@ export function removeWatch(id: string): void {
 	save(getWatchlist().filter((i) => i !== id));
 }
 
-/** Toggle watch state. Returns the new watched state. */
+/**
+ * Toggle watch state. Returns the actual persisted state after the operation.
+ * Returns false if addWatch no-ops (MAX_ITEMS reached, invalid UUID, storage error).
+ */
 export function toggleWatch(id: string): boolean {
 	if (isWatched(id)) {
 		removeWatch(id);
 		return false;
 	}
 	addWatch(id);
-	return true;
+	// Re-read storage to reflect the actual outcome — addWatch can no-op silently
+	return isWatched(id);
 }

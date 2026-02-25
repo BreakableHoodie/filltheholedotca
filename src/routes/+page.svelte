@@ -489,7 +489,7 @@
 </div>
 
 <div bind:this={watchlistSection}>
-	<WatchlistPanel />
+	<WatchlistPanel bind:count={watchlistCount} />
 </div>
 
 <style>

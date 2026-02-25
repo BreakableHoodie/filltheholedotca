@@ -14,10 +14,17 @@
 		filled_at: string | null;
 	};
 
+	let { count = $bindable(0) }: { count?: number } = $props();
+
 	let ids = $state<string[]>([]);
 	let potholes = $state<WatchedPothole[]>([]);
 	let loading = $state(false);
 	let fetchError = $state(false);
+
+	// Keep the bound count in sync whenever ids changes
+	$effect(() => {
+		count = ids.length;
+	});
 
 	function daysSince(date: string): number {
 		return Math.floor((Date.now() - new Date(date).getTime()) / 86_400_000);
