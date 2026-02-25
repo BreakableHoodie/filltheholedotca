@@ -82,12 +82,11 @@ To prevent spam, a new report starts as `pending` and only becomes public after 
 ### Status pipeline
 
 ```
-pending → reported → wanksyd → filled
+pending → reported → filled
 ```
 
 - **pending** — awaiting 3 confirmations
 - **reported** — live on the map, needs city attention
-- **wanksyd** — someone physically flagged it and submitted a city service request
 - **filled** — city patched it
 
 ### Ward heatmap

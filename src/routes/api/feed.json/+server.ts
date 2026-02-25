@@ -8,7 +8,7 @@ const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 export const GET: RequestHandler = async () => {
 	const { data, error } = await supabase
 		.from('potholes')
-		.select('id, created_at, lat, lng, address, description, status, wanksy_at, filled_at')
+		.select('id, created_at, lat, lng, address, description, status, filled_at')
 		.neq('status', 'pending')
 		.order('created_at', { ascending: false });
 

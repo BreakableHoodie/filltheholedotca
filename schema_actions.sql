@@ -1,14 +1,14 @@
 -- Migration: pothole_actions table + increment_confirmation RPC
 -- Run this in your Supabase SQL editor after schema_update.sql
 
--- Tracks per-pothole per-IP status transitions (wanksy, filled).
+-- Tracks per-pothole per-IP status transitions (filled).
 -- Unique constraint prevents the same device from triggering the same
 -- transition more than once, and provides an audit trail.
 create table if not exists pothole_actions (
   id          uuid primary key default gen_random_uuid(),
   pothole_id  uuid not null references potholes(id) on delete cascade,
   ip_hash     text not null,
-  action      text not null check (action in ('wanksy', 'filled')),
+  action      text not null check (action in ('filled')),
   created_at  timestamptz not null default now(),
   unique (pothole_id, ip_hash, action)
 );

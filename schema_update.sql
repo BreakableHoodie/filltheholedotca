@@ -4,10 +4,8 @@ ALTER TABLE potholes ADD COLUMN IF NOT EXISTS confirmed_count int default 1;
 
 -- Drop columns no longer used
 ALTER TABLE potholes DROP COLUMN IF EXISTS photo_url;
-ALTER TABLE potholes DROP COLUMN IF EXISTS wanksy_url;
 ALTER TABLE potholes DROP COLUMN IF EXISTS filled_url;
 ALTER TABLE potholes DROP COLUMN IF EXISTS submitter;
-ALTER TABLE potholes DROP COLUMN IF EXISTS wanksy_by;
 
 -- IP deduplication table (stores hashed IPs only — no raw PII)
 CREATE TABLE IF NOT EXISTS pothole_confirmations (

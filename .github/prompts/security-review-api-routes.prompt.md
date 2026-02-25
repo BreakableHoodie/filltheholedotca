@@ -16,9 +16,8 @@ Review the public API routes for this SvelteKit application.
 **Files to review (in priority order):**
 1. `src/routes/api/report/+server.ts` — highest risk. Accepts public reports, runs geofence check, IP dedup, and 50m merge logic
 2. `src/routes/api/admin/pothole/[id]/+server.ts` — admin delete/patch. Token-gated
-3. `src/routes/api/wanksy/+server.ts` — status transition: reported → wanksyd
-4. `src/routes/api/filled/+server.ts` — status transition: wanksyd → filled
-5. `src/lib/geo.ts` — geofence and point-in-ring utilities used by the above
+3. `src/routes/api/filled/+server.ts` — status transition: reported → filled
+4. `src/lib/geo.ts` — geofence and point-in-ring utilities used by the above
 
 **What to look for:**
 - Injection: are all Supabase queries parameterized, or is any user input interpolated?

@@ -32,15 +32,6 @@ test.describe('Watchlist API (/api/watchlist)', () => {
 	});
 });
 
-test.describe('Removed API endpoints', () => {
-	test('/api/wanksy returns 404 after removal', async ({ request }) => {
-		const response = await request.post('/api/wanksy', {
-			data: { id: '550e8400-e29b-41d4-a716-446655440000' }
-		});
-		expect(response.status()).toBe(404);
-	});
-});
-
 test.describe('Filled API — status guard', () => {
 	test('accepts a valid UUID for filled endpoint', async ({ request }) => {
 		const response = await request.post('/api/filled', {

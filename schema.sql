@@ -7,8 +7,7 @@ create table if not exists potholes (
   lng         float8 not null,
   address     text,
   description text,
-  status      text default 'reported',  -- 'pending' | 'reported' | 'filled' | 'expired' (legacy: 'wanksyd')
-  wanksy_at   timestamptz,             -- kept for historical rows
+  status      text default 'reported',  -- 'pending' | 'reported' | 'filled' | 'expired'
   filled_at   timestamptz,
   expired_at  timestamptz,
   confirmed_count int default 1
@@ -62,7 +61,7 @@ create policy "Public insert confirmations"
   on pothole_confirmations for insert
   with check (true);
 
--- Tracks per-pothole per-IP status transitions (wanksy, filled)
+-- Tracks per-pothole per-IP status transitions (filled)
 create table if not exists pothole_actions (
   id          uuid primary key default gen_random_uuid(),
   pothole_id  uuid not null references potholes(id) on delete cascade,
@@ -122,8 +121,7 @@ $$;
 -- ALTER TABLE potholes ADD COLUMN IF NOT EXISTS expired_at timestamptz;
 -- ALTER TABLE potholes DROP CONSTRAINT IF EXISTS potholes_status_check;
 -- ALTER TABLE potholes ADD CONSTRAINT potholes_status_check
---   CHECK (status IN ('pending', 'reported', 'wanksyd', 'filled', 'expired'));
--- Note: 'wanksyd' kept in constraint for historical rows.
+--   CHECK (status IN ('pending', 'reported', 'filled', 'expired'));
 
 -- pg_cron: nightly expiry job (run once in Supabase SQL editor)
 -- CREATE EXTENSION IF NOT EXISTS pg_cron;
