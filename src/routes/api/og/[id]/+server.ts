@@ -9,10 +9,17 @@ let fontCache: ArrayBuffer | null = null;
 
 async function loadFont(): Promise<ArrayBuffer> {
 	if (fontCache) return fontCache;
-	const res = await fetch(
-		'https://cdn.jsdelivr.net/npm/@fontsource/barlow-condensed@5/files/barlow-condensed-latin-700-normal.woff'
-	);
-	if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`);
+	let res: Response;
+	try {
+		res = await fetch(
+			'https://cdn.jsdelivr.net/npm/@fontsource/barlow-condensed@5/files/barlow-condensed-latin-700-normal.woff',
+			{ signal: AbortSignal.timeout(5000) }
+		);
+	} catch (e) {
+		// Network error or timeout — don't cache so the next request retries
+		throw new Error(`Font fetch failed: ${e instanceof Error ? e.message : 'network error'}`);
+	}
+	if (!res.ok) throw new Error(`Font fetch failed: HTTP ${res.status}`);
 	fontCache = await res.arrayBuffer();
 	return fontCache;
 }
@@ -31,12 +38,13 @@ const STATUS_STYLES = {
 } as const;
 
 export const GET: RequestHandler = async ({ params }) => {
-	const { data: pothole } = await supabase
+	const { data: pothole, error: dbError } = await supabase
 		.from('potholes')
 		.select('id, address, lat, lng, status, created_at, filled_at')
 		.eq('id', params.id)
 		.single();
 
+	if (dbError && dbError.code !== 'PGRST116') throw error(500, 'Database error');
 	if (!pothole) throw error(404, 'Hole not found');
 
 	const font = await loadFont();
