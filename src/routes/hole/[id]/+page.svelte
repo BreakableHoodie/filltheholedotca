@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { invalidateAll } from '$app/navigation';
 	import { format } from 'date-fns';
 	import { STATUS_CONFIG } from '$lib/constants';
 	import Icon from '$lib/components/Icon.svelte';
+	import { isWatched, toggleWatch } from '$lib/watchlist';
 	import type { PageData } from './$types';
 	import type { Pothole } from '$lib/types';
 	import type { Councillor } from '$lib/wards';
@@ -22,6 +24,20 @@
 
 	let submitting = $state(false);
 	let showFilledForm = $state(false);
+
+	// Watch state — initialised on mount to avoid SSR/hydration mismatch
+	let watching = $state(false);
+	let watchMounted = $state(false);
+
+	onMount(() => {
+		watching = isWatched(pothole.id);
+		watchMounted = true;
+	});
+
+	function handleWatch() {
+		watching = toggleWatch(pothole.id);
+		toast.success(watching ? 'Added to your watchlist.' : 'Removed from watchlist.');
+	}
 
 	async function markFilled() {
 		submitting = true;
@@ -97,10 +113,26 @@ Thank you.`;
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
 	<!-- Header -->
 	<div>
-		<a href="/" class="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 text-sm mb-3 transition-colors">
-			<Icon name="arrow-left" size={14} />
-			Back to map
-		</a>
+		<div class="flex items-center justify-between mb-3">
+			<a href="/" class="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+				<Icon name="arrow-left" size={14} />
+				Back to map
+			</a>
+			{#if watchMounted}
+				<button
+					onclick={handleWatch}
+					aria-pressed={watching}
+					aria-label={watching ? 'Remove from watchlist' : 'Add to watchlist'}
+					class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors
+						{watching
+							? 'bg-sky-900/40 border-sky-700 text-sky-400 hover:bg-sky-900/60'
+							: 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'}"
+				>
+					<Icon name={watching ? 'bookmark-filled' : 'bookmark'} size={13} class="shrink-0" />
+					{watching ? 'Watching' : 'Watch'}
+				</button>
+			{/if}
+		</div>
 		<h1 class="text-2xl font-bold text-white">
 			{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
 		</h1>

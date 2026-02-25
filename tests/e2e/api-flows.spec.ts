@@ -5,6 +5,33 @@ import { test, expect } from '@playwright/test';
 // The "valid UUID" tests confirm schema acceptance; downstream DB behaviour
 // (409 wrong status, 500 no connection) is intentionally outside scope here.
 
+test.describe('Watchlist API (/api/watchlist)', () => {
+	test('rejects request with no ids param', async ({ request }) => {
+		const response = await request.get('/api/watchlist');
+		expect(response.status()).toBe(400);
+	});
+
+	test('rejects a non-UUID id', async ({ request }) => {
+		const response = await request.get('/api/watchlist?ids=not-a-uuid');
+		expect(response.status()).toBe(400);
+	});
+
+	test('rejects more than 50 ids', async ({ request }) => {
+		const ids = Array.from({ length: 51 }, (_, i) =>
+			`550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`
+		).join(',');
+		const response = await request.get(`/api/watchlist?ids=${ids}`);
+		expect(response.status()).toBe(400);
+	});
+
+	test('accepts valid UUIDs — zod passes, returns array for unknown ids', async ({ request }) => {
+		const response = await request.get(
+			'/api/watchlist?ids=550e8400-e29b-41d4-a716-446655440000,550e8400-e29b-41d4-a716-446655440001'
+		);
+		expect(response.status()).not.toBe(400);
+	});
+});
+
 test.describe('Removed API endpoints', () => {
 	test('/api/wanksy returns 404 after removal', async ({ request }) => {
 		const response = await request.post('/api/wanksy', {

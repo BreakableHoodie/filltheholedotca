@@ -12,11 +12,15 @@
 	import { ICONS } from '$lib/icons';
 	import Icon from '$lib/components/Icon.svelte';
 	import { escapeHtml } from '$lib/escape';
+	import WatchlistPanel from '$lib/components/WatchlistPanel.svelte';
+	import { getWatchlist } from '$lib/watchlist';
 
 	let { data }: { data: PageData } = $props();
 
 	let mapEl: HTMLDivElement;
 	let mapReady = $state(false);
+	let watchlistCount = $state(0);
+	let watchlistSection: HTMLElement | null = null;
 
 	let mapRef: Map | null = null;
 	let LRef: typeof Leaflet | null = null;
@@ -332,6 +336,7 @@
 		});
 
 		mapReady = true;
+		watchlistCount = getWatchlist().length;
 	});
 </script>
 
@@ -466,6 +471,25 @@
 			No potholes yet —&nbsp;<a href="/report" class="text-sky-400 hover:text-sky-300 underline">be the first to report one!</a>
 		</div>
 	{/if}
+
+	<!-- Watchlist scroll affordance — only visible when user has watched holes -->
+	{#if watchlistCount > 0}
+		<div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000]">
+			<button
+				onclick={() => watchlistSection?.scrollIntoView({ behavior: 'smooth' })}
+				class="inline-flex items-center gap-1.5 bg-zinc-900/90 backdrop-blur border border-sky-800 text-sky-400 text-xs font-semibold px-3 py-1.5 rounded-full hover:border-sky-600 hover:text-sky-300 transition-colors shadow-lg"
+				aria-label="Scroll to watchlist"
+			>
+				<Icon name="bookmark-filled" size={12} class="shrink-0" />
+				{watchlistCount} watched
+				<Icon name="chevron-down" size={12} class="shrink-0" />
+			</button>
+		</div>
+	{/if}
+</div>
+
+<div bind:this={watchlistSection}>
+	<WatchlistPanel />
 </div>
 
 <style>
