@@ -49,6 +49,7 @@ jobs:
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
         run: |
           if [ -n "$PUBLIC_SUPABASE_URL" ]; then
             sed -i "s|PUBLIC_SUPABASE_URL=.*|PUBLIC_SUPABASE_URL=$PUBLIC_SUPABASE_URL|" .env
@@ -58,6 +59,9 @@ jobs:
           fi
           if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
             sed -i "s|SUPABASE_SERVICE_ROLE_KEY=.*|SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY|" .env
+          fi
+          if [ -n "$ADMIN_SECRET" ]; then
+            sed -i "s|ADMIN_SECRET=.*|ADMIN_SECRET=$ADMIN_SECRET|" .env
           fi
 
       - run: npm run build
@@ -119,6 +123,7 @@ jobs:
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
         run: |
           if [ -n "$PUBLIC_SUPABASE_URL" ]; then
             sed -i "s|PUBLIC_SUPABASE_URL=.*|PUBLIC_SUPABASE_URL=$PUBLIC_SUPABASE_URL|" .env
@@ -129,6 +134,9 @@ jobs:
           if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
             sed -i "s|SUPABASE_SERVICE_ROLE_KEY=.*|SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY|" .env
           fi
+          if [ -n "$ADMIN_SECRET" ]; then
+            sed -i "s|ADMIN_SECRET=.*|ADMIN_SECRET=$ADMIN_SECRET|" .env
+          fi
 
       - name: Run axe accessibility tests
         run: npm run test:a11y
@@ -137,6 +145,6 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-a11y-report
           path: playwright-report/
           retention-days: 7
