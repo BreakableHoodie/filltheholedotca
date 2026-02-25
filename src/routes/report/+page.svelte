@@ -295,7 +295,7 @@
 </script>
 
 <svelte:head>
-	<title>Report a pothole — fillthehole.ca</title>
+	<title>Report a Pothole — FillTheHole.ca</title>
 </svelte:head>
 
 <div class="max-w-lg mx-auto px-4 py-8">

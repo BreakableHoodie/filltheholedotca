@@ -83,7 +83,7 @@ Thank you.`;
 </script>
 
 <svelte:head>
-	<title>Pothole at {pothole.address || 'Unknown location'} — fillthehole.ca</title>
+	<title>Pothole at {pothole.address || 'Unknown location'} — FillTheHole.ca</title>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
