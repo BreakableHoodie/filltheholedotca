@@ -74,7 +74,7 @@
 			iconClass: 'text-sky-400',
 			bgClass: 'bg-sky-500/10',
 			title: 'Flag',
-			desc: 'Verify a pothole is still there and file an official report with the city. Then mark it flagged here.',
+			desc: 'Verify a pothole is still there and file an official report with the city, right from the app.',
 		},
 		{
 			icon: 'check-circle' as const,
