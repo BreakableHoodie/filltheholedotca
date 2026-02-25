@@ -28,5 +28,6 @@
 	aria-hidden="true"
 	focusable="false"
 >
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html ICONS[name]}
 </svg>

@@ -449,7 +449,7 @@
 		<fieldset class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
 			<legend class="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-2">
 				<Icon name="alert-triangle" size={14} class="text-zinc-400" />
-				How bad is it? <span class="text-zinc-600 font-normal">(optional)</span>
+				How bad is it? <span class="text-zinc-400 font-normal">(optional)</span>
 			</legend>
 			<div class="grid grid-cols-2 gap-2">
 				{#each SEVERITY_OPTIONS as opt (opt.value)}
@@ -469,7 +469,7 @@
 						/>
 						<!-- Signal-strength damage indicator -->
 						<div class="flex items-end gap-0.5 h-4" aria-hidden="true">
-							{#each [1, 2, 3, 4] as i}
+							{#each [1, 2, 3, 4] as i (i)}
 								<div
 									class="w-1.5 rounded-t-sm transition-colors {i <= opt.level ? opt.barColor : 'bg-zinc-700'}"
 									style="height: {i * 25}%"

@@ -118,7 +118,7 @@
 				</p>
 
 				<div class="grid gap-2">
-					{#each STEPS as step}
+					{#each STEPS as step (step.title)}
 						<div class="flex items-start gap-3 bg-zinc-800/60 rounded-lg p-3">
 							<div class="shrink-0 mt-0.5 p-1.5 rounded-md {step.bgClass}">
 								<Icon name={step.icon} size={15} class={step.iconClass} />
