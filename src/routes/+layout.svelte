@@ -43,14 +43,8 @@
 				<div class="hidden sm:flex items-center gap-3 text-sm" aria-label="Pothole statistics">
 					<span class="flex items-center gap-1.5 text-zinc-400">
 						<span class="w-2 h-2 rounded-full bg-orange-500 shrink-0"></span>
-						<span class="text-white font-semibold tabular-nums">{counts.reported + counts.flagged + counts.filled}</span>
+						<span class="text-white font-semibold tabular-nums">{counts.reported}</span>
 						reported
-					</span>
-					<span class="text-zinc-700" aria-hidden="true">·</span>
-					<span class="flex items-center gap-1.5 text-zinc-400">
-						<span class="w-2 h-2 rounded-full bg-sky-500 shrink-0"></span>
-						<span class="text-white font-semibold tabular-nums">{counts.flagged}</span>
-						flagged
 					</span>
 					<span class="text-zinc-700" aria-hidden="true">·</span>
 					<span class="flex items-center gap-1.5 text-zinc-400">

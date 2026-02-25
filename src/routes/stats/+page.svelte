@@ -33,7 +33,7 @@
 	// ── Summary stats ──────────────────────────────────────────────────────────
 	let totalConfirmed = $derived(filtered.length);
 	let totalFilled    = $derived(filtered.filter(p => p.status === 'filled').length);
-	let totalOpen      = $derived(filtered.filter(p => p.status === 'reported' || p.status === 'wanksyd').length);
+	let totalOpen      = $derived(filtered.filter(p => p.status === 'reported' || p.status === 'expired').length);
 	let fillRate       = $derived(totalConfirmed === 0 ? null : (totalFilled / totalConfirmed) * 100);
 
 	let avgDaysToFill = $derived.by(() => {
@@ -141,7 +141,7 @@
 						const days = (new Date(p.filled_at).getTime() - new Date(p.created_at).getTime()) / 86_400_000;
 						(filledTimes[key] ??= []).push(days);
 					}
-				} else if (p.status === 'reported' || p.status === 'wanksyd') {
+				} else if (p.status === 'reported' || p.status === 'expired') {
 					stats[key].open++;
 				}
 				break;
@@ -199,7 +199,7 @@
 	// Worst offenders: longest-open unfilled potholes
 	let offenders = $derived(
 		filtered
-			.filter(p => p.status === 'reported' || p.status === 'wanksyd')
+			.filter(p => p.status === 'reported')
 			.map(p => ({ ...p, days: Math.floor((Date.now() - new Date(p.created_at).getTime()) / 86_400_000) }))
 			.sort((a, b) => b.days - a.days)
 			.slice(0, 10)
@@ -505,17 +505,10 @@
 									{p.days}
 								</td>
 								<td class="px-4 py-3 text-right">
-									{#if p.status === 'wanksyd'}
-										<span class="inline-flex items-center gap-1 text-sky-400 text-xs">
-											<Icon name="flag" size={11} class="shrink-0" />
-											Flagged
-										</span>
-									{:else}
-										<span class="inline-flex items-center gap-1 text-orange-400 text-xs">
-											<Icon name="map-pin" size={11} class="shrink-0" />
-											Reported
-										</span>
-									{/if}
+									<span class="inline-flex items-center gap-1 text-orange-400 text-xs">
+										<Icon name="map-pin" size={11} class="shrink-0" />
+										Reported
+									</span>
 								</td>
 							</tr>
 						{/each}

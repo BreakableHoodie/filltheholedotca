@@ -37,3 +37,7 @@ test-results/
 
 # Local code review / AI-generated docs
 docs/code-review/
+docs/plans/
+
+# Git worktrees
+.worktrees/

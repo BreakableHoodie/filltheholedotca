@@ -5,36 +5,16 @@
 	import { STATUS_CONFIG } from '$lib/constants';
 	import Icon from '$lib/components/Icon.svelte';
 	import type { PageData } from './$types';
-	import type { Pothole, PotholeStatus } from '$lib/types';
+	import type { Pothole } from '$lib/types';
 	import type { Councillor } from '$lib/wards';
 
 	let { data }: { data: PageData } = $props();
 	let pothole = $derived(data.pothole as Pothole);
-	let info = $derived(STATUS_CONFIG[pothole.status]);
+	let info = $derived(STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG]);
 	let councillor = $derived(data.councillor as Councillor | null);
 
 	let submitting = $state(false);
-	let showFlagForm = $state(false);
 	let showFilledForm = $state(false);
-
-	async function flagPothole() {
-		submitting = true;
-		try {
-			const res = await fetch('/api/wanksy', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ id: pothole.id })
-			});
-			if (!res.ok) throw new Error((await res.json()).message || 'Failed');
-			toast.success('Flagged! The city has been put on notice.');
-			showFlagForm = false;
-			await invalidateAll();
-		} catch (err: unknown) {
-			toast.error(err instanceof Error ? err.message : 'Something went wrong');
-		} finally {
-			submitting = false;
-		}
-	}
 
 	async function markFilled() {
 		submitting = true;
@@ -144,14 +124,13 @@ Thank you.`;
 	{/if}
 
 	<!-- Status pipeline -->
-	{#if pothole.status !== 'pending'}
+	{#if pothole.status !== 'pending' && pothole.status !== 'expired'}
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
 			<div class="flex items-center justify-between text-sm">
-				{#each ['reported', 'wanksyd', 'filled'] as s (s)}
-					{@const status = s as PotholeStatus}
-					{@const cfg = STATUS_CONFIG[status]}
-					{@const isCurrent = pothole.status === status}
-					{@const isPast = status === 'reported' || (status === 'wanksyd' && pothole.status !== 'reported') || (status === 'filled' && pothole.status === 'filled')}
+				{#each (['reported', 'filled'] as const) as s (s)}
+					{@const cfg = STATUS_CONFIG[s]}
+					{@const isCurrent = pothole.status === s}
+					{@const isPast = s === 'reported' || pothole.status === 'filled'}
 					<div class="flex flex-col items-center gap-1.5 flex-1">
 						<div class="transition-colors {isPast ? cfg.colorClass : 'text-zinc-700'}">
 							<Icon name={cfg.icon} size={22} />
@@ -161,7 +140,7 @@ Thank you.`;
 							<div class="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
 						{/if}
 					</div>
-					{#if status !== 'filled'}
+					{#if s !== 'filled'}
 						<div class="flex-1 h-px bg-zinc-700 self-center mb-6 max-w-12"></div>
 					{/if}
 				{/each}
@@ -170,13 +149,10 @@ Thank you.`;
 	{/if}
 
 	<!-- Info -->
-	{#if pothole.description || pothole.wanksy_at || pothole.filled_at}
+	{#if pothole.description || pothole.filled_at}
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-2 text-sm">
 			{#if pothole.description}
 				<p class="text-zinc-300 italic">"{pothole.description}"</p>
-			{/if}
-			{#if pothole.wanksy_at}
-				<p class="text-zinc-500">Flagged on <span class="text-zinc-300">{fmt(pothole.wanksy_at)}</span></p>
 			{/if}
 			{#if pothole.filled_at}
 				<p class="text-zinc-500">Filled on <span class="text-zinc-300">{fmt(pothole.filled_at)}</span></p>
@@ -184,51 +160,8 @@ Thank you.`;
 		</div>
 	{/if}
 
-	<!-- Flag action -->
-	{#if pothole.status === 'reported'}
-		{#if !showFlagForm}
-			<button
-				onclick={() => (showFlagForm = true)}
-				class="w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-			>
-				<Icon name="flag" size={16} class="shrink-0" />
-				I flagged this one
-			</button>
-		{:else}
-			<div class="bg-zinc-900 border border-sky-800 rounded-xl p-4 space-y-3">
-				<h3 class="flex items-center gap-2 font-semibold text-sky-400">
-					<Icon name="flag" size={15} class="shrink-0" />
-					Flag this pothole
-				</h3>
-				<p class="text-zinc-400 text-sm">
-					Go to this location, verify the pothole is still there, and submit an official report
-					through the city's service request system. Then come back and mark it flagged here.
-				</p>
-				<div class="flex gap-2">
-					<button
-						onclick={() => (showFlagForm = false)}
-						class="flex-1 py-2 border border-zinc-700 text-zinc-400 rounded-lg text-sm hover:border-zinc-500 transition-colors"
-					>Cancel</button>
-					<button
-						onclick={flagPothole}
-						disabled={submitting}
-						class="flex-1 py-2 bg-sky-600 hover:bg-sky-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-1.5"
-					>
-						{#if submitting}
-							<Icon name="loader" size={13} class="animate-spin shrink-0" />
-							Saving…
-						{:else}
-							<Icon name="flag" size={13} class="shrink-0" />
-							Mark as flagged
-						{/if}
-					</button>
-				</div>
-			</div>
-		{/if}
-	{/if}
-
-	<!-- Filled action -->
-	{#if pothole.status === 'wanksyd'}
+	<!-- Mark as fixed action (reported or legacy wanksyd rows) -->
+	{#if pothole.status === 'reported' || (pothole.status as string) === 'wanksyd'}
 		{#if !showFilledForm}
 			<button
 				onclick={() => (showFilledForm = true)}
@@ -277,8 +210,21 @@ Thank you.`;
 		</div>
 	{/if}
 
+	<!-- Expired state -->
+	{#if pothole.status === 'expired'}
+		<div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 text-center space-y-1">
+			<div class="flex justify-center mb-2">
+				<Icon name="clock" size={36} class="text-zinc-500" />
+			</div>
+			<p class="text-zinc-300 font-semibold">This report has expired</p>
+			<p class="text-zinc-500 text-sm mt-1">
+				No activity for 6+ months. The pothole may have been filled — or may still be there.
+			</p>
+		</div>
+	{/if}
+
 	<!-- Days since reported -->
-	{#if pothole.status !== 'filled' && pothole.status !== 'pending'}
+	{#if pothole.status === 'reported'}
 		{@const days = daysSince(pothole.created_at)}
 		{#if days !== null && days > 0}
 			<p class="text-center text-zinc-500 text-sm">

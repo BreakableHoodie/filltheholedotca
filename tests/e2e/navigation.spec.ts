@@ -62,7 +62,9 @@ test.describe('Navigation — core routes load', () => {
 
 	test('logo link navigates home', async ({ page }) => {
 		await page.goto('/about');
-		await page.getByRole('link', { name: /FillTheHole/i }).click();
+		// Use the header logo link specifically — the about page also has a GitHub
+		// link whose text "BreakableHoodie/filltheholedotca" matches /FillTheHole/i
+		await page.locator('header').getByRole('link', { name: /FillTheHole/i }).click();
 		await expect(page).toHaveURL('/');
 	});
 

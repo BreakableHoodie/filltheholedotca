@@ -88,8 +88,7 @@ src/
       +page.server.ts         # Loads single pothole + councillor
     api/
       report/+server.ts       # POST — submit report (geofence, IP dedup, 3-confirm merge)
-      wanksy/+server.ts       # POST — flag pothole (reported → wanksyd)
-      filled/+server.ts       # POST — mark filled (wanksyd → filled)
+      filled/+server.ts       # POST — mark filled (reported → filled)
       wards.geojson/+server.ts # GET — ward boundaries for heatmap
       feed.json/+server.ts    # GET — JSON feed of recent potholes
       admin/pothole/[id]/+server.ts  # DELETE/PATCH — admin moderation
@@ -108,8 +107,9 @@ src/
 potholes (
   id uuid PK, created_at, lat float8, lng float8,
   address text, description text,
-  status text,          -- 'pending' | 'reported' | 'wanksyd' | 'filled'
-  wanksy_at timestamptz, filled_at timestamptz,
+  status text,          -- 'pending' | 'reported' | 'expired' | 'filled'
+  wanksy_at timestamptz,  -- kept for historical rows; no longer written
+  filled_at timestamptz, expired_at timestamptz,
   confirmed_count int   -- starts at 1, promoted to 'reported' at 3
 )
 
@@ -120,21 +120,25 @@ pothole_confirmations (
 ```
 
 Run `schema.sql` for initial setup, `schema_update.sql` for the confirmation system.
+A `pg_cron` job (`expire-old-potholes`) runs nightly at 03:00 UTC to set
+`status = 'expired'` on `reported` potholes older than 90 days.
 
 ## Status Flow
 
 ```
-pending → reported → wanksyd → filled
-  (1 report)  (3 confirmations) (flagged) (city fixed it)
+pending → reported → filled
+  (1 report)  (3 confirmations)  (city fixed it — via popup or detail page)
+                    ↓
+                 expired  (auto after 90 days with no action)
 ```
 
 ## Key Business Rules
 
 - **Geofence**: Waterloo Region only — lat 43.32–43.53, lng -80.59 to -80.22
-- **Merge radius**: 50m — nearby pending reports are merged, not duplicated
+- **Merge radius**: 25m — nearby pending reports are merged, not duplicated
 - **3 confirmations** from distinct IPs required to go live on the public map
 - **IP hashing**: SHA-256, never store raw IPs
-- **`wanksyd`** = Wanksy-inspired status — someone physically flagged/reported to the city
+- **Auto-expiry**: `reported` potholes expire after 90 days via pg_cron
 
 ## Svelte 5 Patterns (important — don't use Svelte 4 syntax)
 
