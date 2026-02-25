@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-	<title>About — fillthehole.ca</title>
+	<title>About — FillTheHole.ca</title>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-12 space-y-10">

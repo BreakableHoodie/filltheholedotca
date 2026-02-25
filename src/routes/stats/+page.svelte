@@ -217,7 +217,7 @@
 </script>
 
 <svelte:head>
-	<title>Stats — fillthehole.ca</title>
+	<title>Stats — FillTheHole.ca</title>
 </svelte:head>
 
 <div class="max-w-4xl mx-auto px-4 py-10 space-y-10">
