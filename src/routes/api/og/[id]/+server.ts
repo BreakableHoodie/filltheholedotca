@@ -28,7 +28,8 @@ async function loadFont(): Promise<ArrayBuffer> {
 		return fontCache;
 	} catch (e) {
 		// Do not cache failures — next request should retry loading from disk.
-		throw error(500, `Font load failed: ${e instanceof Error ? e.message : 'file error'}`);
+		console.error('[og] Font load failed:', e);
+		throw error(500, 'OG image generation unavailable');
 	}
 }
 

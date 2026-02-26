@@ -5,6 +5,7 @@ import { ADMIN_SECRET, SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { hashClientAddressForLog } from '$lib/hash';
 
 // Service role client — bypasses RLS for admin operations.
 // Never use this key in client-side code.
@@ -24,7 +25,8 @@ const bodySchema = z.object({ action: z.enum(['approve', 'reject']) });
 
 export const PATCH: RequestHandler = async ({ request, params, getClientAddress }) => {
 	if (!isAuthorized(request.headers.get('Authorization'))) {
-		console.warn(`[admin] Unauthorized photo PATCH attempt from ${getClientAddress()}`);
+		const ipHash = await hashClientAddressForLog(getClientAddress, 'admin');
+		console.warn(`[admin] Unauthorized photo PATCH attempt from ip_hash=${ipHash}`);
 		throw error(401, 'Unauthorized');
 	}
 
@@ -51,7 +53,8 @@ export const PATCH: RequestHandler = async ({ request, params, getClientAddress 
 
 export const DELETE: RequestHandler = async ({ request, params, getClientAddress }) => {
 	if (!isAuthorized(request.headers.get('Authorization'))) {
-		console.warn(`[admin] Unauthorized photo DELETE attempt from ${getClientAddress()}`);
+		const ipHash = await hashClientAddressForLog(getClientAddress, 'admin');
+		console.warn(`[admin] Unauthorized photo DELETE attempt from ip_hash=${ipHash}`);
 		throw error(401, 'Unauthorized');
 	}
 
