@@ -131,22 +131,22 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(429, 'Too many photo uploads. Please wait before trying again.');
 	}
 
-	const { error: rateLimitInsertError } = await adminSupabase
-		.from('api_rate_limit_events')
-		.insert({ ip_hash: ipHash, scope: 'photo_upload' });
-	if (rateLimitInsertError) throw error(500, 'Failed to record upload rate limit');
-
 	// Confirm the pothole exists and still accepts photos.
 	const { data: pothole, error: potholeError } = await adminSupabase
 		.from('potholes')
 		.select('id, status')
 		.eq('id', idParsed.data)
-		.single();
+		.maybeSingle();
 	if (potholeError) throw error(500, 'Failed to verify pothole status');
 	if (!pothole) throw error(404, 'Pothole not found');
 	if (!ACTIVE_UPLOAD_STATUSES.has(pothole.status)) {
 		throw error(409, 'Photos are only allowed for pending or reported potholes');
 	}
+
+	const { error: rateLimitInsertError } = await adminSupabase
+		.from('api_rate_limit_events')
+		.insert({ ip_hash: ipHash, scope: 'photo_upload' });
+	if (rateLimitInsertError) throw error(500, 'Failed to record upload rate limit');
 
 	// Prevent unlimited media accumulation on a single pothole.
 	const { count: activePhotoCount, error: activePhotoCountError } = await adminSupabase
