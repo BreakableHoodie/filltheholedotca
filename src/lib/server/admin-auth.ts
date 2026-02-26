@@ -256,7 +256,7 @@ export function buildSessionCookie(sessionId: string, isSecure: boolean): string
 		`${SESSION_COOKIE}=${sessionId}`,
 		'HttpOnly',
 		'SameSite=Strict',
-		'Path=/admin'
+		'Path=/'
 	];
 	if (isSecure) parts.push('Secure');
 	// Expires in 1 day (matches hard DB expiry)
@@ -267,5 +267,5 @@ export function buildSessionCookie(sessionId: string, isSecure: boolean): string
 
 /** Build a blank session cookie to clear it. */
 export function clearSessionCookie(): string {
-	return `${SESSION_COOKIE}=; HttpOnly; SameSite=Strict; Path=/admin; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+	return `${SESSION_COOKIE}=; HttpOnly; SameSite=Strict; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 }

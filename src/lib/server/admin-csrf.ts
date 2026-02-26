@@ -50,7 +50,7 @@ export async function validateCsrfToken(sessionId: string, token: string): Promi
 
 /** Build the CSRF cookie string (non-HttpOnly so client JS can attach it to requests). */
 export function buildCsrfCookie(token: string, isSecure: boolean): string {
-	const parts = [`${CSRF_COOKIE}=${token}`, 'SameSite=Strict', 'Path=/admin'];
+	const parts = [`${CSRF_COOKIE}=${token}`, 'SameSite=Strict', 'Path=/'];
 	if (isSecure) parts.push('Secure');
 	const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString();
 	parts.push(`Expires=${expires}`);
@@ -58,5 +58,5 @@ export function buildCsrfCookie(token: string, isSecure: boolean): string {
 }
 
 export function clearCsrfCookie(): string {
-	return `${CSRF_COOKIE}=; SameSite=Strict; Path=/admin; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+	return `${CSRF_COOKIE}=; SameSite=Strict; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 }

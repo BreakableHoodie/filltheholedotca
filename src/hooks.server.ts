@@ -80,7 +80,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 					// Session timed out — invalidate and fall through to reject
 					await invalidateSession(sessionId);
 					event.cookies.set(SESSION_COOKIE, '', {
-						path: '/admin',
+						path: '/',
 						expires: new Date(0),
 						httpOnly: true,
 						sameSite: 'strict'
