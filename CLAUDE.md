@@ -11,8 +11,8 @@ Security is critical at every juncture. This app accepts untrusted public input 
 - **Never expose secrets** — env vars stay server-side. `PUBLIC_` prefix is for genuinely public values only.
 - **Prevent injection** — always use parameterized Supabase queries. Never interpolate user input into SQL or raw queries.
 - **Sanitize before rendering** — escape user-supplied strings before inserting into HTML (e.g. `escapeHtml()` in map popups). XSS is a real risk with Leaflet's `bindPopup`.
-- **Rate-limit & geofence** — the report endpoint enforces a geofence and IP-hash deduplication. Any new public endpoint must have equivalent abuse protection.
-- **No raw PII** — IPs are SHA-256 hashed immediately and the hash is what gets stored. Never log or persist raw IP addresses.
+- **Rate-limit & geofence** — report/photo endpoints enforce geofence and DB-backed abuse throttling. Any new public endpoint must have equivalent abuse protection.
+- **No raw PII** — IPs are HMAC-SHA-256 hashed immediately with `IP_HASH_SECRET`; only the hash is stored. Never log or persist raw IP addresses.
 - **Admin routes require auth** — any endpoint under `/api/admin/` must validate a secret token or session. Do not make admin operations publicly accessible.
 - **Supabase RLS is the last line of defence** — all tables have Row Level Security enabled. Never disable it, and review policies when adding new tables.
 - **Dependencies** — don't add packages without checking for known CVEs. Keep dependencies minimal.
@@ -51,6 +51,7 @@ When in doubt about whether something belongs in the repo, leave it out.
 - **Tailwind CSS v4** (no config file — uses `@tailwindcss/vite` plugin, not PostCSS)
 - **Supabase** — Postgres + RLS + storage bucket `pothole-photos`
 - **Leaflet** + `leaflet.markercluster` — always client-only, dynamically imported in `onMount`
+- **@fontsource/barlow-condensed** — local OG image font asset (no runtime CDN dependency)
 - **svelte-sonner** for toasts, **date-fns** for formatting, **zod** for API validation
 - Deployed to **Netlify** (`@sveltejs/adapter-netlify`)
 - **License**: GNU Affero General Public License v3.0 (AGPL-3.0)
@@ -67,7 +68,10 @@ Copy `.env.example` → `.env` with real values:
 
 - `PUBLIC_SUPABASE_URL` — Supabase project URL
 - `PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key
+- `SUPABASE_SERVICE_ROLE_KEY` — server-only key for admin routes and moderation
+- `ADMIN_SECRET` — bearer token for `/api/admin/*` endpoints
 - `SIGHTENGINE_API_USER` / `SIGHTENGINE_API_SECRET` — image moderation (optional)
+- `IP_HASH_SECRET` — server-only HMAC key for IP hashing
 
 ## Project Structure
 
@@ -89,9 +93,11 @@ src/
     api/
       report/+server.ts       # POST — submit report (geofence, IP dedup, 3-confirm merge)
       filled/+server.ts       # POST — mark filled (reported → filled)
+      photos/+server.ts       # POST — upload photo (magic-byte validation, moderation, rate limit)
       wards.geojson/+server.ts # GET — ward boundaries for heatmap
       feed.json/+server.ts    # GET — JSON feed of recent potholes
-      admin/pothole/[id]/+server.ts  # DELETE/PATCH — admin moderation
+      admin/pothole/[id]/+server.ts  # DELETE — admin moderation
+      admin/photo/[id]/+server.ts    # PATCH/DELETE — photo moderation
   lib/
     types.ts                  # Pothole, PotholeStatus types
     geo.ts                    # Shared geo utilities (pipRing, inWardFeature)
@@ -117,9 +123,18 @@ pothole_confirmations (
   id uuid PK, pothole_id uuid FK, ip_hash text, created_at
   UNIQUE(pothole_id, ip_hash)
 )
+
+pothole_photos (
+  id uuid PK, pothole_id uuid FK, storage_path text,
+  ip_hash text, moderation_status text, moderation_score float8, created_at
+)
+
+api_rate_limit_events (
+  id uuid PK, ip_hash text, scope text, created_at
+)
 ```
 
-Run `schema.sql` for initial setup, `schema_update.sql` for the confirmation system.
+Run `schema.sql` for initial setup, `schema_update.sql` for confirmations/security hardening, and `schema_photos.sql` for photo upload schema.
 A `pg_cron` job (`expire-old-potholes`) runs nightly at 03:00 UTC to set
 `status = 'expired'` on `reported` potholes older than 90 days.
 
@@ -137,7 +152,7 @@ pending → reported → filled
 - **Geofence**: Waterloo Region only — lat 43.32–43.53, lng -80.59 to -80.22
 - **Merge radius**: 25m — nearby pending reports are merged, not duplicated
 - **3 confirmations** from distinct IPs required to go live on the public map
-- **IP hashing**: SHA-256, never store raw IPs
+- **IP hashing**: HMAC-SHA-256 with `IP_HASH_SECRET`, never store raw IPs
 - **Auto-expiry**: `reported` potholes expire after 90 days via pg_cron
 
 ## Svelte 5 Patterns (important — don't use Svelte 4 syntax)

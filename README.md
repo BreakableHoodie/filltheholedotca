@@ -25,6 +25,7 @@ Each pothole page shows the ward councillor's contact info so you can apply dire
 - **[Tailwind CSS v4](https://tailwindcss.com)** via `@tailwindcss/vite`
 - **[Supabase](https://supabase.com)** — Postgres with Row Level Security
 - **[Leaflet](https://leafletjs.com)** + `leaflet.markercluster` for the map
+- **[@fontsource/barlow-condensed](https://www.npmjs.com/package/@fontsource/barlow-condensed)** for local OG image font loading
 - **[Netlify](https://netlify.com)** for deployment
 
 ---
@@ -66,8 +67,11 @@ App runs at `http://localhost:5173`.
 | -------------------------- | --------------------------- |
 | `PUBLIC_SUPABASE_URL`      | Supabase project URL        |
 | `PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (public)  |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key for admin/moderation routes |
+| `ADMIN_SECRET` | Bearer token required for `/api/admin/*` routes |
 | `SIGHTENGINE_API_USER`     | Image moderation — optional |
 | `SIGHTENGINE_API_SECRET`   | Image moderation — optional |
+| `IP_HASH_SECRET` | Server-only HMAC key for IP hashing |
 
 See `.env.example` for the full list.
 
@@ -77,18 +81,20 @@ See `.env.example` for the full list.
 
 ### Confirmation system
 
-To prevent spam, a new report starts as `pending` and only becomes public after **3 independent confirmations** from different IPs. IPs are SHA-256 hashed immediately — no raw addresses are ever stored.
+To prevent spam, a new report starts as `pending` and only becomes public after **3 independent confirmations** from different IPs. IPs are HMAC-SHA-256 hashed immediately with a server-only secret — no raw addresses are ever stored.
 
 ### Status pipeline
 
 ```
-pending → reported → wanksyd → filled
+pending → reported → filled
+             ↓
+          expired
 ```
 
 - **pending** — awaiting 3 confirmations
 - **reported** — live on the map, needs city attention
-- **wanksyd** — someone physically flagged it and submitted a city service request
 - **filled** — city patched it
+- **expired** — auto-closed after aging out with no fill event
 
 ### Ward heatmap
 
@@ -104,7 +110,7 @@ Reports are restricted to the Waterloo Region boundary (lat 43.32–43.53, lng -
 
 - No accounts, no cookies, no tracking
 - GPS coordinates are stored only to place the pin — no movement data
-- IP addresses are SHA-256 hashed on arrival and never stored in raw form
+- IP addresses are HMAC-SHA-256 hashed on arrival and never stored in raw form
 - Map tiles served by OpenStreetMap; reverse geocoding by Nominatim
 
 See [fillthehole.ca/about#privacy](https://fillthehole.ca/about#privacy) for the full policy.

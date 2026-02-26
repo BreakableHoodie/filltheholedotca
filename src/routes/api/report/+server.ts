@@ -1,17 +1,10 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
-
-/** Encode HTML entities in user-supplied strings before persistence. */
-function sanitize(s: string): string {
-	return s.replace(
-		/[&<>"']/g,
-		(c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[c] ?? c
-	);
-}
 
 // Create Supabase client only when needed, not at module level
 function getSupabaseClient() {
@@ -33,12 +26,18 @@ const GEOFENCE = {
 
 const MERGE_RADIUS_M = 25;
 const CONFIRMATIONS_REQUIRED = 3;
+const REPORT_RATE_LIMIT = 20;
+const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const SEVERITY_VALUES = ['Spilled my coffee', 'Bent a rim', 'Caused real damage', 'RIP'] as const;
+
+// Service role client used only for persistent rate-limit tracking.
+const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const reportSchema = z.object({
 	lat: z.number().finite().min(-90).max(90),
 	lng: z.number().finite().min(-180).max(180),
 	address: z.string().trim().max(255).nullable().optional(),
-	description: z.string().trim().max(500).nullable().optional()
+	description: z.enum(SEVERITY_VALUES).nullable().optional()
 });
 
 type ConfirmationResult =
@@ -88,6 +87,26 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	} catch {
 		throw error(500, 'Database connection failed');
 	}
+
+	// Persistent per-IP report throttling.
+	const windowStart = new Date(Date.now() - REPORT_RATE_WINDOW_MS).toISOString();
+	const { count: recentReports, error: reportRateError } = await adminSupabase
+		.from('api_rate_limit_events')
+		.select('*', { count: 'exact', head: true })
+		.eq('ip_hash', ipHash)
+		.eq('scope', 'report_submit')
+		.gte('created_at', windowStart);
+
+	if (reportRateError) throw error(500, 'Failed to check report rate limit');
+	if ((recentReports ?? 0) >= REPORT_RATE_LIMIT) {
+		throw error(429, 'Too many report attempts. Please wait before trying again.');
+	}
+
+	const { error: reportRateInsertError } = await adminSupabase
+		.from('api_rate_limit_events')
+		.insert({ ip_hash: ipHash, scope: 'report_submit' });
+
+	if (reportRateInsertError) throw error(500, 'Failed to record report rate limit');
 
 	// Search for existing pending potholes nearby using a bounding box
 	const delta = 0.0005;
@@ -145,8 +164,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.insert({
 			lat,
 			lng,
-			address: address ? sanitize(address.trim()) : null,
-			description: description ? sanitize(description.trim()) : null,
+			address: address ?? null,
+			description: description ?? null,
 			status: 'pending',
 			confirmed_count: 1
 		})

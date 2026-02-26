@@ -20,6 +20,48 @@
 	let severity = $state<string | null>(null);
 	let submitting = $state(false);
 
+	// Photo upload state
+	let photoFile = $state<File | null>(null);
+	let photoPreview = $state<string | null>(null);
+	let photoInput = $state<HTMLInputElement | undefined>(undefined);
+
+	async function resizeImage(file: File): Promise<Blob> {
+		return new Promise((resolve) => {
+			const MAX_PX = 800;
+			const objectUrl = URL.createObjectURL(file);
+			const img = new Image();
+			img.onload = () => {
+				URL.revokeObjectURL(objectUrl);
+				const scale = Math.min(1, MAX_PX / Math.max(img.width, img.height));
+				const w = Math.round(img.width * scale);
+				const h = Math.round(img.height * scale);
+				const canvas = document.createElement('canvas');
+				canvas.width = w;
+				canvas.height = h;
+				canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+				canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.82);
+			};
+			img.src = objectUrl;
+		});
+	}
+
+	async function handlePhotoSelect(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		const resized = await resizeImage(file);
+		if (photoPreview) URL.revokeObjectURL(photoPreview);
+		photoFile = new File([resized], 'photo.jpg', { type: 'image/jpeg' });
+		photoPreview = URL.createObjectURL(resized);
+	}
+
+	function clearPhoto() {
+		if (photoPreview) URL.revokeObjectURL(photoPreview);
+		photoFile = null;
+		photoPreview = null;
+		if (photoInput) photoInput.value = '';
+	}
+
 	const LOCATION_TABS = [
 		{ mode: 'gps',     label: 'GPS' },
 		{ mode: 'address', label: 'Address' },
@@ -284,6 +326,18 @@
 			const result = await res.json();
 			if (!res.ok) throw new Error(result.message || 'Submission failed');
 
+			// Upload photo if one was selected — non-fatal if it fails
+			if (photoFile) {
+				const fd = new FormData();
+				fd.append('photo', photoFile);
+				fd.append('pothole_id', result.id);
+				try {
+					await fetch('/api/photos', { method: 'POST', body: fd });
+				} catch {
+					// Photo upload failure does not block navigation
+				}
+			}
+
 			toast.success(result.message);
 			goto(`/hole/${result.id}`);
 		} catch (err: unknown) {
@@ -380,7 +434,7 @@
 						{address}
 					</p>
 				{:else if gpsStatus === 'got'}
-					<p class="text-xs text-zinc-500">Looking up address…</p>
+					<p class="text-xs text-zinc-400">Looking up address…</p>
 				{/if}
 			</div>
 
@@ -448,7 +502,7 @@
 						{address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
 					</p>
 				{:else}
-					<p class="text-xs text-zinc-500">Tap the map to place a pin</p>
+					<p class="text-xs text-zinc-400">Tap the map to place a pin</p>
 				{/if}
 			</div>
 		</div>
@@ -490,6 +544,48 @@
 				{/each}
 			</div>
 		</fieldset>
+
+	<!-- Photo (optional) -->
+	<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+		<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+			<Icon name="camera" size={14} class="text-sky-400" />
+			Photo <span class="text-zinc-400 font-normal">(optional)</span>
+		</div>
+
+		{#if photoPreview}
+			<div class="relative">
+				<img src={photoPreview} alt="Selected" class="w-full rounded-lg object-cover aspect-video" />
+				<button
+					type="button"
+					onclick={clearPhoto}
+					aria-label="Remove photo"
+					class="absolute top-2 right-2 bg-zinc-900/80 hover:bg-zinc-900 rounded-full p-1.5 text-zinc-400 hover:text-white transition-colors"
+				>
+					<Icon name="x" size={14} />
+				</button>
+			</div>
+		{:else}
+			<button
+				type="button"
+				onclick={() => photoInput?.click()}
+				class="w-full py-3 rounded-lg border-2 border-dashed border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+			>
+				<Icon name="camera" size={15} class="shrink-0" />
+				Add a photo
+			</button>
+			<input
+				bind:this={photoInput}
+				id="photo-input"
+				type="file"
+				accept="image/jpeg,image/png,image/webp"
+				class="sr-only"
+				aria-label="Upload a pothole photo"
+				onchange={handlePhotoSelect}
+			/>
+		{/if}
+
+		<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly.</p>
+	</div>
 
 		<button
 			type="submit"

@@ -2,10 +2,9 @@ import type { Handle } from '@sveltejs/kit';
 import { error, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
-// In-memory rate limit store: ip -> { count, resetAt }
-// NOTE: on Netlify serverless this resets per cold start — it's a deterrent, not a wall.
-// For persistent rate limiting, use Upstash Redis (@upstash/ratelimit) or a Supabase
-// rate_limits table. See docs/code-review/2026-02-22-api-security-review.md (M-03).
+// In-memory coarse rate limit store: ip -> { count, resetAt }.
+// NOTE: on Netlify serverless this resets per cold start — treat it as a broad deterrent.
+// Route-specific persistent throttles are enforced in API handlers via DB-backed checks.
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
@@ -61,18 +60,22 @@ export const handle: Handle = async ({ event, resolve }) => {
 		'Permissions-Policy',
 		'camera=(), microphone=(), payment=(), geolocation=(self)'
 	);
+	// H4: Removed 'unsafe-eval' (not required by SvelteKit/Svelte 5/Leaflet in production).
+	// Tightened img-src from wildcard https: to specific origins.
+	// Allow Google Fonts stylesheet/font origins currently used by src/app.css.
 	response.headers.set(
 		'Content-Security-Policy',
 		[
 			"default-src 'self'",
-			"script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-* required by Vite/SvelteKit + Leaflet
+			"script-src 'self' 'unsafe-inline'",
 			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-			"img-src 'self' data: https: blob:",
+			"img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org",
 			"font-src 'self' data: https://fonts.gstatic.com",
 			"connect-src 'self' https://*.supabase.co https://nominatim.openstreetmap.org",
 			"frame-ancestors 'none'"
 		].join('; ')
 	);
+	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
 
 	return response;
 };

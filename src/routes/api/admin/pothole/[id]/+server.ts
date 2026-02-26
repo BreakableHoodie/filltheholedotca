@@ -12,9 +12,12 @@ const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KE
 
 function isAuthorized(authHeader: string | null): boolean {
 	if (!authHeader) return false;
-	const expected = Buffer.from(`Bearer ${ADMIN_SECRET}`);
+	const expectedAuthHeader = `Bearer ${ADMIN_SECRET}`;
+	// M5: Guard against large headers and length mismatches before Buffer allocation.
+	if (authHeader.length > 512 || authHeader.length !== expectedAuthHeader.length) return false;
+	const expected = Buffer.from(expectedAuthHeader);
 	const provided = Buffer.from(authHeader);
-	return expected.length === provided.length && timingSafeEqual(expected, provided);
+	return timingSafeEqual(expected, provided);
 }
 
 export const DELETE: RequestHandler = async ({ request, params, getClientAddress }) => {
