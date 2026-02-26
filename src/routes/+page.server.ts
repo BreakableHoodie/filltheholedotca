@@ -9,7 +9,8 @@ export const load: PageServerLoad = async () => {
 			.from('potholes')
 			.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at, expired_at')
 			.neq('status', 'pending')
-			.order('created_at', { ascending: false });
+			.order('created_at', { ascending: false })
+			.limit(2000);
 
 		if (error) {
 			console.error('Failed to load potholes:', error);
