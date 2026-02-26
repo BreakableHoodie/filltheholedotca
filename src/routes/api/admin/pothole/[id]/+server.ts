@@ -8,6 +8,53 @@ import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+const patchSchema = z
+	.object({
+		status: z.enum(['pending', 'reported', 'filled', 'expired']).optional(),
+		address: z.string().min(1).max(500).optional()
+	})
+	.refine((d) => d.status !== undefined || d.address !== undefined, {
+		message: 'At least one field required'
+	});
+
+// PATCH — status override or address correction (editor+)
+export const PATCH: RequestHandler = async ({ params, request, locals, getClientAddress }) => {
+	if (!locals.adminUser) throw error(401, 'Unauthorized');
+	requireRole(locals.adminUser.role, 'editor');
+
+	const parsed = z.object({ id: z.string().uuid() }).safeParse(params);
+	if (!parsed.success) throw error(400, 'Invalid ID');
+	const { id } = parsed.data;
+
+	const body = await request.json();
+	const bodyParsed = patchSchema.safeParse(body);
+	if (!bodyParsed.success) throw error(400, bodyParsed.error.issues[0]?.message ?? 'Invalid request body');
+
+	const updates: Record<string, unknown> = {};
+	if (bodyParsed.data.address !== undefined) updates.address = bodyParsed.data.address;
+	if (bodyParsed.data.status !== undefined) {
+		const s = bodyParsed.data.status;
+		updates.status = s;
+		updates.filled_at = s === 'filled' ? new Date().toISOString() : null;
+		updates.expired_at = s === 'expired' ? new Date().toISOString() : null;
+	}
+
+	const { error: dbErr } = await adminSupabase.from('potholes').update(updates).eq('id', id);
+	if (dbErr) throw error(500, 'Failed to update');
+
+	await writeAuditLog(
+		locals.adminUser.id,
+		'pothole.update',
+		'pothole',
+		id,
+		{ fields: Object.keys(updates) },
+		getClientAddress()
+	);
+
+	return json({ ok: true });
+};
+
+// DELETE — hard delete (admin only)
 export const DELETE: RequestHandler = async ({ params, locals, getClientAddress }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
 	requireRole(locals.adminUser.role, 'admin');
