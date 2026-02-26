@@ -29,10 +29,9 @@ Expand the Playwright test suite for fillthehole.ca.
    - Expects a 422 or 400 response with a rejection message
    - POST with coordinates just inside the boundary — expects 200
 
-3. **Wanksy and filled API flows**
-   - POST to `/api/wanksy` with a valid pothole ID (mock the DB response) — expects 200
+3. **Filled API flows**
    - POST to `/api/filled` with a valid pothole ID (mock the DB response) — expects 200
-   - POST to either with a missing or malformed ID — expects 400 or 422
+   - POST with a missing or malformed ID — expects 400 or 422
 
 4. **WelcomeModal first-visit behaviour**
    - Visit `/` with no `fth-welcomed` key in localStorage

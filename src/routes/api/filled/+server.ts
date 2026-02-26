@@ -53,7 +53,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.from('potholes')
 		.update({ status: 'filled', filled_at: new Date().toISOString() })
 		.eq('id', parsed.data.id)
-		.in('status', ['reported', 'wanksyd']) // Accept reported or legacy wanksyd
+		.neq('status', 'pending')
+		.neq('status', 'filled')
+		.neq('status', 'expired')
 		.select('id');
 
 	if (updateError) throw error(500, 'Failed to update status');

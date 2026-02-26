@@ -114,7 +114,6 @@ potholes (
   id uuid PK, created_at, lat float8, lng float8,
   address text, description text,
   status text,          -- 'pending' | 'reported' | 'expired' | 'filled'
-  wanksy_at timestamptz,  -- kept for historical rows; no longer written
   filled_at timestamptz, expired_at timestamptz,
   confirmed_count int   -- starts at 1, promoted to 'reported' at 3
 )

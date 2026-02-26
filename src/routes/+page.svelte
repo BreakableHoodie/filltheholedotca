@@ -240,9 +240,8 @@
 
 		const potholes = data.potholes as Pothole[];
 		for (const pothole of potholes) {
-			// Legacy wanksyd rows (pre-migration DB rows) fall back to the reported layer.
-			// Cast to string since 'wanksyd' is no longer part of PotholeStatus.
-			const layerKey = (pothole.status as string) === 'wanksyd' ? 'reported' : pothole.status;
+			// Any unknown legacy status falls back to the reported layer.
+			const layerKey = pothole.status in clusterGroups ? pothole.status : 'reported';
 			if (!(layerKey in clusterGroups)) continue;
 
 			const info = STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported;

@@ -52,8 +52,6 @@ jobs:
             sed -i "s|ADMIN_SECRET=.*|ADMIN_SECRET=$ADMIN_SECRET|" .env
           fi
 
-      - run: npm run build
-
       - name: Run E2E tests
         run: npx playwright test tests/e2e
 
