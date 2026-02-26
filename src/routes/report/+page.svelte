@@ -434,7 +434,7 @@
 						{address}
 					</p>
 				{:else if gpsStatus === 'got'}
-					<p class="text-xs text-zinc-500">Looking up address…</p>
+					<p class="text-xs text-zinc-400">Looking up address…</p>
 				{/if}
 			</div>
 
@@ -502,7 +502,7 @@
 						{address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
 					</p>
 				{:else}
-					<p class="text-xs text-zinc-500">Tap the map to place a pin</p>
+					<p class="text-xs text-zinc-400">Tap the map to place a pin</p>
 				{/if}
 			</div>
 		</div>
@@ -575,14 +575,16 @@
 			</button>
 			<input
 				bind:this={photoInput}
+				id="photo-input"
 				type="file"
 				accept="image/jpeg,image/png,image/webp"
 				class="sr-only"
+				aria-label="Upload a pothole photo"
 				onchange={handlePhotoSelect}
 			/>
 		{/if}
 
-		<p class="text-xs text-zinc-500">Photos are reviewed before appearing publicly.</p>
+		<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly.</p>
 	</div>
 
 		<button
