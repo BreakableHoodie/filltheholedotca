@@ -65,7 +65,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Auth endpoints are exempt from both.
 	// -----------------------------------------------------------------------
 	const { pathname } = event.url;
-	const isAdminPage = pathname.startsWith('/admin') && !pathname.startsWith('/admin/login');
+	const isAdminPage =
+		pathname.startsWith('/admin') &&
+		!pathname.startsWith('/admin/login') &&
+		!pathname.startsWith('/admin/signup');
 	const isAdminApi = pathname.startsWith('/api/admin') && !pathname.startsWith('/api/admin/auth/');
 
 	if (isAdminPage || isAdminApi) {
