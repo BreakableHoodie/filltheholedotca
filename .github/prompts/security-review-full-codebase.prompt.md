@@ -11,7 +11,7 @@ Perform a full security review of this repository (not diff-focused). Prioritize
 
 - Project: `filltheholedotca` (public civic reporting app)
 - Stack: SvelteKit + TypeScript, Supabase (Postgres + RLS), Zod, Playwright
-- Threat model: anonymous internet users can call public endpoints directly; admin operations are token-gated
+- Threat model: anonymous internet users can call public endpoints directly; admin operations are privileged
 - Security policy focus includes injection, XSS, auth/authz bypass, data exposure, and geofence/rate-limit bypass
 
 ## Scope
@@ -45,7 +45,7 @@ Then perform a secondary pass over frontend rendering paths for stored/reflected
 
 ## Required output
 
-Create `docs/code-review/2026-02-26-security-review-full-codebase.md` with:
+Create `docs/code-review/YYYY-MM-DD-security-review-full-codebase.md` (using today's date for `YYYY-MM-DD`) with:
 
 1. Executive summary (2-6 bullets)
 2. Attack surface map (entry points, trust boundaries, sensitive data flows)
@@ -59,14 +59,13 @@ Create `docs/code-review/2026-02-26-security-review-full-codebase.md` with:
    - Exploit path (step-by-step attacker path)
    - Minimal fix recommendation
    - Defense-in-depth recommendation
-5. “No finding” controls reviewed and judged acceptable
-6. “Security test gaps” with concrete regression tests to add
-7. “Top 5 fixes to implement first” prioritized by risk reduction vs effort
+5. "No finding" controls reviewed and judged acceptable
+6. "Security test gaps" with concrete regression tests to add
+7. "Top 5 fixes to implement first" prioritized by risk reduction vs effort
 
 ## Review quality bar
 
 - Evidence-based findings only; no speculative issues without code evidence.
-- If a control may exist outside the repo (edge/proxy/hosting), label it as “runtime verification required”.
+- If a control may exist outside the repo (edge/proxy/hosting), label it as "runtime verification required".
 - Prefer practical exploitability over theoretical concerns.
 - Avoid noisy low-impact lint-style comments unless they create a meaningful security risk.
-
