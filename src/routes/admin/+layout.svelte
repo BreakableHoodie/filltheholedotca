@@ -24,7 +24,7 @@
 		<aside class="w-52 flex-shrink-0 bg-zinc-900 border-r border-zinc-800 flex flex-col">
 			<!-- Brand -->
 			<div class="px-4 py-4 border-b border-zinc-800">
-				<a href="/admin/photos" class="block">
+				<a href="/admin" class="block">
 					<span class="text-sky-400 font-bold text-sm">fillthehole.ca</span>
 					<span class="block text-zinc-500 text-xs mt-0.5">Admin Panel</span>
 				</a>
@@ -32,6 +32,16 @@
 
 			<!-- Nav -->
 			<nav class="flex-1 px-2 py-3 space-y-0.5">
+				<a
+					href="/admin"
+					class="flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-colors {currentPath === '/admin' ? 'bg-sky-600/20 text-sky-400' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'}"
+				>
+					<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+					</svg>
+					Dashboard
+				</a>
+
 				<a
 					href="/admin/photos"
 					class="flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-colors {isActive('/admin/photos') ? 'bg-sky-600/20 text-sky-400' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'}"
