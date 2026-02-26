@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { SUPABASE_SERVICE_ROLE_KEY, SIGHTENGINE_API_USER, SIGHTENGINE_API_SECRET } from '$env/static/private';
+import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
@@ -69,8 +70,8 @@ async function runModeration(
 		const seForm = new FormData();
 		seForm.append('media', new Blob([buffer], { type: mimeType }), `photo.${ext}`);
 		seForm.append('models', 'nudity,offensive');
-		seForm.append('api_user', SIGHTENGINE_API_USER);
-		seForm.append('api_secret', SIGHTENGINE_API_SECRET);
+		seForm.append('api_user', env.SIGHTENGINE_API_USER);
+		seForm.append('api_secret', env.SIGHTENGINE_API_SECRET);
 
 		const res = await fetch('https://api.sightengine.com/1.0/check.json', {
 			method: 'POST',
