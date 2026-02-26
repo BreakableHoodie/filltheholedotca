@@ -326,17 +326,30 @@
 			const result = await res.json();
 			if (!res.ok) throw new Error(result.message || 'Submission failed');
 
-			// Upload photo if one was selected — non-fatal if it fails
-			if (photoFile) {
-				const fd = new FormData();
-				fd.append('photo', photoFile);
-				fd.append('pothole_id', result.id);
-				try {
-					await fetch('/api/photos', { method: 'POST', body: fd });
-				} catch {
-					// Photo upload failure does not block navigation
+				// Upload photo if one was selected — non-fatal if it fails
+				if (photoFile) {
+					const fd = new FormData();
+					fd.append('photo', photoFile);
+					fd.append('pothole_id', result.id);
+					try {
+						const photoRes = await fetch('/api/photos', { method: 'POST', body: fd });
+						if (!photoRes.ok) {
+							let uploadMessage = 'Photo upload failed';
+							try {
+								const photoResult = await photoRes.json();
+								if (typeof photoResult?.message === 'string' && photoResult.message.length > 0) {
+									uploadMessage = photoResult.message;
+								}
+							} catch {
+								// Keep generic message when response body is not JSON.
+							}
+							toast.error(`Report submitted, but photo was not uploaded: ${uploadMessage}`);
+						}
+					} catch {
+						// Photo upload failure does not block navigation
+						toast.error('Report submitted, but photo was not uploaded due to a network error');
+					}
 				}
-			}
 
 			toast.success(result.message);
 			goto(`/hole/${result.id}`);
