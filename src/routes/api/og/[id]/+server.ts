@@ -4,27 +4,32 @@ import { error } from '@sveltejs/kit';
 import { z } from 'zod';
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
+import { decodeHtmlEntities } from '$lib/escape';
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 
 const paramsSchema = z.object({ id: z.string().uuid() });
+const require = createRequire(import.meta.url);
+const OG_FONT_PATH = require.resolve(
+	'@fontsource/barlow-condensed/files/barlow-condensed-latin-700-normal.woff'
+);
 
 // Cache font at module level — reused across warm Lambda invocations
 let fontCache: ArrayBuffer | null = null;
 
 async function loadFont(): Promise<ArrayBuffer> {
 	if (fontCache) return fontCache;
-	let res: Response;
 	try {
-		res = await fetch(
-			'https://cdn.jsdelivr.net/npm/@fontsource/barlow-condensed@5/files/barlow-condensed-latin-700-normal.woff',
-			{ signal: AbortSignal.timeout(5000) }
+		const fontFile = await readFile(OG_FONT_PATH);
+		fontCache = fontFile.buffer.slice(
+			fontFile.byteOffset,
+			fontFile.byteOffset + fontFile.byteLength
 		);
+		return fontCache;
 	} catch (e) {
-		// Network error or timeout — don't cache so the next request retries
-		throw error(500, `Font fetch failed: ${e instanceof Error ? e.message : 'network error'}`);
+		// Do not cache failures — next request should retry loading from disk.
+		throw error(500, `Font load failed: ${e instanceof Error ? e.message : 'file error'}`);
 	}
-	if (!res.ok) throw error(500, `Font fetch failed: HTTP ${res.status}`);
-	fontCache = await res.arrayBuffer();
-	return fontCache;
 }
 
 // Lightweight satori element helper — avoids React dependency.
@@ -58,10 +63,11 @@ export const GET: RequestHandler = async ({ params }) => {
 
 	const font = await loadFont();
 
-	const rawAddress = pothole.address
-		? pothole.address.length > 55
-			? pothole.address.slice(0, 54) + '…'
-			: pothole.address
+	const address = pothole.address ? decodeHtmlEntities(pothole.address) : null;
+	const rawAddress = address
+		? address.length > 55
+			? address.slice(0, 54) + '…'
+			: address
 		: `${(pothole.lat as number).toFixed(4)}, ${(pothole.lng as number).toFixed(4)}`;
 
 	// Shrink font size for longer addresses so they always fit on two lines

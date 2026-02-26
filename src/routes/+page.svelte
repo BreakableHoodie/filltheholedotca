@@ -352,7 +352,7 @@
 		<div class="absolute inset-0 flex items-center justify-center bg-zinc-900">
 			<div class="text-center">
 				<div class="mx-auto w-9 h-9 rounded-full border-2 border-zinc-700 border-t-sky-500 animate-spin mb-4"></div>
-				<div class="text-sm text-zinc-500">Loading the map…</div>
+				<div class="text-sm text-zinc-300">Loading the map…</div>
 			</div>
 		</div>
 	{/if}

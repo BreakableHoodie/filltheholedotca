@@ -33,3 +33,20 @@ create index if not exists potholes_geo_idx on potholes (status, lat, lng);
 
 -- Optimize for feed/map loading (status != pending, order by created_at)
 create index if not exists potholes_feed_idx on potholes (created_at desc) where status != 'pending';
+
+-- Security hardening: persistent API abuse-throttling table (service role access only)
+create table if not exists api_rate_limit_events (
+  id          uuid primary key default gen_random_uuid(),
+  ip_hash     text not null,
+  scope       text not null check (scope in ('report_submit', 'photo_upload')),
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists api_rate_limit_events_scope_ip_created_idx
+  on api_rate_limit_events (scope, ip_hash, created_at desc);
+
+alter table api_rate_limit_events enable row level security;
+
+-- Security hardening: track uploader hashes for photo abuse controls.
+alter table if exists pothole_photos add column if not exists ip_hash text;
+create index if not exists pothole_photos_ip_hash_created_idx on pothole_photos (ip_hash, created_at desc);

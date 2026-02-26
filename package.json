@@ -35,6 +35,7 @@
     "vite": "^7.3.1"
   },
   "dependencies": {
+    "@fontsource/barlow-condensed": "^5.2.8",
     "@resvg/resvg-js": "^2.6.2",
     "@supabase/supabase-js": "^2.97.0",
     "@types/leaflet": "^1.9.21",
