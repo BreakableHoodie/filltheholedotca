@@ -180,7 +180,7 @@ export async function writeAuditLog(
 	ipHash: string
 ): Promise<void> {
 	try {
-		await adminSupabase.from('admin_audit_log').insert({
+		const { error: auditError } = await adminSupabase.from('admin_audit_log').insert({
 			user_id: userId,
 			action,
 			resource_type: resourceType,
@@ -188,9 +188,11 @@ export async function writeAuditLog(
 			details: details ?? null,
 			ip_address: ipHash
 		});
+		// Supabase returns errors in the result, not as thrown exceptions.
+		if (auditError) console.error('[audit] Failed to write audit log:', auditError.message);
 	} catch (e) {
-		// Audit failures are non-fatal — log but don't break the primary operation.
-		console.error('[audit] Failed to write audit log:', e);
+		// Catch network-level failures separately.
+		console.error('[audit] Unexpected error writing audit log:', e);
 	}
 }
 

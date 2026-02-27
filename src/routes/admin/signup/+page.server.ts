@@ -192,6 +192,19 @@ export const actions: Actions = {
 				return fail(500, { error: 'Failed to create bootstrap account. Please try again.', ...echo });
 			}
 
+			// Guard against concurrent bootstrap: only one admin should exist after this insert.
+			const { count: postCount } = await adminSupabase
+				.from('admin_users')
+				.select('*', { count: 'exact', head: true });
+
+			if ((postCount ?? 0) > 1) {
+				await adminSupabase.from('admin_users').delete().eq('id', newUser.id);
+				return fail(409, {
+					error: 'Another admin account was created simultaneously. Please log in instead.',
+					...echo
+				});
+			}
+
 			await recordAuthAttempt({
 				userId: newUser.id,
 				email,
@@ -251,11 +264,20 @@ export const actions: Actions = {
 		if (insertError || !newUser)
 			return fail(500, { error: 'Failed to create account. Please try again.', ...echo });
 
-		// Mark invite as used (atomic — if this fails the user is still created but can't be activated cleanly)
-		await adminSupabase
+		// Atomically mark invite as used — the .is('used_at', null) guard ensures only one
+		// concurrent signup wins even if two requests arrive with the same valid code.
+		const { data: consumed } = await adminSupabase
 			.from('admin_invite_codes')
 			.update({ used_by: newUser.id, used_at: new Date().toISOString(), is_active: false })
-			.eq('id', invite.id);
+			.eq('id', invite.id)
+			.is('used_at', null)
+			.select('id');
+
+		if (!consumed || consumed.length === 0) {
+			// Another concurrent request consumed the invite first — roll back the created user.
+			await adminSupabase.from('admin_users').delete().eq('id', newUser.id);
+			return fail(409, { error: 'This invite code has already been used', ...echo });
+		}
 
 		await recordAuthAttempt({
 			userId: newUser.id,
