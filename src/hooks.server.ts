@@ -6,8 +6,7 @@ import {
 	checkSessionExpiry,
 	touchSession,
 	invalidateSession,
-	SESSION_COOKIE,
-	clearSessionCookie
+	SESSION_COOKIE
 } from '$lib/server/admin-auth';
 import { CSRF_HEADER, validateCsrfToken } from '$lib/server/admin-csrf';
 

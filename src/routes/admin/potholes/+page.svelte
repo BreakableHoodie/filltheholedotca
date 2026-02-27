@@ -56,7 +56,7 @@
 
 	<!-- Status filter tabs -->
 	<div class="flex gap-1 mb-5 border-b border-zinc-800">
-		{#each statusTabs as tab}
+		{#each statusTabs as tab (tab.label)}
 			<a
 				href={tabHref(tab.value)}
 				class="px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px

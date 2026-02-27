@@ -115,7 +115,7 @@
 										name="role"
 										class="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200 focus:outline-none focus:border-sky-500"
 									>
-										{#each ['admin', 'editor', 'viewer'] as r}
+										{#each ['admin', 'editor', 'viewer'] as r (r)}
 											<option value={r} selected={user.role === r}>{r}</option>
 										{/each}
 									</select>

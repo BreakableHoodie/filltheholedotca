@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { enhance } from '$app/forms';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { formatDistanceToNow } from 'date-fns';
 
 	interface Props {
@@ -9,9 +10,7 @@
 
 	let { data }: Props = $props();
 
-	type Photo = (typeof data.photos)[number];
-
-	let selected = $state(new Set<string>());
+	let selected = $state(new SvelteSet<string>());
 	let bulkFormEl: HTMLFormElement | undefined = $state();
 
 	const allSelected = $derived(
@@ -20,14 +19,13 @@
 	const someSelected = $derived(selected.size > 0);
 
 	function toggleSelect(id: string) {
-		const next = new Set(selected);
-		if (next.has(id)) next.delete(id);
-		else next.add(id);
-		selected = next;
+		if (selected.has(id)) selected.delete(id);
+		else selected.add(id);
 	}
 
 	function toggleAll() {
-		selected = allSelected ? new Set() : new Set(data.photos.map((p) => p.id));
+		if (allSelected) selected.clear();
+		else data.photos.forEach((p) => selected.add(p.id));
 	}
 
 	function scoreColor(score: number | null): string {

@@ -8,12 +8,11 @@ import {
 	checkAuthRateLimit,
 	recordAuthAttempt,
 	createAdminSession,
-	SESSION_COOKIE,
 	TRUSTED_DEVICE_COOKIE,
 	buildSessionCookie
 } from '$lib/server/admin-auth';
 import { verifyPassword } from '$lib/server/admin-crypto';
-import { generateCsrfToken, buildCsrfCookie, CSRF_COOKIE } from '$lib/server/admin-csrf';
+import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);

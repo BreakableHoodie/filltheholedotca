@@ -13,8 +13,6 @@
 	const pothole = $derived(data.pothole);
 	const isAdmin = $derived(data.adminUser?.role === 'admin');
 
-	// Editing state
-	let editingAddress = $state(false);
 	let addressValue = $state(data.pothole.address ?? '');
 
 	function statusColor(status: string): string {
@@ -157,7 +155,7 @@
 							name="status"
 							class="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
 						>
-							{#each ['pending', 'reported', 'filled', 'expired'] as s}
+							{#each ['pending', 'reported', 'filled', 'expired'] as s (s)}
 								<option value={s} selected={pothole.status === s}>{s}</option>
 							{/each}
 						</select>

@@ -89,11 +89,11 @@
 			<select
 				id="filter-user"
 				name="user"
-				onchange="this.form.submit()"
+				onchange={(e) => (e.currentTarget as HTMLSelectElement).form?.submit()}
 				class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-sky-500 cursor-pointer"
 			>
 				<option value="">All users</option>
-				{#each data.users as u}
+				{#each data.users as u (u.id)}
 					<option value={u.id} selected={data.filterUser === u.id}>
 						{u.first_name} {u.last_name} ({u.email})
 					</option>
@@ -106,10 +106,10 @@
 			<select
 				id="filter-resource"
 				name="resource_type"
-				onchange="this.form.submit()"
+				onchange={(e) => (e.currentTarget as HTMLSelectElement).form?.submit()}
 				class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-sky-500 cursor-pointer"
 			>
-				{#each RESOURCE_TYPES as rt}
+				{#each RESOURCE_TYPES as rt (rt.value)}
 					<option value={rt.value} selected={data.filterResourceType === rt.value}>
 						{rt.label}
 					</option>

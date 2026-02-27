@@ -9,9 +9,6 @@
 
 	let { data, form }: Props = $props();
 
-	// MFA is enabled either from DB (data) or just confirmed this session
-	const totpEnabled = $derived(data.totpEnabled || form?.confirmed || (form && 'disabled' in form && !form.disabled));
-
 	let showRegenForm = $state(false);
 
 	function formatCode(code: string): string {
@@ -48,7 +45,7 @@
 				your authenticator.
 			</p>
 			<div class="grid grid-cols-2 gap-2">
-				{#each form.backupCodes as code}
+				{#each form.backupCodes as code (code)}
 					<code class="bg-zinc-900 border border-zinc-700 rounded px-3 py-1.5 text-sm font-mono text-zinc-200 text-center">
 						{formatCode(code)}
 					</code>
@@ -63,7 +60,7 @@
 			<h2 class="text-amber-400 font-semibold mb-1">New backup codes</h2>
 			<p class="text-zinc-300 text-sm mb-4">Your old codes are now invalid. Save these new ones.</p>
 			<div class="grid grid-cols-2 gap-2">
-				{#each form.newBackupCodes as code}
+				{#each form.newBackupCodes as code (code)}
 					<code class="bg-zinc-900 border border-zinc-700 rounded px-3 py-1.5 text-sm font-mono text-zinc-200 text-center">
 						{formatCode(code)}
 					</code>
@@ -114,7 +111,7 @@
 					<label for="code" class="block text-xs text-zinc-500 mb-1.5">
 						Verify — enter the 6-digit code from your app
 					</label>
-					{#if form?.error && form.pendingSetup}
+					{#if form?.error}
 						<p class="text-red-400 text-xs mb-1.5">{form.error}</p>
 					{/if}
 					<input

@@ -7,7 +7,7 @@
 		form: ActionData;
 	}
 
-	let { data: _data, form }: Props = $props();
+	let { form }: Props = $props();
 
 	let submitting = $state(false);
 </script>

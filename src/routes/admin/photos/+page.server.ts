@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// Batch-generate signed URLs (one round-trip for all photos)
 	const paths = photos.map((p) => p.storage_path).filter(Boolean);
-	let signedUrlMap: Record<string, string> = {};
+	const signedUrlMap: Record<string, string> = {};
 
 	if (paths.length > 0) {
 		const { data: signedUrls } = await adminSupabase.storage

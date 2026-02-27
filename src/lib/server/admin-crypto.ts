@@ -108,11 +108,22 @@ const BACKUP_CODE_COUNT = 8;
 const BACKUP_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // unambiguous chars
 
 export function generateBackupCodes(): string[] {
+	// Rejection sampling avoids modulo bias. With BACKUP_CODE_CHARS.length === 32
+	// (an exact divisor of 256), limit === 256 so no bytes are ever discarded
+	// in practice — this pattern satisfies static analysis without overhead.
+	const limit = 256 - (256 % BACKUP_CODE_CHARS.length);
 	return Array.from({ length: BACKUP_CODE_COUNT }, () => {
-		const bytes = crypto.getRandomValues(new Uint8Array(BACKUP_CODE_LENGTH));
-		return Array.from(bytes)
-			.map((b) => BACKUP_CODE_CHARS[b % BACKUP_CODE_CHARS.length])
-			.join('');
+		const chars: string[] = [];
+		while (chars.length < BACKUP_CODE_LENGTH) {
+			const bytes = crypto.getRandomValues(new Uint8Array(BACKUP_CODE_LENGTH));
+			for (const b of bytes) {
+				if (b < limit) {
+					chars.push(BACKUP_CODE_CHARS[b % BACKUP_CODE_CHARS.length]);
+					if (chars.length === BACKUP_CODE_LENGTH) break;
+				}
+			}
+		}
+		return chars.join('');
 	});
 }
 
