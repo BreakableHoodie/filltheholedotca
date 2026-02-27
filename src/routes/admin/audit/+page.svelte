@@ -220,13 +220,9 @@
 							{/if}
 						</td>
 
-						<!-- IP -->
+						<!-- IP hash (stored as HMAC-SHA-256, not shown to avoid confusion) -->
 						<td class="px-4 py-3">
-							{#if entry.ip_address}
-								<span class="text-zinc-500 text-xs font-mono">{entry.ip_address}</span>
-							{:else}
-								<span class="text-zinc-700 text-xs">—</span>
-							{/if}
+							<span class="text-zinc-700 text-xs">—</span>
 						</td>
 					</tr>
 				{:else}

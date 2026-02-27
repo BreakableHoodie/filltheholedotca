@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { writeAuditLog } from '$lib/server/admin-auth';
 import { hashPassword, verifyPassword } from '$lib/server/admin-crypto';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -26,9 +27,17 @@ export const actions: Actions = {
 		if (!current) return fail(400, { error: 'Enter your current password' });
 		if (next !== confirm) return fail(400, { error: 'New passwords do not match' });
 
-		const nextParsed = z.string().min(12).max(128).safeParse(next);
+		const nextParsed = z
+			.string()
+			.min(12, 'Password must be at least 12 characters')
+			.max(128, 'Password must be at most 128 characters')
+			.regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+			.regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+			.regex(/[0-9]/, 'Password must contain at least one number')
+			.regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character')
+			.safeParse(next);
 		if (!nextParsed.success)
-			return fail(400, { error: 'New password must be 12–128 characters' });
+			return fail(400, { error: nextParsed.error.issues[0]?.message ?? 'Invalid password' });
 
 		// Fetch stored hash
 		const { data: user } = await adminSupabase
@@ -56,7 +65,7 @@ export const actions: Actions = {
 			'user',
 			locals.adminUser.id,
 			null,
-			getClientAddress()
+			await hashIp(getClientAddress())
 		);
 
 		return { success: true };

@@ -64,7 +64,8 @@ const SESSION_EXPIRY_DAYS = 1; // hard DB expiry — soft timeouts enforced abov
 
 export async function createAdminSession(
 	userId: string,
-	ipAddress: string,
+	// ip_address column stores an HMAC-SHA-256 hash — never a raw IP.
+	ipHash: string,
 	userAgent: string
 ): Promise<string> {
 	const sessionId = crypto.randomUUID();
@@ -74,7 +75,7 @@ export async function createAdminSession(
 		id: sessionId,
 		user_id: userId,
 		expires_at: expiresAt.toISOString(),
-		ip_address: ipAddress,
+		ip_address: ipHash,
 		user_agent: userAgent
 	});
 
@@ -175,7 +176,8 @@ export async function writeAuditLog(
 	resourceType: string | null,
 	resourceId: string | null,
 	details: object | null,
-	ipAddress: string
+	// ip_address column stores an HMAC-SHA-256 hash — never a raw IP.
+	ipHash: string
 ): Promise<void> {
 	try {
 		await adminSupabase.from('admin_audit_log').insert({
@@ -184,7 +186,7 @@ export async function writeAuditLog(
 			resource_type: resourceType,
 			resource_id: resourceId,
 			details: details ?? null,
-			ip_address: ipAddress
+			ip_address: ipHash
 		});
 	} catch (e) {
 		// Audit failures are non-fatal — log but don't break the primary operation.
@@ -198,26 +200,39 @@ export async function writeAuditLog(
 
 export async function checkAuthRateLimit(
 	email: string,
-	ipAddress: string,
+	// ipHash must be an HMAC-SHA-256 hash — never a raw IP.
+	ipHash: string,
 	attemptType: 'login' | 'mfa' | 'signup'
 ): Promise<{ allowed: boolean; remainingMinutes?: number }> {
 	const windowMs = 10 * 60 * 1000; // 10 minutes
 	const maxFailures = 5;
 	const windowStart = new Date(Date.now() - windowMs).toISOString();
 
-	const { count, error: countError } = await adminSupabase
-		.from('admin_auth_attempts')
-		.select('*', { count: 'exact', head: true })
-		.or(`email.eq.${email},ip_address.eq.${ipAddress}`)
-		.eq('attempt_type', attemptType)
-		.eq('success', false)
-		.gte('created_at', windowStart);
+	// Two separate parameterized queries to avoid PostgREST .or() string injection.
+	// A crafted email value could alter the filter logic in .or(`email.eq.${email},...`).
+	const [emailResult, ipResult] = await Promise.all([
+		adminSupabase
+			.from('admin_auth_attempts')
+			.select('*', { count: 'exact', head: true })
+			.eq('email', email)
+			.eq('attempt_type', attemptType)
+			.eq('success', false)
+			.gte('created_at', windowStart),
+		adminSupabase
+			.from('admin_auth_attempts')
+			.select('*', { count: 'exact', head: true })
+			.eq('ip_address', ipHash)
+			.eq('attempt_type', attemptType)
+			.eq('success', false)
+			.gte('created_at', windowStart)
+	]);
 
-	if (countError) return { allowed: true }; // fail open on query error
+	if (emailResult.error || ipResult.error) return { allowed: true }; // fail open on query error
 
-	if ((count ?? 0) >= maxFailures) {
-		const remainingMs = windowMs; // conservative — full window remaining
-		return { allowed: false, remainingMinutes: Math.ceil(remainingMs / 60_000) };
+	const count = Math.max(emailResult.count ?? 0, ipResult.count ?? 0);
+
+	if (count >= maxFailures) {
+		return { allowed: false, remainingMinutes: Math.ceil(windowMs / 60_000) };
 	}
 
 	return { allowed: true };
@@ -226,7 +241,8 @@ export async function checkAuthRateLimit(
 export async function recordAuthAttempt(params: {
 	userId?: string | null;
 	email: string;
-	ipAddress: string;
+	// ipHash must be an HMAC-SHA-256 hash — never a raw IP.
+	ipHash: string;
 	userAgent: string;
 	attemptType: 'login' | 'mfa' | 'signup';
 	success: boolean;
@@ -235,7 +251,7 @@ export async function recordAuthAttempt(params: {
 	await adminSupabase.from('admin_auth_attempts').insert({
 		user_id: params.userId ?? null,
 		email: params.email,
-		ip_address: params.ipAddress,
+		ip_address: params.ipHash,
 		user_agent: params.userAgent,
 		attempt_type: params.attemptType,
 		success: params.success,

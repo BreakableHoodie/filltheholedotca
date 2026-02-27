@@ -5,6 +5,7 @@ import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -36,7 +37,7 @@ export const PATCH: RequestHandler = async ({ request, params, locals, getClient
 		'photo',
 		id,
 		{ moderation_status },
-		getClientAddress()
+		await hashIp(getClientAddress())
 	);
 
 	return json({ ok: true, moderation_status });
@@ -72,7 +73,7 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 		'photo',
 		id,
 		{ storage_path: photo?.storage_path ?? null },
-		getClientAddress()
+		await hashIp(getClientAddress())
 	);
 
 	return json({ ok: true });

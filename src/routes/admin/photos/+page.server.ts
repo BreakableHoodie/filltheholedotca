@@ -5,6 +5,7 @@ import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -21,7 +22,12 @@ type PhotoRow = {
 	} | null;
 };
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ locals }) => {
+	// Hooks guarantee a valid session; requireRole makes the permission explicit
+	// and consistent with the actions below (which require 'editor').
+	if (!locals.adminUser) throw error(401, 'Unauthorized');
+	requireRole(locals.adminUser.role, 'viewer');
+
 	const { data: rawPhotos } = await adminSupabase
 		.from('pothole_photos')
 		.select(
@@ -74,7 +80,7 @@ export const actions: Actions = {
 			.eq('id', id);
 		if (dbErr) return fail(500, { error: 'Failed to approve photo' });
 
-		await writeAuditLog(locals.adminUser.id, 'photo.approve', 'photo', id, null, getClientAddress());
+		await writeAuditLog(locals.adminUser.id, 'photo.approve', 'photo', id, null, await hashIp(getClientAddress()));
 		return { success: true };
 	},
 
@@ -91,7 +97,7 @@ export const actions: Actions = {
 			.eq('id', id);
 		if (dbErr) return fail(500, { error: 'Failed to reject photo' });
 
-		await writeAuditLog(locals.adminUser.id, 'photo.reject', 'photo', id, null, getClientAddress());
+		await writeAuditLog(locals.adminUser.id, 'photo.reject', 'photo', id, null, await hashIp(getClientAddress()));
 		return { success: true };
 	},
 
@@ -118,7 +124,7 @@ export const actions: Actions = {
 			'photo',
 			null,
 			{ count: ids.length },
-			getClientAddress()
+			await hashIp(getClientAddress())
 		);
 		return { success: true };
 	},
@@ -146,7 +152,7 @@ export const actions: Actions = {
 			'photo',
 			null,
 			{ count: ids.length },
-			getClientAddress()
+			await hashIp(getClientAddress())
 		);
 		return { success: true };
 	}

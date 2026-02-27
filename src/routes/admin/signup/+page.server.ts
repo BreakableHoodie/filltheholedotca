@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { recordAuthAttempt } from '$lib/server/admin-auth';
 import { hashPassword } from '$lib/server/admin-crypto';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -122,7 +123,7 @@ export const actions: Actions = {
 		await recordAuthAttempt({
 			userId: newUser.id,
 			email,
-			ipAddress: getClientAddress(),
+			ipHash: await hashIp(getClientAddress()),
 			userAgent: '',
 			attemptType: 'signup',
 			success: true

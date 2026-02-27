@@ -14,6 +14,7 @@ import {
 	TRUSTED_DEVICE_COOKIE
 } from '$lib/server/admin-auth';
 import { generateCsrfToken, CSRF_COOKIE } from '$lib/server/admin-csrf';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -39,7 +40,7 @@ export const actions: Actions = {
 		// Prevent open redirect
 		const next = rawNext.startsWith('/admin') ? rawNext : '/admin/photos';
 
-		const ipAddress = getClientAddress();
+		const ipHash = await hashIp(getClientAddress());
 		const userAgent = request.headers.get('user-agent') ?? 'unknown';
 		const isSecure = url.protocol === 'https:';
 
@@ -51,7 +52,9 @@ export const actions: Actions = {
 			return fail(400, { error: 'Email and password are required', email });
 		}
 
-		const rateCheck = await checkAuthRateLimit(email, ipAddress, 'login');
+		// DB-backed rate limit (same as the API endpoint) — no separate in-memory limiter on
+		// this form handler; the shared checkAuthRateLimit covers both paths.
+		const rateCheck = await checkAuthRateLimit(email, ipHash, 'login');
 		if (!rateCheck.allowed) {
 			return fail(429, {
 				error: `Too many attempts. Try again in ${rateCheck.remainingMinutes} minutes.`,
@@ -61,14 +64,14 @@ export const actions: Actions = {
 
 		const { data: user } = await adminSupabase
 			.from('admin_users')
-			.select('id, email, first_name, last_name, role, is_active, password_hash, totp_enabled')
+			.select('id, email, first_name, last_name, role, is_active, activated_at, password_hash, totp_enabled')
 			.eq('email', email)
 			.maybeSingle();
 
 		if (!user) {
 			await recordAuthAttempt({
 				email,
-				ipAddress,
+				ipHash,
 				userAgent,
 				attemptType: 'login',
 				success: false,
@@ -77,25 +80,53 @@ export const actions: Actions = {
 			return fail(401, { error: 'Invalid email or password', email });
 		}
 
+		// Check account status BEFORE verifyPassword to avoid timing oracle:
+		// verifyPassword runs slow PBKDF2 — checking is_active after it leaks
+		// whether a given password is correct for an inactive account.
+		if (!user.activated_at) {
+			await recordAuthAttempt({
+				userId: user.id,
+				email,
+				ipHash,
+				userAgent,
+				attemptType: 'login',
+				success: false,
+				failureReason: 'activation_required'
+			});
+			return fail(403, {
+				error: 'Your account has not been activated yet. Contact an administrator.',
+				email
+			});
+		}
+
+		if (!user.is_active) {
+			await recordAuthAttempt({
+				userId: user.id,
+				email,
+				ipHash,
+				userAgent,
+				attemptType: 'login',
+				success: false,
+				failureReason: 'account_disabled'
+			});
+			return fail(403, {
+				error: 'Your account has been deactivated. Contact an administrator.',
+				email
+			});
+		}
+
 		const passwordOk = await verifyPassword(password, user.password_hash);
 		if (!passwordOk) {
 			await recordAuthAttempt({
 				userId: user.id,
 				email,
-				ipAddress,
+				ipHash,
 				userAgent,
 				attemptType: 'login',
 				success: false,
 				failureReason: 'wrong_password'
 			});
 			return fail(401, { error: 'Invalid email or password', email });
-		}
-
-		if (!user.is_active) {
-			return fail(403, {
-				error: 'Your account has not been activated yet. Contact an administrator.',
-				email
-			});
 		}
 
 		// Check trusted device before requiring MFA
@@ -111,7 +142,7 @@ export const actions: Actions = {
 					.maybeSingle();
 
 				if (trusted) {
-					const sessionId = await createAdminSession(user.id, ipAddress, userAgent);
+					const sessionId = await createAdminSession(user.id, ipHash, userAgent);
 					const csrfToken = await generateCsrfToken(sessionId);
 					cookies.set(SESSION_COOKIE, sessionId, {
 						httpOnly: true,
@@ -134,7 +165,7 @@ export const actions: Actions = {
 					await recordAuthAttempt({
 						userId: user.id,
 						email,
-						ipAddress,
+						ipHash,
 						userAgent,
 						attemptType: 'login',
 						success: true
@@ -148,7 +179,7 @@ export const actions: Actions = {
 			await adminSupabase.from('admin_mfa_challenges').insert({
 				token: mfaToken,
 				user_id: user.id,
-				ip_address: ipAddress,
+				ip_address: ipHash,
 				user_agent: userAgent,
 				expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString()
 			});
@@ -156,7 +187,7 @@ export const actions: Actions = {
 		}
 
 		// No MFA enrolled — create session directly
-		const sessionId = await createAdminSession(user.id, ipAddress, userAgent);
+		const sessionId = await createAdminSession(user.id, ipHash, userAgent);
 		const csrfToken = await generateCsrfToken(sessionId);
 		cookies.set(SESSION_COOKIE, sessionId, {
 			httpOnly: true,
@@ -179,7 +210,7 @@ export const actions: Actions = {
 		await recordAuthAttempt({
 			userId: user.id,
 			email,
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'login',
 			success: true

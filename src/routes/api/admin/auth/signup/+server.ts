@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { checkAuthRateLimit, recordAuthAttempt } from '$lib/server/admin-auth';
 import { hashPassword } from '$lib/server/admin-crypto';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -32,11 +33,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	const { inviteCode, email, password, firstName, lastName } = parsed.data;
-	const ipAddress = getClientAddress();
+	const ipHash = await hashIp(getClientAddress());
 	const userAgent = request.headers.get('user-agent') ?? 'unknown';
 
 	// Rate limit
-	const rateCheck = await checkAuthRateLimit(email, ipAddress, 'signup');
+	const rateCheck = await checkAuthRateLimit(email, ipHash, 'signup');
 	if (!rateCheck.allowed) {
 		throw error(
 			429,
@@ -57,7 +58,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!invite) {
 		await recordAuthAttempt({
 			email,
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'signup',
 			success: false,
@@ -70,7 +71,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (invite.email && invite.email.toLowerCase() !== email) {
 		await recordAuthAttempt({
 			email,
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'signup',
 			success: false,
@@ -121,7 +122,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	await recordAuthAttempt({
 		userId: newUser.id,
 		email,
-		ipAddress,
+		ipHash,
 		userAgent,
 		attemptType: 'signup',
 		success: true

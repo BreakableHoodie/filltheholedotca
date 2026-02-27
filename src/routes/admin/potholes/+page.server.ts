@@ -4,12 +4,17 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { createClient } from '@supabase/supabase-js';
 import type { PotholeStatus } from '$lib/types';
+import { requireRole } from '$lib/server/admin-auth';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const VALID_STATUSES: PotholeStatus[] = ['pending', 'reported', 'filled', 'expired'];
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
+	// Hooks guarantee a valid session; requireRole makes the permission explicit.
+	if (!locals.adminUser) throw error(401, 'Unauthorized');
+	requireRole(locals.adminUser.role, 'viewer');
+
 	const statusParam = url.searchParams.get('status');
 	const filterStatus = VALID_STATUSES.includes(statusParam as PotholeStatus)
 		? (statusParam as PotholeStatus)

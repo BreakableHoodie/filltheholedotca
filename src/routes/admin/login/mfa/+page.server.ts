@@ -14,6 +14,7 @@ import {
 	TRUSTED_DEVICE_COOKIE
 } from '$lib/server/admin-auth';
 import { generateCsrfToken, CSRF_COOKIE } from '$lib/server/admin-csrf';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -43,7 +44,7 @@ export const actions: Actions = {
 		const rawNext = formData.get('next')?.toString() ?? '/admin/photos';
 		const next = rawNext.startsWith('/admin') ? rawNext : '/admin/photos';
 
-		const ipAddress = getClientAddress();
+		const ipHash = await hashIp(getClientAddress());
 		const userAgent = request.headers.get('user-agent') ?? 'unknown';
 		const isSecure = url.protocol === 'https:';
 
@@ -63,6 +64,8 @@ export const actions: Actions = {
 				totp_enabled: boolean;
 				totp_secret: string | null;
 				backup_codes: string | null;
+				last_used_totp_code: string | null;
+				last_used_totp_at: string | null;
 			};
 		};
 
@@ -70,7 +73,7 @@ export const actions: Actions = {
 			.from('admin_mfa_challenges')
 			.select(
 				`id, user_id, ip_address, user_agent,
-       admin_users!inner ( id, email, is_active, totp_enabled, totp_secret, backup_codes )`
+       admin_users!inner ( id, email, is_active, totp_enabled, totp_secret, backup_codes, last_used_totp_code, last_used_totp_at )`
 			)
 			.eq('token', mfaToken)
 			.eq('used', false)
@@ -90,7 +93,7 @@ export const actions: Actions = {
 
 		// Prevent token reuse from a different network context
 		const ipMismatch =
-			row.ip_address && row.ip_address !== 'unknown' && row.ip_address !== ipAddress;
+			row.ip_address && row.ip_address !== 'unknown' && row.ip_address !== ipHash;
 		const uaMismatch =
 			row.user_agent && row.user_agent !== 'unknown' && row.user_agent !== userAgent;
 		if (ipMismatch || uaMismatch) {
@@ -105,7 +108,7 @@ export const actions: Actions = {
 			return fail(403, { error: 'Account has been deactivated.', token: mfaToken, next });
 		}
 
-		const rateCheck = await checkAuthRateLimit(dbUser.email, ipAddress, 'mfa');
+		const rateCheck = await checkAuthRateLimit(dbUser.email, ipHash, 'mfa');
 		if (!rateCheck.allowed) {
 			return fail(429, {
 				error: `Too many failed attempts. Try again in ${rateCheck.remainingMinutes} minutes.`,
@@ -121,7 +124,28 @@ export const actions: Actions = {
 		if (dbUser.totp_enabled && dbUser.totp_secret) {
 			try {
 				const secret = await decryptTotpSecret(dbUser.totp_secret);
-				verified = await verifyTotpCode(secret, code);
+				const totpValid = await verifyTotpCode(secret, code);
+
+				if (totpValid) {
+					// Replay prevention: a TOTP code stays mathematically valid for ~60s.
+					// Reject if this exact code was already accepted within the last 90s.
+					const withinWindow =
+						dbUser.last_used_totp_at &&
+						Date.now() - new Date(dbUser.last_used_totp_at).getTime() < 90_000;
+					if (dbUser.last_used_totp_code === code && withinWindow) {
+						await recordAuthAttempt({
+							userId: row.user_id,
+							email: dbUser.email,
+							ipHash,
+							userAgent,
+							attemptType: 'mfa',
+							success: false,
+							failureReason: 'totp_replay'
+						});
+						return fail(401, { error: 'Invalid code. Please try again.', token: mfaToken, next });
+					}
+					verified = true;
+				}
 			} catch (e) {
 				console.error('[mfa] TOTP decrypt/verify failed:', e);
 			}
@@ -145,7 +169,7 @@ export const actions: Actions = {
 			await recordAuthAttempt({
 				userId: row.user_id,
 				email: dbUser.email,
-				ipAddress,
+				ipHash,
 				userAgent,
 				attemptType: 'mfa',
 				success: false,
@@ -170,6 +194,14 @@ export const actions: Actions = {
 			});
 		}
 
+		// Record last-used TOTP code to prevent replay within the validity window
+		if (!usedBackupCode) {
+			await adminSupabase
+				.from('admin_users')
+				.update({ last_used_totp_code: code, last_used_totp_at: new Date().toISOString() })
+				.eq('id', row.user_id);
+		}
+
 		if (usedBackupCode && remainingBackupCodes !== null) {
 			await adminSupabase
 				.from('admin_users')
@@ -179,7 +211,7 @@ export const actions: Actions = {
 				.eq('id', row.user_id);
 		}
 
-		const sessionId = await createAdminSession(row.user_id, ipAddress, userAgent);
+		const sessionId = await createAdminSession(row.user_id, ipHash, userAgent);
 		const csrfToken = await generateCsrfToken(sessionId);
 		cookies.set(SESSION_COOKIE, sessionId, {
 			httpOnly: true,
@@ -202,7 +234,7 @@ export const actions: Actions = {
 		await recordAuthAttempt({
 			userId: row.user_id,
 			email: dbUser.email,
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'mfa',
 			success: true
@@ -215,7 +247,7 @@ export const actions: Actions = {
 				await adminSupabase.from('admin_trusted_devices').insert({
 					token: deviceToken,
 					user_id: row.user_id,
-					ip_address: ipAddress,
+					ip_address: ipHash,
 					user_agent: userAgent,
 					expires_at: expiresAt
 				});

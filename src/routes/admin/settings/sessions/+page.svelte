@@ -85,10 +85,6 @@
 					</div>
 
 					<div class="flex items-center gap-3 mt-0.5 flex-wrap">
-						{#if session.ip_address}
-							<span class="text-zinc-500 text-xs font-mono">{session.ip_address}</span>
-							<span class="text-zinc-700">·</span>
-						{/if}
 						<span class="text-zinc-500 text-xs">
 							Active {formatDistanceToNow(new Date(session.last_activity_at), { addSuffix: true })}
 						</span>

@@ -5,6 +5,7 @@ import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -86,7 +87,7 @@ export const actions: Actions = {
 			'pothole',
 			id,
 			{ status: s },
-			getClientAddress()
+			await hashIp(getClientAddress())
 		);
 
 		return { success: true };
@@ -116,7 +117,7 @@ export const actions: Actions = {
 			'pothole',
 			id,
 			null,
-			getClientAddress()
+			await hashIp(getClientAddress())
 		);
 
 		return { success: true };
@@ -141,7 +142,7 @@ export const actions: Actions = {
 			'pothole',
 			id,
 			null,
-			getClientAddress()
+			await hashIp(getClientAddress())
 		);
 
 		redirect(303, '/admin/potholes');

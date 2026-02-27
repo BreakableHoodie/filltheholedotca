@@ -5,6 +5,7 @@ import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -48,7 +49,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, getClient
 		'pothole',
 		id,
 		{ fields: Object.keys(updates) },
-		getClientAddress()
+		await hashIp(getClientAddress())
 	);
 
 	return json({ ok: true });
@@ -70,7 +71,7 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 	const { error: deleteError } = await adminSupabase.from('potholes').delete().eq('id', id);
 	if (deleteError) throw error(500, 'Failed to delete');
 
-	await writeAuditLog(locals.adminUser.id, 'pothole.delete', 'pothole', id, null, getClientAddress());
+	await writeAuditLog(locals.adminUser.id, 'pothole.delete', 'pothole', id, null, await hashIp(getClientAddress()));
 
 	return json({ ok: true });
 };

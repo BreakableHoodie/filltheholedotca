@@ -4,7 +4,7 @@ import { invalidateSession, SESSION_COOKIE } from '$lib/server/admin-auth';
 import { CSRF_COOKIE } from '$lib/server/admin-csrf';
 
 export const actions: Actions = {
-	default: async ({ cookies, locals }) => {
+	default: async ({ cookies }) => {
 		const sessionId = cookies.get(SESSION_COOKIE);
 		if (sessionId) {
 			await invalidateSession(sessionId);

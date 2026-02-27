@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -29,7 +30,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
 
 	const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1'));
-	const filterUser = url.searchParams.get('user') || null;
+	// Validate filterUser as UUID to prevent injection via .eq()
+	const rawUser = url.searchParams.get('user');
+	const filterUser = rawUser && z.string().uuid().safeParse(rawUser).success ? rawUser : null;
 	const filterResourceType = url.searchParams.get('resource_type') || null;
 	const filterAction = url.searchParams.get('action') || null;
 

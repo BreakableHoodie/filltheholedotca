@@ -13,6 +13,7 @@ import {
 } from '$lib/server/admin-auth';
 import { decryptTotpSecret, verifyBackupCode } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -28,7 +29,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!parsed.success) throw error(400, 'MFA token and code are required');
 
 	const { mfaToken, code, rememberDevice } = parsed.data;
-	const ipAddress = getClientAddress();
+	const ipHash = await hashIp(getClientAddress());
 	const userAgent = request.headers.get('user-agent') ?? 'unknown';
 	const isSecure = request.url.startsWith('https://');
 
@@ -38,7 +39,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.select(`
       id, user_id, ip_address, user_agent,
       admin_users!inner (
-        id, email, first_name, last_name, role, is_active, totp_enabled, totp_secret, backup_codes
+        id, email, first_name, last_name, role, is_active, totp_enabled, totp_secret, backup_codes,
+        last_used_totp_code, last_used_totp_at
       )
     `)
 		.eq('token', mfaToken)
@@ -49,7 +51,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!challenge) {
 		await recordAuthAttempt({
 			email: 'unknown',
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'mfa',
 			success: false,
@@ -62,7 +64,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Verify IP/UA match (prevents token reuse from a different device)
 	const ipMismatch =
-		challenge.ip_address && challenge.ip_address !== 'unknown' && challenge.ip_address !== ipAddress;
+		challenge.ip_address && challenge.ip_address !== 'unknown' && challenge.ip_address !== ipHash;
 	const uaMismatch =
 		challenge.user_agent &&
 		challenge.user_agent !== 'unknown' &&
@@ -72,7 +74,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		await recordAuthAttempt({
 			userId: challenge.user_id as string,
 			email: dbUser['email'] as string,
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'mfa',
 			success: false,
@@ -86,7 +88,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// Rate limit on MFA failures
-	const rateCheck = await checkAuthRateLimit(dbUser['email'] as string, ipAddress, 'mfa');
+	const rateCheck = await checkAuthRateLimit(dbUser['email'] as string, ipHash, 'mfa');
 	if (!rateCheck.allowed) {
 		throw error(
 			429,
@@ -102,13 +104,36 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (dbUser['totp_enabled'] && dbUser['totp_secret']) {
 		try {
 			const secret = await decryptTotpSecret(dbUser['totp_secret'] as string);
-			verified = await verifyTotpCode(secret, code);
+			const totpValid = await verifyTotpCode(secret, code);
+
+			if (totpValid) {
+				// Replay prevention: reject if this exact code was accepted within the last 90s.
+				// TOTP codes are valid for up to ~60s (current + adjacent period with window=1).
+				// A 90s window ensures we cover both periods plus a small clock-skew buffer.
+				const lastCode = dbUser['last_used_totp_code'] as string | null;
+				const lastAt = dbUser['last_used_totp_at'] as string | null;
+				const withinWindow = lastAt && Date.now() - new Date(lastAt).getTime() < 90_000;
+				if (lastCode === code && withinWindow) {
+					await recordAuthAttempt({
+						userId: challenge.user_id as string,
+						email: dbUser['email'] as string,
+						ipHash,
+						userAgent,
+						attemptType: 'mfa',
+						success: false,
+						failureReason: 'totp_replay'
+					});
+					throw error(401, 'Invalid authentication code');
+				}
+				verified = true;
+			}
 		} catch (e) {
+			if ((e as { status?: number }).status === 401) throw e;
 			console.error('[mfa/verify] TOTP decrypt/verify failed:', e);
 		}
 	}
 
-	// Fall back to backup codes
+	// Fall back to backup codes (backup codes are single-use by design — no replay risk)
 	if (!verified && dbUser['backup_codes']) {
 		try {
 			const hashes: string[] = JSON.parse(dbUser['backup_codes'] as string);
@@ -127,7 +152,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		await recordAuthAttempt({
 			userId: challenge.user_id as string,
 			email: dbUser['email'] as string,
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'mfa',
 			success: false,
@@ -148,6 +173,14 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(401, 'MFA challenge already used');
 	}
 
+	// Record last-used TOTP code to prevent replay within the validity window
+	if (!usedBackupCode) {
+		await adminSupabase
+			.from('admin_users')
+			.update({ last_used_totp_code: code, last_used_totp_at: new Date().toISOString() })
+			.eq('id', challenge.user_id);
+	}
+
 	// Consume backup code if used
 	if (usedBackupCode && remainingBackupCodes !== null) {
 		await adminSupabase
@@ -160,7 +193,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// Create session
-	const sessionId = await createAdminSession(challenge.user_id as string, ipAddress, userAgent);
+	const sessionId = await createAdminSession(challenge.user_id as string, ipHash, userAgent);
 	const csrfToken = await generateCsrfToken(sessionId);
 
 	await adminSupabase
@@ -171,7 +204,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	await recordAuthAttempt({
 		userId: challenge.user_id as string,
 		email: dbUser['email'] as string,
-		ipAddress,
+		ipHash,
 		userAgent,
 		attemptType: 'mfa',
 		success: true
@@ -189,7 +222,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			await adminSupabase.from('admin_trusted_devices').insert({
 				token: trustedToken,
 				user_id: challenge.user_id,
-				ip_address: ipAddress,
+				ip_address: ipHash,
 				user_agent: userAgent,
 				expires_at: expiresAt
 			});

@@ -14,9 +14,8 @@ export async function hashPassword(password: string): Promise<string> {
 	const saltBuf = new ArrayBuffer(SALT_BYTES);
 	const salt = new Uint8Array(saltBuf);
 	crypto.getRandomValues(salt);
-	const key = await deriveKey(password, salt);
-	const hash = await crypto.subtle.exportKey('raw', key);
-	return `${PBKDF2_ITERATIONS}:${hex(salt)}:${hex(new Uint8Array(hash))}`;
+	const hash = await deriveKeyBits(password, salt);
+	return `${PBKDF2_ITERATIONS}:${hex(salt)}:${hex(hash)}`;
 }
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
@@ -27,8 +26,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
 	if (!Number.isFinite(iterations) || iterations < 1) return false;
 	const salt = unhex(saltHex);
 	const expected = unhex(hashHex);
-	const key = await deriveKey(password, salt, iterations);
-	const actual = new Uint8Array(await crypto.subtle.exportKey('raw', key));
+	const actual = await deriveKeyBits(password, salt, iterations);
 	// Constant-time comparison
 	if (actual.length !== expected.length) return false;
 	let diff = 0;
@@ -36,22 +34,24 @@ export async function verifyPassword(password: string, stored: string): Promise<
 	return diff === 0;
 }
 
-async function deriveKey(
+// Derives HASH_BYTES of PBKDF2-SHA-256 key material directly as raw bytes.
+// Using deriveBits is semantically cleaner than deriveKey+exportKey because
+// the output is never used as a cipher key — it's compared as a byte array.
+async function deriveKeyBits(
 	password: string,
 	salt: Uint8Array<ArrayBuffer>,
 	iterations = PBKDF2_ITERATIONS
-): Promise<CryptoKey> {
+): Promise<Uint8Array> {
 	const enc = new TextEncoder();
 	const baseKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, [
-		'deriveKey'
+		'deriveBits'
 	]);
-	return crypto.subtle.deriveKey(
+	const bits = await crypto.subtle.deriveBits(
 		{ name: 'PBKDF2', hash: 'SHA-256', salt, iterations },
 		baseKey,
-		{ name: 'AES-GCM', length: HASH_BYTES * 8 },
-		true,
-		['encrypt', 'decrypt']
+		HASH_BYTES * 8
 	);
+	return new Uint8Array(bits);
 }
 
 // ---------------------------------------------------------------------------
@@ -59,6 +59,9 @@ async function deriveKey(
 // Stored format: "iv_hex:ciphertext_hex"
 // ---------------------------------------------------------------------------
 
+// Module-level cache: lives for the lifetime of the server process.
+// If you rotate TOTP_ENCRYPTION_KEY, you must also re-encrypt all totp_secret values
+// in admin_users — the old key is not kept, so old ciphertexts will fail to decrypt.
 let totpKeyCache: CryptoKey | null = null;
 
 async function getTotpKey(): Promise<CryptoKey> {

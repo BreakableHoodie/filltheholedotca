@@ -5,6 +5,7 @@ import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -37,7 +38,7 @@ export const POST: RequestHandler = async ({ request, locals, getClientAddress }
 		'photo',
 		null,
 		{ ids, count: ids.length },
-		getClientAddress()
+		await hashIp(getClientAddress())
 	);
 
 	return json({ ok: true, updated: ids.length });

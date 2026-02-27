@@ -4,6 +4,7 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { createClient } from '@supabase/supabase-js';
 import { writeAuditLog } from '$lib/server/admin-auth';
+import { hashIp } from '$lib/hash';
 import {
 	encryptTotpSecret,
 	decryptTotpSecret,
@@ -94,7 +95,7 @@ export const actions: Actions = {
 			'user',
 			locals.adminUser.id,
 			null,
-			getClientAddress()
+			await hashIp(getClientAddress())
 		);
 
 		return { confirmed: true as const, backupCodes: plainCodes };
@@ -140,7 +141,7 @@ export const actions: Actions = {
 			'user',
 			locals.adminUser.id,
 			null,
-			getClientAddress()
+			await hashIp(getClientAddress())
 		);
 
 		return { disabled: true as const };
@@ -182,7 +183,7 @@ export const actions: Actions = {
 			'user',
 			locals.adminUser.id,
 			null,
-			getClientAddress()
+			await hashIp(getClientAddress())
 		);
 
 		return { newBackupCodes: plainCodes };

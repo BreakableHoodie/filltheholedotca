@@ -19,6 +19,10 @@ create table if not exists admin_users (
   totp_enabled    boolean not null default false,
   totp_secret     text,               -- AES-GCM encrypted base32 secret ("iv_hex:ciphertext_hex")
   backup_codes    text,               -- JSON array of PBKDF2-hashed single-use recovery codes
+  -- TOTP replay prevention: reject a code that matches the last accepted code
+  -- within a 90-second window (covers the current + adjacent TOTP period).
+  last_used_totp_code text,
+  last_used_totp_at   timestamptz,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
@@ -120,6 +124,7 @@ create index if not exists admin_audit_log_resource_idx on admin_audit_log (reso
 create index if not exists admin_audit_log_created_idx  on admin_audit_log (created_at desc);
 
 -- Admin-initiated password reset tokens (24h expiry; 1 active at a time per user)
+-- NOTE: No application code implements this flow yet. Schema kept for future use.
 create table if not exists admin_password_resets (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references admin_users(id) on delete cascade,

@@ -9,10 +9,12 @@ import {
 	recordAuthAttempt,
 	createAdminSession,
 	SESSION_COOKIE,
+	TRUSTED_DEVICE_COOKIE,
 	buildSessionCookie
 } from '$lib/server/admin-auth';
 import { verifyPassword } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie, CSRF_COOKIE } from '$lib/server/admin-csrf';
+import { hashIp } from '$lib/hash';
 
 const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -21,18 +23,18 @@ const loginSchema = z.object({
 	password: z.string().min(1)
 });
 
-export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
 	const raw = await request.json().catch(() => null);
 	const parsed = loginSchema.safeParse(raw);
 	if (!parsed.success) throw error(400, 'Email and password are required');
 
 	const { email, password } = parsed.data;
-	const ipAddress = getClientAddress();
+	const ipHash = await hashIp(getClientAddress());
 	const userAgent = request.headers.get('user-agent') ?? 'unknown';
 	const isSecure = request.url.startsWith('https://');
 
 	// DB-backed rate limit: 5 failures / 10 min per email+IP
-	const rateCheck = await checkAuthRateLimit(email, ipAddress, 'login');
+	const rateCheck = await checkAuthRateLimit(email, ipHash, 'login');
 	if (!rateCheck.allowed) {
 		throw error(
 			429,
@@ -50,7 +52,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!user) {
 		await recordAuthAttempt({
 			email,
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'login',
 			success: false,
@@ -64,7 +66,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		await recordAuthAttempt({
 			userId: user.id,
 			email,
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'login',
 			success: false,
@@ -77,7 +79,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		await recordAuthAttempt({
 			userId: user.id,
 			email,
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'login',
 			success: false,
@@ -91,7 +93,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		await recordAuthAttempt({
 			userId: user.id,
 			email,
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'login',
 			success: false,
@@ -103,9 +105,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	// Check for trusted device before requiring MFA
 	let skipMfa = false;
 	if (user.totp_enabled) {
-		const trustedToken = request.headers
-			.get('cookie')
-			?.match(/admin_trusted_device=([^;]+)/)?.[1];
+		const trustedToken = cookies.get(TRUSTED_DEVICE_COOKIE);
 		if (trustedToken) {
 			const { data: device } = await adminSupabase
 				.from('admin_trusted_devices')
@@ -140,7 +140,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		await adminSupabase.from('admin_mfa_challenges').insert({
 			token: mfaToken,
 			user_id: user.id,
-			ip_address: ipAddress,
+			ip_address: ipHash,
 			user_agent: userAgent,
 			expires_at: expiresAt
 		});
@@ -148,7 +148,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		await recordAuthAttempt({
 			userId: user.id,
 			email,
-			ipAddress,
+			ipHash,
 			userAgent,
 			attemptType: 'login',
 			success: true
@@ -162,7 +162,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// No MFA required — create session directly
-	const sessionId = await createAdminSession(user.id, ipAddress, userAgent);
+	const sessionId = await createAdminSession(user.id, ipHash, userAgent);
 	const csrfToken = await generateCsrfToken(sessionId);
 
 	await adminSupabase
@@ -173,7 +173,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	await recordAuthAttempt({
 		userId: user.id,
 		email,
-		ipAddress,
+		ipHash,
 		userAgent,
 		attemptType: 'login',
 		success: true
