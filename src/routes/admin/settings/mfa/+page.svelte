@@ -10,6 +10,8 @@
 	let { data, form }: Props = $props();
 
 	let showRegenForm = $state(false);
+	// Extracted to avoid TypeScript narrowing to 'never' inside {#if form?.pendingSetup} && {#if form?.error}
+	const pendingSetupError = $derived(form && 'error' in form ? (form as { error: string }).error : null);
 
 	function formatCode(code: string): string {
 		// ABCDEFGH → ABCD EFGH for readability
@@ -111,8 +113,8 @@
 					<label for="code" class="block text-xs text-zinc-500 mb-1.5">
 						Verify — enter the 6-digit code from your app
 					</label>
-					{#if form?.error}
-						<p class="text-red-400 text-xs mb-1.5">{form.error}</p>
+					{#if pendingSetupError}
+						<p class="text-red-400 text-xs mb-1.5">{pendingSetupError}</p>
 					{/if}
 					<input
 						id="code"

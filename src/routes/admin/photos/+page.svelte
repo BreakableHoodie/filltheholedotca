@@ -10,7 +10,7 @@
 
 	let { data }: Props = $props();
 
-	let selected = $state(new SvelteSet<string>());
+	let selected = new SvelteSet<string>();
 	let bulkFormEl: HTMLFormElement | undefined = $state();
 
 	const allSelected = $derived(

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { untrack } from 'svelte';
 	import { formatDistanceToNow, format } from 'date-fns';
 
 	interface Props {
@@ -13,7 +14,7 @@
 	const pothole = $derived(data.pothole);
 	const isAdmin = $derived(data.adminUser?.role === 'admin');
 
-	let addressValue = $state(data.pothole.address ?? '');
+	let addressValue = $state(untrack(() => data.pothole.address ?? ''));
 
 	function statusColor(status: string): string {
 		switch (status) {
@@ -263,7 +264,7 @@
 									<a href={photo.url} target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
 										<img
 											src={photo.url}
-											alt="Pothole photo"
+											alt="Pothole"
 											loading="lazy"
 											class="w-16 h-16 object-cover rounded bg-zinc-800"
 										/>
