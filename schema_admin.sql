@@ -150,8 +150,14 @@ alter table admin_audit_log        enable row level security;
 alter table admin_password_resets  enable row level security;
 
 -- ============================================================
--- Bootstrap: create the first admin invite (run once manually)
+-- Bootstrap: create the first admin account
 -- ============================================================
--- INSERT INTO admin_invite_codes (code, role, expires_at)
--- VALUES (gen_random_uuid()::text, 'admin', now() + interval '1 day');
--- Copy the code value and visit /admin/auth/signup?invite=<code>
+-- Preferred: visit /admin/signup with ADMIN_BOOTSTRAP_SECRET set in the environment.
+--   Bootstrap mode is automatically available while admin_users has zero rows.
+--   Generate the secret with: openssl rand -hex 32
+--   Once the first admin exists, the route switches to invite-only automatically.
+--
+-- Fallback (manual invite): if you prefer to bootstrap via SQL, run:
+--   INSERT INTO admin_invite_codes (code, role, expires_at)
+--   VALUES (gen_random_uuid()::text, 'admin', now() + interval '1 day');
+--   Then copy the code and visit /admin/signup?code=<code>
