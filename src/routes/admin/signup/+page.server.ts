@@ -9,7 +9,11 @@ import { checkAuthRateLimit, recordAuthAttempt } from '$lib/server/admin-auth';
 import { hashPassword } from '$lib/server/admin-crypto';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+// Client created inside request handlers — $env/dynamic/private is not
+// guaranteed to be populated at module-init time in Vite SSR dev mode.
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 const MIN_BOOTSTRAP_SECRET_LENGTH = 32;
 
 function getConfiguredBootstrapSecret(): string | null {
@@ -32,7 +36,7 @@ function secureSecretMatch(provided: string, expected: string): boolean {
 }
 
 async function getAdminUserCount(): Promise<number> {
-	const { count } = await adminSupabase.from('admin_users').select('*', { count: 'exact', head: true });
+	const { count } = await getAdminClient().from('admin_users').select('*', { count: 'exact', head: true });
 	return count ?? 0;
 }
 
@@ -63,7 +67,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		};
 	}
 
-	const { data: invite } = await adminSupabase
+	const { data: invite } = await getAdminClient()
 		.from('admin_invite_codes')
 		.select('id, code, email, role, expires_at, is_active, used_at')
 		.eq('code', code)
@@ -165,7 +169,7 @@ export const actions: Actions = {
 				return fail(403, { error: 'Invalid bootstrap secret', ...echo });
 			}
 
-			const { data: existing } = await adminSupabase
+			const { data: existing } = await getAdminClient()
 				.from('admin_users')
 				.select('id')
 				.eq('email', email)
@@ -174,7 +178,7 @@ export const actions: Actions = {
 			if (existing) return fail(400, { error: 'An account with that email already exists', ...echo });
 
 			const passwordHash = await hashPassword(password);
-			const { data: newUser, error: insertError } = await adminSupabase
+			const { data: newUser, error: insertError } = await getAdminClient()
 				.from('admin_users')
 				.insert({
 					email,
@@ -192,13 +196,20 @@ export const actions: Actions = {
 				return fail(500, { error: 'Failed to create bootstrap account. Please try again.', ...echo });
 			}
 
-			// Guard against concurrent bootstrap: only one admin should exist after this insert.
-			const { count: postCount } = await adminSupabase
+			// Guard against concurrent bootstrap: elect a winner by earliest created_at (id as
+			// tiebreaker). Both concurrent requests see the same winner after their inserts commit,
+			// so only the loser deletes its own row — the count-then-delete approach would cause
+			// both to delete themselves if they both read postCount > 1 before either delete commits.
+			const { data: firstAdmin } = await getAdminClient()
 				.from('admin_users')
-				.select('*', { count: 'exact', head: true });
+				.select('id')
+				.order('created_at', { ascending: true })
+				.order('id', { ascending: true })
+				.limit(1)
+				.single();
 
-			if ((postCount ?? 0) > 1) {
-				await adminSupabase.from('admin_users').delete().eq('id', newUser.id);
+			if (!firstAdmin || firstAdmin.id !== newUser.id) {
+				await getAdminClient().from('admin_users').delete().eq('id', newUser.id);
 				return fail(409, {
 					error: 'Another admin account was created simultaneously. Please log in instead.',
 					...echo
@@ -219,7 +230,7 @@ export const actions: Actions = {
 		}
 
 		// Re-validate invite (never trust hidden field — re-fetch from DB)
-		const { data: invite } = await adminSupabase
+		const { data: invite } = await getAdminClient()
 			.from('admin_invite_codes')
 			.select('id, email, role, expires_at, is_active, used_at')
 			.eq('code', code)
@@ -231,24 +242,32 @@ export const actions: Actions = {
 			invite.used_at !== null ||
 			new Date(invite.expires_at) < new Date();
 
-		if (invalid) return fail(400, { error: 'Invalid or expired invite code', ...echo });
+		if (invalid) {
+			await recordAuthAttempt({ email, ipHash, userAgent, attemptType: 'signup', success: false, failureReason: 'invalid_invite_code' });
+			return fail(400, { error: 'Invalid or expired invite code', ...echo });
+		}
 
 		// If invite is email-restricted, enforce it
-		if (invite.email && invite.email.toLowerCase() !== email)
+		if (invite.email && invite.email.toLowerCase() !== email) {
+			await recordAuthAttempt({ email, ipHash, userAgent, attemptType: 'signup', success: false, failureReason: 'invite_email_mismatch' });
 			return fail(400, { error: 'Email does not match this invite', ...echo });
+		}
 
 		// Check email uniqueness
-		const { data: existing } = await adminSupabase
+		const { data: existing } = await getAdminClient()
 			.from('admin_users')
 			.select('id')
 			.eq('email', email)
 			.maybeSingle();
 
-		if (existing) return fail(400, { error: 'An account with that email already exists', ...echo });
+		if (existing) {
+			await recordAuthAttempt({ email, ipHash, userAgent, attemptType: 'signup', success: false, failureReason: 'email_taken' });
+			return fail(400, { error: 'An account with that email already exists', ...echo });
+		}
 
 		// Create user — role always from invite, never from request body
 		const passwordHash = await hashPassword(password);
-		const { data: newUser, error: insertError } = await adminSupabase
+		const { data: newUser, error: insertError } = await getAdminClient()
 			.from('admin_users')
 			.insert({
 				email,
@@ -266,7 +285,7 @@ export const actions: Actions = {
 
 		// Atomically mark invite as used — the .is('used_at', null) guard ensures only one
 		// concurrent signup wins even if two requests arrive with the same valid code.
-		const { data: consumed } = await adminSupabase
+		const { data: consumed } = await getAdminClient()
 			.from('admin_invite_codes')
 			.update({ used_by: newUser.id, used_at: new Date().toISOString(), is_active: false })
 			.eq('id', invite.id)
@@ -275,7 +294,7 @@ export const actions: Actions = {
 
 		if (!consumed || consumed.length === 0) {
 			// Another concurrent request consumed the invite first — roll back the created user.
-			await adminSupabase.from('admin_users').delete().eq('id', newUser.id);
+			await getAdminClient().from('admin_users').delete().eq('id', newUser.id);
 			return fail(409, { error: 'This invite code has already been used', ...echo });
 		}
 
