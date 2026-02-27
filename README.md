@@ -63,17 +63,38 @@ App runs at `http://localhost:5173`.
 
 ## Environment variables
 
-| Variable                    | Description                                                 |
-| --------------------------- | ----------------------------------------------------------- |
-| `PUBLIC_SUPABASE_URL`       | Supabase project URL                                        |
-| `PUBLIC_SUPABASE_ANON_KEY`  | Supabase anon key (public)                                  |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key for admin/moderation routes        |
-| `ADMIN_SECRET`              | Bearer token required for `/api/admin/*` routes             |
-| `SIGHTENGINE_API_USER`      | Image moderation — optional                                 |
-| `SIGHTENGINE_API_SECRET`    | Image moderation — optional                                 |
-| `IP_HASH_SECRET`            | Server-only HMAC key for immediate IP hashing on ingestion  |
+| Variable                    | Description                                                               |
+| --------------------------- | ------------------------------------------------------------------------- |
+| `PUBLIC_SUPABASE_URL`       | Supabase project URL                                                      |
+| `PUBLIC_SUPABASE_ANON_KEY`  | Supabase anon key (public)                                                |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key for admin/moderation routes                      |
+| `ADMIN_SECRET`              | Bearer token required for `/api/admin/*` routes                           |
+| `SIGHTENGINE_API_USER`      | Image moderation — optional                                               |
+| `SIGHTENGINE_API_SECRET`    | Image moderation — optional                                               |
+| `IP_HASH_SECRET`            | Server-only HMAC key for immediate IP hashing on ingestion                |
+| `ADMIN_SESSION_SECRET`      | 32-byte hex key for signing admin session cookies                         |
+| `TOTP_ENCRYPTION_KEY`       | 32-byte hex AES-GCM key for encrypting TOTP secrets at rest               |
+| `ADMIN_BOOTSTRAP_SECRET`    | One-time secret for creating the first admin account — see section below  |
 
 See `.env.example` for the full list.
+
+---
+
+## First admin setup
+
+Before any admin users exist, `/admin/signup` enters **bootstrap mode**, allowing you to create the first admin account without a manual database invite.
+
+1. Generate a strong random secret:
+   ```bash
+   openssl rand -hex 32
+   ```
+2. Add it to your `.env`:
+   ```
+   ADMIN_BOOTSTRAP_SECRET=<the generated value>
+   ```
+3. Visit `/admin/signup` — you will see the bootstrap form.
+4. Enter your details and the bootstrap secret to create the first admin account (active immediately, no activation step required).
+5. Once the first admin exists, `/admin/signup` automatically switches to invite-only mode. The bootstrap secret is ignored from that point on.
 
 ---
 
