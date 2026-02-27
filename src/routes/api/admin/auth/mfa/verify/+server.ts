@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { verifyTotpCode } from '$lib/server/admin-totp';
@@ -15,7 +15,7 @@ import { decryptTotpSecret, verifyBackupCode } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 const verifySchema = z.object({
 	mfaToken: z.string().uuid(),

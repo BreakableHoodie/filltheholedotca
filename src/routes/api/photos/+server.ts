@@ -1,6 +1,5 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { env } from '$env/dynamic/private';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
@@ -20,7 +19,7 @@ const PHOTO_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 // Service role client — bypasses RLS for storage and DB writes.
 // Never use this key in client-side code.
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 interface SightEngineResponse {
 	status: string;

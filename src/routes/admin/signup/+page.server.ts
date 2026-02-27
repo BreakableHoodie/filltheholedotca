@@ -1,14 +1,14 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { recordAuthAttempt } from '$lib/server/admin-auth';
 import { hashPassword } from '$lib/server/admin-crypto';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 // ---------------------------------------------------------------------------
 // Load: validate invite code from URL, pre-populate email if restricted

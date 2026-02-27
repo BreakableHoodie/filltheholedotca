@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { verifyTotpCode } from '$lib/server/admin-totp';
 import { decryptTotpSecret, verifyBackupCode } from '$lib/server/admin-crypto';
@@ -16,7 +16,7 @@ import {
 import { generateCsrfToken, CSRF_COOKIE } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
 	const sessionId = cookies.get(SESSION_COOKIE);
