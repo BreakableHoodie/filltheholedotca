@@ -113,11 +113,20 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(500, 'Failed to create account');
 	}
 
-	// Mark invite as used
-	await adminSupabase
+	// Atomically mark invite as used — the .is('used_at', null) guard ensures only one
+	// concurrent signup wins even if two requests arrive with the same valid code.
+	const { data: consumed } = await adminSupabase
 		.from('admin_invite_codes')
 		.update({ used_by: newUser.id, used_at: new Date().toISOString() })
-		.eq('id', invite.id);
+		.eq('id', invite.id)
+		.is('used_at', null)
+		.select('id');
+
+	if (!consumed || consumed.length === 0) {
+		// Another concurrent request consumed the invite first — roll back the created user.
+		await adminSupabase.from('admin_users').delete().eq('id', newUser.id);
+		throw error(409, 'This invite code has already been used');
+	}
 
 	await recordAuthAttempt({
 		userId: newUser.id,

@@ -230,7 +230,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				`admin_trusted_device=${trustedToken}`,
 				'HttpOnly',
 				'SameSite=Strict',
-				'Path=/admin',
+				'Path=/',
 				`Expires=${new Date(expiresAt).toUTCString()}`
 			];
 			if (isSecure) deviceCookieParts.push('Secure');

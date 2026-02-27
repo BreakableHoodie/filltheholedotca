@@ -145,6 +145,6 @@ export const actions: Actions = {
 			await hashIp(getClientAddress())
 		);
 
-		redirect(303, '/admin/potholes');
+		throw redirect(303, '/admin/potholes');
 	}
 };
