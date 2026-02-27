@@ -1,12 +1,12 @@
 import { fail, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { SESSION_COOKIE, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 export const load: PageServerLoad = async ({ locals, cookies }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');

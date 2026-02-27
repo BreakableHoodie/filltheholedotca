@@ -1,4 +1,4 @@
-import { TOTP_ENCRYPTION_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 // ---------------------------------------------------------------------------
 // PBKDF2-SHA-256 password hashing
@@ -60,14 +60,14 @@ async function deriveKeyBits(
 // ---------------------------------------------------------------------------
 
 // Module-level cache: lives for the lifetime of the server process.
-// If you rotate TOTP_ENCRYPTION_KEY, you must also re-encrypt all totp_secret values
+// If you rotate env.TOTP_ENCRYPTION_KEY, you must also re-encrypt all totp_secret values
 // in admin_users — the old key is not kept, so old ciphertexts will fail to decrypt.
 let totpKeyCache: CryptoKey | null = null;
 
 async function getTotpKey(): Promise<CryptoKey> {
 	if (totpKeyCache) return totpKeyCache;
-	const raw = unhex(TOTP_ENCRYPTION_KEY);
-	if (raw.length !== 32) throw new Error('TOTP_ENCRYPTION_KEY must be 32 bytes (64 hex chars)');
+	const raw = unhex(env.TOTP_ENCRYPTION_KEY);
+	if (raw.length !== 32) throw new Error('env.TOTP_ENCRYPTION_KEY must be 32 bytes (64 hex chars)');
 	totpKeyCache = await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, [
 		'encrypt',
 		'decrypt'

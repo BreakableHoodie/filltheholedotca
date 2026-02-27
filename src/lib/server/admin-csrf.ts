@@ -1,10 +1,10 @@
-import { ADMIN_SESSION_SECRET } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 // ---------------------------------------------------------------------------
 // CSRF protection — double-submit cookie pattern
 //
 // On session creation:
-//   1. Generate token = HMAC-SHA-256(sessionId, ADMIN_SESSION_SECRET)
+//   1. Generate token = HMAC-SHA-256(sessionId, env.ADMIN_SESSION_SECRET)
 //   2. Set csrf_token cookie (non-HttpOnly so JS can read it)
 //
 // On state-changing requests (POST/PATCH/DELETE):
@@ -22,7 +22,7 @@ let keyCache: CryptoKey | null = null;
 
 async function getKey(): Promise<CryptoKey> {
 	if (keyCache) return keyCache;
-	const raw = new TextEncoder().encode(ADMIN_SESSION_SECRET);
+	const raw = new TextEncoder().encode(env.ADMIN_SESSION_SECRET);
 	keyCache = await crypto.subtle.importKey('raw', raw, { name: 'HMAC', hash: 'SHA-256' }, false, [
 		'sign',
 		'verify'

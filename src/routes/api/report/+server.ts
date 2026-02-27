@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
-import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
@@ -31,7 +31,7 @@ const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const SEVERITY_VALUES = ['Spilled my coffee', 'Bent a rim', 'Caused real damage', 'RIP'] as const;
 
 // Service role client used only for persistent rate-limit tracking.
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 const reportSchema = z.object({
 	lat: z.number().finite().min(-90).max(90),
