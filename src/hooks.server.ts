@@ -1,6 +1,14 @@
 import type { Handle } from '@sveltejs/kit';
 import { error, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
+import {
+	validateAdminSession,
+	checkSessionExpiry,
+	touchSession,
+	invalidateSession,
+	SESSION_COOKIE
+} from '$lib/server/admin-auth';
+import { CSRF_HEADER, validateCsrfToken } from '$lib/server/admin-csrf';
 
 // In-memory coarse rate limit store: ip -> { count, resetAt }.
 // NOTE: on Netlify serverless this resets per cold start — treat it as a broad deterrent.
@@ -47,6 +55,75 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (!DISABLE_API_RATE_LIMIT && event.url.pathname.startsWith('/api/')) {
 		const ip = event.getClientAddress();
 		checkRateLimit(ip);
+	}
+
+	// -----------------------------------------------------------------------
+	// Admin session enforcement
+	// - /admin/* page routes → redirect to /admin/login on invalid session
+	// - /api/admin/* routes  → return 401 JSON on invalid session
+	// Auth endpoints are exempt from both.
+	// -----------------------------------------------------------------------
+	const { pathname } = event.url;
+	const isAdminPage =
+		pathname.startsWith('/admin') &&
+		!pathname.startsWith('/admin/login') &&
+		!pathname.startsWith('/admin/signup');
+	const isAdminApi = pathname.startsWith('/api/admin') && !pathname.startsWith('/api/admin/auth/');
+
+	if (isAdminPage || isAdminApi) {
+		const sessionId = event.cookies.get(SESSION_COOKIE) ?? null;
+		let authed = false;
+
+		if (sessionId) {
+			const result = await validateAdminSession(sessionId);
+			if (result) {
+				const expiry = checkSessionExpiry(result.session, result.user.role);
+				if (expiry) {
+					// Session timed out — invalidate and fall through to reject
+					await invalidateSession(sessionId);
+					event.cookies.set(SESSION_COOKIE, '', {
+						path: '/',
+						expires: new Date(0),
+						httpOnly: true,
+						sameSite: 'strict'
+					});
+				} else {
+					// Valid session — inject into locals and touch
+					event.locals.adminUser = result.user;
+					event.locals.adminSession = result.session;
+					await touchSession(sessionId);
+					authed = true;
+				}
+			}
+		}
+
+		if (!authed) {
+			if (isAdminApi) {
+				return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+					status: 401,
+					headers: { 'Content-Type': 'application/json' }
+				});
+			}
+			const loginUrl = `/admin/login?next=${encodeURIComponent(pathname)}`;
+			throw redirect(303, loginUrl);
+		}
+
+		// CSRF validation for state-changing admin API requests
+		if (isAdminApi && !['GET', 'HEAD', 'OPTIONS'].includes(event.request.method)) {
+			const csrfHeader = event.request.headers.get(CSRF_HEADER);
+			const csrfCookie = event.cookies.get('admin_csrf');
+			if (
+				!csrfHeader ||
+				!csrfCookie ||
+				csrfHeader !== csrfCookie ||
+				!(await validateCsrfToken(sessionId!, csrfHeader))
+			) {
+				return new Response(JSON.stringify({ error: 'Invalid CSRF token' }), {
+					status: 403,
+					headers: { 'Content-Type': 'application/json' }
+				});
+			}
+		}
 	}
 
 	const response = await resolve(event);

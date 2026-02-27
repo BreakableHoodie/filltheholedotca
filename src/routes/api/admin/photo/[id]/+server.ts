@@ -1,34 +1,19 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { timingSafeEqual } from 'node:crypto';
-import { ADMIN_SECRET, SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { hashClientAddressForLog } from '$lib/hash';
+import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
+import { hashIp } from '$lib/hash';
 
-// Service role client — bypasses RLS for admin operations.
-// Never use this key in client-side code.
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-function isAuthorized(authHeader: string | null): boolean {
-	if (!authHeader) return false;
-	const expectedAuthHeader = `Bearer ${ADMIN_SECRET}`;
-	// M5: Guard against large headers and length mismatches before Buffer allocation.
-	if (authHeader.length > 512 || authHeader.length !== expectedAuthHeader.length) return false;
-	const expected = Buffer.from(expectedAuthHeader);
-	const provided = Buffer.from(authHeader);
-	return timingSafeEqual(expected, provided);
-}
+const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 const bodySchema = z.object({ action: z.enum(['approve', 'reject']) });
 
-export const PATCH: RequestHandler = async ({ request, params, getClientAddress }) => {
-	if (!isAuthorized(request.headers.get('Authorization'))) {
-		const ipHash = await hashClientAddressForLog(getClientAddress, 'admin');
-		console.warn(`[admin] Unauthorized photo PATCH attempt from ip_hash=${ipHash}`);
-		throw error(401, 'Unauthorized');
-	}
+export const PATCH: RequestHandler = async ({ request, params, locals, getClientAddress }) => {
+	if (!locals.adminUser) throw error(401, 'Unauthorized');
+	requireRole(locals.adminUser.role, 'editor');
 
 	const idParsed = z.object({ id: z.string().uuid() }).safeParse(params);
 	if (!idParsed.success) throw error(400, 'Invalid ID');
@@ -39,8 +24,6 @@ export const PATCH: RequestHandler = async ({ request, params, getClientAddress 
 	const { id } = idParsed.data;
 	const moderation_status = bodyParsed.data.action === 'approve' ? 'approved' : 'rejected';
 
-	console.info(`[admin] ${moderation_status.toUpperCase()} photo ${id}`);
-
 	const { error: updateError } = await adminSupabase
 		.from('pothole_photos')
 		.update({ moderation_status })
@@ -48,37 +31,50 @@ export const PATCH: RequestHandler = async ({ request, params, getClientAddress 
 
 	if (updateError) throw error(500, 'Failed to update photo status');
 
+	await writeAuditLog(
+		locals.adminUser.id,
+		`photo.${bodyParsed.data.action}`,
+		'photo',
+		id,
+		{ moderation_status },
+		await hashIp(getClientAddress())
+	);
+
 	return json({ ok: true, moderation_status });
 };
 
-export const DELETE: RequestHandler = async ({ request, params, getClientAddress }) => {
-	if (!isAuthorized(request.headers.get('Authorization'))) {
-		const ipHash = await hashClientAddressForLog(getClientAddress, 'admin');
-		console.warn(`[admin] Unauthorized photo DELETE attempt from ip_hash=${ipHash}`);
-		throw error(401, 'Unauthorized');
-	}
+export const DELETE: RequestHandler = async ({ params, locals, getClientAddress }) => {
+	if (!locals.adminUser) throw error(401, 'Unauthorized');
+	requireRole(locals.adminUser.role, 'editor');
 
 	const idParsed = z.object({ id: z.string().uuid() }).safeParse(params);
 	if (!idParsed.success) throw error(400, 'Invalid ID');
 
 	const { id } = idParsed.data;
 
-	// Look up the storage path before deleting the DB record
+	// Look up storage path before deleting the record
 	const { data: photo } = await adminSupabase
 		.from('pothole_photos')
 		.select('storage_path')
 		.eq('id', id)
 		.single();
 
-	console.info(`[admin] DELETE photo ${id}`);
-
 	const { error: deleteError } = await adminSupabase.from('pothole_photos').delete().eq('id', id);
 	if (deleteError) throw error(500, 'Failed to delete photo record');
 
-	// Best-effort storage cleanup (cascade not automatic for storage)
+	// Best-effort storage cleanup
 	if (photo?.storage_path) {
 		await adminSupabase.storage.from('pothole-photos').remove([photo.storage_path]);
 	}
+
+	await writeAuditLog(
+		locals.adminUser.id,
+		'photo.delete',
+		'photo',
+		id,
+		{ storage_path: photo?.storage_path ?? null },
+		await hashIp(getClientAddress())
+	);
 
 	return json({ ok: true });
 };
