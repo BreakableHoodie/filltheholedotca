@@ -196,12 +196,19 @@ export const actions: Actions = {
 				return fail(500, { error: 'Failed to create bootstrap account. Please try again.', ...echo });
 			}
 
-			// Guard against concurrent bootstrap: only one admin should exist after this insert.
-			const { count: postCount } = await getAdminClient()
+			// Guard against concurrent bootstrap: elect a winner by earliest created_at (id as
+			// tiebreaker). Both concurrent requests see the same winner after their inserts commit,
+			// so only the loser deletes its own row — the count-then-delete approach would cause
+			// both to delete themselves if they both read postCount > 1 before either delete commits.
+			const { data: firstAdmin } = await getAdminClient()
 				.from('admin_users')
-				.select('*', { count: 'exact', head: true });
+				.select('id')
+				.order('created_at', { ascending: true })
+				.order('id', { ascending: true })
+				.limit(1)
+				.single();
 
-			if ((postCount ?? 0) > 1) {
+			if (!firstAdmin || firstAdmin.id !== newUser.id) {
 				await getAdminClient().from('admin_users').delete().eq('id', newUser.id);
 				return fail(409, {
 					error: 'Another admin account was created simultaneously. Please log in instead.',
@@ -235,11 +242,16 @@ export const actions: Actions = {
 			invite.used_at !== null ||
 			new Date(invite.expires_at) < new Date();
 
-		if (invalid) return fail(400, { error: 'Invalid or expired invite code', ...echo });
+		if (invalid) {
+			await recordAuthAttempt({ email, ipHash, userAgent, attemptType: 'signup', success: false, failureReason: 'invalid_invite_code' });
+			return fail(400, { error: 'Invalid or expired invite code', ...echo });
+		}
 
 		// If invite is email-restricted, enforce it
-		if (invite.email && invite.email.toLowerCase() !== email)
+		if (invite.email && invite.email.toLowerCase() !== email) {
+			await recordAuthAttempt({ email, ipHash, userAgent, attemptType: 'signup', success: false, failureReason: 'invite_email_mismatch' });
 			return fail(400, { error: 'Email does not match this invite', ...echo });
+		}
 
 		// Check email uniqueness
 		const { data: existing } = await getAdminClient()
@@ -248,7 +260,10 @@ export const actions: Actions = {
 			.eq('email', email)
 			.maybeSingle();
 
-		if (existing) return fail(400, { error: 'An account with that email already exists', ...echo });
+		if (existing) {
+			await recordAuthAttempt({ email, ipHash, userAgent, attemptType: 'signup', success: false, failureReason: 'email_taken' });
+			return fail(400, { error: 'An account with that email already exists', ...echo });
+		}
 
 		// Create user — role always from invite, never from request body
 		const passwordHash = await hashPassword(password);
