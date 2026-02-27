@@ -3,8 +3,11 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 
-// Service-role client — all admin tables have RLS with no public policies.
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+// Client created per-call — $env/dynamic/private is not guaranteed to be
+// populated at module-init time in Vite SSR dev mode.
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 // ---------------------------------------------------------------------------
 // RBAC
@@ -71,7 +74,7 @@ export async function createAdminSession(
 	const sessionId = crypto.randomUUID();
 	const expiresAt = new Date(Date.now() + SESSION_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
 
-	const { error: insertError } = await adminSupabase.from('admin_sessions').insert({
+	const { error: insertError } = await getAdminClient().from('admin_sessions').insert({
 		id: sessionId,
 		user_id: userId,
 		expires_at: expiresAt.toISOString(),
@@ -86,7 +89,7 @@ export async function createAdminSession(
 export async function validateAdminSession(
 	sessionId: string
 ): Promise<{ user: AdminUser; session: AdminSession } | null> {
-	const { data, error: queryError } = await adminSupabase
+	const { data, error: queryError } = await getAdminClient()
 		.from('admin_sessions')
 		.select(
 			`
@@ -127,21 +130,21 @@ export async function validateAdminSession(
 }
 
 export async function touchSession(sessionId: string): Promise<void> {
-	await adminSupabase
+	await getAdminClient()
 		.from('admin_sessions')
 		.update({ last_activity_at: new Date().toISOString() })
 		.eq('id', sessionId);
 }
 
 export async function invalidateSession(sessionId: string): Promise<void> {
-	await adminSupabase.from('admin_sessions').delete().eq('id', sessionId);
+	await getAdminClient().from('admin_sessions').delete().eq('id', sessionId);
 }
 
 export async function invalidateAllSessionsForUser(
 	userId: string,
 	exceptSessionId?: string
 ): Promise<void> {
-	let query = adminSupabase.from('admin_sessions').delete().eq('user_id', userId);
+	let query = getAdminClient().from('admin_sessions').delete().eq('user_id', userId);
 	if (exceptSessionId) query = query.neq('id', exceptSessionId);
 	await query;
 }
@@ -180,7 +183,7 @@ export async function writeAuditLog(
 	ipHash: string
 ): Promise<void> {
 	try {
-		const { error: auditError } = await adminSupabase.from('admin_audit_log').insert({
+		const { error: auditError } = await getAdminClient().from('admin_audit_log').insert({
 			user_id: userId,
 			action,
 			resource_type: resourceType,
@@ -213,14 +216,14 @@ export async function checkAuthRateLimit(
 	// Two separate parameterized queries to avoid PostgREST .or() string injection.
 	// A crafted email value could alter the filter logic in .or(`email.eq.${email},...`).
 	const [emailResult, ipResult] = await Promise.all([
-		adminSupabase
+		getAdminClient()
 			.from('admin_auth_attempts')
 			.select('*', { count: 'exact', head: true })
 			.eq('email', email)
 			.eq('attempt_type', attemptType)
 			.eq('success', false)
 			.gte('created_at', windowStart),
-		adminSupabase
+		getAdminClient()
 			.from('admin_auth_attempts')
 			.select('*', { count: 'exact', head: true })
 			.eq('ip_address', ipHash)
@@ -250,7 +253,7 @@ export async function recordAuthAttempt(params: {
 	success: boolean;
 	failureReason?: string;
 }): Promise<void> {
-	await adminSupabase.from('admin_auth_attempts').insert({
+	await getAdminClient().from('admin_auth_attempts').insert({
 		user_id: params.userId ?? null,
 		email: params.email,
 		ip_address: params.ipHash,
