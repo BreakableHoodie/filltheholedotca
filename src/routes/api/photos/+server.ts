@@ -19,7 +19,9 @@ const PHOTO_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 // Service role client — bypasses RLS for storage and DB writes.
 // Never use this key in client-side code.
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 interface SightEngineResponse {
 	status: string;
@@ -93,7 +95,7 @@ async function runModeration(
 }
 
 async function cleanupStorageObject(storagePath: string): Promise<void> {
-	const { error: cleanupError } = await adminSupabase.storage.from('pothole-photos').remove([storagePath]);
+	const { error: cleanupError } = await getAdminClient().storage.from('pothole-photos').remove([storagePath]);
 	if (cleanupError) {
 		console.error('[photos] Failed to clean up orphaned storage object:', cleanupError);
 	}
@@ -120,7 +122,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Persistent rate limit to prevent storage and moderation abuse.
 	const windowStart = new Date(Date.now() - PHOTO_RATE_WINDOW_MS).toISOString();
-	const { count: recentUploads, error: rateLimitError } = await adminSupabase
+	const { count: recentUploads, error: rateLimitError } = await getAdminClient()
 		.from('api_rate_limit_events')
 		.select('*', { count: 'exact', head: true })
 		.eq('ip_hash', ipHash)
@@ -132,7 +134,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// Confirm the pothole exists and still accepts photos.
-	const { data: pothole, error: potholeError } = await adminSupabase
+	const { data: pothole, error: potholeError } = await getAdminClient()
 		.from('potholes')
 		.select('id, status')
 		.eq('id', idParsed.data)
@@ -143,13 +145,13 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(409, 'Photos are only allowed for pending or reported potholes');
 	}
 
-	const { error: rateLimitInsertError } = await adminSupabase
+	const { error: rateLimitInsertError } = await getAdminClient()
 		.from('api_rate_limit_events')
 		.insert({ ip_hash: ipHash, scope: 'photo_upload' });
 	if (rateLimitInsertError) throw error(500, 'Failed to record upload rate limit');
 
 	// Prevent unlimited media accumulation on a single pothole.
-	const { count: activePhotoCount, error: activePhotoCountError } = await adminSupabase
+	const { count: activePhotoCount, error: activePhotoCountError } = await getAdminClient()
 		.from('pothole_photos')
 		.select('*', { count: 'exact', head: true })
 		.eq('pothole_id', idParsed.data)
@@ -176,7 +178,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// Upload to Supabase Storage
-	const { error: uploadError } = await adminSupabase.storage
+	const { error: uploadError } = await getAdminClient().storage
 		.from('pothole-photos')
 		.upload(storagePath, buffer, { contentType: mimeType, upsert: false });
 
@@ -186,7 +188,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// Insert DB record — photo stays in 'pending' until an admin approves it
-	const { data: photo, error: insertError } = await adminSupabase
+	const { data: photo, error: insertError } = await getAdminClient()
 		.from('pothole_photos')
 		.insert({
 			pothole_id: idParsed.data,

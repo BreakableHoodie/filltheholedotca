@@ -15,7 +15,9 @@ import { decryptTotpSecret, verifyBackupCode } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const verifySchema = z.object({
 	mfaToken: z.string().uuid(),
@@ -34,7 +36,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const isSecure = request.url.startsWith('https://');
 
 	// Look up challenge (joins to admin_users for account status + TOTP secret)
-	const { data: challenge } = await adminSupabase
+	const { data: challenge } = await getAdminClient()
 		.from('admin_mfa_challenges')
 		.select(`
       id, user_id, ip_address, user_agent,
@@ -162,7 +164,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// Atomically mark challenge as used (prevents replay — only one concurrent request wins)
-	const { data: updated } = await adminSupabase
+	const { data: updated } = await getAdminClient()
 		.from('admin_mfa_challenges')
 		.update({ used: true, used_at: new Date().toISOString() })
 		.eq('id', challenge.id)
@@ -175,7 +177,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Record last-used TOTP code to prevent replay within the validity window
 	if (!usedBackupCode) {
-		await adminSupabase
+		await getAdminClient()
 			.from('admin_users')
 			.update({ last_used_totp_code: code, last_used_totp_at: new Date().toISOString() })
 			.eq('id', challenge.user_id);
@@ -183,7 +185,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Consume backup code if used
 	if (usedBackupCode && remainingBackupCodes !== null) {
-		await adminSupabase
+		await getAdminClient()
 			.from('admin_users')
 			.update({
 				backup_codes:
@@ -196,7 +198,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const sessionId = await createAdminSession(challenge.user_id as string, ipHash, userAgent);
 	const csrfToken = await generateCsrfToken(sessionId);
 
-	await adminSupabase
+	await getAdminClient()
 		.from('admin_users')
 		.update({ last_login_at: new Date().toISOString() })
 		.eq('id', challenge.user_id);
@@ -219,7 +221,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		try {
 			const trustedToken = crypto.randomUUID();
 			const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-			await adminSupabase.from('admin_trusted_devices').insert({
+			await getAdminClient().from('admin_trusted_devices').insert({
 				token: trustedToken,
 				user_id: challenge.user_id,
 				ip_address: ipHash,

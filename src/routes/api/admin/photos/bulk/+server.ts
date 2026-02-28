@@ -7,7 +7,9 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const bulkSchema = z.object({
 	action: z.enum(['approve', 'reject']),
@@ -25,7 +27,7 @@ export const POST: RequestHandler = async ({ request, locals, getClientAddress }
 	const { action, ids } = parsed.data;
 	const moderation_status = action === 'approve' ? 'approved' : 'rejected';
 
-	const { error: updateError } = await adminSupabase
+	const { error: updateError } = await getAdminClient()
 		.from('pothole_photos')
 		.update({ moderation_status })
 		.in('id', ids);

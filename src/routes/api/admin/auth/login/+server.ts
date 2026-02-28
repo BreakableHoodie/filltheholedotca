@@ -15,7 +15,9 @@ import { verifyPassword } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const loginSchema = z.object({
 	email: z.string().email().toLowerCase(),
@@ -42,7 +44,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	}
 
 	// Look up user
-	const { data: user } = await adminSupabase
+	const { data: user } = await getAdminClient()
 		.from('admin_users')
 		.select('id, email, password_hash, first_name, last_name, role, is_active, activated_at, totp_enabled')
 		.eq('email', email)
@@ -106,7 +108,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	if (user.totp_enabled) {
 		const trustedToken = cookies.get(TRUSTED_DEVICE_COOKIE);
 		if (trustedToken) {
-			const { data: device } = await adminSupabase
+			const { data: device } = await getAdminClient()
 				.from('admin_trusted_devices')
 				.select('user_id')
 				.eq('token', trustedToken)
@@ -116,7 +118,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			if (device) {
 				skipMfa = true;
 				// Update last_used_at
-				await adminSupabase
+				await getAdminClient()
 					.from('admin_trusted_devices')
 					.update({ last_used_at: new Date().toISOString() })
 					.eq('token', trustedToken);
@@ -130,13 +132,13 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
 		// Clean up expired/used challenges for this user
-		await adminSupabase
+		await getAdminClient()
 			.from('admin_mfa_challenges')
 			.delete()
 			.eq('user_id', user.id)
 			.or('used.eq.true,expires_at.lt.' + new Date().toISOString());
 
-		await adminSupabase.from('admin_mfa_challenges').insert({
+		await getAdminClient().from('admin_mfa_challenges').insert({
 			token: mfaToken,
 			user_id: user.id,
 			ip_address: ipHash,
@@ -164,7 +166,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	const sessionId = await createAdminSession(user.id, ipHash, userAgent);
 	const csrfToken = await generateCsrfToken(sessionId);
 
-	await adminSupabase
+	await getAdminClient()
 		.from('admin_users')
 		.update({ last_login_at: new Date().toISOString() })
 		.eq('id', user.id);

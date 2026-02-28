@@ -7,7 +7,9 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog, invalidateAllSessionsForUser } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const uuidSchema = z.string().uuid();
 
@@ -16,13 +18,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 	requireRole(locals.adminUser.role, 'admin');
 
 	const [usersRes, sessionsRes] = await Promise.all([
-		adminSupabase
+		getAdminClient()
 			.from('admin_users')
 			.select(
 				'id, email, first_name, last_name, role, is_active, activated_at, last_login_at, totp_enabled, created_at'
 			)
 			.order('created_at', { ascending: true }),
-		adminSupabase
+		getAdminClient()
 			.from('admin_sessions')
 			.select('user_id')
 			.gt('expires_at', new Date().toISOString())
@@ -62,7 +64,7 @@ export const actions: Actions = {
 		const roleParsed = z.enum(['admin', 'editor', 'viewer']).safeParse(role);
 		if (!roleParsed.success) return fail(400, { error: 'Invalid role' });
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('admin_users')
 			.update({ role: roleParsed.data })
 			.eq('id', userId);
@@ -87,7 +89,7 @@ export const actions: Actions = {
 		const userId = fd.get('userId')?.toString() ?? '';
 		if (!uuidSchema.safeParse(userId).success) return fail(400, { error: 'Invalid user ID' });
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('admin_users')
 			.update({ is_active: true, activated_at: new Date().toISOString() })
 			.eq('id', userId);
@@ -114,7 +116,7 @@ export const actions: Actions = {
 		if (userId === locals.adminUser.id)
 			return fail(400, { error: 'Cannot deactivate your own account' });
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('admin_users')
 			.update({ is_active: false })
 			.eq('id', userId);

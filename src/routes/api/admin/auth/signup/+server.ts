@@ -8,7 +8,9 @@ import { checkAuthRateLimit, recordAuthAttempt } from '$lib/server/admin-auth';
 import { hashPassword } from '$lib/server/admin-crypto';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const signupSchema = z.object({
 	inviteCode: z.string().min(1),
@@ -46,7 +48,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// Validate invite code
-	const { data: invite } = await adminSupabase
+	const { data: invite } = await getAdminClient()
 		.from('admin_invite_codes')
 		.select('id, email, role')
 		.eq('code', inviteCode)
@@ -84,7 +86,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const userRole = invite.role;
 
 	// Check for existing account
-	const { data: existing } = await adminSupabase
+	const { data: existing } = await getAdminClient()
 		.from('admin_users')
 		.select('id')
 		.eq('email', email)
@@ -95,7 +97,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const passwordHash = await hashPassword(password);
 
 	// Create user (inactive until activated via link logged to console / sent by email)
-	const { data: newUser, error: insertError } = await adminSupabase
+	const { data: newUser, error: insertError } = await getAdminClient()
 		.from('admin_users')
 		.insert({
 			email,
@@ -115,7 +117,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Atomically mark invite as used — the .is('used_at', null) guard ensures only one
 	// concurrent signup wins even if two requests arrive with the same valid code.
-	const { data: consumed } = await adminSupabase
+	const { data: consumed } = await getAdminClient()
 		.from('admin_invite_codes')
 		.update({ used_by: newUser.id, used_at: new Date().toISOString() })
 		.eq('id', invite.id)
@@ -124,7 +126,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	if (!consumed || consumed.length === 0) {
 		// Another concurrent request consumed the invite first — roll back the created user.
-		await adminSupabase.from('admin_users').delete().eq('id', newUser.id);
+		await getAdminClient().from('admin_users').delete().eq('id', newUser.id);
 		throw error(409, 'This invite code has already been used');
 	}
 

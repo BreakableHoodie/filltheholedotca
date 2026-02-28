@@ -7,7 +7,9 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 type PhotoRow = {
 	id: string;
@@ -28,7 +30,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
 	requireRole(locals.adminUser.role, 'viewer');
 
-	const { data: rawPhotos } = await adminSupabase
+	const { data: rawPhotos } = await getAdminClient()
 		.from('pothole_photos')
 		.select(
 			`id, storage_path, moderation_score, created_at,
@@ -45,7 +47,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const signedUrlMap: Record<string, string> = {};
 
 	if (paths.length > 0) {
-		const { data: signedUrls } = await adminSupabase.storage
+		const { data: signedUrls } = await getAdminClient().storage
 			.from('pothole-photos')
 			.createSignedUrls(paths, 3600);
 
@@ -74,7 +76,7 @@ export const actions: Actions = {
 		const id = (await request.formData()).get('id')?.toString() ?? '';
 		if (!uuidSchema.safeParse(id).success) return fail(400, { error: 'Invalid ID' });
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('pothole_photos')
 			.update({ moderation_status: 'approved' })
 			.eq('id', id);
@@ -91,7 +93,7 @@ export const actions: Actions = {
 		const id = (await request.formData()).get('id')?.toString() ?? '';
 		if (!uuidSchema.safeParse(id).success) return fail(400, { error: 'Invalid ID' });
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('pothole_photos')
 			.update({ moderation_status: 'rejected' })
 			.eq('id', id);
@@ -112,7 +114,7 @@ export const actions: Actions = {
 		if (ids.length === 0) return fail(400, { error: 'No valid photos selected' });
 		if (ids.length > 50) return fail(400, { error: 'Maximum 50 photos per bulk action' });
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('pothole_photos')
 			.update({ moderation_status: 'approved' })
 			.in('id', ids);
@@ -140,7 +142,7 @@ export const actions: Actions = {
 		if (ids.length === 0) return fail(400, { error: 'No valid photos selected' });
 		if (ids.length > 50) return fail(400, { error: 'Maximum 50 photos per bulk action' });
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('pothole_photos')
 			.update({ moderation_status: 'rejected' })
 			.in('id', ids);

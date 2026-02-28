@@ -16,7 +16,9 @@ import {
 import { generateCsrfToken, CSRF_COOKIE } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
 	// Redirect logged-in users away from login page
@@ -62,7 +64,7 @@ export const actions: Actions = {
 			});
 		}
 
-		const { data: user } = await adminSupabase
+		const { data: user } = await getAdminClient()
 			.from('admin_users')
 			.select('id, email, first_name, last_name, role, is_active, activated_at, password_hash, totp_enabled')
 			.eq('email', email)
@@ -133,7 +135,7 @@ export const actions: Actions = {
 		if (user.totp_enabled) {
 			const trustedToken = cookies.get(TRUSTED_DEVICE_COOKIE);
 			if (trustedToken) {
-				const { data: trusted } = await adminSupabase
+				const { data: trusted } = await getAdminClient()
 					.from('admin_trusted_devices')
 					.select('id')
 					.eq('token', trustedToken)
@@ -158,7 +160,7 @@ export const actions: Actions = {
 						secure: isSecure,
 						maxAge: 24 * 60 * 60
 					});
-					await adminSupabase
+					await getAdminClient()
 						.from('admin_users')
 						.update({ last_login_at: new Date().toISOString() })
 						.eq('id', user.id);
@@ -176,7 +178,7 @@ export const actions: Actions = {
 
 			// MFA required — create challenge
 			const mfaToken = crypto.randomUUID();
-			await adminSupabase.from('admin_mfa_challenges').insert({
+			await getAdminClient().from('admin_mfa_challenges').insert({
 				token: mfaToken,
 				user_id: user.id,
 				ip_address: ipHash,
@@ -203,7 +205,7 @@ export const actions: Actions = {
 			secure: isSecure,
 			maxAge: 24 * 60 * 60
 		});
-		await adminSupabase
+		await getAdminClient()
 			.from('admin_users')
 			.update({ last_login_at: new Date().toISOString() })
 			.eq('id', user.id);

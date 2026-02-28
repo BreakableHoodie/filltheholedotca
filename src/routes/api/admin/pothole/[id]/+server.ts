@@ -7,7 +7,9 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const patchSchema = z
 	.object({
@@ -40,7 +42,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, getClient
 		updates.expired_at = s === 'expired' ? new Date().toISOString() : null;
 	}
 
-	const { error: dbErr } = await adminSupabase.from('potholes').update(updates).eq('id', id);
+	const { error: dbErr } = await getAdminClient().from('potholes').update(updates).eq('id', id);
 	if (dbErr) throw error(500, 'Failed to update');
 
 	await writeAuditLog(
@@ -66,9 +68,9 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 	const { id } = parsed.data;
 
 	// Confirmations cascade-delete via FK — delete explicitly for safety
-	await adminSupabase.from('pothole_confirmations').delete().eq('pothole_id', id);
+	await getAdminClient().from('pothole_confirmations').delete().eq('pothole_id', id);
 
-	const { error: deleteError } = await adminSupabase.from('potholes').delete().eq('id', id);
+	const { error: deleteError } = await getAdminClient().from('potholes').delete().eq('id', id);
 	if (deleteError) throw error(500, 'Failed to delete');
 
 	await writeAuditLog(locals.adminUser.id, 'pothole.delete', 'pothole', id, null, await hashIp(getClientAddress()));

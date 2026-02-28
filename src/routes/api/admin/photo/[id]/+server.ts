@@ -7,7 +7,9 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const bodySchema = z.object({ action: z.enum(['approve', 'reject']) });
 
@@ -24,7 +26,7 @@ export const PATCH: RequestHandler = async ({ request, params, locals, getClient
 	const { id } = idParsed.data;
 	const moderation_status = bodyParsed.data.action === 'approve' ? 'approved' : 'rejected';
 
-	const { error: updateError } = await adminSupabase
+	const { error: updateError } = await getAdminClient()
 		.from('pothole_photos')
 		.update({ moderation_status })
 		.eq('id', id);
@@ -53,18 +55,18 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 	const { id } = idParsed.data;
 
 	// Look up storage path before deleting the record
-	const { data: photo } = await adminSupabase
+	const { data: photo } = await getAdminClient()
 		.from('pothole_photos')
 		.select('storage_path')
 		.eq('id', id)
 		.single();
 
-	const { error: deleteError } = await adminSupabase.from('pothole_photos').delete().eq('id', id);
+	const { error: deleteError } = await getAdminClient().from('pothole_photos').delete().eq('id', id);
 	if (deleteError) throw error(500, 'Failed to delete photo record');
 
 	// Best-effort storage cleanup
 	if (photo?.storage_path) {
-		await adminSupabase.storage.from('pothole-photos').remove([photo.storage_path]);
+		await getAdminClient().storage.from('pothole-photos').remove([photo.storage_path]);
 	}
 
 	await writeAuditLog(

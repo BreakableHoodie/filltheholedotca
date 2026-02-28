@@ -6,7 +6,9 @@ import { createClient } from '@supabase/supabase-js';
 import type { PotholeStatus } from '$lib/types';
 import { requireRole } from '$lib/server/admin-auth';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const VALID_STATUSES: PotholeStatus[] = ['pending', 'reported', 'filled', 'expired'];
 
@@ -20,7 +22,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		? (statusParam as PotholeStatus)
 		: null;
 
-	let query = adminSupabase
+	let query = getAdminClient()
 		.from('potholes')
 		.select('id, created_at, address, status, confirmed_count, lat, lng, filled_at, expired_at')
 		.order('created_at', { ascending: false })

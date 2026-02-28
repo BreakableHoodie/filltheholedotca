@@ -8,7 +8,9 @@ import { writeAuditLog } from '$lib/server/admin-auth';
 import { hashPassword, verifyPassword } from '$lib/server/admin-crypto';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
@@ -40,7 +42,7 @@ export const actions: Actions = {
 			return fail(400, { error: nextParsed.error.issues[0]?.message ?? 'Invalid password' });
 
 		// Fetch stored hash
-		const { data: user } = await adminSupabase
+		const { data: user } = await getAdminClient()
 			.from('admin_users')
 			.select('password_hash')
 			.eq('id', locals.adminUser.id)
@@ -52,7 +54,7 @@ export const actions: Actions = {
 		if (!ok) return fail(400, { error: 'Current password is incorrect' });
 
 		const newHash = await hashPassword(next);
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('admin_users')
 			.update({ password_hash: newHash })
 			.eq('id', locals.adminUser.id);

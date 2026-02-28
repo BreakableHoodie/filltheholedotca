@@ -7,7 +7,9 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 type InviteRow = {
 	id: string;
@@ -26,7 +28,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
 	requireRole(locals.adminUser.role, 'admin');
 
-	const { data } = await adminSupabase
+	const { data } = await getAdminClient()
 		.from('admin_invite_codes')
 		.select(
 			`id, code, email, role, is_active, created_at, expires_at, used_at,
@@ -66,7 +68,7 @@ export const actions: Actions = {
 		const code = crypto.randomUUID();
 		const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-		const { error: dbErr } = await adminSupabase.from('admin_invite_codes').insert({
+		const { error: dbErr } = await getAdminClient().from('admin_invite_codes').insert({
 			code,
 			email: emailRaw ?? null,
 			role: roleParsed.data,
@@ -95,7 +97,7 @@ export const actions: Actions = {
 		const id = (await request.formData()).get('id')?.toString() ?? '';
 		if (!z.string().uuid().safeParse(id).success) return fail(400, { error: 'Invalid ID' });
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('admin_invite_codes')
 			.update({ is_active: false })
 			.eq('id', id);

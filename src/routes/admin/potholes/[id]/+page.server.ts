@@ -7,7 +7,9 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const uuidSchema = z.string().uuid();
 
@@ -17,13 +19,13 @@ export const load: PageServerLoad = async ({ params }) => {
 	const id = idParsed.data;
 
 	const [potholeRes, confirmationsRes, photosRes] = await Promise.all([
-		adminSupabase.from('potholes').select('*').eq('id', id).single(),
-		adminSupabase
+		getAdminClient().from('potholes').select('*').eq('id', id).single(),
+		getAdminClient()
 			.from('pothole_confirmations')
 			.select('id, ip_hash, created_at')
 			.eq('pothole_id', id)
 			.order('created_at', { ascending: true }),
-		adminSupabase
+		getAdminClient()
 			.from('pothole_photos')
 			.select('id, storage_path, moderation_status, moderation_score, created_at')
 			.eq('pothole_id', id)
@@ -38,7 +40,7 @@ export const load: PageServerLoad = async ({ params }) => {
 	const signedUrlMap: Record<string, string> = {};
 
 	if (paths.length > 0) {
-		const { data: signedUrls } = await adminSupabase.storage
+		const { data: signedUrls } = await getAdminClient().storage
 			.from('pothole-photos')
 			.createSignedUrls(paths, 3600);
 		for (const item of signedUrls ?? []) {
@@ -78,7 +80,7 @@ export const actions: Actions = {
 			expired_at: s === 'expired' ? new Date().toISOString() : null
 		};
 
-		const { error: dbErr } = await adminSupabase.from('potholes').update(updates).eq('id', id);
+		const { error: dbErr } = await getAdminClient().from('potholes').update(updates).eq('id', id);
 		if (dbErr) return fail(500, { error: 'Failed to update status' });
 
 		await writeAuditLog(
@@ -105,7 +107,7 @@ export const actions: Actions = {
 		const addressParsed = z.string().min(1).max(500).safeParse(address);
 		if (!addressParsed.success) return fail(400, { error: 'Address must be 1–500 characters' });
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('potholes')
 			.update({ address: addressParsed.data })
 			.eq('id', id);
@@ -131,9 +133,9 @@ export const actions: Actions = {
 		if (!uuidSchema.safeParse(id).success) return fail(400, { error: 'Invalid ID' });
 
 		// Confirmations cascade-delete via FK — explicit delete for safety
-		await adminSupabase.from('pothole_confirmations').delete().eq('pothole_id', id);
+		await getAdminClient().from('pothole_confirmations').delete().eq('pothole_id', id);
 
-		const { error: dbErr } = await adminSupabase.from('potholes').delete().eq('id', id);
+		const { error: dbErr } = await getAdminClient().from('potholes').delete().eq('id', id);
 		if (dbErr) return fail(500, { error: 'Failed to delete pothole' });
 
 		await writeAuditLog(
