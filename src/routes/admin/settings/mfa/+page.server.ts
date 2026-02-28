@@ -14,12 +14,14 @@ import {
 } from '$lib/server/admin-crypto';
 import { generateTotpSecret, verifyTotpCode, generateTotpUri } from '$lib/server/admin-totp';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
 	// Re-fetch totp_enabled fresh so UI reflects DB state, not session cache
-	const { data: user } = await adminSupabase
+	const { data: user } = await getAdminClient()
 		.from('admin_users')
 		.select('totp_enabled')
 		.eq('id', locals.adminUser.id)
@@ -78,7 +80,7 @@ export const actions: Actions = {
 		const plainCodes = generateBackupCodes();
 		const hashedCodes = await Promise.all(plainCodes.map(hashBackupCode));
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('admin_users')
 			.update({
 				totp_enabled: true,
@@ -109,7 +111,7 @@ export const actions: Actions = {
 		const code = (await request.formData()).get('code')?.toString().replace(/\s/g, '') ?? '';
 		if (!code) return fail(400, { error: 'Enter your TOTP or backup code' });
 
-		const { data: user } = await adminSupabase
+		const { data: user } = await getAdminClient()
 			.from('admin_users')
 			.select('totp_secret, backup_codes')
 			.eq('id', locals.adminUser.id)
@@ -128,7 +130,7 @@ export const actions: Actions = {
 
 		if (!valid) return fail(400, { error: 'Invalid code' });
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('admin_users')
 			.update({ totp_enabled: false, totp_secret: null, backup_codes: null })
 			.eq('id', locals.adminUser.id);
@@ -155,7 +157,7 @@ export const actions: Actions = {
 		const code = (await request.formData()).get('code')?.toString().replace(/\s/g, '') ?? '';
 		if (!/^\d{6}$/.test(code)) return fail(400, { error: 'Enter a 6-digit TOTP code' });
 
-		const { data: user } = await adminSupabase
+		const { data: user } = await getAdminClient()
 			.from('admin_users')
 			.select('totp_secret')
 			.eq('id', locals.adminUser.id)
@@ -170,7 +172,7 @@ export const actions: Actions = {
 		const plainCodes = generateBackupCodes();
 		const hashedCodes = await Promise.all(plainCodes.map(hashBackupCode));
 
-		const { error: dbErr } = await adminSupabase
+		const { error: dbErr } = await getAdminClient()
 			.from('admin_users')
 			.update({ backup_codes: JSON.stringify(hashedCodes) })
 			.eq('id', locals.adminUser.id);

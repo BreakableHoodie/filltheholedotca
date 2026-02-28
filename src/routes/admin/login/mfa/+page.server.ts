@@ -16,7 +16,9 @@ import {
 import { generateCsrfToken, CSRF_COOKIE } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
 	const sessionId = cookies.get(SESSION_COOKIE);
@@ -69,7 +71,7 @@ export const actions: Actions = {
 			};
 		};
 
-		const { data: challenge } = await adminSupabase
+		const { data: challenge } = await getAdminClient()
 			.from('admin_mfa_challenges')
 			.select(
 				`id, user_id, ip_address, user_agent,
@@ -179,7 +181,7 @@ export const actions: Actions = {
 		}
 
 		// Atomically mark challenge used (replay protection)
-		const { data: updated } = await adminSupabase
+		const { data: updated } = await getAdminClient()
 			.from('admin_mfa_challenges')
 			.update({ used: true, used_at: new Date().toISOString() })
 			.eq('id', row.id)
@@ -196,14 +198,14 @@ export const actions: Actions = {
 
 		// Record last-used TOTP code to prevent replay within the validity window
 		if (!usedBackupCode) {
-			await adminSupabase
+			await getAdminClient()
 				.from('admin_users')
 				.update({ last_used_totp_code: code, last_used_totp_at: new Date().toISOString() })
 				.eq('id', row.user_id);
 		}
 
 		if (usedBackupCode && remainingBackupCodes !== null) {
-			await adminSupabase
+			await getAdminClient()
 				.from('admin_users')
 				.update({
 					backup_codes: remainingBackupCodes.length > 0 ? JSON.stringify(remainingBackupCodes) : null
@@ -227,7 +229,7 @@ export const actions: Actions = {
 			secure: isSecure,
 			maxAge: 24 * 60 * 60
 		});
-		await adminSupabase
+		await getAdminClient()
 			.from('admin_users')
 			.update({ last_login_at: new Date().toISOString() })
 			.eq('id', row.user_id);
@@ -244,7 +246,7 @@ export const actions: Actions = {
 			try {
 				const deviceToken = crypto.randomUUID();
 				const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-				await adminSupabase.from('admin_trusted_devices').insert({
+				await getAdminClient().from('admin_trusted_devices').insert({
 					token: deviceToken,
 					user_id: row.user_id,
 					ip_address: ipHash,

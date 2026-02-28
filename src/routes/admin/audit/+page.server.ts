@@ -5,7 +5,9 @@ import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const PAGE_SIZE = 50;
 
@@ -38,7 +40,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	const offset = (page - 1) * PAGE_SIZE;
 
-	let query = adminSupabase
+	let query = getAdminClient()
 		.from('admin_audit_log')
 		.select(
 			'id, action, resource_type, resource_id, details, ip_address, created_at, admin_users(id, email, first_name, last_name, role)',
@@ -53,7 +55,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	const [{ data: entries, count, error: dbErr }, { data: users }] = await Promise.all([
 		query,
-		adminSupabase.from('admin_users').select('id, email, first_name, last_name').order('email')
+		getAdminClient().from('admin_users').select('id, email, first_name, last_name').order('email')
 	]);
 
 	if (dbErr) throw error(500, 'Failed to load audit log');

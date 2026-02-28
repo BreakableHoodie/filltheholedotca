@@ -4,7 +4,9 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 export type RecentEntry = {
 	id: string;
@@ -26,32 +28,32 @@ export const load: PageServerLoad = async ({ locals }) => {
 		expiredPotholesRes,
 		recentAuditRes
 	] = await Promise.all([
-		adminSupabase
+		getAdminClient()
 			.from('pothole_photos')
 			.select('*', { count: 'exact', head: true })
 			.eq('moderation_status', 'pending'),
 
-		adminSupabase
+		getAdminClient()
 			.from('potholes')
 			.select('*', { count: 'exact', head: true })
 			.eq('status', 'pending'),
 
-		adminSupabase
+		getAdminClient()
 			.from('potholes')
 			.select('*', { count: 'exact', head: true })
 			.eq('status', 'reported'),
 
-		adminSupabase
+		getAdminClient()
 			.from('potholes')
 			.select('*', { count: 'exact', head: true })
 			.eq('status', 'filled'),
 
-		adminSupabase
+		getAdminClient()
 			.from('potholes')
 			.select('*', { count: 'exact', head: true })
 			.eq('status', 'expired'),
 
-		adminSupabase
+		getAdminClient()
 			.from('admin_audit_log')
 			.select(
 				'id, action, resource_type, resource_id, created_at, admin_users(first_name, last_name, email)'

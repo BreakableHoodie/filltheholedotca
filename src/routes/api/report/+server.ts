@@ -31,7 +31,9 @@ const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const SEVERITY_VALUES = ['Spilled my coffee', 'Bent a rim', 'Caused real damage', 'RIP'] as const;
 
 // Service role client used only for persistent rate-limit tracking.
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const reportSchema = z.object({
 	lat: z.number().finite().min(-90).max(90),
@@ -90,7 +92,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Persistent per-IP report throttling.
 	const windowStart = new Date(Date.now() - REPORT_RATE_WINDOW_MS).toISOString();
-	const { count: recentReports, error: reportRateError } = await adminSupabase
+	const { count: recentReports, error: reportRateError } = await getAdminClient()
 		.from('api_rate_limit_events')
 		.select('*', { count: 'exact', head: true })
 		.eq('ip_hash', ipHash)
@@ -102,7 +104,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(429, 'Too many report attempts. Please wait before trying again.');
 	}
 
-	const { error: reportRateInsertError } = await adminSupabase
+	const { error: reportRateInsertError } = await getAdminClient()
 		.from('api_rate_limit_events')
 		.insert({ ip_hash: ipHash, scope: 'report_submit' });
 
