@@ -300,11 +300,11 @@
 			(err) => {
 				gpsStatus = 'error';
 				if (err.code === 1) {
-					toast.error('Location access denied — enable it in your browser settings and tap retry');
+					toast.error('Location access denied — enable it in your browser settings and retry');
 				} else if (err.code === 2) {
 					toast.error('Could not determine your location. Try moving outside.');
 				} else {
-					toast.error('Location request timed out. Tap retry.');
+					toast.error('Location request timed out. Retry.');
 				}
 			},
 			{ enableHighAccuracy: true, timeout: 10000 }
@@ -369,6 +369,10 @@
 	<div class="mb-6">
 		<h1 class="font-brand font-bold text-3xl text-white mb-1">Report a pothole</h1>
 		<p class="text-zinc-400 text-sm">Standing next to one? Share its location and submit.</p>
+		<p class="flex items-start gap-1.5 text-xs text-zinc-400 mt-2">
+			<Icon name="alert-triangle" size={13} class="text-amber-500 shrink-0 mt-0.5" />
+			Stay safe — report from the sidewalk or after pulling over. Never stop in a live traffic lane.
+		</p>
 	</div>
 
 	<form onsubmit={handleSubmit} class="space-y-5">
@@ -428,7 +432,7 @@
 						GPS locked
 					{:else if gpsStatus === 'error'}
 						<Icon name="alert-triangle" size={15} class="shrink-0" />
-						GPS failed — tap to retry
+						GPS failed — retry
 					{:else}
 						<Icon name="crosshair" size={15} class="shrink-0" />
 						Use my current location
@@ -438,6 +442,10 @@
 				{#if gpsStatus === 'error'}
 					<p class="text-xs text-red-400" role="alert">
 						Location access is required to report a pothole. Please enable it in your browser settings and try again.
+					</p>
+					<p class="text-xs text-zinc-500">
+						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-zinc-300 transition-colors">Enter an address</button>
+						or <button type="button" onclick={() => (locationMode = 'map')} class="underline hover:text-zinc-300 transition-colors">pin on the map</button>.
 					</p>
 				{/if}
 
@@ -597,7 +605,7 @@
 			/>
 		{/if}
 
-		<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly.</p>
+		<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
 	</div>
 
 		<button

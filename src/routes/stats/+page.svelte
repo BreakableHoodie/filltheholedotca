@@ -275,7 +275,7 @@
 			</div>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
 				<p class="text-xs text-zinc-500 uppercase tracking-wide">Avg days to fill</p>
-				<p class="text-3xl font-bold text-green-400" aria-live="polite">
+				<p class="text-3xl font-bold {avgDaysToFill === null ? 'text-zinc-500' : 'text-green-400'}" aria-live="polite">
 					{avgDaysToFill === null ? '—' : fmt(avgDaysToFill, 1)}
 				</p>
 				<p class="text-xs text-zinc-500">from report to fixed</p>
@@ -327,7 +327,7 @@
 			<div class="flex gap-px mt-2" aria-hidden="true">
 			{#each monthlyData as m, i (m.key)}
 					<div class="flex-1 text-center min-w-0 overflow-hidden">
-						{#if i % 3 === 0}
+						{#if i % 3 === 0 || i === monthlyData.length - 1}
 							<span class="text-zinc-600 text-[10px]">{m.label}</span>
 						{/if}
 					</div>
