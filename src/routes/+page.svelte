@@ -257,20 +257,24 @@
 			const address = escapeHtml(pothole.address || `${pothole.lat.toFixed(5)}, ${pothole.lng.toFixed(5)}`);
 			const description = pothole.description ? escapeHtml(pothole.description) : null;
 
-			// "Fixed" button only for reported potholes
+			// "It's fixed!" button only for reported potholes
 			const fixedBtn = pothole.status === 'reported'
-				? `<button class="popup-fix-btn" data-action="mark-filled" data-pothole-id="${pothole.id}">✓ Fixed</button>`
+				? `<button class="popup-fix-btn" data-action="mark-filled" data-pothole-id="${pothole.id}">✓ It's fixed!</button>`
 				: '';
 
 			marker.bindPopup(
 				`<div class="popup-content">
-					<strong>${address}</strong>
-					<span class="popup-status popup-status--${pothole.status}">${info.label}</span>
-					${description ? `<br/><em>${description}</em>` : ''}
-					<br/><a href="/hole/${pothole.id}" class="popup-link">View details →</a>
-					${fixedBtn}
+					<div class="popup-header">
+						<strong>${address}</strong>
+						<span class="popup-status popup-status--${pothole.status}">${info.label}</span>
+					</div>
+					${description ? `<em class="popup-desc">${description}</em>` : ''}
+					<div class="popup-footer">
+						<a href="/hole/${pothole.id}" class="popup-link">View details →</a>
+						${fixedBtn}
+					</div>
 				</div>`,
-				{ maxWidth: 220 }
+				{ maxWidth: 240 }
 			);
 
 			clusterGroups[layerKey].addLayer(marker);
@@ -531,10 +535,24 @@
 		font-family: system-ui, sans-serif;
 		font-size: 13px;
 		line-height: 1.5;
+		min-width: 180px;
+	}
+
+	:global(.popup-header) {
+		display: flex;
+		align-items: flex-start;
+		gap: 6px;
+		flex-wrap: wrap;
+		margin-bottom: 2px;
+	}
+
+	:global(.popup-header strong) {
+		flex: 1 1 auto;
 	}
 
 	:global(.popup-status) {
 		display: inline-block;
+		flex-shrink: 0;
 		font-size: 11px;
 		font-weight: 600;
 		padding: 1px 6px;
@@ -548,29 +566,43 @@
 	:global(.popup-status--expired)  { background: #71717a20; color: #71717a; }
 	:global(.popup-status--filled)   { background: #22c55e20; color: #22c55e; }
 
+	:global(.popup-desc) {
+		display: block;
+		color: #52525b;
+		margin-bottom: 6px;
+	}
+
+	:global(.popup-footer) {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		margin-top: 6px;
+		padding-top: 6px;
+		border-top: 1px solid #e4e4e7;
+	}
+
 	:global(.popup-link) {
-		display: inline-block;
-		margin-top: 4px;
 		color: #0ea5e9;
 		font-weight: 600;
 		text-decoration: none;
+		white-space: nowrap;
 	}
 	:global(.popup-link:hover) { text-decoration: underline; }
 
 	:global(.popup-fix-btn) {
-		display: inline-block;
-		margin-top: 6px;
 		padding: 3px 10px;
 		background: #16a34a20;
-		color: #22c55e;
-		border: 1px solid #22c55e40;
+		color: #16a34a;
+		border: 1px solid #16a34a40;
 		border-radius: 4px;
 		font-size: 11px;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background 0.15s;
+		white-space: nowrap;
 	}
-	:global(.popup-fix-btn:hover) { background: #16a34a40; }
+	:global(.popup-fix-btn:hover) { background: #16a34a30; }
 
 	:global(.location-dot) {
 		width: 20px;
