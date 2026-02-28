@@ -369,7 +369,7 @@
 	<div class="mb-6">
 		<h1 class="font-brand font-bold text-3xl text-white mb-1">Report a pothole</h1>
 		<p class="text-zinc-400 text-sm">Standing next to one? Share its location and submit.</p>
-		<p class="flex items-start gap-1.5 text-xs text-zinc-500 mt-2">
+		<p class="flex items-start gap-1.5 text-xs text-zinc-400 mt-2">
 			<Icon name="alert-triangle" size={13} class="text-amber-500 shrink-0 mt-0.5" />
 			Stay safe — report from the sidewalk or after pulling over. Never stop in a live traffic lane.
 		</p>
