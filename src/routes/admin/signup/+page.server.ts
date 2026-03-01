@@ -29,16 +29,22 @@ function getConfiguredBootstrapSecret(): string | null {
 }
 
 function secureSecretMatch(provided: string, expected: string): boolean {
-	// Pad both buffers to the same length before calling timingSafeEqual so
-	// the comparison time does not vary with the byte-length of the input.
-	// A length short-circuit would let an attacker binary-search the secret
-	// length, shrinking the brute-force space.
-	const maxLen = Math.max(Buffer.byteLength(provided, 'utf8'), Buffer.byteLength(expected, 'utf8'));
+	const providedLen = Buffer.byteLength(provided, 'utf8');
+	const expectedLen = Buffer.byteLength(expected, 'utf8');
+	// Pad both buffers to the same length so timingSafeEqual always runs over
+	// the same number of bytes, regardless of input length. This prevents a
+	// timing oracle that would otherwise let an attacker binary-search the
+	// secret's byte count.
+	const maxLen = Math.max(providedLen, expectedLen);
 	const providedBuffer = Buffer.alloc(maxLen);
 	const expectedBuffer = Buffer.alloc(maxLen);
 	Buffer.from(provided, 'utf8').copy(providedBuffer);
 	Buffer.from(expected, 'utf8').copy(expectedBuffer);
-	return timingSafeEqual(providedBuffer, expectedBuffer);
+	// timingSafeEqual runs first (always, unconditionally) so content timing is
+	// never observable. Only then do we enforce strict length equality — this
+	// rejects NUL-padded inputs like `<real secret>\x00` that would otherwise
+	// pass the padded comparison alone.
+	return timingSafeEqual(providedBuffer, expectedBuffer) && providedLen === expectedLen;
 }
 
 async function getAdminUserCount(): Promise<number> {
