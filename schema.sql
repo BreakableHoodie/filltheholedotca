@@ -44,12 +44,12 @@ create policy "Public insert"
   on potholes for insert
   with check (true);
 
--- Allow anyone to update potholes (for status advancement)
--- ideally this would restrict columns, but the app uses anon key for updates
-create policy "Public update"
-  on potholes for update
-  using (true)
-  with check (true);
+-- No public UPDATE policy for potholes.
+-- All status transitions (filled) are performed server-side using the service
+-- role key via src/routes/api/filled/+server.ts which validates the request
+-- (geofence, rate limit, pothole_actions dedup) before writing. Removing the
+-- anon-key UPDATE policy closes the window where any caller with the public
+-- anon key could modify arbitrary columns via the PostgREST REST API.
 
 -- Allow anyone to read confirmations (needed for client-side check)
 create policy "Public read confirmations"

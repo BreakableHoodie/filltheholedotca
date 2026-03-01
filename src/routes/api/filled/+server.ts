@@ -1,11 +1,18 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 
+// Public anon client — used only for pothole_actions (rate-limit/dedup).
+// The actual pothole UPDATE uses the service-role client so no public UPDATE
+// RLS policy is needed on the potholes table.
 const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+function getServiceClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const schema = z.object({ id: z.string().uuid() });
 
@@ -49,7 +56,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(500, 'Failed to record action');
 	}
 
-	const { data: updated, error: updateError } = await supabase
+	// Use service-role key for the update — no public UPDATE policy exists on potholes.
+	const { data: updated, error: updateError } = await getServiceClient()
 		.from('potholes')
 		.update({ status: 'filled', filled_at: new Date().toISOString() })
 		.eq('id', parsed.data.id)
