@@ -232,7 +232,12 @@ export async function checkAuthRateLimit(
 			.gte('created_at', windowStart)
 	]);
 
-	if (emailResult.error || ipResult.error) return { allowed: true }; // fail open on query error
+	// Fail CLOSED on DB error — a broken rate-limit query must not silently
+	// allow unlimited login attempts. Log the error for observability.
+	if (emailResult.error || ipResult.error) {
+		console.error('[auth] Rate-limit query failed:', emailResult.error ?? ipResult.error);
+		return { allowed: false, remainingMinutes: Math.ceil(windowMs / 60_000) };
+	}
 
 	const count = Math.max(emailResult.count ?? 0, ipResult.count ?? 0);
 

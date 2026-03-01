@@ -29,9 +29,15 @@ function getConfiguredBootstrapSecret(): string | null {
 }
 
 function secureSecretMatch(provided: string, expected: string): boolean {
-	const providedBuffer = Buffer.from(provided, 'utf8');
-	const expectedBuffer = Buffer.from(expected, 'utf8');
-	if (providedBuffer.length !== expectedBuffer.length) return false;
+	// Pad both buffers to the same length before calling timingSafeEqual so
+	// the comparison time does not vary with the byte-length of the input.
+	// A length short-circuit would let an attacker binary-search the secret
+	// length, shrinking the brute-force space.
+	const maxLen = Math.max(Buffer.byteLength(provided, 'utf8'), Buffer.byteLength(expected, 'utf8'));
+	const providedBuffer = Buffer.alloc(maxLen);
+	const expectedBuffer = Buffer.alloc(maxLen);
+	Buffer.from(provided, 'utf8').copy(providedBuffer);
+	Buffer.from(expected, 'utf8').copy(expectedBuffer);
 	return timingSafeEqual(providedBuffer, expectedBuffer);
 }
 
@@ -225,7 +231,8 @@ export const actions: Actions = {
 				success: true
 			});
 
-			console.info(`[bootstrap] First admin account created: ${email}`);
+			// Log only the UUID — never log the email address to stdout.
+			console.info(`[bootstrap] First admin account created (id: ${newUser.id}).`);
 			return { registered: true, requiresActivation: false, role: 'admin' };
 		}
 
