@@ -35,12 +35,26 @@ async function fetchCityRepairRequests(lat: number, lng: number): Promise<CityRe
 		});
 		if (!res.ok) return [];
 		const json = await res.json();
-		const features: { attributes: { INTERSECTION: string; CREATE_DATE: number } }[] =
-			json.features ?? [];
-		return features.map((f) => ({
-			intersection: f.attributes.INTERSECTION,
-			date: new Date(f.attributes.CREATE_DATE).toISOString().slice(0, 10)
-		}));
+		const features: unknown[] = Array.isArray(json.features) ? json.features : [];
+		return features.flatMap((f) => {
+			// Validate shape — ArcGIS response may be missing fields if the service
+			// returns an unexpected schema version.
+			if (
+				typeof f !== 'object' ||
+				f === null ||
+				!('attributes' in f) ||
+				typeof (f as Record<string, unknown>).attributes !== 'object'
+			)
+				return [];
+			const attrs = (f as { attributes: Record<string, unknown> }).attributes;
+			const intersection = attrs.INTERSECTION;
+			const createDate = attrs.CREATE_DATE;
+			if (typeof intersection !== 'string' || !intersection) return [];
+			if (typeof createDate !== 'number') return [];
+			const date = new Date(createDate);
+			if (isNaN(date.getTime())) return [];
+			return [{ intersection, date: date.toISOString().slice(0, 10) }];
+		});
 	} catch {
 		return [];
 	}

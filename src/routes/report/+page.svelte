@@ -76,6 +76,7 @@
 	let addressSearching = $state(false);
 	let addressDebounce: ReturnType<typeof setTimeout> | null = null;
 	let addressAbortController: AbortController | null = null;
+	let reverseGeocodeAbortController: AbortController | null = null;
 
 	// Waterloo Region bounding box for Nominatim: minLon,minLat,maxLon,maxLat
 	const WR_VIEWBOX = '-80.59,43.32,-80.22,43.53';
@@ -178,11 +179,17 @@
 			return;
 		}
 
+		// Track whether the effect is still active. If the component unmounts or
+		// locationMode changes before the async Leaflet imports resolve, the async
+		// continuation must not create an orphaned map instance on a detached element.
+		let active = true;
+
 		const timer = setTimeout(async () => {
-			if (!miniMapEl || miniMapRef) return;
+			if (!active || !miniMapEl || miniMapRef) return;
 
 			await import('leaflet/dist/leaflet.css');
 			const leafletModule = await import('leaflet');
+			if (!active) return; // guard after async imports
 			const L = leafletModule.default ?? leafletModule;
 
 			const center: [number, number] = lat !== null && lng !== null ? [lat, lng] : [43.425, -80.42];
@@ -231,7 +238,10 @@
 			map.invalidateSize();
 		}, 50);
 
-		return () => clearTimeout(timer);
+		return () => {
+			active = false;
+			clearTimeout(timer);
+		};
 	});
 
 	onMount(() => {
@@ -262,6 +272,10 @@
 				addressAbortController.abort();
 				addressAbortController = null;
 			}
+			if (reverseGeocodeAbortController) {
+				reverseGeocodeAbortController.abort();
+				reverseGeocodeAbortController = null;
+			}
 			if (miniMapRef) {
 				miniMapRef.remove();
 				miniMapRef = null;
@@ -271,14 +285,30 @@
 	});
 
 	async function reverseGeocode(lat: number, lng: number) {
+		// Cancel any prior in-flight request so the last pin position wins,
+		// not the last-to-arrive response.
+		if (reverseGeocodeAbortController) {
+			reverseGeocodeAbortController.abort();
+		}
+		reverseGeocodeAbortController = new AbortController();
+		const controller = reverseGeocodeAbortController;
 		try {
-			const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+			const res = await fetch(
+				`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+				{ signal: controller.signal }
+			);
 			const data = await res.json();
+			if (controller.signal.aborted) return;
 			const a = data.address ?? {};
 			const parts = [a.house_number, a.road, a.suburb].filter(Boolean);
 			address = parts.length ? parts.join(' ') : null;
-		} catch {
+		} catch (e) {
+			if (e instanceof DOMException && e.name === 'AbortError') return;
 			address = null;
+		} finally {
+			if (reverseGeocodeAbortController === controller) {
+				reverseGeocodeAbortController = null;
+			}
 		}
 	}
 
