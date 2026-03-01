@@ -29,10 +29,22 @@ function getConfiguredBootstrapSecret(): string | null {
 }
 
 function secureSecretMatch(provided: string, expected: string): boolean {
-	const providedBuffer = Buffer.from(provided, 'utf8');
-	const expectedBuffer = Buffer.from(expected, 'utf8');
-	if (providedBuffer.length !== expectedBuffer.length) return false;
-	return timingSafeEqual(providedBuffer, expectedBuffer);
+	const providedLen = Buffer.byteLength(provided, 'utf8');
+	const expectedLen = Buffer.byteLength(expected, 'utf8');
+	// Pad both buffers to the same length so timingSafeEqual always runs over
+	// the same number of bytes, regardless of input length. This prevents a
+	// timing oracle that would otherwise let an attacker binary-search the
+	// secret's byte count.
+	const maxLen = Math.max(providedLen, expectedLen);
+	const providedBuffer = Buffer.alloc(maxLen);
+	const expectedBuffer = Buffer.alloc(maxLen);
+	Buffer.from(provided, 'utf8').copy(providedBuffer);
+	Buffer.from(expected, 'utf8').copy(expectedBuffer);
+	// timingSafeEqual runs first (always, unconditionally) so content timing is
+	// never observable. Only then do we enforce strict length equality — this
+	// rejects NUL-padded inputs like `<real secret>\x00` that would otherwise
+	// pass the padded comparison alone.
+	return timingSafeEqual(providedBuffer, expectedBuffer) && providedLen === expectedLen;
 }
 
 async function getAdminUserCount(): Promise<number> {
@@ -225,7 +237,8 @@ export const actions: Actions = {
 				success: true
 			});
 
-			console.info(`[bootstrap] First admin account created: ${email}`);
+			// Log only the UUID — never log the email address to stdout.
+			console.info(`[bootstrap] First admin account created (id: ${newUser.id}).`);
 			return { registered: true, requiresActivation: false, role: 'admin' };
 		}
 

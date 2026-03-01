@@ -3,7 +3,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
-import { writeAuditLog } from '$lib/server/admin-auth';
+import { writeAuditLog, invalidateAllSessionsForUser } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 import {
 	encryptTotpSecret,
@@ -67,12 +67,14 @@ export const actions: Actions = {
 
 		const valid = await verifyTotpCode(secret, code);
 		if (!valid) {
+			// Do NOT return the plaintext secret or TOTP URI in the failure response.
+			// Both are visible in browser devtools / network proxies. The user still
+			// has the QR code / manual entry from the initMfa step — only the
+			// encrypted blob is needed to re-submit.
 			return fail(400, {
 				error: 'Invalid code — check the time on your authenticator and try again.',
 				pendingSetup: true as const,
-				encryptedSecret,
-				displaySecret: secret,
-				totpUri: generateTotpUri(secret, locals.adminUser.email)
+				encryptedSecret
 			});
 		}
 
@@ -136,6 +138,10 @@ export const actions: Actions = {
 			.eq('id', locals.adminUser.id);
 
 		if (dbErr) return fail(500, { error: 'Failed to disable MFA' });
+
+		// Invalidate all other sessions so a stolen session token cannot continue
+		// to bypass the MFA requirement that was just removed.
+		await invalidateAllSessionsForUser(locals.adminUser.id, locals.adminSession?.id);
 
 		await writeAuditLog(
 			locals.adminUser.id,

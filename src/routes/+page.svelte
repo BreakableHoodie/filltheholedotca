@@ -183,10 +183,11 @@
 					const city = String(f?.properties?.CITY ?? '');
 					const w = Number(f?.properties?.WARDID_NORM ?? 0);
 					const n = counts[`${city}-${w}`] ?? 0;
-					const cityLabel = city.charAt(0).toUpperCase() + city.slice(1);
+					const cityLabel = escapeHtml(city.charAt(0).toUpperCase() + city.slice(1));
 					const c = COUNCILLORS.find(x => x.city === city && x.ward === w);
+					const cName = c ? ' — ' + escapeHtml(c.name) : '';
 					layer.bindTooltip(
-						`<strong>${cityLabel} Ward ${w}${c ? ' — ' + c.name : ''}</strong><br/>${n} active hole${n !== 1 ? 's' : ''}`,
+						`<strong>${cityLabel} Ward ${w}${cName}</strong><br/>${n} active hole${n !== 1 ? 's' : ''}`,
 						{ sticky: true }
 					);
 				}

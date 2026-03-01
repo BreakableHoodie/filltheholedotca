@@ -140,11 +140,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	});
 
 	// TODO: send activation email when SMTP is configured.
-	// For now, an admin must manually set is_active = true and activated_at = now() in Supabase.
-	console.info(
-		`[signup] New admin account created: ${email} (role: ${userRole}). ` +
-			`Activate via Supabase dashboard: UPDATE admin_users SET is_active = true, activated_at = now() WHERE id = '${newUser.id}';`
-	);
+	// For now, an admin must manually activate the account via the Supabase dashboard.
+	// Log only the UUID — never log the email address or raw SQL to stdout.
+	console.info(`[signup] New admin account created (id: ${newUser.id}, role: ${userRole}). Pending activation.`);
 
 	return json({
 		ok: true,

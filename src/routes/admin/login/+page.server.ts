@@ -85,6 +85,9 @@ export const actions: Actions = {
 		// Check account status BEFORE verifyPassword to avoid timing oracle:
 		// verifyPassword runs slow PBKDF2 — checking is_active after it leaks
 		// whether a given password is correct for an inactive account.
+		// Return the same generic message for both inactive states to prevent
+		// account enumeration — an unauthenticated caller must not be able to
+		// determine whether an email belongs to an active/inactive account.
 		if (!user.activated_at) {
 			await recordAuthAttempt({
 				userId: user.id,
@@ -95,10 +98,7 @@ export const actions: Actions = {
 				success: false,
 				failureReason: 'activation_required'
 			});
-			return fail(403, {
-				error: 'Your account has not been activated yet. Contact an administrator.',
-				email
-			});
+			return fail(401, { error: 'Invalid credentials.', email });
 		}
 
 		if (!user.is_active) {
@@ -111,10 +111,7 @@ export const actions: Actions = {
 				success: false,
 				failureReason: 'account_disabled'
 			});
-			return fail(403, {
-				error: 'Your account has been deactivated. Contact an administrator.',
-				email
-			});
+			return fail(401, { error: 'Invalid credentials.', email });
 		}
 
 		const passwordOk = await verifyPassword(password, user.password_hash);

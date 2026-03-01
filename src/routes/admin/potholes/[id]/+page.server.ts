@@ -13,7 +13,12 @@ function getAdminClient() {
 
 const uuidSchema = z.string().uuid();
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
+	// Defence-in-depth guard — hooks.server.ts enforces auth for all /admin/*
+	// routes, but this explicit check ensures the load function cannot return
+	// sensitive data (IP hashes, signed URLs) if the middleware is ever bypassed.
+	if (!locals.adminUser) throw error(401, 'Unauthorized');
+
 	const idParsed = uuidSchema.safeParse(params.id);
 	if (!idParsed.success) throw error(400, 'Invalid pothole ID');
 	const id = idParsed.data;

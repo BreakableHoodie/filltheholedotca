@@ -155,10 +155,13 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			success: true
 		});
 
+		// Return only the mfaToken needed to continue the MFA challenge.
+		// Do NOT return name/email/role before authentication is complete —
+		// an attacker with compromised credentials but no TOTP device must not
+		// be able to enumerate user PII via the pre-auth response.
 		return json({
 			mfaRequired: true,
-			mfaToken,
-			user: { email: user.email, firstName: user.first_name, lastName: user.last_name, role: user.role }
+			mfaToken
 		});
 	}
 
