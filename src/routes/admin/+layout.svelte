@@ -14,6 +14,15 @@
 	const currentPath = $derived($page.url.pathname);
 
 	let sidebarOpen = $state(false);
+	let isMobile = $state(false);
+
+	$effect(() => {
+		const mq = window.matchMedia('(max-width: 767px)');
+		isMobile = mq.matches;
+		const handler = (e: MediaQueryListEvent) => (isMobile = e.matches);
+		mq.addEventListener('change', handler);
+		return () => mq.removeEventListener('change', handler);
+	});
 
 	function isActive(path: string): boolean {
 		return currentPath.startsWith(path);
@@ -70,6 +79,7 @@
 				? 'translate-x-0'
 				: '-translate-x-full'}"
 			aria-label="Admin navigation"
+			inert={isMobile && !sidebarOpen}
 		>
 			<!-- Brand -->
 			<div class="px-4 py-4 border-b border-zinc-800">
