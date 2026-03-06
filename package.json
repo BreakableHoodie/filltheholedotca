@@ -43,7 +43,7 @@
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
     "otplib": "^13.3.0",
-    "satori": "^0.19.2",
+    "satori": "^0.21.0",
     "svelte-sonner": "^1.0.7",
     "zod": "^4.3.6"
   },
