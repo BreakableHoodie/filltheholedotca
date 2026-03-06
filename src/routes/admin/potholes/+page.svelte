@@ -79,7 +79,8 @@
 		</div>
 	{:else}
 		<div class="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-			<table class="w-full text-sm">
+			<div class="overflow-x-auto">
+			<table class="w-full text-sm min-w-[640px]">
 				<thead>
 					<tr class="border-b border-zinc-800 text-left">
 						<th class="px-4 py-3 text-zinc-500 font-medium">Address</th>
@@ -129,6 +130,7 @@
 					{/each}
 				</tbody>
 			</table>
+			</div>
 		</div>
 	{/if}
 </div>

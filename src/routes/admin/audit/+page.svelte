@@ -143,7 +143,8 @@
 
 	<!-- Log table -->
 	<div class="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-		<table class="w-full text-sm">
+		<div class="overflow-x-auto">
+		<table class="w-full text-sm min-w-[640px]">
 			<thead>
 				<tr class="border-b border-zinc-800 text-left">
 					<th class="px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wide w-44">Time</th>
@@ -234,6 +235,7 @@
 				{/each}
 			</tbody>
 		</table>
+		</div>
 	</div>
 
 	<!-- Pagination -->
