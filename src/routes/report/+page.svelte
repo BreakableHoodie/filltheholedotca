@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
+	import { toastError } from '$lib/toast';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import Icon from '$lib/components/Icon.svelte';
@@ -314,7 +315,7 @@
 
 	async function getLocation() {
 		if (!navigator.geolocation) {
-			toast.error('Geolocation not supported on this device');
+			toastError('Geolocation not supported on this device');
 			gpsStatus = 'error';
 			return;
 		}
@@ -330,11 +331,11 @@
 			(err) => {
 				gpsStatus = 'error';
 				if (err.code === 1) {
-					toast.error('Location access denied — enable it in your browser settings and retry');
+					toastError('Location access denied — enable it in your browser settings and retry');
 				} else if (err.code === 2) {
-					toast.error('Could not determine your location. Try moving outside.');
+					toastError('Could not determine your location. Try moving outside.');
 				} else {
-					toast.error('Location request timed out. Retry.');
+					toastError('Location request timed out. Retry.');
 				}
 			},
 			{ enableHighAccuracy: true, timeout: 10000 }
@@ -373,18 +374,18 @@
 							} catch {
 								// Keep generic message when response body is not JSON.
 							}
-							toast.error(`Report submitted, but photo was not uploaded: ${uploadMessage}`);
+							toastError(`Report submitted, but photo was not uploaded: ${uploadMessage}`);
 						}
 					} catch {
 						// Photo upload failure does not block navigation
-						toast.error('Report submitted, but photo was not uploaded due to a network error');
+						toastError('Report submitted, but photo was not uploaded due to a network error');
 					}
 				}
 
 			toast.success(result.message);
 			goto(`/hole/${result.id}`);
 		} catch (err: unknown) {
-			toast.error(err instanceof Error ? err.message : 'Something went wrong');
+			toastError(err instanceof Error ? err.message : 'Something went wrong');
 		} finally {
 			submitting = false;
 		}

@@ -108,7 +108,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.from('api_rate_limit_events')
 		.insert({ ip_hash: ipHash, scope: 'report_submit' });
 
-	if (reportRateInsertError) throw error(500, 'Failed to record report rate limit');
+	if (reportRateInsertError) {
+		// Non-fatal: log and continue. A broken rate-limit table should not block
+		// legitimate reports — the next check will simply see a lower count.
+		console.error('[report] Failed to record rate limit event:', reportRateInsertError.message);
+	}
 
 	// Search for existing pending potholes nearby using a bounding box
 	const delta = 0.0005;
