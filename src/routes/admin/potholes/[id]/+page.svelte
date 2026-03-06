@@ -210,7 +210,8 @@
 				{#if data.confirmations.length === 0}
 					<p class="text-zinc-600 text-sm px-4 py-4">No confirmations yet.</p>
 				{:else}
-					<table class="w-full text-sm">
+					<div class="overflow-x-auto">
+					<table class="w-full text-sm min-w-[400px]">
 						<thead>
 							<tr class="border-b border-zinc-800 text-left">
 								<th class="px-4 py-2.5 text-zinc-500 font-medium text-xs">#</th>
@@ -230,6 +231,7 @@
 							{/each}
 						</tbody>
 					</table>
+					</div>
 				{/if}
 			</div>
 		</div>
