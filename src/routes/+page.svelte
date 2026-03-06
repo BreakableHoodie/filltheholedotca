@@ -2,6 +2,7 @@
 	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
+	import { toastError } from '$lib/toast';
 	import type { Map, Marker } from 'leaflet';
 	import type * as Leaflet from 'leaflet';
 	import type { PageData } from './$types';
@@ -82,7 +83,7 @@
 		if (!map || !L) return;
 
 		if (!navigator.geolocation) {
-			toast.error('Geolocation is not supported by your browser.');
+			toastError('Geolocation is not supported by your browser.');
 			return;
 		}
 		locating = true;
@@ -107,9 +108,9 @@
 			},
 			(err) => {
 				locating = false;
-				if (err.code === 1) toast.error('Location access denied. Enable it in your browser settings.');
-				else if (err.code === 2) toast.error('Could not determine your location. Try again.');
-				else toast.error('Location request timed out. Try again.');
+				if (err.code === 1) toastError('Location access denied. Enable it in your browser settings.');
+				else if (err.code === 2) toastError('Could not determine your location. Try again.');
+				else toastError('Location request timed out. Try again.');
 			},
 			{ enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
 		);
@@ -196,7 +197,7 @@
 			if (wardLayerRef) wardLayerRef.bringToBack();
 			layers.wards = true;
 		} catch (err) {
-			toast.error('Could not load ward boundaries. Try again later.');
+			toastError('Could not load ward boundaries. Try again later.');
 			console.error('[ward heatmap]', err);
 		} finally {
 			wardLoading = false;
@@ -312,7 +313,7 @@
 						clusterGroups['filled']?.addLayer(marker);
 					}
 				} catch (err: unknown) {
-					toast.error(err instanceof Error ? err.message : 'Something went wrong');
+					toastError(err instanceof Error ? err.message : 'Something went wrong');
 				}
 			});
 		});

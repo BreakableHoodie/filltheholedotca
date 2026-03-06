@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import { toastError } from '$lib/toast';
 	import { invalidateAll } from '$app/navigation';
 	import { format } from 'date-fns';
 	import { STATUS_CONFIG } from '$lib/constants';
@@ -26,6 +27,76 @@
 
 	let submitting = $state(false);
 	let showFilledForm = $state(false);
+
+	// Photo upload state
+	let photoFile = $state<File | null>(null);
+	let photoPreview = $state<string | null>(null);
+	let photoInput = $state<HTMLInputElement | undefined>(undefined);
+	let uploadingPhoto = $state(false);
+	let photoSubmitted = $state(false);
+
+	let canUploadPhoto = $derived(
+		(pothole.status === 'pending' || pothole.status === 'reported') && !photoSubmitted
+	);
+
+	async function resizeImage(file: File): Promise<Blob> {
+		return new Promise((resolve) => {
+			const MAX_PX = 800;
+			const objectUrl = URL.createObjectURL(file);
+			const img = new Image();
+			img.onload = () => {
+				URL.revokeObjectURL(objectUrl);
+				const scale = Math.min(1, MAX_PX / Math.max(img.width, img.height));
+				const w = Math.round(img.width * scale);
+				const h = Math.round(img.height * scale);
+				const canvas = document.createElement('canvas');
+				canvas.width = w;
+				canvas.height = h;
+				canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+				canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.82);
+			};
+			img.src = objectUrl;
+		});
+	}
+
+	async function handlePhotoSelect(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		const resized = await resizeImage(file);
+		if (photoPreview) URL.revokeObjectURL(photoPreview);
+		photoFile = new File([resized], 'photo.jpg', { type: 'image/jpeg' });
+		photoPreview = URL.createObjectURL(resized);
+	}
+
+	function clearPhoto() {
+		if (photoPreview) URL.revokeObjectURL(photoPreview);
+		photoFile = null;
+		photoPreview = null;
+		if (photoInput) photoInput.value = '';
+	}
+
+	async function uploadPhoto() {
+		if (!photoFile) return;
+		uploadingPhoto = true;
+		try {
+			const fd = new FormData();
+			fd.append('photo', photoFile);
+			fd.append('pothole_id', pothole.id);
+			const res = await fetch('/api/photos', { method: 'POST', body: fd });
+			if (!res.ok) {
+				const result = await res.json();
+				throw new Error(result.message || 'Upload failed');
+			}
+			toast.success("Photo submitted — it'll appear here once reviewed.");
+			clearPhoto();
+			photoSubmitted = true;
+		} catch (err: unknown) {
+			toastError(err instanceof Error ? err.message : 'Photo upload failed');
+		} finally {
+			uploadingPhoto = false;
+		}
+	}
 
 	// Watch state — initialised on mount to avoid SSR/hydration mismatch
 	let watching = $state(false);
@@ -54,7 +125,7 @@
 			showFilledForm = false;
 			await invalidateAll();
 		} catch (err: unknown) {
-			toast.error(err instanceof Error ? err.message : 'Something went wrong');
+			toastError(err instanceof Error ? err.message : 'Something went wrong');
 		} finally {
 			submitting = false;
 		}
@@ -190,7 +261,7 @@ Thank you.`;
 		</div>
 	{/if}
 
-	<!-- Photo gallery (approved photos only) -->
+	<!-- Photos -->
 	{#if photos.length > 0}
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
 			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
@@ -209,6 +280,57 @@ Thank you.`;
 					</a>
 				{/each}
 			</div>
+		</div>
+	{:else if canUploadPhoto}
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+				<Icon name="camera" size={14} class="text-sky-400 shrink-0" />
+				Photo
+			</div>
+			{#if photoPreview}
+				<div class="relative">
+					<img src={photoPreview} alt="Selected photo" class="w-full rounded-lg object-cover aspect-video" />
+					<button
+						type="button"
+						onclick={clearPhoto}
+						aria-label="Remove photo"
+						class="absolute top-2 right-2 bg-zinc-900/80 hover:bg-zinc-900 rounded-full p-1.5 text-zinc-400 hover:text-white transition-colors"
+					>
+						<Icon name="x" size={14} />
+					</button>
+				</div>
+				<button
+					onclick={uploadPhoto}
+					disabled={uploadingPhoto}
+					class="w-full py-2.5 bg-sky-700 hover:bg-sky-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-1.5"
+				>
+					{#if uploadingPhoto}
+						<Icon name="loader" size={13} class="animate-spin shrink-0" />
+						Uploading…
+					{:else}
+						<Icon name="camera" size={13} class="shrink-0" />
+						Submit photo
+					{/if}
+				</button>
+			{:else}
+				<button
+					type="button"
+					onclick={() => photoInput?.click()}
+					class="w-full py-3 rounded-lg border-2 border-dashed border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+				>
+					<Icon name="camera" size={15} class="shrink-0" />
+					Add a photo
+				</button>
+			{/if}
+			<input
+				bind:this={photoInput}
+				type="file"
+				accept="image/jpeg,image/png,image/webp"
+				class="sr-only"
+				aria-label="Upload a pothole photo"
+				onchange={handlePhotoSelect}
+			/>
+			<p class="text-xs text-zinc-500">Photos are reviewed before appearing publicly. Only snap one if you're safely off the road.</p>
 		</div>
 	{/if}
 

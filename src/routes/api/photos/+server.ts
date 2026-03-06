@@ -148,7 +148,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const { error: rateLimitInsertError } = await getAdminClient()
 		.from('api_rate_limit_events')
 		.insert({ ip_hash: ipHash, scope: 'photo_upload' });
-	if (rateLimitInsertError) throw error(500, 'Failed to record upload rate limit');
+	if (rateLimitInsertError) {
+		console.error('[photos] Failed to record rate limit event:', rateLimitInsertError.message);
+	}
 
 	// Prevent unlimited media accumulation on a single pothole.
 	const { count: activePhotoCount, error: activePhotoCountError } = await getAdminClient()
