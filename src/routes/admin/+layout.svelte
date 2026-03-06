@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
+	import { tick } from 'svelte';
 	import { page } from '$app/stores';
 
 	interface Props {
@@ -15,6 +16,8 @@
 
 	let sidebarOpen = $state(false);
 	let isMobile = $state(false);
+	let sidebarEl = $state<HTMLElement | null>(null);
+	let openerElement: HTMLElement | null = null;
 
 	$effect(() => {
 		const mq = window.matchMedia('(max-width: 767px)');
@@ -28,34 +31,57 @@
 		return currentPath.startsWith(path);
 	}
 
-	function close() {
-		sidebarOpen = false;
+	function open() {
+		// Capture the element that triggered open so we can restore focus on close.
+		// Exclude body — it is not a meaningful restore target.
+		const active = document.activeElement as HTMLElement | null;
+		openerElement = active !== document.body ? active : null;
+		sidebarOpen = true;
 	}
 
-	const pageTitle = $derived(
-		currentPath === '/admin'
-			? 'Dashboard'
-			: currentPath.startsWith('/admin/photos')
-				? 'Photos'
-				: currentPath.startsWith('/admin/potholes')
-					? 'Potholes'
-					: currentPath.startsWith('/admin/users')
-						? 'Users'
-						: currentPath.startsWith('/admin/audit')
-							? 'Audit Log'
-							: currentPath.startsWith('/admin/settings/password')
-								? 'Change Password'
-								: currentPath.startsWith('/admin/settings/mfa')
-									? 'Two-Factor Auth'
-									: currentPath.startsWith('/admin/settings/sessions')
-										? 'Sessions'
-										: 'Admin'
-	);
+	function close() {
+		const focusWasInSidebar = sidebarEl?.contains(document.activeElement) ?? false;
+		sidebarOpen = false;
+		if (focusWasInSidebar) {
+			tick().then(() => openerElement?.focus());
+		}
+		openerElement = null;
+	}
+
+	function toggle() {
+		if (sidebarOpen) close();
+		else open();
+	}
+
+	// Ordered most-specific → least-specific so that more-precise paths match first.
+	const routeTitleMappings: { prefix: string; title: string }[] = [
+		{ prefix: '/admin/settings/password', title: 'Change Password' },
+		{ prefix: '/admin/settings/mfa', title: 'Two-Factor Auth' },
+		{ prefix: '/admin/settings/sessions', title: 'Sessions' },
+		{ prefix: '/admin/photos', title: 'Photos' },
+		{ prefix: '/admin/potholes', title: 'Potholes' },
+		{ prefix: '/admin/users', title: 'Users' },
+		{ prefix: '/admin/audit', title: 'Audit Log' }
+	];
+
+	function getPageTitle(path: string): string {
+		if (path === '/admin') {
+			return 'Dashboard';
+		}
+		for (const { prefix, title } of routeTitleMappings) {
+			if (path.startsWith(prefix)) {
+				return title;
+			}
+		}
+		return 'Admin';
+	}
+
+	const pageTitle = $derived(getPageTitle(currentPath));
 
 	$effect(() => {
 		if (!sidebarOpen) return;
 		function onKeydown(e: KeyboardEvent) {
-			if (e.key === 'Escape') sidebarOpen = false;
+			if (e.key === 'Escape') close();
 		}
 		window.addEventListener('keydown', onKeydown);
 		return () => window.removeEventListener('keydown', onKeydown);
@@ -75,6 +101,7 @@
 
 		<!-- Sidebar -->
 		<aside
+			bind:this={sidebarEl}
 			class="fixed inset-y-0 left-0 z-50 w-64 flex-shrink-0 bg-zinc-900 border-r border-zinc-800 flex flex-col transition-transform duration-200 md:static md:inset-auto md:w-52 md:translate-x-0 {sidebarOpen
 				? 'translate-x-0'
 				: '-translate-x-full'}"
@@ -205,7 +232,7 @@
 			<header class="md:hidden sticky top-0 z-30 flex items-center gap-3 px-4 py-3 bg-zinc-900 border-b border-zinc-800">
 				<button
 					type="button"
-					onclick={() => (sidebarOpen = !sidebarOpen)}
+					onclick={toggle}
 					aria-label="Toggle navigation"
 					aria-expanded={sidebarOpen}
 					class="p-1.5 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors flex-shrink-0"
@@ -223,7 +250,7 @@
 				<div class="flex-1 min-w-0">
 					<span class="text-sm font-semibold text-zinc-100">{pageTitle}</span>
 				</div>
-				<a href="/admin" class="text-sky-400 text-xs font-bold flex-shrink-0">fillthehole.ca</a>
+				<a href="/admin" class="text-sky-400 text-xs font-bold flex-shrink-0" onclick={close}>fillthehole.ca</a>
 			</header>
 
 			<!-- Main -->
