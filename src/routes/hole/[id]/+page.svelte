@@ -40,7 +40,7 @@
 	);
 
 	async function resizeImage(file: File): Promise<Blob> {
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			const MAX_PX = 800;
 			const objectUrl = URL.createObjectURL(file);
 			const img = new Image();
@@ -52,9 +52,15 @@
 				const canvas = document.createElement('canvas');
 				canvas.width = w;
 				canvas.height = h;
-				canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
-				canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.82);
+				const ctx = canvas.getContext('2d');
+				if (!ctx) { reject(new Error('Could not get canvas context')); return; }
+				ctx.drawImage(img, 0, 0, w, h);
+				canvas.toBlob((blob) => {
+					if (!blob) { reject(new Error('Image conversion failed')); return; }
+					resolve(blob);
+				}, 'image/jpeg', 0.82);
 			};
+			img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Failed to load image')); };
 			img.src = objectUrl;
 		});
 	}
@@ -85,8 +91,14 @@
 			fd.append('pothole_id', pothole.id);
 			const res = await fetch('/api/photos', { method: 'POST', body: fd });
 			if (!res.ok) {
-				const result = await res.json();
-				throw new Error(result.message || 'Upload failed');
+				let message = 'Upload failed';
+				try {
+					const result = await res.json();
+					if (result.message) message = result.message;
+				} catch {
+					// Non-JSON error body — use generic message
+				}
+				throw new Error(message);
 			}
 			toast.success("Photo submitted — it'll appear here once reviewed.");
 			clearPhoto();
@@ -327,6 +339,8 @@ Thank you.`;
 				type="file"
 				accept="image/jpeg,image/png,image/webp"
 				class="sr-only"
+			tabindex="-1"
+			aria-hidden="true"
 				aria-label="Upload a pothole photo"
 				onchange={handlePhotoSelect}
 			/>
