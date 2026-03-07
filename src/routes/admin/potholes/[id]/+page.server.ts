@@ -130,6 +130,34 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
+	togglePhotosPublished: async ({ params, request, locals, getClientAddress }) => {
+		if (!locals.adminUser) throw error(401, 'Unauthorized');
+		requireRole(locals.adminUser.role, 'editor');
+
+		const id = params.id ?? '';
+		if (!uuidSchema.safeParse(id).success) return fail(400, { error: 'Invalid ID' });
+
+		const fd = await request.formData();
+		const value = fd.get('photos_published') === 'true';
+
+		const { error: dbErr } = await getAdminClient()
+			.from('potholes')
+			.update({ photos_published: value })
+			.eq('id', id);
+		if (dbErr) return fail(500, { error: 'Failed to update photo visibility' });
+
+		await writeAuditLog(
+			locals.adminUser.id,
+			'pothole.photos_published_toggle',
+			'pothole',
+			id,
+			{ photos_published: value },
+			await hashIp(getClientAddress())
+		);
+
+		return { success: true };
+	},
+
 	deletePothole: async ({ params, locals, getClientAddress }) => {
 		if (!locals.adminUser) throw error(401, 'Unauthorized');
 		requireRole(locals.adminUser.role, 'admin');

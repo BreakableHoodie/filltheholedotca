@@ -25,7 +25,7 @@ const GEOFENCE = {
 };
 
 const MERGE_RADIUS_M = 25;
-const CONFIRMATIONS_REQUIRED = 3;
+const CONFIRMATIONS_REQUIRED = 2;
 const REPORT_RATE_LIMIT = 20;
 const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const SEVERITY_VALUES = ['Spilled my coffee', 'Bent a rim', 'Caused real damage', 'RIP'] as const;

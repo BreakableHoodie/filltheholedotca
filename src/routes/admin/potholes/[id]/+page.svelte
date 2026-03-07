@@ -241,19 +241,37 @@
 
 			<!-- Photos -->
 			<div class="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-				<div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+				<div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between gap-3 flex-wrap">
 					<h2 class="text-sm font-medium text-zinc-300">
 						Photos
 						<span class="ml-1.5 text-zinc-500 font-normal">({data.photos.length})</span>
 					</h2>
-					{#if data.photos.length > 0}
-						<a
-							href="/admin/photos"
-							class="text-xs text-sky-400 hover:text-sky-300 transition-colors"
-						>
-							Review queue →
-						</a>
-					{/if}
+					<div class="flex items-center gap-2 ml-auto">
+						{#if data.photos.length > 0}
+							<form method="post" action="?/togglePhotosPublished" use:enhance>
+								<input type="hidden" name="photos_published" value={String(!pothole.photos_published)} />
+								<button
+									type="submit"
+									class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded border transition-colors
+									       {pothole.photos_published
+										? 'border-emerald-600/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20'
+										: 'border-zinc-600 text-zinc-400 bg-zinc-800 hover:bg-zinc-700'}"
+								>
+									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+									</svg>
+									{pothole.photos_published ? 'Photos published' : 'Photos hidden'}
+								</button>
+							</form>
+							<a
+								href="/admin/photos"
+								class="text-xs text-sky-400 hover:text-sky-300 transition-colors"
+							>
+								Review queue →
+							</a>
+						{/if}
+					</div>
 				</div>
 
 				{#if data.photos.length === 0}

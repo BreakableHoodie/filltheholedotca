@@ -63,7 +63,7 @@ async function fetchCityRepairRequests(lat: number, lng: number): Promise<CityRe
 export const load: PageServerLoad = async ({ params, url }) => {
 	const { data, error: dbError } = await supabase
 		.from('potholes')
-		.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at, expired_at')
+		.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at, expired_at, photos_published')
 		.eq('id', params.id)
 		.single();
 
@@ -87,13 +87,17 @@ export const load: PageServerLoad = async ({ params, url }) => {
 			.order('created_at', { ascending: true })
 	]);
 
-	const photos: PotholePhoto[] = (photosResult.data ?? []).map((p) => ({
-		...p,
-		pothole_id: params.id,
-		moderation_status: 'approved' as const,
-		moderation_score: null,
-		url: supabase.storage.from('pothole-photos').getPublicUrl(p.storage_path).data.publicUrl
-	}));
+	// Only expose photos publicly when admin has explicitly published them for this pothole.
+	// A reported (live) pothole does not imply its photos are visible.
+	const photos: PotholePhoto[] = pothole.photos_published
+		? (photosResult.data ?? []).map((p) => ({
+				...p,
+				pothole_id: params.id,
+				moderation_status: 'approved' as const,
+				moderation_score: null,
+				url: supabase.storage.from('pothole-photos').getPublicUrl(p.storage_path).data.publicUrl
+			}))
+		: [];
 
 	return { pothole, councillor, cityRepairRequests, photos, origin: url.origin };
 };

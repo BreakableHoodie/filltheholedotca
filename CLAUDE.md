@@ -91,7 +91,7 @@ src/
       +page.svelte            # Pothole detail (status, councillor contact, share)
       +page.server.ts         # Loads single pothole + councillor
     api/
-      report/+server.ts       # POST — submit report (geofence, IP dedup, 3-confirm merge)
+      report/+server.ts       # POST — submit report (geofence, IP dedup, 2-confirm merge)
       filled/+server.ts       # POST — mark filled (reported → filled)
       photos/+server.ts       # POST — upload photo (magic-byte validation, moderation, rate limit)
       wards.geojson/+server.ts # GET — ward boundaries for heatmap
@@ -115,7 +115,8 @@ potholes (
   address text, description text,
   status text,          -- 'pending' | 'reported' | 'expired' | 'filled'
   filled_at timestamptz, expired_at timestamptz,
-  confirmed_count int   -- starts at 1, promoted to 'reported' at 3
+  confirmed_count int,  -- starts at 1, promoted to 'reported' at 2
+  photos_published bool  -- admin toggle; published pothole ≠ published photos
 )
 
 pothole_confirmations (
@@ -133,7 +134,7 @@ api_rate_limit_events (
 )
 ```
 
-Run `schema.sql` for initial setup, `schema_update.sql` for confirmations/security hardening, and `schema_photos.sql` for photo upload schema.
+Run `schema.sql` for initial setup, `schema_update.sql` for confirmations/security hardening, `schema_photos.sql` for photo upload schema, and `schema_photo_publishing.sql` for `photos_published` flag + confirmation threshold change.
 A `pg_cron` job (`expire-old-potholes`) runs nightly at 03:00 UTC to set
 `status = 'expired'` on `reported` potholes older than 90 days.
 
@@ -141,7 +142,7 @@ A `pg_cron` job (`expire-old-potholes`) runs nightly at 03:00 UTC to set
 
 ```
 pending → reported → filled
-  (1 report)  (3 confirmations)  (city fixed it — via popup or detail page)
+  (1 report)  (2 confirmations)  (city fixed it — via popup or detail page)
                     ↓
                  expired  (auto after 90 days with no action)
 ```
@@ -150,7 +151,8 @@ pending → reported → filled
 
 - **Geofence**: Waterloo Region only — lat 43.32–43.53, lng -80.59 to -80.22
 - **Merge radius**: 25m — nearby pending reports are merged, not duplicated
-- **3 confirmations** from distinct IPs required to go live on the public map
+- **2 confirmations** from distinct IPs required to go live on the public map
+- **photos_published**: admin-only toggle per pothole; a live pothole does NOT mean its photos are shown — admin must explicitly publish them
 - **IP hashing**: HMAC-SHA-256 with `IP_HASH_SECRET`, never store raw IPs
 - **Auto-expiry**: `reported` potholes expire after 90 days via pg_cron
 

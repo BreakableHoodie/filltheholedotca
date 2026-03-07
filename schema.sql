@@ -1,16 +1,17 @@
 -- Run this in your Supabase SQL editor
 
 create table if not exists potholes (
-  id          uuid primary key default gen_random_uuid(),
-  created_at  timestamptz default now(),
-  lat         float8 not null,
-  lng         float8 not null,
-  address     text,
-  description text,
-  status      text default 'reported',  -- 'pending' | 'reported' | 'filled' | 'expired'
-  filled_at   timestamptz,
-  expired_at  timestamptz,
-  confirmed_count int default 1
+  id               uuid primary key default gen_random_uuid(),
+  created_at       timestamptz default now(),
+  lat              float8 not null,
+  lng              float8 not null,
+  address          text,
+  description      text,
+  status           text default 'reported',  -- 'pending' | 'reported' | 'filled' | 'expired'
+  filled_at        timestamptz,
+  expired_at       timestamptz,
+  confirmed_count  int default 1,
+  photos_published boolean not null default false  -- admin-controlled; published pothole ≠ published photos
 );
 
 -- IP deduplication table (stores hashed IPs only — no raw PII)
@@ -117,7 +118,7 @@ begin
   update potholes
   set
     confirmed_count = confirmed_count + 1,
-    status = case when confirmed_count + 1 >= 3 then 'reported' else status end
+    status = case when confirmed_count + 1 >= 2 then 'reported' else status end
   where id = p_pothole_id
   returning confirmed_count, status into v_count, v_status;
 
