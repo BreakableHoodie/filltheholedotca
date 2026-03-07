@@ -10,26 +10,34 @@
 -- p_threshold, bypassing IP deduplication and the confirmation threshold.
 -- The application now calls this via the service-role client exclusively.
 --
+-- IMPORTANT: Revoking only from 'anon' and 'authenticated' is insufficient —
+-- PostgreSQL privilege checks are additive and every role inherits the PUBLIC
+-- grant unless it is explicitly revoked. Revoking from PUBLIC removes the
+-- grant from all roles, including anon and authenticated.
+--
 -- The exact signature must match the function defined in schema_site_settings.sql.
--- If the function was previously defined without explicit REVOKE, PostgreSQL
--- grants EXECUTE to PUBLIC by default — this revokes that grant.
-REVOKE EXECUTE ON FUNCTION increment_confirmation(uuid, text, integer) FROM anon;
-REVOKE EXECUTE ON FUNCTION increment_confirmation(uuid, text, integer) FROM authenticated;
+REVOKE EXECUTE ON FUNCTION increment_confirmation(uuid, text, integer) FROM PUBLIC;
 
 -- ---------------------------------------------------------------------------
--- H3: Document the 'deferred' moderation status
+-- H3: Add 'deferred' to the moderation_status check constraint
 -- ---------------------------------------------------------------------------
--- pothole_photos.moderation_status is a text column (no enum constraint).
+-- schema_photos.sql defines an inline check constraint (auto-named by
+-- PostgreSQL as pothole_photos_moderation_status_check) that allows only
+-- ('pending', 'approved', 'rejected'). Inserting 'deferred' without updating
+-- this constraint causes the DB to reject the insert with a constraint
+-- violation, breaking the intended "upload but require manual review" flow.
+--
 -- Valid values after this migration:
 --   'pending'  — SightEngine accepted; awaiting admin approval
 --   'approved' — admin has approved; visible to the public
---   'rejected' — admin has rejected; not visible to the public
---   'deferred' — SightEngine was unavailable; requires mandatory admin review
+--   'rejected' — admin or SightEngine rejected; not visible
+--   'deferred' — SightEngine was unavailable; mandatory admin review required
 --
 -- The existing RLS SELECT policy (anon key sees only 'approved' rows) covers
--- 'deferred' automatically — no policy change needed.
--- The admin photo queue should surface 'deferred' photos distinctly from
--- 'pending' so they receive prioritised attention.
---
--- No DDL change required — the column already accepts any text value.
--- This comment serves as the canonical record of the added status.
+-- 'deferred' automatically — no RLS change needed.
+ALTER TABLE pothole_photos
+  DROP CONSTRAINT IF EXISTS pothole_photos_moderation_status_check;
+
+ALTER TABLE pothole_photos
+  ADD CONSTRAINT pothole_photos_moderation_status_check
+  CHECK (moderation_status IN ('pending', 'approved', 'rejected', 'deferred'));
