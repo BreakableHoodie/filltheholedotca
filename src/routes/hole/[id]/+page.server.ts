@@ -4,6 +4,7 @@ import type { PageServerLoad } from './$types';
 import type { Pothole, PotholePhoto } from '$lib/types';
 import { lookupWard } from '$lib/wards';
 import { decodeHtmlEntities } from '$lib/escape';
+import { getConfirmationThreshold } from '$lib/server/settings';
 
 const CCC_URL = 'https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Corporate_Contact_Centre_Requests/FeatureServer/0/query';
 const CCC_RADIUS_M = 200;
@@ -76,7 +77,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		address: data.address ? decodeHtmlEntities(data.address) : null,
 		description: data.description ? decodeHtmlEntities(data.description) : null
 	} as Pothole;
-	const [councillor, cityRepairRequests, photosResult] = await Promise.all([
+	const [councillor, cityRepairRequests, photosResult, confirmationThreshold] = await Promise.all([
 		lookupWard(pothole.lat, pothole.lng),
 		fetchCityRepairRequests(pothole.lat, pothole.lng),
 		supabase
@@ -84,7 +85,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
 			.select('id, storage_path, created_at')
 			.eq('pothole_id', params.id)
 			.eq('moderation_status', 'approved')
-			.order('created_at', { ascending: true })
+			.order('created_at', { ascending: true }),
+		getConfirmationThreshold()
 	]);
 
 	// Only expose photos publicly when admin has explicitly published them for this pothole.
@@ -99,5 +101,5 @@ export const load: PageServerLoad = async ({ params, url }) => {
 			}))
 		: [];
 
-	return { pothole, councillor, cityRepairRequests, photos, origin: url.origin };
+	return { pothole, councillor, cityRepairRequests, photos, origin: url.origin, confirmationThreshold };
 };
