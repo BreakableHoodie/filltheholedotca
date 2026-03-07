@@ -138,7 +138,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		// The RPC handles duplicate IPs (ON CONFLICT DO NOTHING) and the
 		// confirmed_count increment in a single statement, preventing race conditions.
 		const confirmationsRequired = await getConfirmationThreshold();
-		const { data: result, error: rpcError } = await supabase.rpc('increment_confirmation', {
+		// C1 fix: use service-role client so this RPC is unreachable via the public anon key.
+		// Calling via the anon client exposes it to the public Supabase REST API, allowing
+		// anyone to supply an arbitrary p_ip_hash or p_threshold and bypass all guards.
+		const { data: result, error: rpcError } = await getAdminClient().rpc('increment_confirmation', {
 			p_pothole_id: match.id,
 			p_ip_hash: ipHash,
 			p_threshold: confirmationsRequired

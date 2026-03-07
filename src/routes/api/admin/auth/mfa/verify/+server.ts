@@ -11,7 +11,7 @@ import {
 	createAdminSession,
 	buildSessionCookie
 } from '$lib/server/admin-auth';
-import { decryptTotpSecret, verifyBackupCode } from '$lib/server/admin-crypto';
+import { decryptTotpSecret, verifyBackupCode, hashToken } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 
@@ -216,20 +216,23 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	headers.append('Set-Cookie', buildSessionCookie(sessionId, isSecure));
 	headers.append('Set-Cookie', buildCsrfCookie(csrfToken, isSecure));
 
-	// Trusted device
+	// Trusted device — H1 fix: store SHA-256 hash of the token, not the raw value.
+	// If admin_trusted_devices is compromised, hashes alone cannot be used to bypass MFA.
 	if (rememberDevice) {
 		try {
-			const trustedToken = crypto.randomUUID();
+			// Two UUIDs concatenated = 488 bits of entropy — well beyond brute-force range.
+			const rawToken = crypto.randomUUID() + crypto.randomUUID();
+			const tokenHash = await hashToken(rawToken);
 			const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 			await getAdminClient().from('admin_trusted_devices').insert({
-				token: trustedToken,
+				token: tokenHash, // only the hash is stored
 				user_id: challenge.user_id,
 				ip_address: ipHash,
 				user_agent: userAgent,
 				expires_at: expiresAt
 			});
 			const deviceCookieParts = [
-				`admin_trusted_device=${trustedToken}`,
+				`admin_trusted_device=${rawToken}`, // raw value goes to the cookie
 				'HttpOnly',
 				'SameSite=Strict',
 				'Path=/',

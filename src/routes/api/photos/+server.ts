@@ -71,7 +71,7 @@ function detectImageType(bytes: Uint8Array): { mimeType: DetectedMimeType; ext: 
 	return null;
 }
 
-type ModerationResult = { score: number | null; rejected: boolean };
+type ModerationResult = { score: number | null; rejected: boolean; deferred?: boolean };
 
 async function runModeration(
 	buffer: ArrayBuffer,
@@ -119,8 +119,11 @@ async function runModeration(
 		const score = Math.max(nudityScore, offensiveScore);
 		return { score, rejected: score > MODERATION_THRESHOLD };
 	} catch {
-		console.warn('[photos] SightEngine check failed — deferring photo to manual review');
-		return { score: null, rejected: false };
+		// H3 fix: fail to a distinct 'deferred' state rather than silently passing.
+		// An attacker who disrupts SightEngine would previously bypass automated moderation
+		// entirely. Now the photo is uploaded but flagged for mandatory admin review.
+		console.error('[photos] SightEngine check failed — photo will require manual admin review');
+		return { score: null, rejected: false, deferred: true };
 	}
 }
 
@@ -219,12 +222,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(500, 'Upload failed — please try again');
 	}
 
-	// Insert DB record — photo stays in 'pending' until an admin approves it
+	// Insert DB record. Status is 'pending' (normal flow) or 'deferred' (SightEngine
+	// unavailable). Both are hidden from the public; only admins see them in the queue.
+	// 'deferred' is visually distinct in the admin UI so it gets prioritised for review.
 	const { data: photo, error: insertError } = await getAdminClient()
 		.from('pothole_photos')
 		.insert({
 			pothole_id: idParsed.data,
 			storage_path: storagePath,
+			moderation_status: moderation.deferred ? 'deferred' : 'pending',
 			moderation_score: moderation.score,
 			ip_hash: ipHash
 		})
