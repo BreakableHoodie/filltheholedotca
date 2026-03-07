@@ -48,9 +48,13 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ photos_published: next })
 			});
-			if (!res.ok) localOverrides[id] = !next;
+			if (!res.ok) {
+				localOverrides[id] = !next;
+				toast.error('Failed to update photo visibility');
+			}
 		} catch {
 			localOverrides[id] = !next;
+			toast.error('Failed to update photo visibility');
 		}
 	}
 
@@ -290,6 +294,7 @@
 			<div class="flex items-center gap-2">
 				<select
 					bind:value={bulkStatus}
+					aria-label="Bulk status"
 					class="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200 focus:outline-none focus:border-sky-500"
 				>
 					{#each ['pending', 'reported', 'filled', 'expired'] as s (s)}

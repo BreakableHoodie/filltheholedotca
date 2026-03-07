@@ -5,35 +5,10 @@
 -- Admin explicitly sets photos_published = true to make approved photos appear publicly.
 ALTER TABLE potholes ADD COLUMN IF NOT EXISTS photos_published boolean NOT NULL DEFAULT false;
 
--- Lower the confirmation threshold from 3 to 2.
--- CREATE OR REPLACE is safe to re-run.
-CREATE OR REPLACE FUNCTION increment_confirmation(p_pothole_id uuid, p_ip_hash text)
-RETURNS jsonb
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  v_count  int;
-  v_status text;
-BEGIN
-  INSERT INTO pothole_confirmations (pothole_id, ip_hash)
-  VALUES (p_pothole_id, p_ip_hash)
-  ON CONFLICT (pothole_id, ip_hash) DO NOTHING;
-
-  IF NOT FOUND THEN
-    RETURN jsonb_build_object('duplicate', true);
-  END IF;
-
-  UPDATE potholes
-  SET
-    confirmed_count = confirmed_count + 1,
-    status = CASE WHEN confirmed_count + 1 >= 2 THEN 'reported' ELSE status END
-  WHERE id = p_pothole_id
-  RETURNING confirmed_count, status INTO v_count, v_status;
-
-  RETURN jsonb_build_object(
-    'duplicate',        false,
-    'confirmed_count',  v_count,
-    'status',           v_status
-  );
-END;
-$$;
+-- NOTE: increment_confirmation() is intentionally NOT redefined here.
+-- schema_site_settings.sql (which must run after this file) defines the
+-- current 3-parameter signature: increment_confirmation(p_pothole_id, p_ip_hash, p_threshold).
+-- Redefining it here with 2 parameters would overwrite the newer version and
+-- break the application. Run migrations in order:
+--   schema.sql → schema_update.sql → schema_photos.sql →
+--   schema_photo_publishing.sql → schema_site_settings.sql → schema_pr61_fixes.sql
