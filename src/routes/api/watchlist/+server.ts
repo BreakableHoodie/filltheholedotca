@@ -36,7 +36,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	const { data: potholes, error: dbError } = await supabase
 		.from('potholes')
-		.select('id, address, lat, lng, status, created_at, filled_at')
+		.select('id, address, lat, lng, status, created_at, filled_at, photos_published')
 		.in('id', parsed.data.ids);
 
 	if (dbError) throw error(500, 'Database error');

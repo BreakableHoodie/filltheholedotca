@@ -243,7 +243,7 @@ Thank you.`;
 				it appears on the public map.
 			</p>
 			<p class="text-zinc-600 text-xs mt-2 tabular-nums">
-				Confirmations: {pothole.confirmed_count}/3
+				Confirmations: {pothole.confirmed_count}/{data.confirmationThreshold}
 			</p>
 		</div>
 	{/if}

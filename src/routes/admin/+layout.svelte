@@ -58,6 +58,7 @@
 		{ prefix: '/admin/settings/password', title: 'Change Password' },
 		{ prefix: '/admin/settings/mfa', title: 'Two-Factor Auth' },
 		{ prefix: '/admin/settings/sessions', title: 'Sessions' },
+		{ prefix: '/admin/settings/site', title: 'Site Settings' },
 		{ prefix: '/admin/photos', title: 'Photos' },
 		{ prefix: '/admin/potholes', title: 'Potholes' },
 		{ prefix: '/admin/users', title: 'Users' },
@@ -177,6 +178,18 @@
 				</a>
 
 				<div class="pt-2 mt-1 border-t border-zinc-800 space-y-0.5">
+					{#if user.role === 'admin'}
+						<a
+							href="/admin/settings/site"
+							onclick={close}
+							class="flex items-center gap-2.5 px-3 py-2.5 md:py-2 rounded text-sm transition-colors {isActive('/admin/settings/site') ? 'bg-sky-600/20 text-sky-400' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'}"
+						>
+							<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+							</svg>
+							Site Settings
+						</a>
+					{/if}
 					<a
 						href="/admin/settings/password"
 						onclick={close}

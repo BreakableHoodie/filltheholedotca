@@ -24,4 +24,5 @@ export interface Pothole {
 	confirmed_count: number;
 	filled_at: string | null;
 	expired_at: string | null;
+	photos_published: boolean;
 }

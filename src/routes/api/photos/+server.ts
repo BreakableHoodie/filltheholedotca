@@ -29,6 +29,15 @@ interface SightEngineResponse {
 	offensive?: { prob?: number };
 }
 
+interface SightEngineWorkflowResponse {
+	status: string;
+	summary?: {
+		action: 'accept' | 'reject';
+		reject_prob?: number;
+		reject_reasons?: string[];
+	};
+}
+
 function detectImageType(bytes: Uint8Array): { mimeType: DetectedMimeType; ext: DetectedExtension } | null {
 	if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
 		return { mimeType: 'image/jpeg', ext: 'jpg' };
@@ -62,35 +71,56 @@ function detectImageType(bytes: Uint8Array): { mimeType: DetectedMimeType; ext: 
 	return null;
 }
 
+type ModerationResult = { score: number | null; rejected: boolean };
+
 async function runModeration(
 	buffer: ArrayBuffer,
 	mimeType: DetectedMimeType,
 	ext: DetectedExtension
-): Promise<number | null> {
+): Promise<ModerationResult> {
+	const workflowId = env.SIGHTENGINE_WORKFLOW_ID;
+
 	try {
 		const seForm = new FormData();
 		seForm.append('media', new Blob([buffer], { type: mimeType }), `photo.${ext}`);
-		seForm.append('models', 'nudity,offensive');
 		seForm.append('api_user', env.SIGHTENGINE_API_USER);
 		seForm.append('api_secret', env.SIGHTENGINE_API_SECRET);
 
+		if (workflowId) {
+			// Workflow mode — rules and thresholds are configured in the SightEngine
+			// dashboard. The API just returns accept/reject + a reject probability.
+			seForm.append('workflow', workflowId);
+			const res = await fetch('https://api.sightengine.com/1.0/check-workflow.json', {
+				method: 'POST',
+				body: seForm,
+				signal: AbortSignal.timeout(10_000)
+			});
+			if (!res.ok) return { score: null, rejected: false };
+			const data: SightEngineWorkflowResponse = await res.json();
+			if (data.status !== 'success' || !data.summary) return { score: null, rejected: false };
+			return {
+				score: data.summary.reject_prob ?? null,
+				rejected: data.summary.action === 'reject'
+			};
+		}
+
+		// Legacy fallback: manual model scoring (no workflow ID configured).
+		seForm.append('models', 'nudity,offensive');
 		const res = await fetch('https://api.sightengine.com/1.0/check.json', {
 			method: 'POST',
 			body: seForm,
 			signal: AbortSignal.timeout(10_000)
 		});
-
-		if (!res.ok) return null;
-
+		if (!res.ok) return { score: null, rejected: false };
 		const data: SightEngineResponse = await res.json();
-		if (data.status !== 'success') return null;
-
+		if (data.status !== 'success') return { score: null, rejected: false };
 		const nudityScore = Math.max(data.nudity?.sexual_activity ?? 0, data.nudity?.sexual_display ?? 0);
 		const offensiveScore = data.offensive?.prob ?? 0;
-		return Math.max(nudityScore, offensiveScore);
+		const score = Math.max(nudityScore, offensiveScore);
+		return { score, rejected: score > MODERATION_THRESHOLD };
 	} catch {
 		console.warn('[photos] SightEngine check failed — deferring photo to manual review');
-		return null;
+		return { score: null, rejected: false };
 	}
 }
 
@@ -173,9 +203,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const storagePath = `${idParsed.data}/${photoId}.${ext}`;
 
 	// Run SightEngine moderation (non-blocking on failure)
-	const moderationScore = await runModeration(buffer, mimeType, ext);
+	const moderation = await runModeration(buffer, mimeType, ext);
 
-	if (moderationScore !== null && moderationScore > MODERATION_THRESHOLD) {
+	if (moderation.rejected) {
 		throw error(422, 'Photo rejected by content moderation');
 	}
 
@@ -195,7 +225,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.insert({
 			pothole_id: idParsed.data,
 			storage_path: storagePath,
-			moderation_score: moderationScore,
+			moderation_score: moderation.score,
 			ip_hash: ipHash
 		})
 		.select('id')

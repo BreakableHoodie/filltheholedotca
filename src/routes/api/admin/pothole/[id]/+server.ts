@@ -14,9 +14,10 @@ function getAdminClient() {
 const patchSchema = z
 	.object({
 		status: z.enum(['pending', 'reported', 'filled', 'expired']).optional(),
-		address: z.string().min(1).max(500).optional()
+		address: z.string().min(1).max(500).optional(),
+		photos_published: z.boolean().optional()
 	})
-	.refine((d) => d.status !== undefined || d.address !== undefined, {
+	.refine((d) => d.status !== undefined || d.address !== undefined || d.photos_published !== undefined, {
 		message: 'At least one field required'
 	});
 
@@ -35,6 +36,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, getClient
 
 	const updates: Record<string, unknown> = {};
 	if (bodyParsed.data.address !== undefined) updates.address = bodyParsed.data.address;
+	if (bodyParsed.data.photos_published !== undefined) updates.photos_published = bodyParsed.data.photos_published;
 	if (bodyParsed.data.status !== undefined) {
 		const s = bodyParsed.data.status;
 		updates.status = s;

@@ -5,6 +5,7 @@ import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
+import { getConfirmationThreshold } from '$lib/server/settings';
 
 // Create Supabase client only when needed, not at module level
 function getSupabaseClient() {
@@ -25,7 +26,6 @@ const GEOFENCE = {
 };
 
 const MERGE_RADIUS_M = 25;
-const CONFIRMATIONS_REQUIRED = 3;
 const REPORT_RATE_LIMIT = 20;
 const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const SEVERITY_VALUES = ['Spilled my coffee', 'Bent a rim', 'Caused real damage', 'RIP'] as const;
@@ -137,9 +137,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		// Atomically insert confirmation and increment count via RPC.
 		// The RPC handles duplicate IPs (ON CONFLICT DO NOTHING) and the
 		// confirmed_count increment in a single statement, preventing race conditions.
+		const confirmationsRequired = await getConfirmationThreshold();
 		const { data: result, error: rpcError } = await supabase.rpc('increment_confirmation', {
 			p_pothole_id: match.id,
-			p_ip_hash: ipHash
+			p_ip_hash: ipHash,
+			p_threshold: confirmationsRequired
 		});
 
 		if (rpcError) throw error(500, 'Failed to update report');
@@ -160,7 +162,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			message:
 				rpc.status === 'reported'
 					? '✅ Confirmed — pothole is now live on the map!'
-					: `📍 Confirmation noted (${rpc.confirmed_count}/${CONFIRMATIONS_REQUIRED} needed).`
+					: `📍 Confirmation noted (${rpc.confirmed_count}/${confirmationsRequired} needed).`
 		});
 	}
 
