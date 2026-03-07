@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PageData, ActionData } from './$types';
+	import type { PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -8,10 +8,9 @@
 
 	interface Props {
 		data: PageData;
-		form: ActionData;
 	}
 
-	let { data, form }: Props = $props();
+	let { data }: Props = $props();
 
 	// ── Selection state ───────────────────────────────────────────────────────
 	let selected = new SvelteSet<string>();
@@ -59,8 +58,8 @@
 	let bulkStatus = $state('reported');
 
 	// ── Bulk form enhance handler ─────────────────────────────────────────────
-	function makeBulkEnhance(photosPublishedValue?: boolean) {
-		return function ({ formData, submitter }: { formData: FormData; submitter: HTMLElement | null }) {
+	function makeBulkEnhance() {
+		return function ({ formData }: { formData: FormData }) {
 			// Inject selected IDs into whichever form was submitted
 			selected.forEach((id) => formData.append('ids', id));
 
@@ -160,10 +159,10 @@
 <form id="bulk-main" method="post" use:enhance={makeBulkEnhance()} hidden>
 	<input type="hidden" name="status" value={bulkStatus} />
 </form>
-<form id="bulk-pub" method="post" action="?/bulkTogglePhotos" use:enhance={makeBulkEnhance(true)} hidden>
+<form id="bulk-pub" method="post" action="?/bulkTogglePhotos" use:enhance={makeBulkEnhance()} hidden>
 	<input type="hidden" name="photos_published" value="true" />
 </form>
-<form id="bulk-unpub" method="post" action="?/bulkTogglePhotos" use:enhance={makeBulkEnhance(false)} hidden>
+<form id="bulk-unpub" method="post" action="?/bulkTogglePhotos" use:enhance={makeBulkEnhance()} hidden>
 	<input type="hidden" name="photos_published" value="false" />
 </form>
 
