@@ -186,6 +186,20 @@ export async function verifyBackupCode(
 }
 
 // ---------------------------------------------------------------------------
+// Token hashing (H1 fix)
+// ---------------------------------------------------------------------------
+//
+// Trusted-device tokens are high-entropy random values (UUID pair), so plain
+// SHA-256 is sufficient — no HMAC needed (unlike IP hashing where the small
+// IPv4 space requires a keyed hash). Store the hash; send the raw value in
+// the cookie. A DB compromise reveals only hashes, not usable tokens.
+
+export async function hashToken(raw: string): Promise<string> {
+	const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+	return hex(new Uint8Array(digest));
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 

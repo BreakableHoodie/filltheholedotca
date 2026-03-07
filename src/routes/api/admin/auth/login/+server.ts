@@ -11,7 +11,7 @@ import {
 	TRUSTED_DEVICE_COOKIE,
 	buildSessionCookie
 } from '$lib/server/admin-auth';
-import { verifyPassword } from '$lib/server/admin-crypto';
+import { verifyPassword, hashToken } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 
@@ -103,15 +103,17 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		throw error(401, 'Invalid email or password');
 	}
 
-	// Check for trusted device before requiring MFA
+	// Check for trusted device before requiring MFA.
+	// H1 fix: hash the raw cookie value before comparing — the DB stores only hashes.
 	let skipMfa = false;
 	if (user.totp_enabled) {
 		const trustedToken = cookies.get(TRUSTED_DEVICE_COOKIE);
 		if (trustedToken) {
+			const trustedTokenHash = await hashToken(trustedToken);
 			const { data: device } = await getAdminClient()
 				.from('admin_trusted_devices')
 				.select('user_id')
-				.eq('token', trustedToken)
+				.eq('token', trustedTokenHash)
 				.eq('user_id', user.id)
 				.gt('expires_at', new Date().toISOString())
 				.maybeSingle();

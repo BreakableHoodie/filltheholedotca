@@ -127,6 +127,8 @@ pothole_confirmations (
 pothole_photos (
   id uuid PK, pothole_id uuid FK, storage_path text,
   ip_hash text, moderation_status text, moderation_score float8, created_at
+  -- moderation_status values: 'pending' | 'approved' | 'rejected' | 'deferred'
+  -- 'deferred' = SightEngine was unavailable; requires mandatory admin review
 )
 
 api_rate_limit_events (
@@ -141,6 +143,7 @@ Run migrations in this order:
 4. `schema_photo_publishing.sql` — `photos_published` flag
 5. `schema_site_settings.sql` — site settings table + redefines `increment_confirmation` with 3-parameter signature (must run after step 4)
 6. `schema_pr61_fixes.sql` — RLS policy hardening + pending pothole backfill
+7. `schema_security_hardening.sql` — revokes public EXECUTE on `increment_confirmation`; documents `deferred` photo status
 A `pg_cron` job (`expire-old-potholes`) runs nightly at 03:00 UTC to set
 `status = 'expired'` on `reported` potholes older than 90 days.
 
