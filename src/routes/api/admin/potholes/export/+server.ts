@@ -14,8 +14,13 @@ const VALID_STATUSES: PotholeStatus[] = ['pending', 'reported', 'filled', 'expir
 
 function escapeCSV(val: unknown): string {
 	if (val === null || val === undefined) return '';
-	const s = String(val);
-	if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+	let s = String(val);
+	// Neutralize CSV formula injection (OWASP: values starting with =, +, -, @, tab, CR
+	// are interpreted as formulas by spreadsheet apps when opened by admins).
+	if (s.length > 0 && '=+-@\t\r'.includes(s[0])) {
+		s = "'" + s;
+	}
+	if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes("'")) {
 		return '"' + s.replace(/"/g, '""') + '"';
 	}
 	return s;
