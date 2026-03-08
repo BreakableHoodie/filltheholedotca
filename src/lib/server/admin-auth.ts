@@ -210,16 +210,24 @@ export async function checkAuthRateLimit(
 	attemptType: 'login' | 'mfa' | 'signup'
 ): Promise<{ allowed: boolean; remainingMinutes?: number }> {
 	const windowMs = 10 * 60 * 1000; // 10 minutes
-	const maxFailures = 5;
+	// M6: Do NOT count failures by email alone — that lets an attacker lock
+	// out any account by hammering it from many IPs without ever touching the
+	// victim's real IP. Instead:
+	//   - emailIp: per email+IP combo (5 failures) — tight, per-device limit
+	//   - ip:      per IP, any email   (15 failures) — broader, covers shared
+	//              IPs (office NAT) while still blocking brute-force from one IP
+	const maxPerEmailIp = 5;
+	const maxPerIp = 15;
 	const windowStart = new Date(Date.now() - windowMs).toISOString();
 
 	// Two separate parameterized queries to avoid PostgREST .or() string injection.
 	// A crafted email value could alter the filter logic in .or(`email.eq.${email},...`).
-	const [emailResult, ipResult] = await Promise.all([
+	const [emailIpResult, ipResult] = await Promise.all([
 		getAdminClient()
 			.from('admin_auth_attempts')
 			.select('*', { count: 'exact', head: true })
 			.eq('email', email)
+			.eq('ip_address', ipHash)
 			.eq('attempt_type', attemptType)
 			.eq('success', false)
 			.gte('created_at', windowStart),
@@ -234,14 +242,12 @@ export async function checkAuthRateLimit(
 
 	// Fail CLOSED on DB error — a broken rate-limit query must not silently
 	// allow unlimited login attempts. Log the error for observability.
-	if (emailResult.error || ipResult.error) {
-		console.error('[auth] Rate-limit query failed:', emailResult.error ?? ipResult.error);
+	if (emailIpResult.error || ipResult.error) {
+		console.error('[auth] Rate-limit query failed:', emailIpResult.error ?? ipResult.error);
 		return { allowed: false, remainingMinutes: Math.ceil(windowMs / 60_000) };
 	}
 
-	const count = Math.max(emailResult.count ?? 0, ipResult.count ?? 0);
-
-	if (count >= maxFailures) {
+	if ((emailIpResult.count ?? 0) >= maxPerEmailIp || (ipResult.count ?? 0) >= maxPerIp) {
 		return { allowed: false, remainingMinutes: Math.ceil(windowMs / 60_000) };
 	}
 
