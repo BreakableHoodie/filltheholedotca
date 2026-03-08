@@ -54,25 +54,56 @@ function buildDescription(p: {
 	return parts.join(' ');
 }
 
+/** The timestamp that best represents when this pothole's status last changed. */
+function eventTime(p: { status: string; created_at: string; filled_at: string | null }): string {
+	return p.filled_at ?? p.created_at;
+}
+
 export const GET: RequestHandler = async () => {
-	// Newest 100 confirmed or filled potholes — pending excluded (not yet verified).
-	const { data, error: dbError } = await supabase
-		.from('potholes')
-		.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at')
-		.in('status', ['reported', 'filled'])
-		.order('created_at', { ascending: false })
-		.limit(100);
+	// Fetch the 50 most-recently-confirmed and 50 most-recently-filled potholes
+	// separately so that a pothole filled today (but created months ago) is not
+	// buried below newer reports in the feed. Merge and re-sort by event time.
+	const [reportedResult, filledResult] = await Promise.all([
+		supabase
+			.from('potholes')
+			.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at')
+			.eq('status', 'reported')
+			.order('created_at', { ascending: false })
+			.limit(50),
+		supabase
+			.from('potholes')
+			.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at')
+			.eq('status', 'filled')
+			.order('filled_at', { ascending: false })
+			.limit(50)
+	]);
 
-	if (dbError) throw error(500, 'Failed to load data');
+	if (reportedResult.error || filledResult.error) throw error(500, 'Failed to load data');
 
-	const potholes = data ?? [];
+	// Merge and deduplicate (a pothole could theoretically appear in both if status
+	// changed between the two queries — extremely unlikely but safe to guard).
+	const seen = new Set<string>();
+	const merged = [...(reportedResult.data ?? []), ...(filledResult.data ?? [])].filter((p) => {
+		if (seen.has(p.id)) return false;
+		seen.add(p.id);
+		return true;
+	});
+
+	// Sort unified timeline by event time (fill date for filled, creation for reported).
+	merged.sort(
+		(a, b) => new Date(eventTime(b)).getTime() - new Date(eventTime(a)).getTime()
+	);
+
+	const potholes = merged.slice(0, 100);
 	const now = new Date().toUTCString();
-	const lastBuild = potholes[0] ? new Date(potholes[0].created_at).toUTCString() : now;
+	const lastBuild = potholes[0] ? new Date(eventTime(potholes[0])).toUTCString() : now;
 
 	const items = potholes
 		.map((p) => {
 			const link = `${SITE_URL}/hole/${p.id}`;
-			const pubDate = new Date(p.created_at).toUTCString();
+			// pubDate reflects when the event occurred — fill date for filled items,
+			// confirmation date for reported items.
+			const pubDate = new Date(eventTime(p)).toUTCString();
 			const title = xmlEscape(buildTitle(p));
 			const description = xmlEscape(buildDescription(p));
 			return `  <item>

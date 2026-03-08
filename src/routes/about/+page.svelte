@@ -262,7 +262,7 @@
 				<Icon name="download" size={18} class="text-sky-400 shrink-0 mt-0.5" />
 				<div>
 					<div class="font-semibold text-white text-sm group-hover:text-sky-300 transition-colors">CSV export</div>
-					<p class="text-xs text-zinc-400 mt-0.5">All reported &amp; filled potholes — id, lat/lng, address, status, dates.</p>
+					<p class="text-xs text-zinc-400 mt-0.5">All reported, filled &amp; expired potholes — id, lat/lng, address, status, dates.</p>
 				</div>
 			</a>
 			<a
