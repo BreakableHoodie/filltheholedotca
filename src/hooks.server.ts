@@ -18,9 +18,11 @@ const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX = 10; // requests per window per IP
 const DISABLE_API_RATE_LIMIT = env.DISABLE_API_RATE_LIMIT === 'true';
-// H4: Refuse to start in production with rate-limiting disabled.
+// H4: Refuse to start in a production deployment with rate-limiting disabled.
 // DISABLE_API_RATE_LIMIT is strictly a test/dev convenience flag.
-if (DISABLE_API_RATE_LIMIT && import.meta.env.PROD) {
+// CI is exempted: GitHub Actions sets process.env.CI='true'; Netlify production
+// functions do not, so this guard fires only on real production deployments.
+if (DISABLE_API_RATE_LIMIT && import.meta.env.PROD && !process.env.CI) {
 	throw new Error('[hooks] DISABLE_API_RATE_LIMIT must not be set in production. Aborting startup.');
 }
 
