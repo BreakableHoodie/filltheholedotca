@@ -4,7 +4,7 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { verifyTotpCode } from '$lib/server/admin-totp';
-import { decryptTotpSecret, verifyBackupCode } from '$lib/server/admin-crypto';
+import { decryptTotpSecret, verifyBackupCode, hashToken } from '$lib/server/admin-crypto';
 import {
 	checkAuthRateLimit,
 	recordAuthAttempt,
@@ -29,10 +29,10 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 			throw redirect(302, rawNext.startsWith('/admin') ? rawNext : '/admin/photos');
 		}
 	}
-	const token = url.searchParams.get('token');
+	// M2 fix: MFA token is in an HttpOnly cookie, not the URL.
+	const token = cookies.get('admin_mfa_pending');
 	if (!token) throw redirect(302, '/admin/login');
 	return {
-		token,
 		next: url.searchParams.get('next') ?? '/admin/photos'
 	};
 };
@@ -40,7 +40,8 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 export const actions: Actions = {
 	default: async ({ request, cookies, getClientAddress, url }) => {
 		const formData = await request.formData();
-		const mfaToken = formData.get('token')?.toString() ?? '';
+		// M2 fix: read MFA token from HttpOnly cookie, not form field (URL leak prevention).
+		const mfaToken = cookies.get('admin_mfa_pending') ?? '';
 		const code = formData.get('code')?.toString().replace(/\s/g, '') ?? '';
 		const rememberDevice = formData.get('rememberDevice') === 'on';
 		const rawNext = formData.get('next')?.toString() ?? '/admin/photos';
@@ -51,7 +52,7 @@ export const actions: Actions = {
 		const isSecure = url.protocol === 'https:';
 
 		if (!mfaToken || !code) {
-			return fail(400, { error: 'Verification code is required', token: mfaToken, next });
+			return fail(400, { error: 'Verification code is required', next });
 		}
 
 		type ChallengeRow = {
@@ -85,7 +86,6 @@ export const actions: Actions = {
 		if (!challenge) {
 			return fail(401, {
 				error: 'Invalid or expired MFA session. Please log in again.',
-				token: mfaToken,
 				next
 			});
 		}
@@ -101,20 +101,18 @@ export const actions: Actions = {
 		if (ipMismatch || uaMismatch) {
 			return fail(401, {
 				error: 'Session mismatch. Please log in again.',
-				token: mfaToken,
 				next
 			});
 		}
 
 		if (!dbUser.is_active) {
-			return fail(403, { error: 'Account has been deactivated.', token: mfaToken, next });
+			return fail(403, { error: 'Account has been deactivated.', next });
 		}
 
 		const rateCheck = await checkAuthRateLimit(dbUser.email, ipHash, 'mfa');
 		if (!rateCheck.allowed) {
 			return fail(429, {
 				error: `Too many failed attempts. Try again in ${rateCheck.remainingMinutes} minutes.`,
-				token: mfaToken,
 				next
 			});
 		}
@@ -144,7 +142,7 @@ export const actions: Actions = {
 							success: false,
 							failureReason: 'totp_replay'
 						});
-						return fail(401, { error: 'Invalid code. Please try again.', token: mfaToken, next });
+						return fail(401, { error: 'Invalid code. Please try again.', next });
 					}
 					verified = true;
 				}
@@ -177,7 +175,7 @@ export const actions: Actions = {
 				success: false,
 				failureReason: 'invalid_code'
 			});
-			return fail(401, { error: 'Invalid code. Please try again.', token: mfaToken, next });
+			return fail(401, { error: 'Invalid code. Please try again.', next });
 		}
 
 		// Atomically mark challenge used (replay protection)
@@ -191,10 +189,12 @@ export const actions: Actions = {
 		if (!updated || updated.length === 0) {
 			return fail(401, {
 				error: 'MFA session already completed. Please log in again.',
-				token: mfaToken,
 				next
 			});
 		}
+
+		// M2 fix: clear the one-time MFA pending cookie now that the challenge is consumed.
+		cookies.delete('admin_mfa_pending', { path: '/admin/login' });
 
 		// Record last-used TOTP code to prevent replay within the validity window
 		if (!usedBackupCode) {
@@ -244,16 +244,19 @@ export const actions: Actions = {
 
 		if (rememberDevice) {
 			try {
-				const deviceToken = crypto.randomUUID();
+				// H1 fix: store SHA-256 hash of the token, not the raw value.
+				// Two UUIDs concatenated = 488 bits of entropy — well beyond brute-force range.
+				const rawToken = crypto.randomUUID() + crypto.randomUUID();
+				const tokenHash = await hashToken(rawToken);
 				const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 				await getAdminClient().from('admin_trusted_devices').insert({
-					token: deviceToken,
+					token: tokenHash, // only the hash is stored
 					user_id: row.user_id,
 					ip_address: ipHash,
 					user_agent: userAgent,
 					expires_at: expiresAt
 				});
-				cookies.set(TRUSTED_DEVICE_COOKIE, deviceToken, {
+				cookies.set(TRUSTED_DEVICE_COOKIE, rawToken, { // raw value goes to cookie
 					httpOnly: true,
 					sameSite: 'strict',
 					path: '/',

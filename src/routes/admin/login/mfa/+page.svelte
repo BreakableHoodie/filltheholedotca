@@ -59,7 +59,6 @@
 					};
 				}}
 			>
-				<input type="hidden" name="token" value={data.token} />
 				<input type="hidden" name="next" value={data.next} />
 
 				<div class="mb-4">

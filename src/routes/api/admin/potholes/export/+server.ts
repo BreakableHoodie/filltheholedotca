@@ -61,8 +61,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				: photosPublishedParam === 'false'
 					? false
 					: null;
-		const dateFrom = url.searchParams.get('dateFrom') || null;
-		const dateTo = url.searchParams.get('dateTo') || null;
+		// M4: Validate date params as strict YYYY-MM-DD before use.
+		// Without this, new Date(dateTo) throws a RangeError on garbage input.
+		const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+		const rawDateFrom = url.searchParams.get('dateFrom') || null;
+		const rawDateTo = url.searchParams.get('dateTo') || null;
+		const dateFrom = rawDateFrom && ISO_DATE_RE.test(rawDateFrom) ? rawDateFrom : null;
+		const dateTo = rawDateTo && ISO_DATE_RE.test(rawDateTo) ? rawDateTo : null;
 
 		if (filterStatus) query = query.eq('status', filterStatus);
 		if (search) query = query.ilike('address', `%${search}%`);

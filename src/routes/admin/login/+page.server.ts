@@ -4,7 +4,7 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { verifyPassword } from '$lib/server/admin-crypto';
+import { verifyPassword, hashToken } from '$lib/server/admin-crypto';
 import {
 	checkAuthRateLimit,
 	recordAuthAttempt,
@@ -132,10 +132,12 @@ export const actions: Actions = {
 		if (user.totp_enabled) {
 			const trustedToken = cookies.get(TRUSTED_DEVICE_COOKIE);
 			if (trustedToken) {
+				// H1 fix: hash the raw cookie value before comparing — only hashes are stored in DB.
+				const trustedTokenHash = await hashToken(trustedToken);
 				const { data: trusted } = await getAdminClient()
 					.from('admin_trusted_devices')
 					.select('id')
-					.eq('token', trustedToken)
+					.eq('token', trustedTokenHash)
 					.eq('user_id', user.id)
 					.gt('expires_at', new Date().toISOString())
 					.maybeSingle();
@@ -173,7 +175,9 @@ export const actions: Actions = {
 				}
 			}
 
-			// MFA required — create challenge
+			// MFA required — create challenge.
+			// M2 fix: token is stored in an HttpOnly cookie rather than the URL query string.
+			// A URL token leaks into browser history, server logs, and Referer headers.
 			const mfaToken = crypto.randomUUID();
 			await getAdminClient().from('admin_mfa_challenges').insert({
 				token: mfaToken,
@@ -182,7 +186,14 @@ export const actions: Actions = {
 				user_agent: userAgent,
 				expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString()
 			});
-			throw redirect(302, `/admin/login/mfa?token=${mfaToken}&next=${encodeURIComponent(next)}`);
+			cookies.set('admin_mfa_pending', mfaToken, {
+				httpOnly: true,
+				sameSite: 'strict',
+				path: '/admin/login',
+				secure: isSecure,
+				maxAge: 5 * 60 // matches challenge expiry
+			});
+			throw redirect(302, `/admin/login/mfa?next=${encodeURIComponent(next)}`);
 		}
 
 		// No MFA enrolled — create session directly

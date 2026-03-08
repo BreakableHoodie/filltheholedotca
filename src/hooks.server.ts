@@ -18,6 +18,11 @@ const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX = 10; // requests per window per IP
 const DISABLE_API_RATE_LIMIT = env.DISABLE_API_RATE_LIMIT === 'true';
+// H4: Refuse to start in production with rate-limiting disabled.
+// DISABLE_API_RATE_LIMIT is strictly a test/dev convenience flag.
+if (DISABLE_API_RATE_LIMIT && import.meta.env.PROD) {
+	throw new Error('[hooks] DISABLE_API_RATE_LIMIT must not be set in production. Aborting startup.');
+}
 
 function checkRateLimit(ip: string): void {
 	const now = Date.now();
@@ -137,21 +142,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		'Permissions-Policy',
 		'camera=(), microphone=(), payment=(), geolocation=(self)'
 	);
-	// H4: Removed 'unsafe-eval' (not required by SvelteKit/Svelte 5/Leaflet in production).
-	// Tightened img-src from wildcard https: to specific origins.
-	// Allow Google Fonts stylesheet/font origins currently used by src/app.css.
-	response.headers.set(
-		'Content-Security-Policy',
-		[
-			"default-src 'self'",
-			"script-src 'self' 'unsafe-inline'",
-			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-			"img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org",
-			"font-src 'self' data: https://fonts.gstatic.com",
-			"connect-src 'self' https://*.supabase.co https://nominatim.openstreetmap.org",
-			"frame-ancestors 'none'"
-		].join('; ')
-	);
+	// CSP is now configured in svelte.config.js (csp.mode: 'nonce').
+	// SvelteKit sets the header automatically on all HTML responses.
 	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
 
 	return response;
