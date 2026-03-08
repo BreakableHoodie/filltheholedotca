@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import Icon from '$lib/components/Icon.svelte';
 
 	let { compact = false }: { compact?: boolean } = $props();
@@ -40,9 +40,14 @@
 
 	let canNativeShare = $state(false);
 	let copied = $state(false);
+	let copyTimer: ReturnType<typeof setTimeout> | undefined;
 
 	onMount(() => {
 		canNativeShare = 'share' in navigator;
+	});
+
+	onDestroy(() => {
+		clearTimeout(copyTimer);
 	});
 
 	async function nativeShare() {
@@ -61,7 +66,8 @@
 		try {
 			await navigator.clipboard.writeText(SITE_URL);
 			copied = true;
-			setTimeout(() => {
+			clearTimeout(copyTimer);
+			copyTimer = setTimeout(() => {
 				copied = false;
 			}, 2000);
 		} catch {
@@ -102,10 +108,12 @@
 				<Icon name="external-link" size={13} class="shrink-0 opacity-60" />
 			</a>
 		{/each}
+		<!-- aria-live announces the "Copied!" state change to screen readers -->
+		<span class="sr-only" aria-live="polite">{copied ? 'Link copied to clipboard' : ''}</span>
 		<button
+			type="button"
 			onclick={copyLink}
 			class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-zinc-800 border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors"
-			aria-label="Copy site link to clipboard"
 		>
 			{#if copied}
 				<Icon name="check" size={13} class="shrink-0 text-green-400" />
@@ -117,9 +125,9 @@
 		</button>
 		{#if canNativeShare}
 			<button
+				type="button"
 				onclick={nativeShare}
 				class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-sky-700 hover:bg-sky-600 border border-sky-600 text-white transition-colors"
-				aria-label="Share via your device's share sheet"
 			>
 				<Icon name="share-2" size={13} class="shrink-0" />
 				Share
