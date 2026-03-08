@@ -3,6 +3,7 @@
 	import { Toaster } from 'svelte-sonner';
 	import WelcomeModal from '$lib/components/WelcomeModal.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import SocialShare from '$lib/components/SocialShare.svelte';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
@@ -98,6 +99,7 @@
 			<span class="mx-1 text-zinc-600" aria-hidden="true">·</span>
 			<a href="https://github.com/BreakableHoodie/filltheholedotca/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors">AGPL-3.0</a>
 		</p>
+		<p><SocialShare compact /></p>
 	</footer>
 </div>
 

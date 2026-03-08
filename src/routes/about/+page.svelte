@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
+	import SocialShare from '$lib/components/SocialShare.svelte';
 </script>
 
 <svelte:head>
@@ -93,6 +94,16 @@
 
 	<section class="space-y-4 text-zinc-300 leading-relaxed">
 		<h2 class="text-xl font-bold text-white">How it works</h2>
+
+		<div class="flex gap-3 bg-amber-950/40 border border-amber-700/40 rounded-xl p-4 text-sm text-amber-200/90">
+			<Icon name="alert-triangle" size={18} class="text-amber-400 shrink-0 mt-0.5" />
+			<p>
+				<strong class="text-amber-300">Stay safe when reporting.</strong>
+				Never stop in traffic or step onto a road to report a pothole. Report from the sidewalk,
+				parking lot, or after you've safely parked. If you're driving, let a passenger report
+				or wait until you've stopped somewhere safe. No pothole is worth an injury.
+			</p>
+		</div>
 
 		<div class="grid gap-4">
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex gap-4 items-start">
@@ -235,6 +246,16 @@
 			<Icon name="github" size={16} class="shrink-0" />
 			BreakableHoodie/filltheholedotca
 		</a>
+	</section>
+
+	<section class="space-y-4">
+		<h2 class="text-xl font-bold text-white">Spread the word</h2>
+		<p class="text-zinc-400 text-sm">
+			This project runs on word of mouth — no ads, no algorithm. If the map helped you,
+			share it with your neighbours, your local community group, or anywhere people talk about
+			life in Waterloo Region.
+		</p>
+		<SocialShare />
 	</section>
 
 	<div class="text-center pt-4">
