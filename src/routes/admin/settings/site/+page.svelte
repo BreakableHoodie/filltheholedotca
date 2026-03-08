@@ -10,6 +10,20 @@
 	);
 	const thresholdUpdatedAt = $derived(data.settings['confirmation_threshold']?.updated_at ?? null);
 
+	// Pushover toggles — default true if not yet seeded in DB
+	const pushoverEnabled = $derived(
+		(data.settings['pushover_enabled']?.value ?? 'true') === 'true'
+	);
+	const pushoverNotifyPhotos = $derived(
+		(data.settings['pushover_notify_photos']?.value ?? 'true') === 'true'
+	);
+	const pushoverNotifyCommunity = $derived(
+		(data.settings['pushover_notify_community']?.value ?? 'true') === 'true'
+	);
+	const pushoverNotifySecurity = $derived(
+		(data.settings['pushover_notify_security']?.value ?? 'true') === 'true'
+	);
+
 	let thresholdInputEl = $state<HTMLInputElement | null>(null);
 
 	function formatDate(iso: string) {
@@ -110,4 +124,68 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Pushover notifications -->
+	<div class="bg-zinc-900 border border-zinc-800 rounded-lg p-5 space-y-4">
+		<div>
+			<h2 class="text-sm font-medium text-zinc-200">Pushover notifications</h2>
+			<p class="text-zinc-500 text-xs mt-1 leading-relaxed">
+				Controls whether push notifications are sent via Pushover. The master switch must be on
+				for any notifications to fire. Individual categories can be muted independently.
+				Credentials (<code class="text-zinc-400">PUSHOVER_APP_TOKEN</code> /
+				<code class="text-zinc-400">PUSHOVER_USER_KEY</code>) must still be set in the environment.
+			</p>
+		</div>
+
+		<!-- Master toggle -->
+		{@render toggle('pushover_enabled', pushoverEnabled, 'All notifications', 'Send any Pushover notification')}
+
+		<!-- Per-category toggles -->
+		<div class="pl-4 border-l border-zinc-800 space-y-3" class:opacity-40={!pushoverEnabled} class:pointer-events-none={!pushoverEnabled}>
+			{@render toggle('pushover_notify_photos', pushoverNotifyPhotos, 'Photo uploads', 'New photos awaiting moderation, including deferred reviews when SightEngine is down')}
+			{@render toggle('pushover_notify_community', pushoverNotifyCommunity, 'Community events', 'Pothole confirmed and live, pothole marked filled')}
+			{@render toggle('pushover_notify_security', pushoverNotifySecurity, 'Security & logins', 'Admin login events and login rate-limit alerts')}
+		</div>
+	</div>
 </div>
+
+{#snippet toggle(key: string, current: boolean, label: string, description: string)}
+	<form
+		method="post"
+		action="?/updateSetting"
+		use:enhance={() => {
+			return async ({ result, update }) => {
+				await update({ reset: false });
+				if (result.type === 'success') {
+					toast.success(`${label} ${current ? 'disabled' : 'enabled'}`);
+				} else if (result.type === 'failure') {
+					toast.error((result.data as { error?: string })?.error ?? 'Failed to save');
+				}
+			};
+		}}
+	>
+		<input type="hidden" name="key" value={key} />
+		<input type="hidden" name="value" value={current ? 'false' : 'true'} />
+		<button
+			type="submit"
+			class="w-full flex items-center justify-between gap-4 py-2 text-left group"
+		>
+			<div>
+				<p class="text-sm text-zinc-300 group-hover:text-zinc-100 transition-colors">{label}</p>
+				<p class="text-xs text-zinc-600 leading-relaxed">{description}</p>
+			</div>
+			<!-- Toggle pill -->
+			<div
+				class="relative shrink-0 w-10 h-5 rounded-full transition-colors {current
+					? 'bg-sky-600'
+					: 'bg-zinc-700'}"
+			>
+				<div
+					class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform {current
+						? 'translate-x-5'
+						: 'translate-x-0'}"
+				></div>
+			</div>
+		</button>
+	</form>
+{/snippet}

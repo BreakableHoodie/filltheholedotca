@@ -208,7 +208,7 @@ export async function checkAuthRateLimit(
 	// ipHash must be an HMAC-SHA-256 hash — never a raw IP.
 	ipHash: string,
 	attemptType: 'login' | 'mfa' | 'signup'
-): Promise<{ allowed: boolean; remainingMinutes?: number }> {
+): Promise<{ allowed: boolean; remainingMinutes?: number; justBlocked?: boolean }> {
 	const windowMs = 10 * 60 * 1000; // 10 minutes
 	// M6: Do NOT count failures by email alone — that lets an attacker lock
 	// out any account by hammering it from many IPs without ever touching the
@@ -247,8 +247,15 @@ export async function checkAuthRateLimit(
 		return { allowed: false, remainingMinutes: Math.ceil(windowMs / 60_000) };
 	}
 
-	if ((emailIpResult.count ?? 0) >= maxPerEmailIp || (ipResult.count ?? 0) >= maxPerIp) {
-		return { allowed: false, remainingMinutes: Math.ceil(windowMs / 60_000) };
+	const emailIpCount = emailIpResult.count ?? 0;
+	const ipCount = ipResult.count ?? 0;
+
+	if (emailIpCount >= maxPerEmailIp || ipCount >= maxPerIp) {
+		// justBlocked is true only on the exact attempt that crosses the threshold —
+		// callers use this to send a one-time security alert rather than spamming on
+		// every subsequent blocked attempt.
+		const justBlocked = emailIpCount === maxPerEmailIp || ipCount === maxPerIp;
+		return { allowed: false, remainingMinutes: Math.ceil(windowMs / 60_000), justBlocked };
 	}
 
 	return { allowed: true };
