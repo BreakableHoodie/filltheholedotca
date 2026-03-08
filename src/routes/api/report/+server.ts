@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { getConfirmationThreshold } from '$lib/server/settings';
+import { sendPushover } from '$lib/server/pushover';
 
 // Create Supabase client only when needed, not at module level
 function getSupabaseClient() {
@@ -156,6 +157,17 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				id: match.id,
 				confirmed: false,
 				message: "📍 You've already reported this one. Thanks though!"
+			});
+		}
+
+		if (rpc.status === 'reported') {
+			const locationLabel = address?.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+			await sendPushover({
+				title: '🕳️ Pothole confirmed — now live',
+				message: `Pothole at ${locationLabel} reached the confirmation threshold and is now on the public map.`,
+				url: `https://fillthehole.ca/hole/${match.id}`,
+				urlTitle: 'View pothole',
+				priority: -1
 			});
 		}
 

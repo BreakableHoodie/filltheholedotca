@@ -5,6 +5,7 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
+import { sendPushover } from '$lib/server/pushover';
 
 type DetectedMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
 type DetectedExtension = 'jpg' | 'png' | 'webp';
@@ -241,6 +242,18 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		await cleanupStorageObject(storagePath);
 		throw error(500, 'Failed to save photo record');
 	}
+
+	// Notify admin — deferred photos require mandatory human review, so they
+	// get higher priority than standard pending photos.
+	await sendPushover({
+		title: moderation.deferred ? '⚠️ Photo needs review (SightEngine down)' : '📸 New photo to review',
+		message: moderation.deferred
+			? 'SightEngine was unavailable — automated moderation skipped. Manual review required.'
+			: 'A new photo passed automated moderation and is waiting for admin approval.',
+		url: `https://fillthehole.ca/admin`,
+		urlTitle: 'Open admin panel',
+		priority: moderation.deferred ? 1 : 0
+	});
 
 	return json({ ok: true, id: photo.id });
 };

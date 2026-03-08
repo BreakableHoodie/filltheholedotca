@@ -5,6 +5,7 @@ import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
+import { sendPushover } from '$lib/server/pushover';
 
 // L6: All pothole_actions queries use the service-role client — the public SELECT
 // policy on pothole_actions was a data-leak vector (ip_hash correlation). After
@@ -68,6 +69,14 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	if (updateError) throw error(500, 'Failed to update status');
 	if (!updated || updated.length === 0) throw error(409, 'Pothole is not in a fillable state');
+
+	await sendPushover({
+		title: '✅ Pothole marked filled',
+		message: 'A community member marked a pothole as filled.',
+		url: `https://fillthehole.ca/hole/${parsed.data.id}`,
+		urlTitle: 'View pothole',
+		priority: -1
+	});
 
 	return json({ ok: true });
 };
