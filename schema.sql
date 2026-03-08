@@ -138,8 +138,9 @@ $$;
 -- ALTER TABLE potholes ADD CONSTRAINT potholes_status_check
 --   CHECK (status IN ('pending', 'reported', 'filled', 'expired'));
 
--- pg_cron: nightly expiry job (run once in Supabase SQL editor)
+-- pg_cron: nightly expiry jobs (run once in Supabase SQL editor, or see schema_sprint3.sql)
 -- CREATE EXTENSION IF NOT EXISTS pg_cron;
+-- Expire reported potholes after 90 days with no fill action:
 -- SELECT cron.schedule(
 --   'expire-old-potholes',
 --   '0 3 * * *',
@@ -147,7 +148,18 @@ $$;
 --     UPDATE potholes
 --     SET status = 'expired', expired_at = NOW()
 --     WHERE status = 'reported'
---       AND created_at < NOW() - INTERVAL '6 months';
+--       AND created_at < NOW() - INTERVAL '90 days';
+--   $$
+-- );
+-- Expire pending (unconfirmed) potholes after 14 days to prevent merge-radius suppression:
+-- SELECT cron.schedule(
+--   'expire-stale-pending',
+--   '30 3 * * *',
+--   $$
+--     UPDATE potholes
+--     SET status = 'expired', expired_at = NOW()
+--     WHERE status = 'pending'
+--       AND created_at < NOW() - INTERVAL '14 days';
 --   $$
 -- );
 

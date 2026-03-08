@@ -20,6 +20,10 @@ export type RecentEntry = {
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
 
+	// L3: Audit log contains user emails and IPs (hashed) — restrict to editor+.
+	// Viewers see the dashboard counts but not the audit trail.
+	const canViewAudit = locals.adminUser.role !== 'viewer';
+
 	const [
 		pendingPhotosRes,
 		pendingPotholesRes,
@@ -53,13 +57,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.select('*', { count: 'exact', head: true })
 			.eq('status', 'expired'),
 
-		getAdminClient()
-			.from('admin_audit_log')
-			.select(
-				'id, action, resource_type, resource_id, created_at, admin_users(first_name, last_name, email)'
-			)
-			.order('created_at', { ascending: false })
-			.limit(8)
+		canViewAudit
+			? getAdminClient()
+					.from('admin_audit_log')
+					.select(
+						'id, action, resource_type, resource_id, created_at, admin_users(first_name, last_name, email)'
+					)
+					.order('created_at', { ascending: false })
+					.limit(8)
+			: Promise.resolve({ data: null })
 	]);
 
 	return {

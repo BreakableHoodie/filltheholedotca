@@ -32,7 +32,6 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	const { email, password } = parsed.data;
 	const ipHash = await hashIp(getClientAddress());
 	const userAgent = request.headers.get('user-agent') ?? 'unknown';
-	const isSecure = request.url.startsWith('https://');
 
 	// DB-backed rate limit: 5 failures / 10 min per email+IP
 	const rateCheck = await checkAuthRateLimit(email, ipHash, 'login');
@@ -186,8 +185,8 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	});
 
 	const headers = new Headers({ 'Content-Type': 'application/json' });
-	headers.append('Set-Cookie', buildSessionCookie(sessionId, isSecure));
-	headers.append('Set-Cookie', buildCsrfCookie(csrfToken, isSecure));
+	headers.append('Set-Cookie', buildSessionCookie(sessionId));
+	headers.append('Set-Cookie', buildCsrfCookie(csrfToken));
 
 	return new Response(
 		JSON.stringify({

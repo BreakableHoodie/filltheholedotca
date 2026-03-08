@@ -49,7 +49,8 @@ export const actions: Actions = {
 
 		const ipHash = await hashIp(getClientAddress());
 		const userAgent = request.headers.get('user-agent') ?? 'unknown';
-		const isSecure = url.protocol === 'https:';
+		// M1: Use build-time flag — url.protocol can be spoofed via reverse proxy.
+		const isSecure = import.meta.env.PROD;
 
 		if (!mfaToken || !code) {
 			return fail(400, { error: 'Verification code is required', next });

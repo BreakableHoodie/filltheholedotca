@@ -49,9 +49,10 @@ export async function validateCsrfToken(sessionId: string, token: string): Promi
 }
 
 /** Build the CSRF cookie string (non-HttpOnly so client JS can attach it to requests). */
-export function buildCsrfCookie(token: string, isSecure: boolean): string {
+export function buildCsrfCookie(token: string): string {
 	const parts = [`${CSRF_COOKIE}=${token}`, 'SameSite=Strict', 'Path=/'];
-	if (isSecure) parts.push('Secure');
+	// M1: Use import.meta.env.PROD — same rationale as buildSessionCookie.
+	if (import.meta.env.PROD) parts.push('Secure');
 	const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString();
 	parts.push(`Expires=${expires}`);
 	return parts.join('; ');
