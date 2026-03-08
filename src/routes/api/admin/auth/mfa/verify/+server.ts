@@ -212,9 +212,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		success: true
 	});
 
-	await notify('security', {
+	// Fire-and-forget — do not block the auth response on Pushover latency.
+	// Email omitted: it would be sent to a third-party API as PII.
+	void notify('security', {
 		title: '🔐 Admin login (MFA)',
-		message: `Successful MFA login: ${dbUser['email'] as string}${usedBackupCode ? ' (backup code used)' : ''}`,
+		message: `Successful MFA login${usedBackupCode ? ' — backup code used' : ''}`,
 		priority: usedBackupCode ? 0 : -1
 	});
 

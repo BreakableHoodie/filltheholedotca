@@ -161,8 +161,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		}
 
 		if (rpc.status === 'reported') {
+			// Fire-and-forget — do not block the public response on Pushover latency.
 			const locationLabel = address?.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-			await notify('community', {
+			void notify('community', {
 				title: '🕳️ Pothole confirmed — now live',
 				message: `Pothole at ${locationLabel} reached the confirmation threshold and is now on the public map.`,
 				url: `https://fillthehole.ca/hole/${match.id}`,

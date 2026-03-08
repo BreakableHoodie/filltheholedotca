@@ -33,22 +33,24 @@ async function isCategoryEnabled(category: NotifyCategory): Promise<boolean> {
  * Send a Pushover notification, respecting the master toggle and category
  * toggles configured in Site Settings.
  *
- * Non-fatal: silently skips when Pushover is unconfigured, when toggled off
- * in the admin panel, or on any API/network failure. No try/catch needed at
- * call sites.
+ * Fire-and-forget safe: never throws. Call with `void notify(...)` on
+ * response-critical paths to avoid blocking on external API latency.
  */
 export async function notify(category: NotifyCategory, opts: PushoverMessage): Promise<void> {
-	if (!(await isPushoverEnabled())) return;
-	if (!(await isCategoryEnabled(category))) return;
-	await sendPushover(opts);
+	try {
+		if (!(await isPushoverEnabled())) return;
+		if (!(await isCategoryEnabled(category))) return;
+		await sendPushover(opts);
+	} catch (e) {
+		console.error('[pushover] notify() failed:', e);
+	}
 }
 
 /**
- * Low-level send — bypasses all settings checks. Prefer `notify()` for
- * normal call sites. Use this only when you intentionally want to send
- * regardless of admin toggles.
+ * Low-level send — bypasses all settings checks. Prefer `notify()` at
+ * call sites. Non-fatal: logs errors, never throws.
  */
-export async function sendPushover(opts: PushoverMessage): Promise<void> {
+async function sendPushover(opts: PushoverMessage): Promise<void> {
 	const token = env.PUSHOVER_APP_TOKEN;
 	const user = env.PUSHOVER_USER_KEY;
 
@@ -56,16 +58,20 @@ export async function sendPushover(opts: PushoverMessage): Promise<void> {
 	if (!token || !user) return;
 
 	try {
-		const body: Record<string, string | number> = { token, user, message: opts.message };
-		if (opts.title) body.title = opts.title;
-		if (opts.url) body.url = opts.url;
-		if (opts.urlTitle) body.url_title = opts.urlTitle;
-		if (opts.priority !== undefined) body.priority = opts.priority;
+		// Pushover requires application/x-www-form-urlencoded, not JSON.
+		const body = new URLSearchParams();
+		body.append('token', token);
+		body.append('user', user);
+		body.append('message', opts.message);
+		if (opts.title) body.append('title', opts.title);
+		if (opts.url) body.append('url', opts.url);
+		if (opts.urlTitle) body.append('url_title', opts.urlTitle);
+		if (opts.priority !== undefined) body.append('priority', String(opts.priority));
 
 		const res = await fetch('https://api.pushover.net/1/messages.json', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(body),
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8' },
+			body,
 			signal: AbortSignal.timeout(5_000)
 		});
 

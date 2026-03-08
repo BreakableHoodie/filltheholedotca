@@ -243,9 +243,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(500, 'Failed to save photo record');
 	}
 
-	// Notify admin — deferred photos require mandatory human review, so they
-	// get higher priority than standard pending photos.
-	await notify('photos', {
+	// Fire-and-forget — do not block the client response on Pushover latency.
+	// Deferred photos get higher priority since SightEngine was down.
+	void notify('photos', {
 		title: moderation.deferred ? '⚠️ Photo needs review (SightEngine down)' : '📸 New photo to review',
 		message: moderation.deferred
 			? 'SightEngine was unavailable — automated moderation skipped. Manual review required.'
