@@ -21,6 +21,15 @@ const patchSchema = z
 		message: 'At least one field required'
 	});
 
+// M3: Valid status transitions — prevents arbitrary state manipulation.
+// Same-status transitions are rejected; all listed transitions are intentional admin overrides.
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+	pending: ['reported', 'filled', 'expired'],
+	reported: ['filled', 'expired', 'pending'],
+	filled: ['pending', 'reported'],
+	expired: ['pending', 'reported']
+};
+
 // PATCH — status override or address correction (editor+)
 export const PATCH: RequestHandler = async ({ params, request, locals, getClientAddress }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
@@ -38,6 +47,20 @@ export const PATCH: RequestHandler = async ({ params, request, locals, getClient
 	if (bodyParsed.data.address !== undefined) updates.address = bodyParsed.data.address;
 	if (bodyParsed.data.photos_published !== undefined) updates.photos_published = bodyParsed.data.photos_published;
 	if (bodyParsed.data.status !== undefined) {
+		// M3: Enforce state machine — fetch current status and validate the transition.
+		const { data: current, error: fetchErr } = await getAdminClient()
+			.from('potholes')
+			.select('status')
+			.eq('id', id)
+			.maybeSingle();
+		if (fetchErr) throw error(500, 'Failed to fetch pothole');
+		if (!current) throw error(404, 'Pothole not found');
+
+		const allowed = ALLOWED_TRANSITIONS[current.status] ?? [];
+		if (!allowed.includes(bodyParsed.data.status)) {
+			throw error(422, `Invalid transition: ${current.status} → ${bodyParsed.data.status}`);
+		}
+
 		const s = bodyParsed.data.status;
 		updates.status = s;
 		updates.filled_at = s === 'filled' ? new Date().toISOString() : null;
