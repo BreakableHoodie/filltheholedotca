@@ -14,7 +14,7 @@ import {
 import { verifyPassword, hashToken } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
-import { sendPushover } from '$lib/server/pushover';
+import { notify } from '$lib/server/pushover';
 
 function getAdminClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -37,7 +37,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	// DB-backed rate limit: 5 failures / 10 min per email+IP
 	const rateCheck = await checkAuthRateLimit(email, ipHash, 'login');
 	if (!rateCheck.allowed) {
-		await sendPushover({
+		await notify('security', {
 			title: '🚨 Login rate limit triggered',
 			message: `Too many failed login attempts for ${email} from this IP. Possible brute-force attempt.`,
 			priority: 1
@@ -190,7 +190,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		success: true
 	});
 
-	await sendPushover({
+	await notify('security', {
 		title: '🔐 Admin login',
 		message: `Successful login: ${email}`,
 		priority: -1
