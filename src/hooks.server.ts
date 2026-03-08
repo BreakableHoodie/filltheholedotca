@@ -133,8 +133,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	// L5: Reject oversized photo uploads before formData() buffers the entire body.
-	// The route enforces 5 MB; we pre-check at 6 MB to catch obvious abuse early.
+	// L5: Best-effort early rejection of oversized photo uploads when Content-Length
+	// is present. Clients using chunked transfer encoding bypass this check, so the
+	// route still enforces a hard 5 MB limit on the parsed body. This guard reduces
+	// unnecessary body buffering for well-behaved clients that include Content-Length.
 	if (event.url.pathname === '/api/photos' && event.request.method === 'POST') {
 		const cl = event.request.headers.get('content-length');
 		if (cl && parseInt(cl, 10) > 6 * 1024 * 1024) {

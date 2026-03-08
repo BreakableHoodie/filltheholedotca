@@ -13,16 +13,22 @@ drop policy if exists "Public read actions" on pothole_actions;
 
 -- ---------------------------------------------------------------------------
 -- L1: Fix pg_cron expiry interval — the comment in schema.sql said 6 months
--- but the business rule is 90 days (CLAUDE.md, README). The scheduled job
--- must be re-created to pick up the corrected interval.
+-- but the business rule is 90 days (CLAUDE.md, README).
+-- L2: Add expire-stale-pending job — pending potholes (1 unconfirmed report)
+-- were never expired, enabling a merge-radius suppression attack.
 --
--- Run this only if the 'expire-old-potholes' job already exists.
--- If starting fresh, the correct interval is already in the cron.schedule
--- call below — skip the unschedule step.
+-- Both SELECT cron.unschedule(...) calls are safe to run unconditionally:
+-- if the job doesn't exist the WHERE EXISTS returns no rows and nothing is
+-- unscheduled; if it does exist it is removed before being re-created.
+-- This makes the entire script idempotent.
 -- ---------------------------------------------------------------------------
--- SELECT cron.unschedule('expire-old-potholes');
-
 CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Remove existing job if present (idempotent)
+SELECT cron.unschedule(jobid)
+  FROM cron.job
+ WHERE jobname = 'expire-old-potholes';
+
 SELECT cron.schedule(
   'expire-old-potholes',
   '0 3 * * *',
@@ -34,13 +40,11 @@ SELECT cron.schedule(
   $$
 );
 
--- ---------------------------------------------------------------------------
--- L2: Expire stale pending potholes.
--- Pending potholes (1 report, never confirmed) were never expired, allowing a
--- merge-radius suppression attack: flood nearby coordinates with unconfirmed
--- reports so legitimate reports merge into them and never go live.
--- Expire pending potholes older than 14 days.
--- ---------------------------------------------------------------------------
+-- Remove existing job if present (idempotent)
+SELECT cron.unschedule(jobid)
+  FROM cron.job
+ WHERE jobname = 'expire-stale-pending';
+
 SELECT cron.schedule(
   'expire-stale-pending',
   '30 3 * * *',
