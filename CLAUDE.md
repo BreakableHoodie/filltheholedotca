@@ -144,8 +144,10 @@ Run migrations in this order:
 5. `schema_site_settings.sql` — site settings table + redefines `increment_confirmation` with 3-parameter signature (must run after step 4)
 6. `schema_pr61_fixes.sql` — RLS policy hardening + pending pothole backfill
 7. `schema_security_hardening.sql` — revokes public EXECUTE on `increment_confirmation`; documents `deferred` photo status
-A `pg_cron` job (`expire-old-potholes`) runs nightly at 03:00 UTC to set
-`status = 'expired'` on `reported` potholes older than 90 days.
+8. `schema_sprint3.sql` — drops public SELECT on `pothole_actions`; fixes pg_cron interval (90 days); adds pending-pothole expiry (14 days)
+Two `pg_cron` jobs run nightly:
+- `expire-old-potholes` (03:00 UTC): sets `status = 'expired'` on `reported` potholes older than 90 days.
+- `expire-stale-pending` (03:30 UTC): sets `status = 'expired'` on `pending` potholes older than 14 days (anti-suppression).
 
 ## Status Flow
 
@@ -163,7 +165,7 @@ pending → reported → filled
 - **2 confirmations** from distinct IPs required to go live on the public map
 - **photos_published**: admin-only toggle per pothole; a live pothole does NOT mean its photos are shown — admin must explicitly publish them
 - **IP hashing**: HMAC-SHA-256 with `IP_HASH_SECRET`, never store raw IPs
-- **Auto-expiry**: `reported` potholes expire after 90 days via pg_cron
+- **Auto-expiry**: `reported` potholes expire after 90 days; `pending` potholes expire after 14 days (both via pg_cron)
 
 ## Svelte 5 Patterns (important — don't use Svelte 4 syntax)
 

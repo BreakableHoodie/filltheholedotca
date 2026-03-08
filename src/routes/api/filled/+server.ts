@@ -1,15 +1,14 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 
-// Public anon client — used only for pothole_actions (rate-limit/dedup).
-// The actual pothole UPDATE uses the service-role client so no public UPDATE
-// RLS policy is needed on the potholes table.
-const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+// L6: All pothole_actions queries use the service-role client — the public SELECT
+// policy on pothole_actions was a data-leak vector (ip_hash correlation). After
+// dropping that policy the anon key cannot read the table; service-role is required.
 function getServiceClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 }
@@ -28,10 +27,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!parsed.success) throw error(400, 'Invalid request');
 
 	const ipHash = await hashIp(getClientAddress());
+	const db = getServiceClient();
 
 	// Persistent rate limit — query the DB so this survives cold starts
 	const windowStart = new Date(Date.now() - FILL_RATE_WINDOW_MS).toISOString();
-	const { count: recentFills, error: countError } = await supabase
+	const { count: recentFills, error: countError } = await db
 		.from('pothole_actions')
 		.select('*', { count: 'exact', head: true })
 		.eq('ip_hash', ipHash)
@@ -45,7 +45,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Record this action — unique constraint (pothole_id, ip_hash, action) prevents
 	// the same device from triggering the same transition more than once
-	const { error: actionError } = await supabase
+	const { error: actionError } = await db
 		.from('pothole_actions')
 		.insert({ pothole_id: parsed.data.id, ip_hash: ipHash, action: 'filled' });
 
@@ -57,7 +57,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// Use service-role key for the update — no public UPDATE policy exists on potholes.
-	const { data: updated, error: updateError } = await getServiceClient()
+	const { data: updated, error: updateError } = await db
 		.from('potholes')
 		.update({ status: 'filled', filled_at: new Date().toISOString() })
 		.eq('id', parsed.data.id)

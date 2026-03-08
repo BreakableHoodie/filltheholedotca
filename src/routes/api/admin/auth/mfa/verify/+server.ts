@@ -33,7 +33,6 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const { mfaToken, code, rememberDevice } = parsed.data;
 	const ipHash = await hashIp(getClientAddress());
 	const userAgent = request.headers.get('user-agent') ?? 'unknown';
-	const isSecure = request.url.startsWith('https://');
 
 	// Look up challenge (joins to admin_users for account status + TOTP secret)
 	const { data: challenge } = await getAdminClient()
@@ -213,8 +212,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	});
 
 	const headers = new Headers({ 'Content-Type': 'application/json' });
-	headers.append('Set-Cookie', buildSessionCookie(sessionId, isSecure));
-	headers.append('Set-Cookie', buildCsrfCookie(csrfToken, isSecure));
+	headers.append('Set-Cookie', buildSessionCookie(sessionId));
+	headers.append('Set-Cookie', buildCsrfCookie(csrfToken));
 
 	// Trusted device — H1 fix: store SHA-256 hash of the token, not the raw value.
 	// If admin_trusted_devices is compromised, hashes alone cannot be used to bypass MFA.
@@ -238,7 +237,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				'Path=/',
 				`Expires=${new Date(expiresAt).toUTCString()}`
 			];
-			if (isSecure) deviceCookieParts.push('Secure');
+			if (import.meta.env.PROD) deviceCookieParts.push('Secure');
 			headers.append('Set-Cookie', deviceCookieParts.join('; '));
 		} catch (e) {
 			// Non-fatal — don't fail login if trusted device creation fails

@@ -4,6 +4,7 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { requireRole } from '$lib/server/admin-auth';
 
 function getAdminClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -30,6 +31,8 @@ export type AuditEntry = {
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
+	// L3: Audit log contains user emails and IP hash metadata — editor+ only.
+	requireRole(locals.adminUser.role, 'editor');
 
 	const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1'));
 	// Validate filterUser as UUID to prevent injection via .eq()

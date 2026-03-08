@@ -277,14 +277,17 @@ export const SESSION_COOKIE = 'admin_session';
 export const TRUSTED_DEVICE_COOKIE = 'admin_trusted_device';
 
 /** Build a secure session cookie string. */
-export function buildSessionCookie(sessionId: string, isSecure: boolean): string {
+export function buildSessionCookie(sessionId: string): string {
 	const parts = [
 		`${SESSION_COOKIE}=${sessionId}`,
 		'HttpOnly',
 		'SameSite=Strict',
 		'Path=/'
 	];
-	if (isSecure) parts.push('Secure');
+	// M1: Use import.meta.env.PROD instead of URL heuristic — the URL is
+	// attacker-controlled on some deployments (e.g. reverse proxies) and
+	// can be spoofed to strip the Secure flag on production cookies.
+	if (import.meta.env.PROD) parts.push('Secure');
 	// Expires in 1 day (matches hard DB expiry)
 	const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString();
 	parts.push(`Expires=${expires}`);

@@ -34,7 +34,7 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, cookies, getClientAddress, url }) => {
+	default: async ({ request, cookies, getClientAddress }) => {
 		const formData = await request.formData();
 		const email = (formData.get('email')?.toString() ?? '').toLowerCase().trim();
 		const password = formData.get('password')?.toString() ?? '';
@@ -44,7 +44,8 @@ export const actions: Actions = {
 
 		const ipHash = await hashIp(getClientAddress());
 		const userAgent = request.headers.get('user-agent') ?? 'unknown';
-		const isSecure = url.protocol === 'https:';
+		// M1: Use build-time flag — url.protocol can be spoofed via reverse proxy.
+		const isSecure = import.meta.env.PROD;
 
 		const parsed = z.object({ email: z.string().email(), password: z.string().min(1) }).safeParse({
 			email,

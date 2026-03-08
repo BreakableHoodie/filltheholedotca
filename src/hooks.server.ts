@@ -26,6 +26,27 @@ if (DISABLE_API_RATE_LIMIT && import.meta.env.PROD && !process.env.CI) {
 	throw new Error('[hooks] DISABLE_API_RATE_LIMIT must not be set in production. Aborting startup.');
 }
 
+/** Apply the standard security header set to any Response, including early returns. */
+function applySecurityHeaders(response: Response): Response {
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+	// L7: preload enables HSTS preload list submission (https://hstspreload.org).
+	response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+	response.headers.set(
+		'Permissions-Policy',
+		'camera=(), microphone=(), payment=(), geolocation=(self)'
+	);
+	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+	// L8: Prevent cross-origin reads by default. Routes that intentionally expose
+	// resources cross-origin (OG images, public feed) set Cross-Origin-Resource-Policy
+	// on their own Response; this hook preserves those opt-out overrides by checking first.
+	if (!response.headers.has('Cross-Origin-Resource-Policy')) {
+		response.headers.set('Cross-Origin-Resource-Policy', 'same-site');
+	}
+	return response;
+}
+
 function checkRateLimit(ip: string): void {
 	const now = Date.now();
 	const entry = rateLimitStore.get(ip);
@@ -106,10 +127,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 		if (!authed) {
 			if (isAdminApi) {
-				return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-					status: 401,
-					headers: { 'Content-Type': 'application/json' }
-				});
+				return applySecurityHeaders(
+					new Response(JSON.stringify({ error: 'Unauthorized' }), {
+						status: 401,
+						headers: { 'Content-Type': 'application/json' }
+					})
+				);
 			}
 			const loginUrl = `/admin/login?next=${encodeURIComponent(pathname)}`;
 			throw redirect(303, loginUrl);
@@ -125,28 +148,35 @@ export const handle: Handle = async ({ event, resolve }) => {
 				csrfHeader !== csrfCookie ||
 				!(await validateCsrfToken(sessionId!, csrfHeader))
 			) {
-				return new Response(JSON.stringify({ error: 'Invalid CSRF token' }), {
-					status: 403,
-					headers: { 'Content-Type': 'application/json' }
-				});
+				return applySecurityHeaders(
+					new Response(JSON.stringify({ error: 'Invalid CSRF token' }), {
+						status: 403,
+						headers: { 'Content-Type': 'application/json' }
+					})
+				);
 			}
+		}
+	}
+
+	// L5: Best-effort early rejection of oversized photo uploads when Content-Length
+	// is present. Clients using chunked transfer encoding bypass this check, so the
+	// route still enforces a hard 5 MB limit on the parsed body. This guard reduces
+	// unnecessary body buffering for well-behaved clients that include Content-Length.
+	if (event.url.pathname === '/api/photos' && event.request.method === 'POST') {
+		const cl = event.request.headers.get('content-length');
+		if (cl && parseInt(cl, 10) > 6 * 1024 * 1024) {
+			return applySecurityHeaders(
+				new Response(JSON.stringify({ error: 'Request too large' }), {
+					status: 413,
+					headers: { 'Content-Type': 'application/json' }
+				})
+			);
 		}
 	}
 
 	const response = await resolve(event);
 
-	// Security headers
-	response.headers.set('X-Frame-Options', 'DENY');
-	response.headers.set('X-Content-Type-Options', 'nosniff');
-	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-	response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
-	response.headers.set(
-		'Permissions-Policy',
-		'camera=(), microphone=(), payment=(), geolocation=(self)'
-	);
-	// CSP is now configured in svelte.config.js (csp.mode: 'nonce').
+	// CSP is configured in svelte.config.js (csp.mode: 'nonce').
 	// SvelteKit sets the header automatically on all HTML responses.
-	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-
-	return response;
+	return applySecurityHeaders(response);
 };

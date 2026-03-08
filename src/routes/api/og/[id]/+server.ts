@@ -225,6 +225,9 @@ export const GET: RequestHandler = async ({ params }) => {
 		headers: {
 			'Content-Type': 'image/png',
 			'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=3600',
+			// L8: OG images are embedded by external sites (social media crawlers) —
+			// opt out of the same-site default set in hooks.server.ts.
+			'Cross-Origin-Resource-Policy': 'cross-origin',
 		},
 	});
 };
