@@ -34,7 +34,7 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, cookies, getClientAddress, url }) => {
+	default: async ({ request, cookies, getClientAddress }) => {
 		const formData = await request.formData();
 		const email = (formData.get('email')?.toString() ?? '').toLowerCase().trim();
 		const password = formData.get('password')?.toString() ?? '';

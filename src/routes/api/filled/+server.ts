@@ -27,10 +27,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!parsed.success) throw error(400, 'Invalid request');
 
 	const ipHash = await hashIp(getClientAddress());
+	const db = getServiceClient();
 
 	// Persistent rate limit — query the DB so this survives cold starts
 	const windowStart = new Date(Date.now() - FILL_RATE_WINDOW_MS).toISOString();
-	const { count: recentFills, error: countError } = await getServiceClient()
+	const { count: recentFills, error: countError } = await db
 		.from('pothole_actions')
 		.select('*', { count: 'exact', head: true })
 		.eq('ip_hash', ipHash)
@@ -44,7 +45,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Record this action — unique constraint (pothole_id, ip_hash, action) prevents
 	// the same device from triggering the same transition more than once
-	const { error: actionError } = await getServiceClient()
+	const { error: actionError } = await db
 		.from('pothole_actions')
 		.insert({ pothole_id: parsed.data.id, ip_hash: ipHash, action: 'filled' });
 
@@ -56,7 +57,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// Use service-role key for the update — no public UPDATE policy exists on potholes.
-	const { data: updated, error: updateError } = await getServiceClient()
+	const { data: updated, error: updateError } = await db
 		.from('potholes')
 		.update({ status: 'filled', filled_at: new Date().toISOString() })
 		.eq('id', parsed.data.id)

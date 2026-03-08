@@ -38,7 +38,7 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, cookies, getClientAddress, url }) => {
+	default: async ({ request, cookies, getClientAddress }) => {
 		const formData = await request.formData();
 		// M2 fix: read MFA token from HttpOnly cookie, not form field (URL leak prevention).
 		const mfaToken = cookies.get('admin_mfa_pending') ?? '';
