@@ -49,7 +49,17 @@ cp .env.example .env
 
 ### Database
 
-Run `schema.sql` against your Supabase project to create the tables, then `schema_update.sql` for the confirmation system.
+Run the migration files against your Supabase project in order:
+
+1. `schema.sql` — initial tables
+2. `schema_update.sql` — confirmation system
+3. `schema_photos.sql` — photo uploads
+4. `schema_photo_publishing.sql` — per-pothole photo publishing toggle
+5. `schema_site_settings.sql` — site settings table + `increment_confirmation` RPC
+6. `schema_pr61_fixes.sql` — RLS hardening
+7. `schema_security_hardening.sql` — revoke public RPC access, deferred photo status
+8. `schema_sprint3.sql` — pothole expiry pg_cron jobs, drop public pothole_actions SELECT
+9. `schema_pushover_settings.sql` — Pushover notification toggles (default: all enabled)
 
 ### Run
 
@@ -75,8 +85,11 @@ App runs at `http://localhost:5173`.
 | `ADMIN_SESSION_SECRET`      | 32-byte hex key for signing admin session cookies                         |
 | `TOTP_ENCRYPTION_KEY`       | 32-byte hex AES-GCM key for encrypting TOTP secrets at rest               |
 | `ADMIN_BOOTSTRAP_SECRET`    | One-time secret for creating the first admin account — see section below  |
+| `PUSHOVER_APP_TOKEN`        | Pushover app token — optional, disables push notifications if absent      |
+| `PUSHOVER_USER_KEY`         | Pushover user/group key — required alongside `PUSHOVER_APP_TOKEN`         |
+| `SIGHTENGINE_WORKFLOW_ID`   | Optional SightEngine workflow ID for automated moderation rules            |
 
-See `.env.example` for the full list.
+See `.env.example` for the full list. Pushover notification categories (photos, community events, security alerts) can be toggled on/off per-category from **Admin → Settings → Site** without a deployment.
 
 ---
 
