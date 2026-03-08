@@ -96,6 +96,8 @@ src/
       photos/+server.ts       # POST — upload photo (magic-byte validation, moderation, rate limit)
       wards.geojson/+server.ts # GET — ward boundaries for heatmap
       feed.json/+server.ts    # GET — JSON feed of recent potholes
+      export.csv/+server.ts   # GET — CSV export of all reported/filled potholes (open data)
+      feed.xml/+server.ts     # GET — RSS 2.0 feed of recent confirmations/fills (open data)
       admin/pothole/[id]/+server.ts  # DELETE — admin moderation
       admin/photo/[id]/+server.ts    # PATCH/DELETE — photo moderation
   lib/

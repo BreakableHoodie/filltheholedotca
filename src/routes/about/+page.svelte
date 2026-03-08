@@ -248,6 +248,36 @@
 		</a>
 	</section>
 
+	<section class="space-y-4" id="open-data">
+		<h2 class="text-xl font-bold text-white">Open data</h2>
+		<p class="text-zinc-400 text-sm">
+			All confirmed pothole data is freely available for research, journalism, or civic apps.
+			No API key required.
+		</p>
+		<div class="grid gap-3 sm:grid-cols-2">
+			<a
+				href="/api/export.csv"
+				class="flex items-start gap-3 bg-zinc-900 border border-zinc-700 rounded-xl p-4 hover:border-sky-600 transition-colors group"
+			>
+				<Icon name="download" size={18} class="text-sky-400 shrink-0 mt-0.5" />
+				<div>
+					<div class="font-semibold text-white text-sm group-hover:text-sky-300 transition-colors">CSV export</div>
+					<p class="text-xs text-zinc-400 mt-0.5">All reported, filled &amp; expired potholes — id, lat/lng, address, status, dates.</p>
+				</div>
+			</a>
+			<a
+				href="/api/feed.xml"
+				class="flex items-start gap-3 bg-zinc-900 border border-zinc-700 rounded-xl p-4 hover:border-sky-600 transition-colors group"
+			>
+				<Icon name="rss" size={18} class="text-sky-400 shrink-0 mt-0.5" />
+				<div>
+					<div class="font-semibold text-white text-sm group-hover:text-sky-300 transition-colors">RSS feed</div>
+					<p class="text-xs text-zinc-400 mt-0.5">100 most recent confirmations &amp; fills. Subscribe in any RSS reader.</p>
+				</div>
+			</a>
+		</div>
+	</section>
+
 	<section class="space-y-4">
 		<h2 class="text-xl font-bold text-white">Spread the word</h2>
 		<p class="text-zinc-400 text-sm">
