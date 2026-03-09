@@ -35,3 +35,15 @@ export async function hashIp(ip: string): Promise<string> {
 		.map((b) => b.toString(16).padStart(2, '0'))
 		.join('');
 }
+
+export async function hashClientAddressForLog(
+	getClientAddress: () => string,
+	scope: string = 'security'
+): Promise<string> {
+	try {
+		return await hashIp(getClientAddress());
+	} catch (e) {
+		console.error(`[${scope}] Failed to hash client IP for logging:`, e);
+		return 'unavailable';
+	}
+}

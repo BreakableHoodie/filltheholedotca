@@ -33,7 +33,10 @@ export const GET: RequestHandler = async () => {
 		{
 			headers: {
 				'Cache-Control': 'public, max-age=60',
-				'Access-Control-Allow-Origin': '*'
+				'Access-Control-Allow-Origin': '*',
+				// L8: This feed is intentionally public/cross-origin (CORS * above).
+				// Opt out of the same-site default set in hooks.server.ts.
+				'Cross-Origin-Resource-Policy': 'cross-origin'
 			}
 		}
 	);

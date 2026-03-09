@@ -36,3 +36,29 @@ Out of scope:
 ## Disclosure Policy
 
 We follow a coordinated disclosure model. Once a fix is deployed, we are happy to credit you in the release notes unless you prefer to remain anonymous.
+
+## Operational Notes
+
+### IP_HASH_SECRET Key Rotation
+
+`IP_HASH_SECRET` is a top-tier credential. If it is exposed, every IPv4 hashed value in the database can be reversed in minutes via brute-force over the ~4 billion IPv4 space. Treat it with the same level of care as `SUPABASE_SERVICE_ROLE_KEY`.
+
+**Rotate only when the key is suspected to be compromised.** A rotation invalidates all existing deduplication records in `pothole_confirmations` and `api_rate_limit_events`:
+
+1. Users previously deduplicated may re-submit reports immediately.
+2. In-progress rate-limit windows are reset.
+
+**Rotation procedure:**
+
+1. Generate a new random 32-byte secret (e.g. `openssl rand -hex 32`).
+2. Update `IP_HASH_SECRET` in all deployment environments.
+3. After the new key is live, flush the rate-limit window by running:
+
+   ```sql
+   DELETE FROM api_rate_limit_events WHERE created_at < now();
+   ```
+
+4. Acceptably, `pothole_confirmations` deduplication records are invalidated — users may confirm the same hole again, but the 3-confirmation threshold still applies.
+5. Document the rotation date and reason in your incident log.
+
+There is no versioned hash migration path (`v1:<hash>`) at this time. A future improvement may add one to allow gradual migration without full dedup loss.

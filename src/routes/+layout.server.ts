@@ -10,7 +10,7 @@ export const load: LayoutServerLoad = async () => {
 
 		if (error) {
 			console.error('Supabase load error:', error);
-			return { counts: { reported: 0, flagged: 0, filled: 0 } };
+			return { counts: { reported: 0, filled: 0 } };
 		}
 
 		const reported = data?.filter((p) => p.status === 'reported').length ?? 0;

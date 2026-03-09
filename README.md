@@ -11,7 +11,7 @@ Live at **[fillthehole.ca](https://fillthehole.ca)**
 Potholes in Kitchener, Waterloo, and Cambridge often sit unfilled for weeks. This app gives residents a way to:
 
 1. **Report** a pothole at their GPS location (or search by address / drop a pin)
-2. **Confirm** reports from others — 3 independent confirmations required before it goes live
+2. **Confirm** reports from others — by default, 2 independent confirmations are required before it goes live
 3. **Watch** potholes you care about — saved locally in your browser
 4. **Celebrate** when the city finally fills it
 
@@ -49,7 +49,17 @@ cp .env.example .env
 
 ### Database
 
-Run `schema.sql` against your Supabase project to create the tables, then `schema_update.sql` for the confirmation system.
+Run the migration files against your Supabase project in order:
+
+1. `schema.sql` — initial tables
+2. `schema_update.sql` — confirmation system
+3. `schema_photos.sql` — photo uploads
+4. `schema_photo_publishing.sql` — per-pothole photo publishing toggle
+5. `schema_site_settings.sql` — site settings table + `increment_confirmation` RPC
+6. `schema_pr61_fixes.sql` — RLS hardening
+7. `schema_security_hardening.sql` — revoke public RPC access, deferred photo status
+8. `schema_sprint3.sql` — pothole expiry pg_cron jobs, drop public pothole_actions SELECT
+9. `schema_pushover_settings.sql` — Pushover notification toggles (default: all enabled)
 
 ### Run
 
@@ -63,17 +73,41 @@ App runs at `http://localhost:5173`.
 
 ## Environment variables
 
-| Variable                    | Description                                                 |
-| --------------------------- | ----------------------------------------------------------- |
-| `PUBLIC_SUPABASE_URL`       | Supabase project URL                                        |
-| `PUBLIC_SUPABASE_ANON_KEY`  | Supabase anon key (public)                                  |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key for admin/moderation routes        |
-| `ADMIN_SECRET`              | Bearer token required for `/api/admin/*` routes             |
-| `SIGHTENGINE_API_USER`      | Image moderation — optional                                 |
-| `SIGHTENGINE_API_SECRET`    | Image moderation — optional                                 |
-| `IP_HASH_SECRET`            | Server-only HMAC key for immediate IP hashing on ingestion  |
+| Variable                    | Description                                                               |
+| --------------------------- | ------------------------------------------------------------------------- |
+| `PUBLIC_SUPABASE_URL`       | Supabase project URL                                                      |
+| `PUBLIC_SUPABASE_ANON_KEY`  | Supabase anon key (public)                                                |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key for admin/moderation routes                      |
+| `ADMIN_SECRET`              | Bearer token required for `/api/admin/*` routes                           |
+| `SIGHTENGINE_API_USER`      | Image moderation — optional                                               |
+| `SIGHTENGINE_API_SECRET`    | Image moderation — optional                                               |
+| `IP_HASH_SECRET`            | Server-only HMAC key for immediate IP hashing on ingestion                |
+| `ADMIN_SESSION_SECRET`      | 32-byte hex key for signing admin session cookies                         |
+| `TOTP_ENCRYPTION_KEY`       | 32-byte hex AES-GCM key for encrypting TOTP secrets at rest               |
+| `ADMIN_BOOTSTRAP_SECRET`    | One-time secret for creating the first admin account — see section below  |
+| `PUSHOVER_APP_TOKEN`        | Pushover app token — optional, disables push notifications if absent      |
+| `PUSHOVER_USER_KEY`         | Pushover user/group key — required alongside `PUSHOVER_APP_TOKEN`         |
+| `SIGHTENGINE_WORKFLOW_ID`   | Optional SightEngine workflow ID for automated moderation rules            |
 
-See `.env.example` for the full list.
+See `.env.example` for the full list. Pushover notification categories (photos, community events, security alerts) can be toggled on/off per-category from **Admin → Settings → Site** without a deployment.
+
+---
+
+## First admin setup
+
+Before any admin users exist, `/admin/signup` enters **bootstrap mode**, allowing you to create the first admin account without a manual database invite.
+
+1. Generate a strong random secret:
+   ```bash
+   openssl rand -hex 32
+   ```
+2. Add it to your `.env`:
+   ```
+   ADMIN_BOOTSTRAP_SECRET=<the generated value>
+   ```
+3. Visit `/admin/signup` — you will see the bootstrap form.
+4. Enter your details and the bootstrap secret to create the first admin account (active immediately, no activation step required).
+5. Once the first admin exists, `/admin/signup` automatically switches to invite-only mode. The bootstrap secret is ignored from that point on.
 
 ---
 
@@ -81,7 +115,7 @@ See `.env.example` for the full list.
 
 ### Confirmation system
 
-To prevent spam, a new report starts as `pending` and only becomes public after **3 independent confirmations** from different IPs. IPs are HMAC-SHA-256 hashed immediately with a server-only secret — no raw addresses are ever stored.
+To prevent spam, a new report starts as `pending` and only becomes public after independent confirmations from different IPs. The confirmation threshold defaults to **2** and can be adjusted in site settings. IPs are HMAC-SHA-256 hashed immediately with a server-only secret — no raw addresses are ever stored.
 
 ### Status pipeline
 
@@ -91,7 +125,7 @@ pending → reported → filled
           expired  (auto after 90 days with no action)
 ```
 
-- **pending** — awaiting 3 confirmations
+- **pending** — awaiting the confirmation threshold
 - **reported** — live on the map, needs city attention
 - **filled** — city patched it
 - **expired** — auto-closed after 90 days with no fill event

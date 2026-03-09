@@ -1,10 +1,11 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { SUPABASE_SERVICE_ROLE_KEY, SIGHTENGINE_API_USER, SIGHTENGINE_API_SECRET } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
+import { notify } from '$lib/server/pushover';
 
 type DetectedMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
 type DetectedExtension = 'jpg' | 'png' | 'webp';
@@ -19,12 +20,23 @@ const PHOTO_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 // Service role client — bypasses RLS for storage and DB writes.
 // Never use this key in client-side code.
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 interface SightEngineResponse {
 	status: string;
 	nudity?: { sexual_activity?: number; sexual_display?: number };
 	offensive?: { prob?: number };
+}
+
+interface SightEngineWorkflowResponse {
+	status: string;
+	summary?: {
+		action: 'accept' | 'reject';
+		reject_prob?: number;
+		reject_reasons?: string[];
+	};
 }
 
 function detectImageType(bytes: Uint8Array): { mimeType: DetectedMimeType; ext: DetectedExtension } | null {
@@ -60,40 +72,64 @@ function detectImageType(bytes: Uint8Array): { mimeType: DetectedMimeType; ext: 
 	return null;
 }
 
+type ModerationResult = { score: number | null; rejected: boolean; deferred?: boolean };
+
 async function runModeration(
 	buffer: ArrayBuffer,
 	mimeType: DetectedMimeType,
 	ext: DetectedExtension
-): Promise<number | null> {
+): Promise<ModerationResult> {
+	const workflowId = env.SIGHTENGINE_WORKFLOW_ID;
+
 	try {
 		const seForm = new FormData();
 		seForm.append('media', new Blob([buffer], { type: mimeType }), `photo.${ext}`);
-		seForm.append('models', 'nudity,offensive');
-		seForm.append('api_user', SIGHTENGINE_API_USER);
-		seForm.append('api_secret', SIGHTENGINE_API_SECRET);
+		seForm.append('api_user', env.SIGHTENGINE_API_USER);
+		seForm.append('api_secret', env.SIGHTENGINE_API_SECRET);
 
+		if (workflowId) {
+			// Workflow mode — rules and thresholds are configured in the SightEngine
+			// dashboard. The API just returns accept/reject + a reject probability.
+			seForm.append('workflow', workflowId);
+			const res = await fetch('https://api.sightengine.com/1.0/check-workflow.json', {
+				method: 'POST',
+				body: seForm,
+				signal: AbortSignal.timeout(10_000)
+			});
+			if (!res.ok) return { score: null, rejected: false };
+			const data: SightEngineWorkflowResponse = await res.json();
+			if (data.status !== 'success' || !data.summary) return { score: null, rejected: false };
+			return {
+				score: data.summary.reject_prob ?? null,
+				rejected: data.summary.action === 'reject'
+			};
+		}
+
+		// Legacy fallback: manual model scoring (no workflow ID configured).
+		seForm.append('models', 'nudity,offensive');
 		const res = await fetch('https://api.sightengine.com/1.0/check.json', {
 			method: 'POST',
 			body: seForm,
 			signal: AbortSignal.timeout(10_000)
 		});
-
-		if (!res.ok) return null;
-
+		if (!res.ok) return { score: null, rejected: false };
 		const data: SightEngineResponse = await res.json();
-		if (data.status !== 'success') return null;
-
+		if (data.status !== 'success') return { score: null, rejected: false };
 		const nudityScore = Math.max(data.nudity?.sexual_activity ?? 0, data.nudity?.sexual_display ?? 0);
 		const offensiveScore = data.offensive?.prob ?? 0;
-		return Math.max(nudityScore, offensiveScore);
+		const score = Math.max(nudityScore, offensiveScore);
+		return { score, rejected: score > MODERATION_THRESHOLD };
 	} catch {
-		console.warn('[photos] SightEngine check failed — deferring photo to manual review');
-		return null;
+		// H3 fix: fail to a distinct 'deferred' state rather than silently passing.
+		// An attacker who disrupts SightEngine would previously bypass automated moderation
+		// entirely. Now the photo is uploaded but flagged for mandatory admin review.
+		console.error('[photos] SightEngine check failed — photo will require manual admin review');
+		return { score: null, rejected: false, deferred: true };
 	}
 }
 
 async function cleanupStorageObject(storagePath: string): Promise<void> {
-	const { error: cleanupError } = await adminSupabase.storage.from('pothole-photos').remove([storagePath]);
+	const { error: cleanupError } = await getAdminClient().storage.from('pothole-photos').remove([storagePath]);
 	if (cleanupError) {
 		console.error('[photos] Failed to clean up orphaned storage object:', cleanupError);
 	}
@@ -120,7 +156,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Persistent rate limit to prevent storage and moderation abuse.
 	const windowStart = new Date(Date.now() - PHOTO_RATE_WINDOW_MS).toISOString();
-	const { count: recentUploads, error: rateLimitError } = await adminSupabase
+	const { count: recentUploads, error: rateLimitError } = await getAdminClient()
 		.from('api_rate_limit_events')
 		.select('*', { count: 'exact', head: true })
 		.eq('ip_hash', ipHash)
@@ -131,25 +167,27 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(429, 'Too many photo uploads. Please wait before trying again.');
 	}
 
-	const { error: rateLimitInsertError } = await adminSupabase
-		.from('api_rate_limit_events')
-		.insert({ ip_hash: ipHash, scope: 'photo_upload' });
-	if (rateLimitInsertError) throw error(500, 'Failed to record upload rate limit');
-
 	// Confirm the pothole exists and still accepts photos.
-	const { data: pothole, error: potholeError } = await adminSupabase
+	const { data: pothole, error: potholeError } = await getAdminClient()
 		.from('potholes')
 		.select('id, status')
 		.eq('id', idParsed.data)
-		.single();
+		.maybeSingle();
 	if (potholeError) throw error(500, 'Failed to verify pothole status');
 	if (!pothole) throw error(404, 'Pothole not found');
 	if (!ACTIVE_UPLOAD_STATUSES.has(pothole.status)) {
 		throw error(409, 'Photos are only allowed for pending or reported potholes');
 	}
 
+	const { error: rateLimitInsertError } = await getAdminClient()
+		.from('api_rate_limit_events')
+		.insert({ ip_hash: ipHash, scope: 'photo_upload' });
+	if (rateLimitInsertError) {
+		console.error('[photos] Failed to record rate limit event:', rateLimitInsertError.message);
+	}
+
 	// Prevent unlimited media accumulation on a single pothole.
-	const { count: activePhotoCount, error: activePhotoCountError } = await adminSupabase
+	const { count: activePhotoCount, error: activePhotoCountError } = await getAdminClient()
 		.from('pothole_photos')
 		.select('*', { count: 'exact', head: true })
 		.eq('pothole_id', idParsed.data)
@@ -169,14 +207,14 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const storagePath = `${idParsed.data}/${photoId}.${ext}`;
 
 	// Run SightEngine moderation (non-blocking on failure)
-	const moderationScore = await runModeration(buffer, mimeType, ext);
+	const moderation = await runModeration(buffer, mimeType, ext);
 
-	if (moderationScore !== null && moderationScore > MODERATION_THRESHOLD) {
+	if (moderation.rejected) {
 		throw error(422, 'Photo rejected by content moderation');
 	}
 
 	// Upload to Supabase Storage
-	const { error: uploadError } = await adminSupabase.storage
+	const { error: uploadError } = await getAdminClient().storage
 		.from('pothole-photos')
 		.upload(storagePath, buffer, { contentType: mimeType, upsert: false });
 
@@ -185,13 +223,16 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(500, 'Upload failed — please try again');
 	}
 
-	// Insert DB record — photo stays in 'pending' until an admin approves it
-	const { data: photo, error: insertError } = await adminSupabase
+	// Insert DB record. Status is 'pending' (normal flow) or 'deferred' (SightEngine
+	// unavailable). Both are hidden from the public; only admins see them in the queue.
+	// 'deferred' is visually distinct in the admin UI so it gets prioritised for review.
+	const { data: photo, error: insertError } = await getAdminClient()
 		.from('pothole_photos')
 		.insert({
 			pothole_id: idParsed.data,
 			storage_path: storagePath,
-			moderation_score: moderationScore,
+			moderation_status: moderation.deferred ? 'deferred' : 'pending',
+			moderation_score: moderation.score,
 			ip_hash: ipHash
 		})
 		.select('id')
@@ -201,6 +242,18 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		await cleanupStorageObject(storagePath);
 		throw error(500, 'Failed to save photo record');
 	}
+
+	// Fire-and-forget — do not block the client response on Pushover latency.
+	// Deferred photos get higher priority since SightEngine was down.
+	void notify('photos', {
+		title: moderation.deferred ? '⚠️ Photo needs review (SightEngine down)' : '📸 New photo to review',
+		message: moderation.deferred
+			? 'SightEngine was unavailable — automated moderation skipped. Manual review required.'
+			: 'A new photo passed automated moderation and is waiting for admin approval.',
+		url: `https://fillthehole.ca/admin`,
+		urlTitle: 'Open admin panel',
+		priority: moderation.deferred ? 1 : 0
+	});
 
 	return json({ ok: true, id: photo.id });
 };

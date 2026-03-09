@@ -12,6 +12,7 @@
 		status: string;
 		created_at: string;
 		filled_at: string | null;
+		photos_published: boolean;
 	};
 
 	let { count = $bindable(0) }: { count?: number } = $props();
@@ -96,43 +97,63 @@
 						{@const info =
 							STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ??
 							STATUS_CONFIG.reported}
-						<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3 hover:border-zinc-700 transition-colors">
-							<!-- Address + remove -->
-							<div class="flex items-start justify-between gap-2">
-								<a
-									href="/hole/{pothole.id}"
-									class="text-sm font-semibold text-white hover:text-sky-400 transition-colors leading-snug line-clamp-2 flex-1"
-								>
-									{pothole.address ||
-										`${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
-								</a>
-								<button
-									onclick={() => unwatch(pothole.id)}
-									class="shrink-0 text-zinc-600 hover:text-zinc-300 transition-colors p-1 rounded-md hover:bg-zinc-800"
-									aria-label="Remove {pothole.address || 'this pothole'} from watchlist"
-									title="Remove from watchlist"
-								>
-									<Icon name="x" size={13} />
-								</button>
-							</div>
+						{@const accentColor =
+							pothole.status === 'reported' ? 'bg-orange-500' :
+							pothole.status === 'filled'   ? 'bg-green-500' :
+							pothole.status === 'expired'  ? 'bg-zinc-600' : 'bg-zinc-700'}
+						{@const pillColor =
+							pothole.status === 'reported' ? 'bg-orange-500/10 text-orange-400' :
+							pothole.status === 'filled'   ? 'bg-green-500/10 text-green-400' :
+							'bg-zinc-700/60 text-zinc-500'}
+						<div class="relative bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-colors">
+							<!-- Status accent strip -->
+							<div class="absolute inset-y-0 left-0 w-[3px] {accentColor}"></div>
 
-							<!-- Status + days -->
-							<div class="flex items-center justify-between">
-								<div class="flex items-center gap-1.5">
-									<Icon name={info.icon} size={13} class={info.colorClass} />
-									<span class="text-xs font-semibold {info.colorClass}">{info.label}</span>
+							<div class="pl-5 pr-3 pt-3.5 pb-3.5 flex flex-col gap-2.5">
+								<!-- Address + remove -->
+								<div class="flex items-start justify-between gap-2">
+									<a
+										href="/hole/{pothole.id}"
+										class="flex-1 text-sm font-semibold text-white hover:text-sky-400 transition-colors leading-snug line-clamp-2"
+									>
+										{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
+									</a>
+									<button
+										onclick={() => unwatch(pothole.id)}
+										class="shrink-0 text-zinc-600 hover:text-zinc-300 transition-colors p-1 -mr-1 rounded-md hover:bg-zinc-800"
+										aria-label="Remove {pothole.address || 'this pothole'} from watchlist"
+										title="Remove from watchlist"
+									>
+										<Icon name="x" size={13} />
+									</button>
 								</div>
-								<span class="text-xs text-zinc-600 tabular-nums">{daysLabel(pothole)}</span>
-							</div>
 
-							<!-- View link -->
-							<a
-								href="/hole/{pothole.id}"
-								class="text-xs text-sky-500 hover:text-sky-400 transition-colors font-medium"
-								aria-label="View details for {pothole.address || 'this pothole'}"
-							>
-								View details →
-							</a>
+								<!-- Status pill + age -->
+								<div class="flex items-center justify-between gap-2">
+									<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold {pillColor}">
+										<Icon name={info.icon} size={11} />
+										{info.label}
+									</span>
+									<span class="text-xs text-zinc-600 tabular-nums shrink-0">{daysLabel(pothole)}</span>
+								</div>
+
+								<!-- Footer: view link + photo badge -->
+								<div class="flex items-center justify-between gap-2 pt-0.5">
+									<a
+										href="/hole/{pothole.id}"
+										class="text-xs font-medium text-zinc-500 hover:text-sky-400 transition-colors"
+										aria-label="View details for {pothole.address || 'this pothole'}"
+									>
+										View details →
+									</a>
+									{#if pothole.photos_published}
+										<span class="inline-flex items-center gap-1 text-[11px] text-zinc-600">
+											<Icon name="camera" size={11} />
+											Photo
+										</span>
+									{/if}
+								</div>
+							</div>
 						</div>
 					{/each}
 				</div>

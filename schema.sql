@@ -1,16 +1,17 @@
 -- Run this in your Supabase SQL editor
 
 create table if not exists potholes (
-  id          uuid primary key default gen_random_uuid(),
-  created_at  timestamptz default now(),
-  lat         float8 not null,
-  lng         float8 not null,
-  address     text,
-  description text,
-  status      text default 'reported',  -- 'pending' | 'reported' | 'filled' | 'expired'
-  filled_at   timestamptz,
-  expired_at  timestamptz,
-  confirmed_count int default 1
+  id               uuid primary key default gen_random_uuid(),
+  created_at       timestamptz default now(),
+  lat              float8 not null,
+  lng              float8 not null,
+  address          text,
+  description      text,
+  status           text default 'reported',  -- 'pending' | 'reported' | 'filled' | 'expired'
+  filled_at        timestamptz,
+  expired_at       timestamptz,
+  confirmed_count  int default 1,
+  photos_published boolean not null default false  -- admin-controlled; published pothole ≠ published photos
 );
 
 -- IP deduplication table (stores hashed IPs only — no raw PII)
@@ -44,12 +45,12 @@ create policy "Public insert"
   on potholes for insert
   with check (true);
 
--- Allow anyone to update potholes (for status advancement)
--- ideally this would restrict columns, but the app uses anon key for updates
-create policy "Public update"
-  on potholes for update
-  using (true)
-  with check (true);
+-- No public UPDATE policy for potholes.
+-- All status transitions (filled) are performed server-side using the service
+-- role key via src/routes/api/filled/+server.ts which validates the request
+-- (geofence, rate limit, pothole_actions dedup) before writing. Removing the
+-- anon-key UPDATE policy closes the window where any caller with the public
+-- anon key could modify arbitrary columns via the PostgREST REST API.
 
 -- Allow anyone to read confirmations (needed for client-side check)
 create policy "Public read confirmations"
@@ -117,7 +118,7 @@ begin
   update potholes
   set
     confirmed_count = confirmed_count + 1,
-    status = case when confirmed_count + 1 >= 3 then 'reported' else status end
+    status = case when confirmed_count + 1 >= 2 then 'reported' else status end
   where id = p_pothole_id
   returning confirmed_count, status into v_count, v_status;
 
@@ -137,8 +138,9 @@ $$;
 -- ALTER TABLE potholes ADD CONSTRAINT potholes_status_check
 --   CHECK (status IN ('pending', 'reported', 'filled', 'expired'));
 
--- pg_cron: nightly expiry job (run once in Supabase SQL editor)
+-- pg_cron: nightly expiry jobs (run once in Supabase SQL editor, or see schema_sprint3.sql)
 -- CREATE EXTENSION IF NOT EXISTS pg_cron;
+-- Expire reported potholes after 90 days with no fill action:
 -- SELECT cron.schedule(
 --   'expire-old-potholes',
 --   '0 3 * * *',
@@ -146,7 +148,18 @@ $$;
 --     UPDATE potholes
 --     SET status = 'expired', expired_at = NOW()
 --     WHERE status = 'reported'
---       AND created_at < NOW() - INTERVAL '6 months';
+--       AND created_at < NOW() - INTERVAL '90 days';
+--   $$
+-- );
+-- Expire pending (unconfirmed) potholes after 14 days to prevent merge-radius suppression:
+-- SELECT cron.schedule(
+--   'expire-stale-pending',
+--   '30 3 * * *',
+--   $$
+--     UPDATE potholes
+--     SET status = 'expired', expired_at = NOW()
+--     WHERE status = 'pending'
+--       AND created_at < NOW() - INTERVAL '14 days';
 --   $$
 -- );
 
@@ -169,10 +182,14 @@ create index if not exists pothole_photos_ip_hash_created_idx on pothole_photos 
 
 alter table pothole_photos enable row level security;
 
--- Only approved photos are visible to the public anon key
+-- Only approved photos are visible, AND only when the admin has published
+-- photos for that pothole. Both conditions must be true simultaneously.
 create policy "Public read approved photos"
   on pothole_photos for select
-  using (moderation_status = 'approved');
+  using (
+    moderation_status = 'approved'
+    and (select photos_published from potholes where id = pothole_id)
+  );
 
 -- Storage bucket: create a public bucket called 'pothole-photos'
 -- In Supabase dashboard: Storage → New Bucket → Name: pothole-photos → Public: ON

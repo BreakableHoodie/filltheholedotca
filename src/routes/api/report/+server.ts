@@ -1,10 +1,12 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
-import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
+import { getConfirmationThreshold } from '$lib/server/settings';
+import { notify } from '$lib/server/pushover';
 
 // Create Supabase client only when needed, not at module level
 function getSupabaseClient() {
@@ -25,13 +27,14 @@ const GEOFENCE = {
 };
 
 const MERGE_RADIUS_M = 25;
-const CONFIRMATIONS_REQUIRED = 3;
 const REPORT_RATE_LIMIT = 20;
 const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const SEVERITY_VALUES = ['Spilled my coffee', 'Bent a rim', 'Caused real damage', 'RIP'] as const;
 
 // Service role client used only for persistent rate-limit tracking.
-const adminSupabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+function getAdminClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const reportSchema = z.object({
 	lat: z.number().finite().min(-90).max(90),
@@ -90,7 +93,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Persistent per-IP report throttling.
 	const windowStart = new Date(Date.now() - REPORT_RATE_WINDOW_MS).toISOString();
-	const { count: recentReports, error: reportRateError } = await adminSupabase
+	const { count: recentReports, error: reportRateError } = await getAdminClient()
 		.from('api_rate_limit_events')
 		.select('*', { count: 'exact', head: true })
 		.eq('ip_hash', ipHash)
@@ -102,11 +105,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(429, 'Too many report attempts. Please wait before trying again.');
 	}
 
-	const { error: reportRateInsertError } = await adminSupabase
+	const { error: reportRateInsertError } = await getAdminClient()
 		.from('api_rate_limit_events')
 		.insert({ ip_hash: ipHash, scope: 'report_submit' });
 
-	if (reportRateInsertError) throw error(500, 'Failed to record report rate limit');
+	if (reportRateInsertError) {
+		// Non-fatal: log and continue. A broken rate-limit table should not block
+		// legitimate reports — the next check will simply see a lower count.
+		console.error('[report] Failed to record rate limit event:', reportRateInsertError.message);
+	}
 
 	// Search for existing pending potholes nearby using a bounding box
 	const delta = 0.0005;
@@ -131,9 +138,14 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		// Atomically insert confirmation and increment count via RPC.
 		// The RPC handles duplicate IPs (ON CONFLICT DO NOTHING) and the
 		// confirmed_count increment in a single statement, preventing race conditions.
-		const { data: result, error: rpcError } = await supabase.rpc('increment_confirmation', {
+		const confirmationsRequired = await getConfirmationThreshold();
+		// C1 fix: use service-role client so this RPC is unreachable via the public anon key.
+		// Calling via the anon client exposes it to the public Supabase REST API, allowing
+		// anyone to supply an arbitrary p_ip_hash or p_threshold and bypass all guards.
+		const { data: result, error: rpcError } = await getAdminClient().rpc('increment_confirmation', {
 			p_pothole_id: match.id,
-			p_ip_hash: ipHash
+			p_ip_hash: ipHash,
+			p_threshold: confirmationsRequired
 		});
 
 		if (rpcError) throw error(500, 'Failed to update report');
@@ -148,13 +160,25 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			});
 		}
 
+		if (rpc.status === 'reported') {
+			// Fire-and-forget — do not block the public response on Pushover latency.
+			const locationLabel = address?.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+			void notify('community', {
+				title: '🕳️ Pothole confirmed — now live',
+				message: `Pothole at ${locationLabel} reached the confirmation threshold and is now on the public map.`,
+				url: `https://fillthehole.ca/hole/${match.id}`,
+				urlTitle: 'View pothole',
+				priority: -1
+			});
+		}
+
 		return json({
 			id: match.id,
 			confirmed: rpc.status === 'reported',
 			message:
 				rpc.status === 'reported'
 					? '✅ Confirmed — pothole is now live on the map!'
-					: `📍 Confirmation noted (${rpc.confirmed_count}/${CONFIRMATIONS_REQUIRED} needed).`
+					: `📍 Confirmation noted (${rpc.confirmed_count}/${confirmationsRequired} needed).`
 		});
 	}
 

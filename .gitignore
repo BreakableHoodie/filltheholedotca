@@ -35,9 +35,21 @@ logs/
 playwright-report/
 test-results/
 
+# Lighthouse CI local output
+.lighthouseci/
+
+# Package manager crash/debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
 # Local code review / AI-generated docs
 docs/code-review/
 docs/plans/
 
 # Git worktrees
 .worktrees/
+
+# Local editor workspace settings
+.vscode/
