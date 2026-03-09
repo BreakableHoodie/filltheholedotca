@@ -18,7 +18,7 @@ module.exports = {
 				// Required for headless Chrome in CI
 				chromeFlags: '--no-sandbox --disable-setuid-sandbox',
 				// Preserve the localStorage set by the puppeteer setup script so the
-				// WelcomeModal is suppressed. Without this, Lighthouse clears storage
+				// homepage intro card is suppressed. Without this, Lighthouse clears storage
 				// before auditing and the script's work is undone.
 				disableStorageReset: true
 			}

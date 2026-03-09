@@ -1,6 +1,7 @@
 export type PotholeStatus = 'pending' | 'reported' | 'filled' | 'expired';
 
-export type PhotoModerationStatus = 'pending' | 'approved' | 'rejected';
+// 'deferred' = SightEngine was unavailable; photo is hidden until an admin reviews it manually.
+export type PhotoModerationStatus = 'pending' | 'approved' | 'rejected' | 'deferred';
 
 export interface PotholePhoto {
 	id: string;
@@ -24,4 +25,5 @@ export interface Pothole {
 	confirmed_count: number;
 	filled_at: string | null;
 	expired_at: string | null;
+	photos_published: boolean;
 }

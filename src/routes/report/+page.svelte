@@ -1,17 +1,21 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 	import Icon from '$lib/components/Icon.svelte';
 	import { ICONS } from '$lib/icons';
-	import { page } from '$app/stores';
+	import { toastError } from '$lib/toast';
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 
 	const SEVERITY_OPTIONS = [
-		{ value: 'Spilled my coffee',  level: 1, label: 'Spilled my coffee',  sub: 'barely there',                    barColor: 'bg-yellow-400' },
-		{ value: 'Bent a rim',         level: 2, label: 'Bent a rim',         sub: 'car or bike — you felt that',     barColor: 'bg-orange-400' },
-		{ value: 'Caused real damage', level: 3, label: 'Caused real damage', sub: 'tire, wheel, or worse',           barColor: 'bg-red-400'    },
-		{ value: 'RIP',                level: 4, label: 'RIP',                sub: 'suspension, wheel, will to live', barColor: 'bg-rose-400'   },
+		{ value: 'Minor damage',    level: 1, label: 'Minor damage',    sub: 'visible, but not urgent',             barColor: 'bg-yellow-400' },
+		{ value: 'Moderate damage', level: 2, label: 'Moderate damage', sub: 'drivers or cyclists will feel it',    barColor: 'bg-orange-400' },
+		{ value: 'Severe damage',   level: 3, label: 'Severe damage',   sub: 'likely to damage a tire or wheel',    barColor: 'bg-red-400'    },
+		{ value: 'Hazardous',       level: 4, label: 'Hazardous',       sub: 'dangerous and needs quick attention', barColor: 'bg-rose-400'   },
 	] as const;
+
+	let { data }: { data: { confirmationThreshold: number } } = $props();
+	let confirmationThreshold = $derived(data.confirmationThreshold);
 
 	let lat = $state<number | null>(null);
 	let lng = $state<number | null>(null);
@@ -19,6 +23,12 @@
 	let address = $state<string | null>(null);
 	let severity = $state<string | null>(null);
 	let submitting = $state(false);
+	let hasLocation = $derived(lat !== null && lng !== null);
+	let locationSummary = $derived(
+		hasLocation
+			? (address ?? `${lat?.toFixed(5)}, ${lng?.toFixed(5)}`)
+			: null
+	);
 
 	// Photo upload state
 	let photoFile = $state<File | null>(null);
@@ -76,6 +86,7 @@
 	let addressSearching = $state(false);
 	let addressDebounce: ReturnType<typeof setTimeout> | null = null;
 	let addressAbortController: AbortController | null = null;
+	let reverseGeocodeAbortController: AbortController | null = null;
 
 	// Waterloo Region bounding box for Nominatim: minLon,minLat,maxLon,maxLat
 	const WR_VIEWBOX = '-80.59,43.32,-80.22,43.53';
@@ -178,11 +189,17 @@
 			return;
 		}
 
+		// Track whether the effect is still active. If the component unmounts or
+		// locationMode changes before the async Leaflet imports resolve, the async
+		// continuation must not create an orphaned map instance on a detached element.
+		let active = true;
+
 		const timer = setTimeout(async () => {
-			if (!miniMapEl || miniMapRef) return;
+			if (!active || !miniMapEl || miniMapRef) return;
 
 			await import('leaflet/dist/leaflet.css');
 			const leafletModule = await import('leaflet');
+			if (!active) return; // guard after async imports
 			const L = leafletModule.default ?? leafletModule;
 
 			const center: [number, number] = lat !== null && lng !== null ? [lat, lng] : [43.425, -80.42];
@@ -231,7 +248,10 @@
 			map.invalidateSize();
 		}, 50);
 
-		return () => clearTimeout(timer);
+		return () => {
+			active = false;
+			clearTimeout(timer);
+		};
 	});
 
 	onMount(() => {
@@ -252,8 +272,6 @@
 			}
 		}
 
-		getLocation();
-
 		return () => {
 			if (addressDebounce) {
 				clearTimeout(addressDebounce);
@@ -261,6 +279,10 @@
 			if (addressAbortController) {
 				addressAbortController.abort();
 				addressAbortController = null;
+			}
+			if (reverseGeocodeAbortController) {
+				reverseGeocodeAbortController.abort();
+				reverseGeocodeAbortController = null;
 			}
 			if (miniMapRef) {
 				miniMapRef.remove();
@@ -271,20 +293,36 @@
 	});
 
 	async function reverseGeocode(lat: number, lng: number) {
+		// Cancel any prior in-flight request so the last pin position wins,
+		// not the last-to-arrive response.
+		if (reverseGeocodeAbortController) {
+			reverseGeocodeAbortController.abort();
+		}
+		reverseGeocodeAbortController = new AbortController();
+		const controller = reverseGeocodeAbortController;
 		try {
-			const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+			const res = await fetch(
+				`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+				{ signal: controller.signal }
+			);
 			const data = await res.json();
+			if (controller.signal.aborted) return;
 			const a = data.address ?? {};
 			const parts = [a.house_number, a.road, a.suburb].filter(Boolean);
 			address = parts.length ? parts.join(' ') : null;
-		} catch {
+		} catch (e) {
+			if (e instanceof DOMException && e.name === 'AbortError') return;
 			address = null;
+		} finally {
+			if (reverseGeocodeAbortController === controller) {
+				reverseGeocodeAbortController = null;
+			}
 		}
 	}
 
 	async function getLocation() {
 		if (!navigator.geolocation) {
-			toast.error('Geolocation not supported on this device');
+			toastError('Geolocation not supported on this device');
 			gpsStatus = 'error';
 			return;
 		}
@@ -300,11 +338,11 @@
 			(err) => {
 				gpsStatus = 'error';
 				if (err.code === 1) {
-					toast.error('Location access denied — enable it in your browser settings and tap retry');
+					toastError('Location access denied — enable it in your browser settings and retry');
 				} else if (err.code === 2) {
-					toast.error('Could not determine your location. Try moving outside.');
+					toastError('Could not determine your location. Try moving outside.');
 				} else {
-					toast.error('Location request timed out. Tap retry.');
+					toastError('Location request timed out. Retry.');
 				}
 			},
 			{ enableHighAccuracy: true, timeout: 10000 }
@@ -326,22 +364,35 @@
 			const result = await res.json();
 			if (!res.ok) throw new Error(result.message || 'Submission failed');
 
-			// Upload photo if one was selected — non-fatal if it fails
-			if (photoFile) {
-				const fd = new FormData();
-				fd.append('photo', photoFile);
-				fd.append('pothole_id', result.id);
-				try {
-					await fetch('/api/photos', { method: 'POST', body: fd });
-				} catch {
-					// Photo upload failure does not block navigation
+				// Upload photo if one was selected — non-fatal if it fails
+				if (photoFile) {
+					const fd = new FormData();
+					fd.append('photo', photoFile);
+					fd.append('pothole_id', result.id);
+					try {
+						const photoRes = await fetch('/api/photos', { method: 'POST', body: fd });
+						if (!photoRes.ok) {
+							let uploadMessage = 'Photo upload failed';
+							try {
+								const photoResult = await photoRes.json();
+								if (typeof photoResult?.message === 'string' && photoResult.message.length > 0) {
+									uploadMessage = photoResult.message;
+								}
+							} catch {
+								// Keep generic message when response body is not JSON.
+							}
+							toastError(`Report submitted, but photo was not uploaded: ${uploadMessage}`);
+						}
+					} catch {
+						// Photo upload failure does not block navigation
+						toastError('Report submitted, but photo was not uploaded due to a network error');
+					}
 				}
-			}
 
 			toast.success(result.message);
-			goto(`/hole/${result.id}`);
+				goto(`/hole/${result.id}?submitted=1`);
 		} catch (err: unknown) {
-			toast.error(err instanceof Error ? err.message : 'Something went wrong');
+			toastError(err instanceof Error ? err.message : 'Something went wrong');
 		} finally {
 			submitting = false;
 		}
@@ -355,7 +406,12 @@
 <div class="max-w-lg mx-auto px-4 py-8">
 	<div class="mb-6">
 		<h1 class="font-brand font-bold text-3xl text-white mb-1">Report a pothole</h1>
-		<p class="text-zinc-400 text-sm">Standing next to one? Share its location and submit.</p>
+		<p class="text-zinc-300 text-sm">Report the location in about 30 seconds. No account required.</p>
+		<p class="text-xs text-zinc-400 mt-2">Independent community tracker for Waterloo Region. For official repair action, report to the city too.</p>
+		<p class="flex items-start gap-1.5 text-xs text-zinc-400 mt-2">
+			<Icon name="alert-triangle" size={13} class="text-amber-500 shrink-0 mt-0.5" />
+			Stay safe — report from the sidewalk or after pulling over. Never stop in a live traffic lane.
+		</p>
 	</div>
 
 	<form onsubmit={handleSubmit} class="space-y-5">
@@ -365,6 +421,7 @@
 				<Icon name="crosshair" size={14} class="text-sky-400" />
 				Location
 			</div>
+			<p class="text-xs text-zinc-400">Use your current location for the fastest report, or switch to address search or map pin if needed.</p>
 
 			<!-- Tab bar -->
 			<div role="tablist" aria-label="Choose a location source" class="flex gap-1 bg-zinc-800 rounded-lg p-1">
@@ -415,7 +472,7 @@
 						GPS locked
 					{:else if gpsStatus === 'error'}
 						<Icon name="alert-triangle" size={15} class="shrink-0" />
-						GPS failed — tap to retry
+						GPS failed — retry
 					{:else}
 						<Icon name="crosshair" size={15} class="shrink-0" />
 						Use my current location
@@ -424,13 +481,17 @@
 
 				{#if gpsStatus === 'error'}
 					<p class="text-xs text-red-400" role="alert">
-						Location access is required to report a pothole. Please enable it in your browser settings and try again.
+						Location access was denied or unavailable. Enable it in your browser settings, or use address or map mode instead.
+					</p>
+					<p class="text-xs text-zinc-400">
+						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-zinc-300 transition-colors">Enter an address</button>
+						or <button type="button" onclick={() => (locationMode = 'map')} class="underline hover:text-zinc-300 transition-colors">pin on the map</button>.
 					</p>
 				{/if}
 
 				{#if address}
 					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
-						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-500" />
+						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address}
 					</p>
 				{:else if gpsStatus === 'got'}
@@ -458,7 +519,7 @@
 						autocomplete="off"
 					/>
 					{#if addressSearching}
-						<p class="text-xs text-zinc-500 mt-1">Searching…</p>
+						<p class="text-xs text-zinc-400 mt-1">Searching…</p>
 					{/if}
 					{#if addressSuggestions.length > 0}
 						<ul
@@ -481,7 +542,7 @@
 				</div>
 				{#if lat !== null && addressQuery && addressSuggestions.length === 0}
 					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
-						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-500" />
+						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address}
 					</p>
 				{/if}
@@ -498,7 +559,7 @@
 				<div bind:this={miniMapEl} class="w-full rounded-lg overflow-hidden" style="height: 260px;"></div>
 				{#if lat !== null}
 					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
-						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-500" />
+						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
 					</p>
 				{:else}
@@ -511,8 +572,9 @@
 		<fieldset class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
 			<legend class="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-2">
 				<Icon name="alert-triangle" size={14} class="text-zinc-400" />
-				How bad is it? <span class="text-zinc-400 font-normal">(optional)</span>
+				How severe is the damage? <span class="text-zinc-400 font-normal">(optional)</span>
 			</legend>
+			<p class="text-xs text-zinc-400">This helps other residents understand urgency at a glance.</p>
 			<div class="grid grid-cols-2 gap-2">
 				{#each SEVERITY_OPTIONS as opt (opt.value)}
 					<label
@@ -584,12 +646,52 @@
 			/>
 		{/if}
 
-		<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly.</p>
+		<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
 	</div>
+
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3" aria-live="polite" aria-atomic="true">
+			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+				<Icon name="check-circle" size={14} class={hasLocation ? 'text-green-400' : 'text-zinc-400'} />
+				Ready to submit
+			</div>
+
+			{#if hasLocation}
+				<div class="space-y-2">
+					<div class="rounded-lg bg-zinc-800/80 p-3 space-y-1.5">
+						<p class="flex items-center gap-1.5 text-xs font-semibold text-green-400">
+							<Icon name="map-pin" size={12} class="shrink-0" />
+							Location locked in
+						</p>
+						<p class="text-sm text-zinc-200 break-words overflow-wrap-anywhere">{locationSummary}</p>
+					</div>
+					<div class="grid gap-2 sm:grid-cols-2">
+						<div class="rounded-lg bg-zinc-800/60 p-3">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">Severity</p>
+							<p class="mt-1 text-sm text-zinc-300">{severity ?? 'Optional — not added yet'}</p>
+						</div>
+						<div class="rounded-lg bg-zinc-800/60 p-3">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">Photo</p>
+							<p class="mt-1 text-sm text-zinc-300">{photoFile ? 'Attached and ready to upload' : 'Optional — not added yet'}</p>
+						</div>
+					</div>
+				</div>
+				<p class="text-xs text-zinc-400 leading-relaxed">
+					After you submit, a pothole page is created right away. It appears on the public map after
+					{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location.
+				</p>
+			{:else}
+				<p class="text-sm text-zinc-300">
+					Choose a location above to unlock the report button.
+				</p>
+				<p class="text-xs text-zinc-400">
+					Use GPS for the fastest report, or switch to address search or map pin if location access fails.
+				</p>
+			{/if}
+		</div>
 
 		<button
 			type="submit"
-			disabled={submitting || lat === null || lng === null}
+			disabled={submitting || !hasLocation}
 			class="w-full py-4 font-bold text-lg rounded-xl transition-colors flex items-center justify-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed bg-sky-700 hover:bg-sky-600 text-white"
 		>
 			{#if submitting}
@@ -597,15 +699,21 @@
 				Submitting…
 			{:else}
 				<Icon name="map-pin" size={16} class="shrink-0" />
-				Report this hole
+				Submit report
 			{/if}
 		</button>
 
 		<p class="text-xs text-zinc-400 text-center">
-			Three independent reports from the same location are needed before a pothole appears on the map.
+			{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location are needed before a pothole appears on the public map.
 		</p>
 		<p class="text-xs text-zinc-400 text-center">
-			On a major road? It may be maintained by the Region of Waterloo, not the City. <a href="/about" class="underline hover:text-white">Learn more →</a>
+			On a major road? It may be maintained by the Region of Waterloo, not the city. <a href="/about" class="underline hover:text-white">Learn more →</a>
 		</p>
 	</form>
 </div>
+
+<style>
+	.overflow-wrap-anywhere {
+		overflow-wrap: anywhere;
+	}
+</style>

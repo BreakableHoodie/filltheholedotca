@@ -75,11 +75,11 @@ Copy `.env.example` → `.env` with real values:
 
 ## Project Structure
 
-```
+```text
 src/
   routes/
-    +page.svelte              # Map (Leaflet, clustering, ward heatmap, locate-me)
-    +layout.svelte            # Nav with live counts, WelcomeModal, Toaster
+    +page.svelte              # Map (Leaflet, clustering, ward heatmap, mobile tool tray, homepage intro card)
+    +layout.svelte            # Nav with live counts and Toaster
     +layout.server.ts         # Server layout loader
     +page.server.ts           # Loads potholes for map
     about/+page.svelte        # About page
@@ -91,11 +91,13 @@ src/
       +page.svelte            # Pothole detail (status, councillor contact, share)
       +page.server.ts         # Loads single pothole + councillor
     api/
-      report/+server.ts       # POST — submit report (geofence, IP dedup, 3-confirm merge)
+      report/+server.ts       # POST — submit report (geofence, IP dedup, 2-confirm merge)
       filled/+server.ts       # POST — mark filled (reported → filled)
       photos/+server.ts       # POST — upload photo (magic-byte validation, moderation, rate limit)
       wards.geojson/+server.ts # GET — ward boundaries for heatmap
       feed.json/+server.ts    # GET — JSON feed of recent potholes
+      export.csv/+server.ts   # GET — CSV export of all reported/filled potholes (open data)
+      feed.xml/+server.ts     # GET — RSS 2.0 feed of recent confirmations/fills (open data)
       admin/pothole/[id]/+server.ts  # DELETE — admin moderation
       admin/photo/[id]/+server.ts    # PATCH/DELETE — photo moderation
   lib/
@@ -104,7 +106,7 @@ src/
     wards.ts                  # COUNCILLORS array (ward/name/email/url)
     supabase.ts               # Supabase client (public anon)
     components/
-      WelcomeModal.svelte     # First-visit onboarding modal
+      HomeIntroCard.svelte    # Homepage-only intro card shown on first visit
 ```
 
 ## Database Schema
@@ -115,7 +117,8 @@ potholes (
   address text, description text,
   status text,          -- 'pending' | 'reported' | 'expired' | 'filled'
   filled_at timestamptz, expired_at timestamptz,
-  confirmed_count int   -- starts at 1, promoted to 'reported' at 3
+  confirmed_count int,  -- starts at 1, promoted to 'reported' at 2
+  photos_published bool  -- admin toggle; published pothole ≠ published photos
 )
 
 pothole_confirmations (
@@ -126,6 +129,8 @@ pothole_confirmations (
 pothole_photos (
   id uuid PK, pothole_id uuid FK, storage_path text,
   ip_hash text, moderation_status text, moderation_score float8, created_at
+  -- moderation_status values: 'pending' | 'approved' | 'rejected' | 'deferred'
+  -- 'deferred' = SightEngine was unavailable; requires mandatory admin review
 )
 
 api_rate_limit_events (
@@ -133,15 +138,27 @@ api_rate_limit_events (
 )
 ```
 
-Run `schema.sql` for initial setup, `schema_update.sql` for confirmations/security hardening, and `schema_photos.sql` for photo upload schema.
-A `pg_cron` job (`expire-old-potholes`) runs nightly at 03:00 UTC to set
-`status = 'expired'` on `reported` potholes older than 90 days.
+Run migrations in this order:
+
+1. `schema.sql` — initial setup
+2. `schema_update.sql` — confirmations table + security hardening
+3. `schema_photos.sql` — photo upload schema
+4. `schema_photo_publishing.sql` — `photos_published` flag
+5. `schema_site_settings.sql` — site settings table + redefines `increment_confirmation` with 3-parameter signature (must run after step 4)
+6. `schema_pr61_fixes.sql` — RLS policy hardening + pending pothole backfill
+7. `schema_security_hardening.sql` — revokes public EXECUTE on `increment_confirmation`; documents `deferred` photo status
+8. `schema_sprint3.sql` — drops public SELECT on `pothole_actions`; fixes pg_cron interval (90 days); adds pending-pothole expiry (14 days)
+
+Two `pg_cron` jobs run nightly:
+
+- `expire-old-potholes` (03:00 UTC): sets `status = 'expired'` on `reported` potholes older than 90 days.
+- `expire-stale-pending` (03:30 UTC): sets `status = 'expired'` on `pending` potholes older than 14 days (anti-suppression).
 
 ## Status Flow
 
-```
+```text
 pending → reported → filled
-  (1 report)  (3 confirmations)  (city fixed it — via popup or detail page)
+  (1 report)  (2 confirmations)  (city fixed it — via popup or detail page)
                     ↓
                  expired  (auto after 90 days with no action)
 ```
@@ -150,9 +167,10 @@ pending → reported → filled
 
 - **Geofence**: Waterloo Region only — lat 43.32–43.53, lng -80.59 to -80.22
 - **Merge radius**: 25m — nearby pending reports are merged, not duplicated
-- **3 confirmations** from distinct IPs required to go live on the public map
+- **2 confirmations** from distinct IPs required to go live on the public map
+- **photos_published**: admin-only toggle per pothole; a live pothole does NOT mean its photos are shown — admin must explicitly publish them
 - **IP hashing**: HMAC-SHA-256 with `IP_HASH_SECRET`, never store raw IPs
-- **Auto-expiry**: `reported` potholes expire after 90 days via pg_cron
+- **Auto-expiry**: `reported` potholes expire after 90 days; `pending` potholes expire after 14 days (both via pg_cron)
 
 ## Svelte 5 Patterns (important — don't use Svelte 4 syntax)
 
