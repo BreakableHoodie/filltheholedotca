@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import Icon from '$lib/components/Icon.svelte';
+	import { resizeImage } from '$lib/image';
 	import { ICONS } from '$lib/icons';
 	import { toastError } from '$lib/toast';
 	import { onMount } from 'svelte';
@@ -34,26 +35,6 @@
 	let photoFile = $state<File | null>(null);
 	let photoPreview = $state<string | null>(null);
 	let photoInput = $state<HTMLInputElement | undefined>(undefined);
-
-	async function resizeImage(file: File): Promise<Blob> {
-		return new Promise((resolve) => {
-			const MAX_PX = 800;
-			const objectUrl = URL.createObjectURL(file);
-			const img = new Image();
-			img.onload = () => {
-				URL.revokeObjectURL(objectUrl);
-				const scale = Math.min(1, MAX_PX / Math.max(img.width, img.height));
-				const w = Math.round(img.width * scale);
-				const h = Math.round(img.height * scale);
-				const canvas = document.createElement('canvas');
-				canvas.width = w;
-				canvas.height = h;
-				canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
-				canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.82);
-			};
-			img.src = objectUrl;
-		});
-	}
 
 	async function handlePhotoSelect(e: Event) {
 		const input = e.target as HTMLInputElement;
@@ -272,6 +253,8 @@
 			}
 		}
 
+		getLocation();
+
 		return () => {
 			if (addressDebounce) {
 				clearTimeout(addressDebounce);
@@ -364,33 +347,33 @@
 			const result = await res.json();
 			if (!res.ok) throw new Error(result.message || 'Submission failed');
 
-				// Upload photo if one was selected — non-fatal if it fails
-				if (photoFile) {
-					const fd = new FormData();
-					fd.append('photo', photoFile);
-					fd.append('pothole_id', result.id);
-					try {
-						const photoRes = await fetch('/api/photos', { method: 'POST', body: fd });
-						if (!photoRes.ok) {
-							let uploadMessage = 'Photo upload failed';
-							try {
-								const photoResult = await photoRes.json();
-								if (typeof photoResult?.message === 'string' && photoResult.message.length > 0) {
-									uploadMessage = photoResult.message;
-								}
-							} catch {
-								// Keep generic message when response body is not JSON.
+			// Upload photo if one was selected — non-fatal if it fails
+			if (photoFile) {
+				const fd = new FormData();
+				fd.append('photo', photoFile);
+				fd.append('pothole_id', result.id);
+				try {
+					const photoRes = await fetch('/api/photos', { method: 'POST', body: fd });
+					if (!photoRes.ok) {
+						let uploadMessage = 'Photo upload failed';
+						try {
+							const photoResult = await photoRes.json();
+							if (typeof photoResult?.message === 'string' && photoResult.message.length > 0) {
+								uploadMessage = photoResult.message;
 							}
-							toastError(`Report submitted, but photo was not uploaded: ${uploadMessage}`);
+						} catch {
+							// Keep generic message when response body is not JSON.
 						}
-					} catch {
-						// Photo upload failure does not block navigation
-						toastError('Report submitted, but photo was not uploaded due to a network error');
+						toastError(`Report submitted, but photo was not uploaded: ${uploadMessage}`);
 					}
+				} catch {
+					// Photo upload failure does not block navigation
+					toastError('Report submitted, but photo was not uploaded due to a network error');
 				}
+			}
 
 			toast.success(result.message);
-				goto(`/hole/${result.id}?submitted=1`);
+			goto(`/hole/${result.id}?submitted=1`);
 		} catch (err: unknown) {
 			toastError(err instanceof Error ? err.message : 'Something went wrong');
 		} finally {
@@ -607,47 +590,47 @@
 			</div>
 		</fieldset>
 
-	<!-- Photo (optional) -->
-	<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-		<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
-			<Icon name="camera" size={14} class="text-sky-400" />
-			Photo <span class="text-zinc-400 font-normal">(optional)</span>
-		</div>
+		<!-- Photo (optional) -->
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+				<Icon name="camera" size={14} class="text-sky-400" />
+				Photo <span class="text-zinc-400 font-normal">(optional)</span>
+			</div>
 
-		{#if photoPreview}
-			<div class="relative">
-				<img src={photoPreview} alt="Selected" class="w-full rounded-lg object-cover aspect-video" />
+			{#if photoPreview}
+				<div class="relative">
+					<img src={photoPreview} alt="Selected" class="w-full rounded-lg object-cover aspect-video" />
+					<button
+						type="button"
+						onclick={clearPhoto}
+						aria-label="Remove photo"
+						class="absolute top-2 right-2 bg-zinc-900/80 hover:bg-zinc-900 rounded-full p-1.5 text-zinc-400 hover:text-white transition-colors"
+					>
+						<Icon name="x" size={14} />
+					</button>
+				</div>
+			{:else}
 				<button
 					type="button"
-					onclick={clearPhoto}
-					aria-label="Remove photo"
-					class="absolute top-2 right-2 bg-zinc-900/80 hover:bg-zinc-900 rounded-full p-1.5 text-zinc-400 hover:text-white transition-colors"
+					onclick={() => photoInput?.click()}
+					class="w-full py-3 rounded-lg border-2 border-dashed border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
 				>
-					<Icon name="x" size={14} />
+					<Icon name="camera" size={15} class="shrink-0" />
+					Add a photo
 				</button>
-			</div>
-		{:else}
-			<button
-				type="button"
-				onclick={() => photoInput?.click()}
-				class="w-full py-3 rounded-lg border-2 border-dashed border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
-			>
-				<Icon name="camera" size={15} class="shrink-0" />
-				Add a photo
-			</button>
-			<input
-				bind:this={photoInput}
-				id="photo-input"
-				type="file"
-				accept="image/jpeg,image/png,image/webp"
-				class="sr-only"
-				aria-label="Upload a pothole photo"
-				onchange={handlePhotoSelect}
-			/>
-		{/if}
+				<input
+					bind:this={photoInput}
+					id="photo-input"
+					type="file"
+					accept="image/jpeg,image/png,image/webp"
+					class="sr-only"
+					aria-label="Upload a pothole photo"
+					onchange={handlePhotoSelect}
+				/>
+			{/if}
 
-		<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
-	</div>
+			<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
+		</div>
 
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3" aria-live="polite" aria-atomic="true">
 			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">

@@ -4,11 +4,11 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { STATUS_CONFIG } from '$lib/constants';
 	import {
-	  CITY_LABELS,
 	  CITY_REPORT_LINKS,
 	  MTO_REPORT_LINK,
 	  REGION_REPORT_LINK
 	} from '$lib/official-reporting';
+	import { resizeImage } from '$lib/image';
 	import { toastError } from '$lib/toast';
 	import type { Pothole } from '$lib/types';
 	import type { Councillor } from '$lib/wards';
@@ -48,32 +48,6 @@
 	let canUploadPhoto = $derived(
 		(pothole.status === 'pending' || pothole.status === 'reported') && !photoSubmitted
 	);
-
-	async function resizeImage(file: File): Promise<Blob> {
-		return new Promise((resolve, reject) => {
-			const MAX_PX = 800;
-			const objectUrl = URL.createObjectURL(file);
-			const img = new Image();
-			img.onload = () => {
-				URL.revokeObjectURL(objectUrl);
-				const scale = Math.min(1, MAX_PX / Math.max(img.width, img.height));
-				const w = Math.round(img.width * scale);
-				const h = Math.round(img.height * scale);
-				const canvas = document.createElement('canvas');
-				canvas.width = w;
-				canvas.height = h;
-				const ctx = canvas.getContext('2d');
-				if (!ctx) { reject(new Error('Could not get canvas context')); return; }
-				ctx.drawImage(img, 0, 0, w, h);
-				canvas.toBlob((blob) => {
-					if (!blob) { reject(new Error('Image conversion failed')); return; }
-					resolve(blob);
-				}, 'image/jpeg', 0.82);
-			};
-			img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Failed to load image')); };
-			img.src = objectUrl;
-		});
-	}
 
 	async function handlePhotoSelect(e: Event) {
 		const input = e.target as HTMLInputElement;
@@ -240,7 +214,7 @@ Thank you.`;
 					class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
 				>
 					<Icon name="external-link" size={13} class="shrink-0" />
-					{officialCityLink ? `File with ${CITY_LABELS[councillor!.city]}` : 'Official reporting links'}
+					{officialCityLink ? `File with ${officialCityLink.label}` : 'Official reporting links'}
 				</a>
 				<button
 					onclick={() => share(pothole.address, pothole.lat, pothole.lng)}
@@ -348,7 +322,7 @@ Thank you.`;
 						class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-sky-700 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-600"
 					>
 						<Icon name="external-link" size={13} class="shrink-0" />
-						File with {CITY_LABELS[councillor!.city]}
+						File with {officialCityLink.label}
 					</a>
 				{/if}
 				<a
@@ -446,8 +420,8 @@ Thank you.`;
 				type="file"
 				accept="image/jpeg,image/png,image/webp"
 				class="sr-only"
-			tabindex="-1"
-			aria-hidden="true"
+				tabindex="-1"
+				aria-hidden="true"
 				aria-label="Upload a pothole photo"
 				onchange={handlePhotoSelect}
 			/>
