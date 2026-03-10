@@ -864,11 +864,6 @@
 	:global(.popup-secondary-btn),
 	:global(.popup-fix-btn) {
 		flex: 1 1 calc(50% - 4px);
-	}
-
-	:global(.popup-primary-link),
-	:global(.popup-secondary-btn),
-	:global(.popup-fix-btn) {
 		min-height: 36px;
 	}
 
