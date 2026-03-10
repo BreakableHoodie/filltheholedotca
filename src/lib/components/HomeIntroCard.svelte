@@ -54,7 +54,7 @@
 		aria-labelledby="welcome-title"
 		class="absolute top-4 left-4 right-4 z-[1001] sm:left-6 sm:right-auto sm:max-w-md"
 	>
-		<div class="bg-zinc-950/95 backdrop-blur border border-zinc-800 rounded-2xl p-5 shadow-2xl">
+		<div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-5 shadow-2xl">
 			<div class="flex items-start justify-between gap-3">
 				<div class="space-y-2">
 					<p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">Waterloo Region civic tool</p>
@@ -76,7 +76,7 @@
 
 			<div class="mt-4 grid gap-2">
 				{#each STEPS as step (step.title)}
-					<div class="flex items-start gap-3 bg-zinc-900/80 rounded-xl p-3">
+					<div class="flex items-start gap-3 bg-zinc-900 rounded-xl p-3">
 						<div class="shrink-0 mt-0.5 p-1.5 rounded-md {step.bgClass}">
 							<Icon name={step.icon} size={15} class={step.iconClass} />
 						</div>

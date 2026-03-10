@@ -460,7 +460,7 @@
 		<!-- Report-here banner -->
 		{#if reportMode}
 			<div
-				class="absolute top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1001] flex flex-wrap items-center gap-2 sm:gap-3 bg-zinc-900/95 backdrop-blur border border-sky-600 rounded-xl px-4 py-3 shadow-xl"
+				class="absolute top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1001] flex flex-wrap items-center gap-2 sm:gap-3 bg-zinc-950 border border-sky-600 rounded-xl px-4 py-3 shadow-xl"
 			>
 				<span class="text-sm text-white grow" aria-live="polite" aria-atomic="true">
 					Tap the map where the pothole is
@@ -492,7 +492,7 @@
 			<button
 				onclick={locateMe}
 				disabled={locating}
-				class="bg-zinc-900/90 backdrop-blur border border-zinc-700 hover:border-zinc-500 rounded-xl px-3 py-2 text-xs text-zinc-300 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+				class="bg-zinc-950 border border-zinc-700 hover:border-zinc-500 rounded-xl px-3 py-2 text-xs text-zinc-300 transition-colors flex items-center gap-1.5 disabled:opacity-50"
 			>
 				{#if locating}
 					<Icon name="loader" size={12} class="animate-spin shrink-0" />
@@ -509,14 +509,14 @@
 				onclick={enterReportMode}
 				aria-pressed={reportMode}
 				disabled={reportMode}
-				class="bg-sky-700/90 backdrop-blur border border-sky-600 hover:border-sky-400 rounded-xl px-3 py-2 text-xs text-white font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+				class="bg-sky-700 border border-sky-600 hover:border-sky-400 rounded-xl px-3 py-2 text-xs text-white font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
 			>
 				<Icon name="map-pin" size={12} class="shrink-0" />
 				Report here
 			</button>
 
 			<!-- Layers panel -->
-			<div class="bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl p-3 space-y-2 text-xs">
+			<div class="bg-zinc-950 border border-zinc-700 rounded-xl p-3 space-y-2 text-xs">
 				<div class="text-zinc-400 font-semibold uppercase tracking-wider text-[10px] mb-1">Layers</div>
 
 				{#each ([
@@ -553,7 +553,7 @@
 
 	<!-- Legend -->
 	{#if mapReady}
-		<div class="absolute safe-bottom right-4 hidden sm:block bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl p-3 text-xs space-y-1.5 z-[1000]">
+		<div class="absolute safe-bottom right-4 hidden sm:block bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-xs space-y-1.5 z-[1000]">
 			<div class="text-zinc-400 font-semibold mb-2 uppercase tracking-wider text-[10px]">Status</div>
 			{#each ['reported', 'expired', 'filled'] as status (status)}
 				{@const info = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]}
@@ -567,7 +567,7 @@
 
 	{#if mapReady}
 		<div class="absolute safe-bottom-mobile-tray inset-x-3 z-[1000] sm:hidden">
-			<div class="rounded-2xl border border-zinc-800 bg-zinc-950/95 backdrop-blur shadow-2xl overflow-hidden">
+			<div class="rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden">
 				<div class="flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-zinc-800/80">
 					<div class="min-w-0">
 						<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-300">Map tools</p>
@@ -691,7 +691,7 @@
 	{/if}
 
 	{#if potholes.length === 0}
-		<div class="absolute top-4 left-1/2 -translate-x-1/2 bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl px-4 py-2 text-sm text-zinc-400 z-[1000]">
+		<div class="absolute top-4 left-1/2 -translate-x-1/2 bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2 text-sm text-zinc-400 z-[1000]">
 			No potholes yet —&nbsp;<a href="/report" class="text-sky-400 hover:text-sky-300 underline">be the first to report one!</a>
 		</div>
 	{/if}
@@ -701,7 +701,7 @@
 		<div class="absolute safe-bottom-watchlist left-1/2 -translate-x-1/2 z-[1000]">
 			<button
 				onclick={() => watchlistSection?.scrollIntoView({ behavior: 'smooth' })}
-				class="inline-flex items-center gap-1.5 bg-zinc-900/90 backdrop-blur border border-sky-800 text-sky-400 text-xs font-semibold px-3 py-1.5 rounded-full hover:border-sky-600 hover:text-sky-300 transition-colors shadow-lg"
+				class="inline-flex items-center gap-1.5 bg-zinc-950 border border-sky-800 text-sky-400 text-xs font-semibold px-3 py-1.5 rounded-full hover:border-sky-600 hover:text-sky-300 transition-colors shadow-lg"
 				aria-label="Scroll to watchlist"
 			>
 				<Icon name="bookmark-filled" size={12} class="shrink-0" />
