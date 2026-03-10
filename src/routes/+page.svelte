@@ -848,17 +848,20 @@
 
 	:global(.popup-fix-btn) {
 		padding: 6px 10px;
-		background: #16a34a20;
-		color: #15803d;
-		border: 1px solid #16a34a40;
+		background: #dcfce7;
+		color: #166534;
+		border: 1px solid #86efac;
 		border-radius: 6px;
 		font-size: 12px;
 		font-weight: 700;
 		cursor: pointer;
-		transition: background 0.15s;
+		transition: background 0.15s, border-color 0.15s;
 		white-space: nowrap;
 	}
-	:global(.popup-fix-btn:hover) { background: #16a34a30; }
+	:global(.popup-fix-btn:hover) {
+		background: #bbf7d0;
+		border-color: #4ade80;
+	}
 
 	:global(.popup-primary-link),
 	:global(.popup-secondary-btn),

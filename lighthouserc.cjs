@@ -38,7 +38,9 @@ module.exports = {
 					}
 				},
 				{
-					matchingUrlPattern: '.*',
+					// Keep the fallback scoped to non-homepage routes so `/` only
+					// receives the homepage-specific assertion budget once.
+					matchingUrlPattern: 'http://localhost:4173/(report|about|stats)$',
 					assertions: {
 						'categories:performance': ['warn', { minScore: 0.6 }],
 						'categories:accessibility': ['error', { minScore: 0.9 }],
