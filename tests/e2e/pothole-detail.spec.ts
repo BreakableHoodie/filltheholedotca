@@ -1,90 +1,117 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-interface FeedPothole {
-	id: string;
-	lat: number;
-	lng: number;
-	address: string | null;
-	description: string | null;
-	status: string;
-	created_at: string;
+const seededReportedPothole = {
+  id: "11111111-1111-4111-8111-111111111111",
+  address: "700 King Street West",
+} as const;
+
+const seededPendingPothole = {
+  id: "22222222-2222-4222-8222-222222222222",
+  address: "55 Erb Street East",
+} as const;
+
+function fixtureDetailUrl(id: string) {
+  return `/hole/${id}?__fixture=1`;
 }
 
-test.describe('Pothole detail page', () => {
-	test.use({
-		storageState: {
-			cookies: [],
-			origins: [
-				{
-					origin: 'http://localhost:4173',
-					localStorage: [{ name: 'fth-welcomed', value: '1' }]
-				}
-			]
-		}
-	});
+test.describe("Pothole detail page", () => {
+  test.use({
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: "http://localhost:4173",
+          localStorage: [{ name: "fth-home-intro-dismissed", value: "1" }],
+        },
+      ],
+    },
+  });
 
-	test('loads and displays core details for a real pothole', async ({ page, request }) => {
-		const feedRes = await request.get('/api/feed.json');
-		const { potholes } = (await feedRes.json()) as { potholes: FeedPothole[] };
+  test("loads seeded detail content with share links and official reporting actions", async ({
+    page,
+  }) => {
+    await page.goto(fixtureDetailUrl(seededReportedPothole.id));
 
-		if (!potholes?.length) {
-			test.skip(true, 'No non-pending potholes in DB — skipping detail page tests');
-			return;
-		}
+    // Heading shows the address or formatted coordinates
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: seededReportedPothole.address,
+      }),
+    ).toBeVisible();
 
-		const pothole = potholes[0];
-		await page.goto(`/hole/${pothole.id}`);
+    // The reported date is rendered in the header for the seeded fixture.
+    await expect(page.getByText(/Reported Mar 7, 2026/i)).toBeVisible();
 
-		// Heading shows the address or formatted coordinates
-		await expect(page.locator('h1')).toBeVisible();
+    // Links section is always present regardless of status
+    await expect(page.getByText("Street View", { exact: false })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Copy link/i }),
+    ).toBeVisible();
 
-		// "Reported" date is always rendered in the header
-		await expect(page.getByText('Reported', { exact: false })).toBeVisible();
+    // Official-reporting panel should expose city, region, and provincial paths.
+    await expect(page.getByText("Report it officially too")).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /File with City of Kitchener/i }),
+    ).toHaveAttribute(
+      "href",
+      "https://www.kitchener.ca/en/transportation-and-parking/report-a-road-concern.aspx",
+    );
+    await expect(
+      page.getByRole("link", { name: /File with Region of Waterloo/i }),
+    ).toHaveAttribute(
+      "href",
+      "https://www.regionofwaterloo.ca/en/living-here/roads-and-traffic.aspx",
+    );
+    await expect(
+      page.getByRole("link", {
+        name: /Report those to the Ontario Ministry of Transportation/i,
+      }),
+    ).toHaveAttribute(
+      "href",
+      "https://www.ontario.ca/page/report-problem-provincial-highway",
+    );
 
-		// Links section is always present regardless of status
-		await expect(page.getByText('Street View', { exact: false })).toBeVisible();
-		await expect(page.getByText('Share on X', { exact: false })).toBeVisible();
-		await expect(page.getByRole('button', { name: /Copy link/i })).toBeVisible();
-	});
+    // Seeded councillor actions should remain available without external ward lookups.
+    await expect(page.getByRole("link", { name: /Email /i })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Councillor page/i }),
+    ).toBeVisible();
+  });
 
-	test('shows "Mark as filled" button when status is reported', async ({ page, request }) => {
-		const feedRes = await request.get('/api/feed.json');
-		const { potholes } = (await feedRes.json()) as { potholes: FeedPothole[] };
-		const reported = potholes?.find((p) => p.status === 'reported');
+  test("shows mark-filled action for the seeded reported pothole", async ({
+    page,
+  }) => {
+    await page.goto(fixtureDetailUrl(seededReportedPothole.id));
+    await expect(
+      page.getByRole("button", { name: /Mark as filled/i }),
+    ).toBeVisible();
+  });
 
-		if (!reported) {
-			test.skip(true, 'No reported potholes in DB');
-			return;
-		}
+  test("shows submitted progress state for the seeded pending pothole", async ({
+    page,
+  }) => {
+    await page.goto(`${fixtureDetailUrl(seededPendingPothole.id)}&submitted=1`);
 
-		await page.goto(`/hole/${reported.id}`);
-		await expect(page.getByRole('button', { name: /Mark as filled/i })).toBeVisible();
-	});
+    await expect(
+      page.getByRole("heading", { name: /Report received/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/waiting for independent confirmation/i),
+    ).toBeVisible();
+    await expect(page.getByText(/Progress: 1\/2 confirmations/i)).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: seededPendingPothole.address,
+      }),
+    ).toBeVisible();
+  });
 
-	test('shows councillor contact block for non-filled open potholes', async ({ page, request }) => {
-		const feedRes = await request.get('/api/feed.json');
-		const { potholes } = (await feedRes.json()) as { potholes: FeedPothole[] };
-		const open = potholes?.find((p) => p.status !== 'filled');
-
-		if (!open) {
-			test.skip(true, 'No open potholes in DB');
-			return;
-		}
-
-		await page.goto(`/hole/${open.id}`);
-
-		// The councillor block is rendered when the pothole lies within a mapped ward.
-		// If a pothole is on the boundary edge it may not match any ward, so this is a
-		// conditional check rather than a hard assertion.
-		const councillorBlock = page.getByText('Contact your councillor');
-		if (await councillorBlock.isVisible()) {
-			await expect(page.getByRole('link', { name: /Email /i })).toBeVisible();
-			await expect(page.getByRole('link', { name: /Councillor page/i })).toBeVisible();
-		}
-	});
-
-	test('returns 404 for a non-existent pothole UUID', async ({ page }) => {
-		const response = await page.goto('/hole/550e8400-e29b-41d4-a716-446655440000');
-		expect(response?.status()).toBe(404);
-	});
+  test("returns 404 for a non-existent pothole UUID", async ({ page }) => {
+    const response = await page.goto(
+      "/hole/550e8400-e29b-41d4-a716-446655440000",
+    );
+    expect(response?.status()).toBe(404);
+  });
 });

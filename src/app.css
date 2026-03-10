@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Outfit:wght@400;500;600;700&display=swap');
-@import 'tailwindcss';
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Outfit:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
 
 /**
  * Global keyboard focus ring — WCAG 2.4.7 Focus Visible / 2.4.11 Focus Appearance.
@@ -17,9 +17,9 @@
 }
 
 @theme {
-  --font-sans:  'Outfit', system-ui, sans-serif;
-  --font-brand: 'Barlow Condensed', system-ui, sans-serif;
-  --color-asphalt:       #0f0f0f;
+  --font-sans: "Outfit", system-ui, sans-serif;
+  --font-brand: "Barlow Condensed", system-ui, sans-serif;
+  --color-asphalt: #0f0f0f;
   --color-asphalt-light: #1a1a1a;
 }
 
@@ -37,4 +37,18 @@ body {
 }
 .safe-bottom {
   bottom: calc(1.5rem + env(safe-area-inset-bottom));
+}
+
+.safe-bottom-mobile-tray {
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+}
+
+.safe-bottom-watchlist {
+  bottom: calc(6.5rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 640px) {
+  .safe-bottom-watchlist {
+    bottom: 1rem;
+  }
 }

@@ -1,18 +1,22 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { toastError } from '$lib/toast';
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import Icon from '$lib/components/Icon.svelte';
-	import { ICONS } from '$lib/icons';
 	import { page } from '$app/stores';
+	import Icon from '$lib/components/Icon.svelte';
+	import { resizeImage } from '$lib/image';
+	import { ICONS } from '$lib/icons';
+	import { toastError } from '$lib/toast';
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 
 	const SEVERITY_OPTIONS = [
-		{ value: 'Spilled my coffee',  level: 1, label: 'Spilled my coffee',  sub: 'barely there',                    barColor: 'bg-yellow-400' },
-		{ value: 'Bent a rim',         level: 2, label: 'Bent a rim',         sub: 'car or bike — you felt that',     barColor: 'bg-orange-400' },
-		{ value: 'Caused real damage', level: 3, label: 'Caused real damage', sub: 'tire, wheel, or worse',           barColor: 'bg-red-400'    },
-		{ value: 'RIP',                level: 4, label: 'RIP',                sub: 'suspension, wheel, will to live', barColor: 'bg-rose-400'   },
+		{ value: 'Minor damage',    level: 1, label: 'Minor damage',    sub: 'visible, but not urgent',             barColor: 'bg-yellow-400' },
+		{ value: 'Moderate damage', level: 2, label: 'Moderate damage', sub: 'drivers or cyclists will feel it',    barColor: 'bg-orange-400' },
+		{ value: 'Severe damage',   level: 3, label: 'Severe damage',   sub: 'likely to damage a tire or wheel',    barColor: 'bg-red-400'    },
+		{ value: 'Hazardous',       level: 4, label: 'Hazardous',       sub: 'dangerous and needs quick attention', barColor: 'bg-rose-400'   },
 	] as const;
+
+	let { data }: { data: { confirmationThreshold: number } } = $props();
+	let confirmationThreshold = $derived(data.confirmationThreshold);
 
 	let lat = $state<number | null>(null);
 	let lng = $state<number | null>(null);
@@ -20,31 +24,17 @@
 	let address = $state<string | null>(null);
 	let severity = $state<string | null>(null);
 	let submitting = $state(false);
+	let hasLocation = $derived(lat !== null && lng !== null);
+	let locationSummary = $derived(
+		hasLocation
+			? (address ?? `${lat?.toFixed(5)}, ${lng?.toFixed(5)}`)
+			: null
+	);
 
 	// Photo upload state
 	let photoFile = $state<File | null>(null);
 	let photoPreview = $state<string | null>(null);
 	let photoInput = $state<HTMLInputElement | undefined>(undefined);
-
-	async function resizeImage(file: File): Promise<Blob> {
-		return new Promise((resolve) => {
-			const MAX_PX = 800;
-			const objectUrl = URL.createObjectURL(file);
-			const img = new Image();
-			img.onload = () => {
-				URL.revokeObjectURL(objectUrl);
-				const scale = Math.min(1, MAX_PX / Math.max(img.width, img.height));
-				const w = Math.round(img.width * scale);
-				const h = Math.round(img.height * scale);
-				const canvas = document.createElement('canvas');
-				canvas.width = w;
-				canvas.height = h;
-				canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
-				canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.82);
-			};
-			img.src = objectUrl;
-		});
-	}
 
 	async function handlePhotoSelect(e: Event) {
 		const input = e.target as HTMLInputElement;
@@ -357,33 +347,33 @@
 			const result = await res.json();
 			if (!res.ok) throw new Error(result.message || 'Submission failed');
 
-				// Upload photo if one was selected — non-fatal if it fails
-				if (photoFile) {
-					const fd = new FormData();
-					fd.append('photo', photoFile);
-					fd.append('pothole_id', result.id);
-					try {
-						const photoRes = await fetch('/api/photos', { method: 'POST', body: fd });
-						if (!photoRes.ok) {
-							let uploadMessage = 'Photo upload failed';
-							try {
-								const photoResult = await photoRes.json();
-								if (typeof photoResult?.message === 'string' && photoResult.message.length > 0) {
-									uploadMessage = photoResult.message;
-								}
-							} catch {
-								// Keep generic message when response body is not JSON.
+			// Upload photo if one was selected — non-fatal if it fails
+			if (photoFile) {
+				const fd = new FormData();
+				fd.append('photo', photoFile);
+				fd.append('pothole_id', result.id);
+				try {
+					const photoRes = await fetch('/api/photos', { method: 'POST', body: fd });
+					if (!photoRes.ok) {
+						let uploadMessage = 'Photo upload failed';
+						try {
+							const photoResult = await photoRes.json();
+							if (typeof photoResult?.message === 'string' && photoResult.message.length > 0) {
+								uploadMessage = photoResult.message;
 							}
-							toastError(`Report submitted, but photo was not uploaded: ${uploadMessage}`);
+						} catch {
+							// Keep generic message when response body is not JSON.
 						}
-					} catch {
-						// Photo upload failure does not block navigation
-						toastError('Report submitted, but photo was not uploaded due to a network error');
+						toastError(`Report submitted, but photo was not uploaded: ${uploadMessage}`);
 					}
+				} catch {
+					// Photo upload failure does not block navigation
+					toastError('Report submitted, but photo was not uploaded due to a network error');
 				}
+			}
 
 			toast.success(result.message);
-			goto(`/hole/${result.id}`);
+			goto(`/hole/${result.id}?submitted=1`);
 		} catch (err: unknown) {
 			toastError(err instanceof Error ? err.message : 'Something went wrong');
 		} finally {
@@ -399,7 +389,8 @@
 <div class="max-w-lg mx-auto px-4 py-8">
 	<div class="mb-6">
 		<h1 class="font-brand font-bold text-3xl text-white mb-1">Report a pothole</h1>
-		<p class="text-zinc-400 text-sm">Standing next to one? Share its location and submit.</p>
+		<p class="text-zinc-300 text-sm">Report the location in about 30 seconds. No account required.</p>
+		<p class="text-xs text-zinc-400 mt-2">Independent community tracker for Waterloo Region. For official repair action, report to the city too.</p>
 		<p class="flex items-start gap-1.5 text-xs text-zinc-400 mt-2">
 			<Icon name="alert-triangle" size={13} class="text-amber-500 shrink-0 mt-0.5" />
 			Stay safe — report from the sidewalk or after pulling over. Never stop in a live traffic lane.
@@ -413,6 +404,7 @@
 				<Icon name="crosshair" size={14} class="text-sky-400" />
 				Location
 			</div>
+			<p class="text-xs text-zinc-400">Use your current location for the fastest report, or switch to address search or map pin if needed.</p>
 
 			<!-- Tab bar -->
 			<div role="tablist" aria-label="Choose a location source" class="flex gap-1 bg-zinc-800 rounded-lg p-1">
@@ -472,9 +464,9 @@
 
 				{#if gpsStatus === 'error'}
 					<p class="text-xs text-red-400" role="alert">
-						Location access is required to report a pothole. Please enable it in your browser settings and try again.
+						Location access was denied or unavailable. Enable it in your browser settings, or use address or map mode instead.
 					</p>
-					<p class="text-xs text-zinc-500">
+					<p class="text-xs text-zinc-400">
 						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-zinc-300 transition-colors">Enter an address</button>
 						or <button type="button" onclick={() => (locationMode = 'map')} class="underline hover:text-zinc-300 transition-colors">pin on the map</button>.
 					</p>
@@ -482,7 +474,7 @@
 
 				{#if address}
 					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
-						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-500" />
+						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address}
 					</p>
 				{:else if gpsStatus === 'got'}
@@ -510,7 +502,7 @@
 						autocomplete="off"
 					/>
 					{#if addressSearching}
-						<p class="text-xs text-zinc-500 mt-1">Searching…</p>
+						<p class="text-xs text-zinc-400 mt-1">Searching…</p>
 					{/if}
 					{#if addressSuggestions.length > 0}
 						<ul
@@ -533,7 +525,7 @@
 				</div>
 				{#if lat !== null && addressQuery && addressSuggestions.length === 0}
 					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
-						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-500" />
+						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address}
 					</p>
 				{/if}
@@ -550,7 +542,7 @@
 				<div bind:this={miniMapEl} class="w-full rounded-lg overflow-hidden" style="height: 260px;"></div>
 				{#if lat !== null}
 					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
-						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-500" />
+						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
 					</p>
 				{:else}
@@ -563,8 +555,9 @@
 		<fieldset class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
 			<legend class="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-2">
 				<Icon name="alert-triangle" size={14} class="text-zinc-400" />
-				How bad is it? <span class="text-zinc-400 font-normal">(optional)</span>
+				How severe is the damage? <span class="text-zinc-400 font-normal">(optional)</span>
 			</legend>
+			<p class="text-xs text-zinc-400">This helps other residents understand urgency at a glance.</p>
 			<div class="grid grid-cols-2 gap-2">
 				{#each SEVERITY_OPTIONS as opt (opt.value)}
 					<label
@@ -597,51 +590,91 @@
 			</div>
 		</fieldset>
 
-	<!-- Photo (optional) -->
-	<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-		<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
-			<Icon name="camera" size={14} class="text-sky-400" />
-			Photo <span class="text-zinc-400 font-normal">(optional)</span>
-		</div>
+		<!-- Photo (optional) -->
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+				<Icon name="camera" size={14} class="text-sky-400" />
+				Photo <span class="text-zinc-400 font-normal">(optional)</span>
+			</div>
 
-		{#if photoPreview}
-			<div class="relative">
-				<img src={photoPreview} alt="Selected" class="w-full rounded-lg object-cover aspect-video" />
+			{#if photoPreview}
+				<div class="relative">
+					<img src={photoPreview} alt="Selected" class="w-full rounded-lg object-cover aspect-video" />
+					<button
+						type="button"
+						onclick={clearPhoto}
+						aria-label="Remove photo"
+						class="absolute top-2 right-2 bg-zinc-900/80 hover:bg-zinc-900 rounded-full p-1.5 text-zinc-400 hover:text-white transition-colors"
+					>
+						<Icon name="x" size={14} />
+					</button>
+				</div>
+			{:else}
 				<button
 					type="button"
-					onclick={clearPhoto}
-					aria-label="Remove photo"
-					class="absolute top-2 right-2 bg-zinc-900/80 hover:bg-zinc-900 rounded-full p-1.5 text-zinc-400 hover:text-white transition-colors"
+					onclick={() => photoInput?.click()}
+					class="w-full py-3 rounded-lg border-2 border-dashed border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
 				>
-					<Icon name="x" size={14} />
+					<Icon name="camera" size={15} class="shrink-0" />
+					Add a photo
 				</button>
-			</div>
-		{:else}
-			<button
-				type="button"
-				onclick={() => photoInput?.click()}
-				class="w-full py-3 rounded-lg border-2 border-dashed border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
-			>
-				<Icon name="camera" size={15} class="shrink-0" />
-				Add a photo
-			</button>
-			<input
-				bind:this={photoInput}
-				id="photo-input"
-				type="file"
-				accept="image/jpeg,image/png,image/webp"
-				class="sr-only"
-				aria-label="Upload a pothole photo"
-				onchange={handlePhotoSelect}
-			/>
-		{/if}
+				<input
+					bind:this={photoInput}
+					id="photo-input"
+					type="file"
+					accept="image/jpeg,image/png,image/webp"
+					class="sr-only"
+					aria-label="Upload a pothole photo"
+					onchange={handlePhotoSelect}
+				/>
+			{/if}
 
-		<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
-	</div>
+			<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
+		</div>
+
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3" aria-live="polite" aria-atomic="true">
+			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+				<Icon name="check-circle" size={14} class={hasLocation ? 'text-green-400' : 'text-zinc-400'} />
+				Ready to submit
+			</div>
+
+			{#if hasLocation}
+				<div class="space-y-2">
+					<div class="rounded-lg bg-zinc-800/80 p-3 space-y-1.5">
+						<p class="flex items-center gap-1.5 text-xs font-semibold text-green-400">
+							<Icon name="map-pin" size={12} class="shrink-0" />
+							Location locked in
+						</p>
+						<p class="text-sm text-zinc-200 break-words overflow-wrap-anywhere">{locationSummary}</p>
+					</div>
+					<div class="grid gap-2 sm:grid-cols-2">
+						<div class="rounded-lg bg-zinc-800/60 p-3">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">Severity</p>
+							<p class="mt-1 text-sm text-zinc-300">{severity ?? 'Optional — not added yet'}</p>
+						</div>
+						<div class="rounded-lg bg-zinc-800/60 p-3">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">Photo</p>
+							<p class="mt-1 text-sm text-zinc-300">{photoFile ? 'Attached and ready to upload' : 'Optional — not added yet'}</p>
+						</div>
+					</div>
+				</div>
+				<p class="text-xs text-zinc-400 leading-relaxed">
+					After you submit, a pothole page is created right away. It appears on the public map after
+					{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location.
+				</p>
+			{:else}
+				<p class="text-sm text-zinc-300">
+					Choose a location above to unlock the report button.
+				</p>
+				<p class="text-xs text-zinc-400">
+					Use GPS for the fastest report, or switch to address search or map pin if location access fails.
+				</p>
+			{/if}
+		</div>
 
 		<button
 			type="submit"
-			disabled={submitting || lat === null || lng === null}
+			disabled={submitting || !hasLocation}
 			class="w-full py-4 font-bold text-lg rounded-xl transition-colors flex items-center justify-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed bg-sky-700 hover:bg-sky-600 text-white"
 		>
 			{#if submitting}
@@ -649,15 +682,21 @@
 				Submitting…
 			{:else}
 				<Icon name="map-pin" size={16} class="shrink-0" />
-				Report this hole
+				Submit report
 			{/if}
 		</button>
 
 		<p class="text-xs text-zinc-400 text-center">
-			Three independent reports from the same location are needed before a pothole appears on the map.
+			{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location are needed before a pothole appears on the public map.
 		</p>
 		<p class="text-xs text-zinc-400 text-center">
-			On a major road? It may be maintained by the Region of Waterloo, not the City. <a href="/about" class="underline hover:text-white">Learn more →</a>
+			On a major road? It may be maintained by the Region of Waterloo, not the city. <a href="/about" class="underline hover:text-white">Learn more →</a>
 		</p>
 	</form>
 </div>
+
+<style>
+	.overflow-wrap-anywhere {
+		overflow-wrap: anywhere;
+	}
+</style>

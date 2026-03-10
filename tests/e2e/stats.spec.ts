@@ -7,7 +7,7 @@ test.describe('Stats page', () => {
 			origins: [
 				{
 					origin: 'http://localhost:4173',
-					localStorage: [{ name: 'fth-welcomed', value: '1' }]
+					localStorage: [{ name: 'fth-home-intro-dismissed', value: '1' }]
 				}
 			]
 		}
