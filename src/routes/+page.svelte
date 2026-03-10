@@ -146,7 +146,7 @@
 					iconAnchor: [10, 10]
 				});
 				locationMarker = L.marker([lat, lng], { icon, zIndexOffset: 500 })
-					.bindPopup(`<div class="popup-content"><strong>You are here</strong><br/><span style="color:#71717a;font-size:11px">±${Math.round(accuracy)}m accuracy</span></div>`)
+					.bindPopup(`<div class="popup-content"><strong>You are here</strong><br/><span style="color:#3f3f46;font-size:11px">±${Math.round(accuracy)}m accuracy</span></div>`)
 					.addTo(map);
 
 				map.flyTo([lat, lng], 16, { duration: 1.2 });
@@ -784,7 +784,7 @@
 	}
 
 	:global(.popup-status--reported) { background: #f9731620; color: #f97316; }
-	:global(.popup-status--expired)  { background: #71717a20; color: #71717a; }
+	:global(.popup-status--expired)  { background: #e4e4e7; color: #3f3f46; }
 	:global(.popup-status--filled)   { background: #22c55e20; color: #22c55e; }
 
 	:global(.popup-desc) {
