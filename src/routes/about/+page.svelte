@@ -10,12 +10,12 @@
 
 <div class="max-w-2xl mx-auto px-4 py-12 space-y-10">
 	<div>
-		<h1 class="font-brand font-bold text-4xl text-white mb-2">About</h1>
-		<p class="text-zinc-400 text-lg">Civic accountability, one pothole at a time.</p>
+		<h1 class="page-title text-4xl sm:text-5xl text-white mb-2">About</h1>
+		<p class="page-intro text-zinc-400 text-lg">Civic accountability, one pothole at a time.</p>
 	</div>
 
 	<section class="space-y-4 text-zinc-300 leading-relaxed">
-		<h2 class="text-xl font-bold text-white">Why this exists</h2>
+		<h2 class="section-title text-xl text-white">Why this exists</h2>
 		<p>
 			Potholes damage cars, bend bike wheels, and throw cyclists. They're a hazard for
 			everyone — drivers, riders, and pedestrians alike. But reporting them through official
@@ -32,7 +32,7 @@
 	</section>
 
 	<section class="bg-zinc-900 border border-zinc-700 rounded-xl p-6 space-y-4">
-		<h2 class="flex items-center gap-2 text-xl font-bold text-white">
+		<h2 class="section-title flex items-center gap-2 text-xl text-white">
 			<Icon name="external-link" size={18} class="text-sky-400 shrink-0" />
 			Report it officially too
 		</h2>
@@ -76,7 +76,7 @@
 	</section>
 
 	<section class="space-y-4 text-zinc-300 leading-relaxed">
-		<h2 class="text-xl font-bold text-white">How it works</h2>
+		<h2 class="section-title text-xl text-white">How it works</h2>
 
 		<div class="flex gap-3 bg-amber-950/40 border border-amber-700/40 rounded-xl p-4 text-sm text-amber-200/90">
 			<Icon name="alert-triangle" size={18} class="text-amber-400 shrink-0 mt-0.5" />
@@ -132,7 +132,7 @@
 	</section>
 
 	<section class="space-y-4 text-zinc-300 leading-relaxed" id="privacy">
-		<h2 class="text-xl font-bold text-white">Privacy</h2>
+		<h2 class="section-title text-xl text-white">Privacy</h2>
 		<p>
 			No accounts. No names. No tracking. Here's exactly what this site does and doesn't do with your data.
 		</p>
@@ -193,7 +193,7 @@
 	</section>
 
 	<section class="space-y-4 text-zinc-300 leading-relaxed" id="disclaimer">
-		<h2 class="text-xl font-bold text-white">Disclaimer</h2>
+		<h2 class="section-title text-xl text-white">Disclaimer</h2>
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-3 text-sm text-zinc-400 leading-relaxed">
 			<p>
 				fillthehole.ca is an independent community tool. It is <strong class="text-zinc-300">not affiliated with, endorsed by, or operated by</strong> the City of Kitchener, City of Waterloo, City of Cambridge, the Region of Waterloo, or any other government body.
@@ -214,7 +214,7 @@
 	</section>
 
 	<section class="space-y-3 text-zinc-300 leading-relaxed">
-		<h2 class="text-xl font-bold text-white">Open source</h2>
+		<h2 class="section-title text-xl text-white">Open source</h2>
 		<p class="text-zinc-400 text-sm">
 			fillthehole.ca is free, open-source software built for the public good. No ads, no investors, no data harvesting.
 			Read the code, file an issue, or contribute a fix.
@@ -231,7 +231,7 @@
 	</section>
 
 	<section class="space-y-4" id="open-data">
-		<h2 class="text-xl font-bold text-white">Open data</h2>
+		<h2 class="section-title text-xl text-white">Open data</h2>
 		<p class="text-zinc-400 text-sm">
 			All confirmed pothole data is freely available for research, journalism, or civic apps.
 			No API key required.
@@ -261,7 +261,7 @@
 	</section>
 
 	<section class="space-y-4">
-		<h2 class="text-xl font-bold text-white">Spread the word</h2>
+		<h2 class="section-title text-xl text-white">Spread the word</h2>
 		<p class="text-zinc-400 text-sm">
 			This project runs on word of mouth — no ads, no algorithm. If the map helped you,
 			share it with your neighbours, your local community group, or anywhere people talk about
