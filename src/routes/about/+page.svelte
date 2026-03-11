@@ -254,7 +254,7 @@
 				<Icon name="rss" size={18} class="text-sky-400 shrink-0 mt-0.5" />
 				<div>
 					<div class="font-semibold text-white text-sm group-hover:text-sky-300 transition-colors">RSS feed</div>
-					<p class="text-xs text-zinc-400 mt-0.5">100 most recent confirmations &amp; fills. Subscribe in any RSS reader.</p>
+					<p class="text-xs text-zinc-400 mt-0.5">Recently reported and filled potholes, ordered by event time. Subscribe in any RSS reader.</p>
 				</div>
 			</a>
 		</div>

@@ -310,26 +310,42 @@
 			return;
 		}
 		gpsStatus = 'loading';
-		navigator.geolocation.getCurrentPosition(
-			(pos) => {
-				lat = pos.coords.latitude;
-				lng = pos.coords.longitude;
-				gpsStatus = 'got';
-				toast.success('Location locked in');
-				reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-			},
-			(err) => {
+
+		function onSuccess(pos: GeolocationPosition) {
+			lat = pos.coords.latitude;
+			lng = pos.coords.longitude;
+			gpsStatus = 'got';
+			toast.success('Location locked in');
+			reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+		}
+
+		function onError(err: GeolocationPositionError) {
+			if (err.code === 1) {
 				gpsStatus = 'error';
-				if (err.code === 1) {
-					toastError('Location access denied — enable it in your browser settings and retry');
-				} else if (err.code === 2) {
-					toastError('Could not determine your location. Try moving outside.');
-				} else {
-					toastError('Location request timed out. Retry.');
-				}
-			},
-			{ enableHighAccuracy: true, timeout: 10000 }
-		);
+				toastError('Location access denied — enable it in your browser settings and retry');
+				return;
+			}
+
+			// High-accuracy timed out or position unavailable — fall back to network location.
+			navigator.geolocation.getCurrentPosition(
+				onSuccess,
+				(fallbackErr) => {
+					gpsStatus = 'error';
+					if (fallbackErr.code === 2) {
+						toastError('Could not determine your location. Try moving outside.');
+					} else {
+						toastError('Location request timed out. Try moving outside or use the map tab.');
+					}
+				},
+				{ enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+			);
+		}
+
+		navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+			enableHighAccuracy: true,
+			timeout: 15000,
+			maximumAge: 30000
+		});
 	}
 
 	async function handleSubmit(e: SubmitEvent) {
