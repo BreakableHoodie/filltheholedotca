@@ -1,4 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Outfit:wght@400;500;600;700&display=swap");
+@import "@fontsource/barlow-condensed/700.css";
+@import "@fontsource/barlow-condensed/800.css";
+@import "@fontsource/public-sans/400.css";
+@import "@fontsource/public-sans/500.css";
+@import "@fontsource/public-sans/600.css";
+@import "@fontsource/public-sans/700.css";
 @import "tailwindcss";
 
 /**
@@ -17,7 +22,7 @@
 }
 
 @theme {
-  --font-sans: "Outfit", system-ui, sans-serif;
+  --font-sans: "Public Sans", system-ui, sans-serif;
   --font-brand: "Barlow Condensed", system-ui, sans-serif;
   --color-asphalt: #0f0f0f;
   --color-asphalt-light: #1a1a1a;
@@ -25,6 +30,27 @@
 
 body {
   font-family: var(--font-sans);
+}
+
+.page-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  text-wrap: balance;
+}
+
+.section-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.page-intro {
+  max-width: 42rem;
+  text-wrap: pretty;
 }
 
 /* iOS safe area support — accounts for notch/Dynamic Island and home indicator */

@@ -388,8 +388,8 @@
 
 <div class="max-w-lg mx-auto px-4 py-8">
 	<div class="mb-6">
-		<h1 class="font-brand font-bold text-3xl text-white mb-1">Report a pothole</h1>
-		<p class="text-zinc-300 text-sm">Report the location in about 30 seconds. No account required.</p>
+		<h1 class="page-title text-3xl sm:text-4xl text-white mb-1">Report a pothole</h1>
+		<p class="page-intro text-zinc-300 text-sm">Report the location in about 30 seconds. No account required.</p>
 		<p class="text-xs text-zinc-400 mt-2">Independent community tracker for Waterloo Region. For official repair action, report to the city too.</p>
 		<p class="flex items-start gap-1.5 text-xs text-zinc-400 mt-2">
 			<Icon name="alert-triangle" size={13} class="text-amber-500 shrink-0 mt-0.5" />
