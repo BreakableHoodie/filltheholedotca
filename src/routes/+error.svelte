@@ -13,7 +13,7 @@
 	</div>
 
 	<div class="space-y-2">
-		<h1 class="text-xl font-bold text-white">
+		<h1 class="page-title text-xl sm:text-2xl text-white">
 			{#if $page.status === 404}
 				Page not found
 			{:else if $page.status >= 500}

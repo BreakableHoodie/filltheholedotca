@@ -225,11 +225,11 @@
 	<!-- Page header + time filter -->
 	<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
 		<div>
-			<h1 class="font-brand font-bold text-3xl text-white flex items-center gap-2.5">
+			<h1 class="page-title text-3xl sm:text-4xl text-white flex items-center gap-2.5">
 				<Icon name="bar-chart-2" size={26} class="text-sky-400 shrink-0" />
 				By the numbers
 			</h1>
-			<p class="text-zinc-400 mt-1">Pothole accountability data for Waterloo Region.</p>
+			<p class="page-intro text-zinc-400 mt-1">Pothole accountability data for Waterloo Region.</p>
 		</div>
 
 		<div
@@ -286,7 +286,7 @@
 	<!-- ── Monthly trend chart ─────────────────────────────────────────────────── -->
 	<section aria-labelledby="trend-heading">
 		<div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-			<h2 id="trend-heading" class="text-lg font-semibold text-white">
+			<h2 id="trend-heading" class="section-title text-lg text-white">
 				Monthly activity
 				<span class="text-zinc-500 font-normal text-sm">(last 18 months, full dataset)</span>
 			</h2>
@@ -339,7 +339,7 @@
 	<!-- ── City breakdown ─────────────────────────────────────────────────────── -->
 	{#if cityRows.length > 0}
 		<section aria-labelledby="city-heading">
-			<h2 id="city-heading" class="text-lg font-semibold text-white mb-4">By city</h2>
+			<h2 id="city-heading" class="section-title text-lg text-white mb-4">By city</h2>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden overflow-x-auto">
 				<table class="w-full text-sm">
 					<thead>
@@ -372,7 +372,7 @@
 	<!-- ── Ward leaderboard ───────────────────────────────────────────────────── -->
 	<section aria-labelledby="ward-heading">
 		<div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-			<h2 id="ward-heading" class="text-lg font-semibold text-white">By ward</h2>
+			<h2 id="ward-heading" class="section-title text-lg text-white">By ward</h2>
 			{#if wardLoading}
 				<span class="text-xs text-zinc-500 animate-pulse" aria-live="polite">Loading ward boundaries…</span>
 			{/if}
@@ -466,7 +466,7 @@
 
 	<!-- ── Worst offenders ────────────────────────────────────────────────────── -->
 	<section aria-labelledby="offenders-heading">
-		<h2 id="offenders-heading" class="flex items-center gap-2 text-lg font-semibold text-white mb-4">
+		<h2 id="offenders-heading" class="section-title flex items-center gap-2 text-lg text-white mb-4">
 			<Icon name="alert-triangle" size={18} class="text-red-400 shrink-0" />
 			Longest-open unfilled holes
 		</h2>

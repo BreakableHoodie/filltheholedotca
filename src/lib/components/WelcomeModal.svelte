@@ -106,7 +106,7 @@
 						<circle cx="13" cy="13" r="4" fill="rgba(249,115,22,0.15)"/>
 					</svg>
 				</div>
-				<h2 id="welcome-title" class="font-brand font-bold text-2xl text-white">Welcome to FillTheHole.ca</h2>
+				<h2 id="welcome-title" class="page-title text-2xl text-white">Welcome to FillTheHole.ca</h2>
 				<p class="text-zinc-400 text-sm">Waterloo Region Pothole Tracker</p>
 			</div>
 

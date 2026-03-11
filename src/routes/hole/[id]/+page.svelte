@@ -218,7 +218,7 @@ Thank you.`;
 				</button>
 			{/if}
 		</div>
-		<h1 class="text-2xl font-bold text-white">
+		<h1 class="page-title text-2xl sm:text-3xl text-white">
 			{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
 		</h1>
 		<div class="flex items-center gap-2 mt-1.5">
