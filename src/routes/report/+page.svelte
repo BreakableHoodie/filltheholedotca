@@ -8,10 +8,10 @@
 	import { page } from '$app/stores';
 
 	const SEVERITY_OPTIONS = [
-		{ value: 'Spilled my coffee',  level: 1, label: 'Spilled my coffee',  sub: 'barely there',                    barColor: 'bg-yellow-400' },
-		{ value: 'Bent a rim',         level: 2, label: 'Bent a rim',         sub: 'car or bike — you felt that',     barColor: 'bg-orange-400' },
-		{ value: 'Caused real damage', level: 3, label: 'Caused real damage', sub: 'tire, wheel, or worse',           barColor: 'bg-red-400'    },
-		{ value: 'RIP',                level: 4, label: 'RIP',                sub: 'suspension, wheel, will to live', barColor: 'bg-rose-400'   },
+		{ value: 'Minor damage',    level: 1, label: 'Minor damage',    sub: 'visible, but not urgent',             barColor: 'bg-yellow-400' },
+		{ value: 'Moderate damage', level: 2, label: 'Moderate damage', sub: 'drivers or cyclists will feel it',    barColor: 'bg-orange-400' },
+		{ value: 'Severe damage',   level: 3, label: 'Severe damage',   sub: 'likely to damage a tire or wheel',    barColor: 'bg-red-400'    },
+		{ value: 'Hazardous',       level: 4, label: 'Hazardous',       sub: 'dangerous and needs quick attention', barColor: 'bg-rose-400'   },
 	] as const;
 
 	let lat = $state<number | null>(null);
@@ -320,26 +320,42 @@
 			return;
 		}
 		gpsStatus = 'loading';
-		navigator.geolocation.getCurrentPosition(
-			(pos) => {
-				lat = pos.coords.latitude;
-				lng = pos.coords.longitude;
-				gpsStatus = 'got';
-				toast.success('Location locked in');
-				reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-			},
-			(err) => {
+
+		function onSuccess(pos: GeolocationPosition) {
+			lat = pos.coords.latitude;
+			lng = pos.coords.longitude;
+			gpsStatus = 'got';
+			toast.success('Location locked in');
+			reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+		}
+
+		function onError(err: GeolocationPositionError) {
+			if (err.code === 1) {
 				gpsStatus = 'error';
-				if (err.code === 1) {
-					toastError('Location access denied — enable it in your browser settings and retry');
-				} else if (err.code === 2) {
-					toastError('Could not determine your location. Try moving outside.');
-				} else {
-					toastError('Location request timed out. Retry.');
-				}
-			},
-			{ enableHighAccuracy: true, timeout: 10000 }
-		);
+				toastError('Location access denied — enable it in your browser settings and retry');
+				return;
+			}
+
+			// High-accuracy timed out or position unavailable — fall back to network location.
+			navigator.geolocation.getCurrentPosition(
+				onSuccess,
+				() => {
+					gpsStatus = 'error';
+					if (err.code === 2) {
+						toastError('Could not determine your location. Try moving outside.');
+					} else {
+						toastError('Location request timed out. Try moving outside or use the map tab.');
+					}
+				},
+				{ enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+			);
+		}
+
+		navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+			enableHighAccuracy: true,
+			timeout: 15000,
+			maximumAge: 30000
+		});
 	}
 
 	async function handleSubmit(e: SubmitEvent) {
@@ -398,8 +414,8 @@
 
 <div class="max-w-lg mx-auto px-4 py-8">
 	<div class="mb-6">
-		<h1 class="font-brand font-bold text-3xl text-white mb-1">Report a pothole</h1>
-		<p class="text-zinc-400 text-sm">Standing next to one? Share its location and submit.</p>
+		<h1 class="page-title text-3xl sm:text-4xl text-white mb-1">Report a pothole</h1>
+		<p class="page-intro text-zinc-400 text-sm">Standing next to one? Share its location and submit.</p>
 		<p class="flex items-start gap-1.5 text-xs text-zinc-400 mt-2">
 			<Icon name="alert-triangle" size={13} class="text-amber-500 shrink-0 mt-0.5" />
 			Stay safe — report from the sidewalk or after pulling over. Never stop in a live traffic lane.
