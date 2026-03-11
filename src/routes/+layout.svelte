@@ -1,10 +1,9 @@
 <script lang="ts">
-	import '../app.css';
-	import { Toaster } from 'svelte-sonner';
-	import WelcomeModal from '$lib/components/WelcomeModal.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import SocialShare from '$lib/components/SocialShare.svelte';
 	import type { Snippet } from 'svelte';
+	import { Toaster } from 'svelte-sonner';
+	import '../app.css';
 	import type { LayoutData } from './$types';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
@@ -104,4 +103,3 @@
 </div>
 
 <Toaster richColors position="bottom-center" />
-<WelcomeModal />

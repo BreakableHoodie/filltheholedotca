@@ -14,6 +14,7 @@ import {
 import { verifyPassword, hashToken } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
+import { notify } from '$lib/server/pushover';
 
 function getAdminClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -36,6 +37,15 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	// DB-backed rate limit: 5 failures / 10 min per email+IP
 	const rateCheck = await checkAuthRateLimit(email, ipHash, 'login');
 	if (!rateCheck.allowed) {
+		// Only alert on the exact attempt that crossed the threshold to avoid
+		// flooding the admin with one notification per blocked request.
+		if (rateCheck.justBlocked) {
+			void notify('security', {
+				title: '🚨 Login rate limit triggered',
+				message: `Too many failed login attempts (IP hash: ${ipHash.slice(0, 8)}…). Possible brute-force.`,
+				priority: 1
+			});
+		}
 		throw error(
 			429,
 			`Too many failed login attempts. Try again in ${rateCheck.remainingMinutes} minutes.`
@@ -182,6 +192,14 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		userAgent,
 		attemptType: 'login',
 		success: true
+	});
+
+	// Fire-and-forget — do not block the auth response on Pushover latency.
+	// Email omitted: it would be sent to a third-party API as PII.
+	void notify('security', {
+		title: '🔐 Admin login',
+		message: `Successful login (role: ${user.role})`,
+		priority: -1
 	});
 
 	const headers = new Headers({ 'Content-Type': 'application/json' });

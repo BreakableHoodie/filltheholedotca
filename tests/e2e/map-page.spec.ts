@@ -1,251 +1,490 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Map page smoke test', () => {
-	test.use({
-		storageState: {
-			cookies: [],
-			origins: [
-				{
-					origin: 'http://localhost:4173',
-					localStorage: [{ name: 'fth-welcomed', value: '1' }]
-				}
-			]
-		}
-	});
+type SeededPothole = {
+  id: string;
+  created_at: string;
+  lat: number;
+  lng: number;
+  address: string | null;
+  description: string | null;
+  status: string;
+  confirmed_count: number;
+  filled_at: string | null;
+  expired_at: string | null;
+  photos_published: boolean;
+};
 
-	test('map container renders with non-zero dimensions', async ({ page }) => {
-		await page.goto('/');
+const dismissedHomeIntroStorage = {
+  cookies: [],
+  origins: [
+    {
+      origin: "http://localhost:4173",
+      localStorage: [{ name: "fth-home-intro-dismissed", value: "1" }],
+    },
+  ],
+};
 
-		// Wait for the page to load
-		await expect(page.getByRole('main')).toBeVisible();
+const seededReportedPothole = {
+  id: "00000000-0000-4000-8000-000000000001",
+  created_at: "2026-03-09T12:00:00.000Z",
+  lat: 43.425,
+  lng: -80.42,
+  address: "123 Test Street",
+  description: "Large pothole near the curb.",
+  status: "reported",
+  confirmed_count: 2,
+  filled_at: null,
+  expired_at: null,
+  photos_published: false,
+} as const;
 
-		// Look for the Leaflet map container
-		// Leaflet typically creates a div with class 'leaflet-container'
-		const mapContainer = page.locator('.leaflet-container').first();
-		
-		// Wait for the map to be initialized (Leaflet is loaded dynamically in onMount)
-		await expect(mapContainer).toBeVisible({ timeout: 10000 });
+const seededSecondReportedPothole = {
+  id: "00000000-0000-4000-8000-000000000002",
+  created_at: "2026-03-09T15:30:00.000Z",
+  lat: 43.431,
+  lng: -80.414,
+  address: "456 Queen Street South",
+  description: "Freshly confirmed and easier to scan from the mobile tray.",
+  status: "reported",
+  confirmed_count: 2,
+  filled_at: null,
+  expired_at: null,
+  photos_published: false,
+} as const;
 
-		// Check that the map container has non-zero dimensions
-		const boundingBox = await mapContainer.boundingBox();
-		expect(boundingBox).not.toBeNull();
-		expect(boundingBox!.width).toBeGreaterThan(0);
-		expect(boundingBox!.height).toBeGreaterThan(0);
+async function seedPopupFixture(
+  page: import("@playwright/test").Page,
+  fixtures: readonly SeededPothole[] = [seededReportedPothole],
+) {
+  await page.addInitScript((seededFixtures) => {
+    const win = window as Window & {
+      __FTH_E2E_POTHOLES__?: typeof seededFixtures;
+    };
+    win.__FTH_E2E_POTHOLES__ = [...seededFixtures];
+  }, fixtures);
+}
 
-		// The map should take up a reasonable amount of space
-		expect(boundingBox!.width).toBeGreaterThan(300);
-		expect(boundingBox!.height).toBeGreaterThan(200);
-	});
+test.describe("Map page smoke test", () => {
+  test.use({
+    storageState: dismissedHomeIntroStorage,
+  });
 
-	test('"Find me" button is present in the UI', async ({ page }) => {
-		await page.goto('/');
+  test("map container renders with non-zero dimensions", async ({ page }) => {
+    await page.goto("/");
 
-		// The locate button is labelled "Find me" (see +page.svelte)
-		const locateButton = page.getByRole('button', { name: /Find me/i });
-		
-		await expect(locateButton).toBeVisible({ timeout: 10000 });
+    // Wait for the page to load
+    await expect(page.getByRole("main")).toBeVisible();
 
-		// Verify the button is interactive  
-		await expect(locateButton).toBeEnabled();
-	});
+    // Look for the Leaflet map container
+    // Leaflet typically creates a div with class 'leaflet-container'
+    const mapContainer = page.locator(".leaflet-container").first();
 
-	test('map loads without JavaScript console errors', async ({ page }) => {
-		const consoleErrors: string[] = [];
-		
-		// Capture console errors
-		page.on('console', msg => {
-			if (msg.type() === 'error') {
-				consoleErrors.push(msg.text());
-			}
-		});
+    // Wait for the map to be initialized (Leaflet is loaded dynamically in onMount)
+    await expect(mapContainer).toBeVisible({ timeout: 10000 });
 
-		// Capture page errors  
-		page.on('pageerror', err => {
-			consoleErrors.push(`Page error: ${err.message}`);
-		});
+    // Check that the map container has non-zero dimensions
+    const boundingBox = await mapContainer.boundingBox();
+    expect(boundingBox).not.toBeNull();
+    expect(boundingBox!.width).toBeGreaterThan(0);
+    expect(boundingBox!.height).toBeGreaterThan(0);
 
-		await page.goto('/');
+    // The map should take up a reasonable amount of space
+    expect(boundingBox!.width).toBeGreaterThan(300);
+    expect(boundingBox!.height).toBeGreaterThan(200);
+  });
 
-		// Wait for map to load
-		await expect(page.locator('.leaflet-container').first()).toBeVisible({ timeout: 10000 });
+  test('"Find me" button is present in the UI', async ({ page }) => {
+    await page.goto("/");
 
-		// Wait for tile requests and async map operations to settle
-		await page.waitForLoadState('networkidle');
+    // The locate button is labelled "Find me" (see +page.svelte)
+    const locateButton = page.getByRole("button", { name: /Find me/i });
 
-		// Filter out non-critical errors (e.g., network errors for tiles in test env)
-		const criticalErrors = consoleErrors.filter(error => 
-			!error.includes('tile') && 
-			!error.includes('404') &&
-			!error.includes('openstreetmap') &&
-			!error.toLowerCase().includes('network error')
-		);
+    await expect(locateButton).toBeVisible({ timeout: 10000 });
 
-		if (criticalErrors.length > 0) {
-			console.log('JavaScript errors found:', criticalErrors);
-		}
+    // Verify the button is interactive
+    await expect(locateButton).toBeEnabled();
+  });
 
-		// No critical JavaScript errors should occur during map loading
-		expect(criticalErrors).toHaveLength(0);
-	});
+  test("map loads without JavaScript console errors", async ({ page }) => {
+    const consoleErrors: string[] = [];
 
-	test('map control buttons are accessible', async ({ page }) => {
-		await page.goto('/');
+    // Capture console errors
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      }
+    });
 
-		// Wait for map to load
-		await expect(page.locator('.leaflet-container').first()).toBeVisible({ timeout: 10000 });
+    // Capture page errors
+    page.on("pageerror", (err) => {
+      consoleErrors.push(`Page error: ${err.message}`);
+    });
 
-		// Check for basic Leaflet controls (zoom in/out)  
-		const zoomIn = page.locator('.leaflet-control-zoom-in');
-		const zoomOut = page.locator('.leaflet-control-zoom-out');
+    await page.goto("/");
 
-		await expect(zoomIn).toBeVisible();
-		await expect(zoomOut).toBeVisible();
+    // Wait for map to load
+    await expect(page.locator(".leaflet-container").first()).toBeVisible({
+      timeout: 10000,
+    });
 
-		// Controls should be keyboard accessible
-		await zoomIn.focus();
-		await expect(zoomIn).toBeFocused();
-		
-		await zoomOut.focus();
-		await expect(zoomOut).toBeFocused();
-	});
+    // Wait for tile requests and async map operations to settle
+    await page.waitForLoadState("networkidle");
 
-	test('map container has proper ARIA attributes', async ({ page }) => {
-		await page.goto('/');
+    // Filter out non-critical errors (e.g., network errors for tiles in test env)
+    const criticalErrors = consoleErrors.filter(
+      (error) =>
+        !error.includes("tile") &&
+        !error.includes("404") &&
+        !error.includes("openstreetmap") &&
+        !error.toLowerCase().includes("network error"),
+    );
 
-		// Wait for map to load
-		const mapContainer = page.locator('.leaflet-container').first();
-		await expect(mapContainer).toBeVisible({ timeout: 10000 });
+    if (criticalErrors.length > 0) {
+      console.log("JavaScript errors found:", criticalErrors);
+    }
 
-		// Leaflet should set up the map container appropriately
-		// Check that it has a reasonable role or is at least not breaking accessibility
-		const containerAttributes = await mapContainer.evaluate(el => ({
-			tabindex: el.getAttribute('tabindex'),
-			role: el.getAttribute('role'),
-			ariaLabel: el.getAttribute('aria-label')
-		}));
+    // No critical JavaScript errors should occur during map loading
+    expect(criticalErrors).toHaveLength(0);
+  });
 
-		// Leaflet typically makes the map focusable
-		expect(containerAttributes.tabindex).not.toBeNull();
-	});
+  test("map control buttons are accessible", async ({ page }) => {
+    await page.goto("/");
 
-	test('page title and meta information is correct', async ({ page }) => {
-		await page.goto('/');
+    // Wait for map to load
+    await expect(page.locator(".leaflet-container").first()).toBeVisible({
+      timeout: 10000,
+    });
 
-		// Check page title
-		await expect(page).toHaveTitle(/FillTheHole\.ca/i);
+    // Check for basic Leaflet controls (zoom in/out)
+    const zoomIn = page.locator(".leaflet-control-zoom-in");
+    const zoomOut = page.locator(".leaflet-control-zoom-out");
 
-		// The page should have proper meta tags for a map application
-		const viewport = page.locator('meta[name="viewport"]');
-		await expect(viewport).toHaveAttribute('content', /width=device-width/);
-	});
+    await expect(zoomIn).toBeVisible();
+    await expect(zoomOut).toBeVisible();
 
-	test('navigation menu is accessible from map page', async ({ page }) => {
-		await page.goto('/');
+    // Controls should be keyboard accessible
+    await zoomIn.focus();
+    await expect(zoomIn).toBeFocused();
 
-		// Navigation should be present and accessible
-		const nav = page.getByRole('navigation');
-		await expect(nav).toBeVisible();
+    await zoomOut.focus();
+    await expect(zoomOut).toBeFocused();
+  });
 
-		// Check that key navigation links are present
-		await expect(page.getByRole('link', { name: /report/i }).first()).toBeVisible();
-		await expect(page.getByRole('link', { name: /stats/i })).toBeVisible(); 
-		await expect(page.getByRole('link', { name: /about/i })).toBeVisible();
-	});
+  test("map container has proper ARIA attributes", async ({ page }) => {
+    await page.goto("/");
 
-	test.describe('Map layer panel', () => {
-		test('shows a Layers panel', async ({ page }) => {
-			await page.goto('/');
-			await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 10000 });
-			await expect(page.getByText(/Layers/i)).toBeVisible();
-		});
+    // Wait for map to load
+    const mapContainer = page.locator(".leaflet-container").first();
+    await expect(mapContainer).toBeVisible({ timeout: 10000 });
 
-		test('Reported layer is on by default', async ({ page }) => {
-			await page.goto('/');
-			await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 10000 });
-			const toggle = page.getByRole('checkbox', { name: /Reported/i });
-			await expect(toggle).toBeChecked();
-		});
+    // Leaflet should set up the map container appropriately
+    // Check that it has a reasonable role or is at least not breaking accessibility
+    const containerAttributes = await mapContainer.evaluate((el) => ({
+      tabindex: el.getAttribute("tabindex"),
+      role: el.getAttribute("role"),
+      ariaLabel: el.getAttribute("aria-label"),
+    }));
 
-		test('Expired and Filled layers are off by default', async ({ page }) => {
-			await page.goto('/');
-			await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 10000 });
-			await expect(page.getByRole('checkbox', { name: /Expired/i })).not.toBeChecked();
-			await expect(page.getByRole('checkbox', { name: /Filled/i })).not.toBeChecked();
-		});
+    // Leaflet typically makes the map focusable
+    expect(containerAttributes.tabindex).not.toBeNull();
+  });
 
-		test('Ward heatmap toggle is in the layers panel', async ({ page }) => {
-			await page.goto('/');
-			await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 10000 });
-			await expect(page.getByRole('checkbox', { name: /Ward heatmap/i })).toBeVisible();
-		});
-	});
+  test("page title and meta information is correct", async ({ page }) => {
+    await page.goto("/");
 
-	test('map page responds to keyboard navigation', async ({ page }) => {
-		await page.goto('/');
+    // Check page title
+    await expect(page).toHaveTitle(/FillTheHole\.ca/i);
 
-		const mapContainer = page.locator('.leaflet-container').first();
-		await expect(mapContainer).toBeVisible({ timeout: 10000 });
+    // The page should have proper meta tags for a map application
+    const viewport = page.locator('meta[name="viewport"]');
+    await expect(viewport).toHaveAttribute("content", /width=device-width/);
+  });
 
-		// Focus the map container
+  test("navigation menu is accessible from map page", async ({ page }) => {
+    await page.goto("/");
 
-		await mapContainer.focus();
-		await expect(mapContainer).toBeFocused();
+    // Navigation should be present and accessible
+    const nav = page.getByRole("navigation");
+    await expect(nav).toBeVisible();
 
-		// Test that arrow keys don't cause JavaScript errors
-		// (We're not testing full Leaflet keyboard functionality, just that it doesn't break)
-		await page.keyboard.press('ArrowUp');
-		await page.keyboard.press('ArrowDown'); 
-		await page.keyboard.press('ArrowLeft');
-		await page.keyboard.press('ArrowRight');
+    // Check that key navigation links are present
+    await expect(
+      page.getByRole("link", { name: /report/i }).first(),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: /stats/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /about/i })).toBeVisible();
+  });
 
-		// Plus/minus keys for zoom  
-		await page.keyboard.press('Equal'); // + key
-		await page.keyboard.press('Minus'); // - key
+  test.describe("Map layer panel", () => {
+    test("shows a Layers panel", async ({ page }) => {
+      await page.goto("/");
+      await expect(page.locator(".leaflet-container")).toBeVisible({
+        timeout: 10000,
+      });
+      await expect(page.getByText(/Layers/i)).toBeVisible();
+    });
 
-		// Map should still be visible and functional after keyboard interaction
-		await expect(mapContainer).toBeVisible();
-	});
+    test("Reported layer is on by default", async ({ page }) => {
+      await page.goto("/");
+      await expect(page.locator(".leaflet-container")).toBeVisible({
+        timeout: 10000,
+      });
+      const toggle = page.getByRole("checkbox", { name: /Reported/i });
+      await expect(toggle).toBeChecked();
+    });
+
+    test("Expired and Filled layers are off by default", async ({ page }) => {
+      await page.goto("/");
+      await expect(page.locator(".leaflet-container")).toBeVisible({
+        timeout: 10000,
+      });
+      await expect(
+        page.getByRole("checkbox", { name: /Expired/i }),
+      ).not.toBeChecked();
+      await expect(
+        page.getByRole("checkbox", { name: /Filled/i }),
+      ).not.toBeChecked();
+    });
+
+    test("Ward heatmap toggle is in the layers panel", async ({ page }) => {
+      await page.goto("/");
+      await expect(page.locator(".leaflet-container")).toBeVisible({
+        timeout: 10000,
+      });
+      await expect(
+        page.getByRole("checkbox", { name: /Ward heatmap/i }),
+      ).toBeVisible();
+    });
+  });
+
+  test("map page responds to keyboard navigation", async ({ page }) => {
+    await page.goto("/");
+
+    const mapContainer = page.locator(".leaflet-container").first();
+    await expect(mapContainer).toBeVisible({ timeout: 10000 });
+
+    // Focus the map container
+
+    await mapContainer.focus();
+    await expect(mapContainer).toBeFocused();
+
+    // Test that arrow keys don't cause JavaScript errors
+    // (We're not testing full Leaflet keyboard functionality, just that it doesn't break)
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("ArrowRight");
+
+    // Plus/minus keys for zoom
+    await page.keyboard.press("Equal"); // + key
+    await page.keyboard.press("Minus"); // - key
+
+    // Map should still be visible and functional after keyboard interaction
+    await expect(mapContainer).toBeVisible();
+  });
+
+  test("seeded pothole popup shows direct actions and detail link", async ({
+    page,
+  }) => {
+    await seedPopupFixture(page);
+    await page.goto("/");
+
+    const marker = page.locator(".pothole-marker--reported").first();
+    await expect(marker).toBeVisible({ timeout: 10000 });
+    await marker.click();
+
+    await expect(page.getByText("123 Test Street")).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Open details" }),
+    ).toHaveAttribute("href", `/hole/${seededReportedPothole.id}`);
+    await expect(
+      page.getByRole("button", { name: "Share or copy link" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /it's fixed/i }),
+    ).toBeVisible();
+  });
+
+  test("reopening a popup does not duplicate the share handler", async ({
+    page,
+  }) => {
+    await seedPopupFixture(page);
+    await page.addInitScript(() => {
+      const win = window as Window & {
+        __FTH_E2E_SHARED_PAYLOADS__?: Array<{ title?: string; url?: string }>;
+      };
+      win.__FTH_E2E_SHARED_PAYLOADS__ = [];
+      Object.defineProperty(navigator, "share", {
+        configurable: true,
+        value: async (payload: { title?: string; url?: string }) => {
+          win.__FTH_E2E_SHARED_PAYLOADS__?.push(payload);
+        },
+      });
+    });
+    await page.goto("/");
+
+    const marker = page.locator(".pothole-marker--reported").first();
+    await expect(marker).toBeVisible({ timeout: 10000 });
+    await marker.click();
+    await page.locator(".leaflet-popup-close-button").click();
+    await marker.click();
+    await page.getByRole("button", { name: "Share or copy link" }).click();
+
+    const payloads = await page.evaluate(() => {
+      const win = window as Window & {
+        __FTH_E2E_SHARED_PAYLOADS__?: Array<{ title?: string; url?: string }>;
+      };
+      return win.__FTH_E2E_SHARED_PAYLOADS__ ?? [];
+    });
+    expect(payloads).toHaveLength(1);
+    expect(payloads[0]?.url).toBe(
+      `http://localhost:4173/hole/${seededReportedPothole.id}`,
+    );
+  });
+
+  test("reopening a popup does not duplicate the mark-filled request", async ({
+    page,
+  }) => {
+    await seedPopupFixture(page);
+    let filledRequestCount = 0;
+    await page.route("**/api/filled", async (route) => {
+      filledRequestCount += 1;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true, message: "Marked as fixed!" }),
+      });
+    });
+    await page.goto("/");
+
+    const marker = page.locator(".pothole-marker--reported").first();
+    await expect(marker).toBeVisible({ timeout: 10000 });
+    await marker.click();
+    await page.locator(".leaflet-popup-close-button").click();
+    await marker.click();
+    await page.getByRole("button", { name: /it's fixed/i }).click();
+
+    await expect(page.getByText("Marked as fixed!")).toBeVisible();
+    expect(filledRequestCount).toBe(1);
+  });
 });
 
-test.describe('Main map — report here mode', () => {
-	test.use({
-		storageState: {
-			cookies: [],
-			origins: [{ origin: 'http://localhost:4173', localStorage: [{ name: 'fth-welcomed', value: '1' }] }]
-		}
-	});
+test.describe("Map page mobile scanning tools", () => {
+  test.use({
+    storageState: dismissedHomeIntroStorage,
+    viewport: { width: 390, height: 844 },
+  });
 
-	test.beforeEach(async ({ page }) => {
-		await page.goto('/');
-		await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 10000 });
-	});
+  test("recent live reports list opens the selected popup from the mobile tray", async ({
+    page,
+  }) => {
+    await seedPopupFixture(page, [
+      seededReportedPothole,
+      seededSecondReportedPothole,
+    ]);
+    await page.goto("/");
 
-	test('shows Report here button', async ({ page }) => {
-		await expect(page.getByRole('button', { name: /Report here/i })).toBeVisible();
-	});
+    await page.getByRole("button", { name: "Tools" }).click();
+    await expect(
+      page.getByRole("heading", { name: /Recent live reports/i }),
+    ).toBeVisible();
 
-	test('clicking Report here shows cancel banner', async ({ page }) => {
-		await page.getByRole('button', { name: /Report here/i }).click();
-		await expect(page.getByText(/Tap the map where the pothole is/i)).toBeVisible();
-		await expect(page.getByRole('button', { name: /Cancel/i })).toBeVisible();
-	});
+    await page.getByRole("button", { name: /456 Queen Street South/i }).click();
 
-	test('cancel exits report mode', async ({ page }) => {
-		await page.getByRole('button', { name: /Report here/i }).click();
-		await page.getByRole('button', { name: /Cancel/i }).click();
-		await expect(page.getByText(/Tap the map where the pothole is/i)).toBeHidden();
-	});
+    await expect(page.getByText("456 Queen Street South")).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Open details" }),
+    ).toHaveAttribute("href", `/hole/${seededSecondReportedPothole.id}`);
+  });
 
-	test('map click enables confirm and navigates to prefilled report URL', async ({ page }) => {
-		await page.getByRole('button', { name: /Report here/i }).click();
-		await expect(page.getByText(/Tap the map where the pothole is/i)).toBeVisible();
+  test("live count and recent reports update after marking a seeded pothole filled", async ({
+    page,
+  }) => {
+    await seedPopupFixture(page);
+    await page.route("**/api/filled", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true, message: "Marked as fixed!" }),
+      });
+    });
+    await page.goto("/");
 
-		await page.locator('.leaflet-container').click({ position: { x: 260, y: 220 } });
+    const marker = page.locator(".pothole-marker--reported").first();
+    await expect(marker).toBeVisible({ timeout: 10000 });
+    await marker.click();
+    await page.getByRole("button", { name: /it's fixed/i }).click();
 
-		const confirm = page.getByRole('button', { name: /Confirm location/i });
-		await expect(confirm).toBeVisible();
-		await confirm.click();
+    await expect(page.getByText("Marked as fixed!")).toBeVisible();
+    await expect(
+      page.getByText("0 live potholes on the public map"),
+    ).toBeVisible();
 
-		await expect(page).toHaveURL(/\/report\?lat=-?\d+(\.\d+)?&lng=-?\d+(\.\d+)?/, { timeout: 10000 });
-	});
+    await page.getByRole("button", { name: "Tools" }).click();
+    await expect(
+      page.getByText(
+        "Live reports will appear here once the community has confirmed them.",
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /123 Test Street/i }),
+    ).toHaveCount(0);
+  });
+});
+
+test.describe("Main map — report here mode", () => {
+  test.use({
+    storageState: dismissedHomeIntroStorage,
+  });
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator(".leaflet-container")).toBeVisible({
+      timeout: 10000,
+    });
+  });
+
+  test("shows Report here button", async ({ page }) => {
+    await expect(
+      page.getByRole("button", { name: /Report here/i }),
+    ).toBeVisible();
+  });
+
+  test("clicking Report here shows cancel banner", async ({ page }) => {
+    await page.getByRole("button", { name: /Report here/i }).click();
+    await expect(
+      page.getByText(/Tap the map where the pothole is/i),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /Cancel/i })).toBeVisible();
+  });
+
+  test("cancel exits report mode", async ({ page }) => {
+    await page.getByRole("button", { name: /Report here/i }).click();
+    await page.getByRole("button", { name: /Cancel/i }).click();
+    await expect(
+      page.getByText(/Tap the map where the pothole is/i),
+    ).toBeHidden();
+  });
+
+  test("map click enables confirm and navigates to prefilled report URL", async ({
+    page,
+  }) => {
+    await page.getByRole("button", { name: /Report here/i }).click();
+    await expect(
+      page.getByText(/Tap the map where the pothole is/i),
+    ).toBeVisible();
+
+    await page
+      .locator(".leaflet-container")
+      .click({ position: { x: 260, y: 220 } });
+
+    const confirm = page.getByRole("button", { name: /Confirm location/i });
+    await expect(confirm).toBeVisible();
+    await confirm.click();
+
+    await expect(page).toHaveURL(
+      /\/report\?lat=-?\d+(\.\d+)?&lng=-?\d+(\.\d+)?/,
+      { timeout: 10000 },
+    );
+  });
 });

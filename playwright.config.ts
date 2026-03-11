@@ -29,6 +29,11 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
+      // Preview runs with import.meta.env.PROD=true; mark the test server as CI so
+      // hooks.server can permit the test-only rate-limit bypass without relaxing
+      // the production startup guard for real deployments.
+      CI: "true",
+      PLAYWRIGHT_E2E_FIXTURES: "true",
       // Playwright needs real-ish env vars to build; use placeholders if not set
       PUBLIC_SUPABASE_URL:
         process.env.PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:65432", // Use a closed port to fail fast

@@ -11,7 +11,7 @@ Live at **[fillthehole.ca](https://fillthehole.ca)**
 Potholes in Kitchener, Waterloo, and Cambridge often sit unfilled for weeks. This app gives residents a way to:
 
 1. **Report** a pothole at their GPS location (or search by address / drop a pin)
-2. **Confirm** reports from others — 3 independent confirmations required before it goes live
+2. **Confirm** reports from others — by default, 2 independent confirmations are required before it goes live
 3. **Watch** potholes you care about — saved locally in your browser
 4. **Celebrate** when the city finally fills it
 
@@ -115,7 +115,7 @@ Before any admin users exist, `/admin/signup` enters **bootstrap mode**, allowin
 
 ### Confirmation system
 
-To prevent spam, a new report starts as `pending` and only becomes public after **3 independent confirmations** from different IPs. IPs are HMAC-SHA-256 hashed immediately with a server-only secret — no raw addresses are ever stored.
+To prevent spam, a new report starts as `pending` and only becomes public after independent confirmations from different IPs. The confirmation threshold defaults to **2** and can be adjusted in site settings. IPs are HMAC-SHA-256 hashed immediately with a server-only secret — no raw addresses are ever stored.
 
 ### Status pipeline
 
@@ -125,7 +125,7 @@ pending → reported → filled
           expired  (auto after 90 days with no action)
 ```
 
-- **pending** — awaiting 3 confirmations
+- **pending** — awaiting the confirmation threshold
 - **reported** — live on the map, needs city attention
 - **filled** — city patched it
 - **expired** — auto-closed after 90 days with no fill event

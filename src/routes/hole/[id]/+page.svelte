@@ -1,15 +1,22 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
-	import { toastError } from '$lib/toast';
 	import { invalidateAll } from '$app/navigation';
-	import { format } from 'date-fns';
-	import { STATUS_CONFIG } from '$lib/constants';
+	import { page } from '$app/stores';
 	import Icon from '$lib/components/Icon.svelte';
-	import { isWatched, toggleWatch } from '$lib/watchlist';
-	import type { PageData } from './$types';
+	import { STATUS_CONFIG } from '$lib/constants';
+	import {
+	  CITY_REPORT_LINKS,
+	  MTO_REPORT_LINK,
+	  REGION_REPORT_LINK
+	} from '$lib/official-reporting';
+	import { resizeImage } from '$lib/image';
+	import { toastError } from '$lib/toast';
 	import type { Pothole } from '$lib/types';
 	import type { Councillor } from '$lib/wards';
+	import { isWatched, toggleWatch } from '$lib/watchlist';
+	import { format } from 'date-fns';
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
+	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	let pothole = $derived(data.pothole as Pothole);
@@ -18,6 +25,9 @@
 	let origin = $derived(data.origin as string);
 	let cityRepairRequests = $derived(data.cityRepairRequests ?? []);
 	let photos = $derived(data.photos ?? []);
+	let confirmationThreshold = $derived(data.confirmationThreshold);
+	let submitted = $derived($page.url.searchParams.get('submitted') === '1');
+	let officialCityLink = $derived(councillor ? CITY_REPORT_LINKS[councillor.city] : null);
 
 	let ogDescription = $derived(
 		pothole.status === 'filled'
@@ -38,32 +48,6 @@
 	let canUploadPhoto = $derived(
 		(pothole.status === 'pending' || pothole.status === 'reported') && !photoSubmitted
 	);
-
-	async function resizeImage(file: File): Promise<Blob> {
-		return new Promise((resolve, reject) => {
-			const MAX_PX = 800;
-			const objectUrl = URL.createObjectURL(file);
-			const img = new Image();
-			img.onload = () => {
-				URL.revokeObjectURL(objectUrl);
-				const scale = Math.min(1, MAX_PX / Math.max(img.width, img.height));
-				const w = Math.round(img.width * scale);
-				const h = Math.round(img.height * scale);
-				const canvas = document.createElement('canvas');
-				canvas.width = w;
-				canvas.height = h;
-				const ctx = canvas.getContext('2d');
-				if (!ctx) { reject(new Error('Could not get canvas context')); return; }
-				ctx.drawImage(img, 0, 0, w, h);
-				canvas.toBlob((blob) => {
-					if (!blob) { reject(new Error('Image conversion failed')); return; }
-					resolve(blob);
-				}, 'image/jpeg', 0.82);
-			};
-			img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Failed to load image')); };
-			img.src = objectUrl;
-		});
-	}
 
 	async function handlePhotoSelect(e: Event) {
 		const input = e.target as HTMLInputElement;
@@ -196,6 +180,53 @@ Thank you.`;
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
+	{#if submitted}
+		<div class="bg-sky-950/40 border border-sky-800 rounded-xl p-5 space-y-3">
+			<div class="flex items-start gap-3">
+				<div class="shrink-0 p-2 rounded-lg bg-sky-500/10">
+					<Icon name="check-circle" size={18} class="text-sky-400" />
+				</div>
+				<div class="space-y-1.5">
+					<h2 class="text-base font-semibold text-white">Report received</h2>
+					{#if pothole.status === 'pending'}
+						<p class="text-sm text-zinc-300">
+							Your report is saved and waiting for independent confirmation before it appears on the public map.
+						</p>
+						<p class="text-xs text-zinc-400 tabular-nums">
+							Progress: {pothole.confirmed_count}/{confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}
+						</p>
+					{:else if pothole.status === 'reported'}
+						<p class="text-sm text-zinc-300">
+							This pothole is now live on the public map. Share the link or report it officially to help it get fixed faster.
+						</p>
+					{:else}
+						<p class="text-sm text-zinc-300">
+							Your report was received. This page will track what happens next.
+						</p>
+					{/if}
+				</div>
+			</div>
+			<div class="flex flex-wrap gap-2">
+				<a
+					href={officialCityLink?.href ?? '/about'}
+					target={officialCityLink ? '_blank' : undefined}
+					rel={officialCityLink ? 'noopener noreferrer' : undefined}
+					class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+				>
+					<Icon name="external-link" size={13} class="shrink-0" />
+					{officialCityLink ? `File with ${officialCityLink.label}` : 'Official reporting links'}
+				</a>
+				<button
+					onclick={() => share(pothole.address, pothole.lat, pothole.lng)}
+					class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+				>
+					<Icon name="clipboard" size={13} class="shrink-0" />
+					Copy link
+				</button>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Header -->
 	<div>
 		<div class="flex items-center justify-between mb-3">
@@ -273,6 +304,56 @@ Thank you.`;
 		</div>
 	{/if}
 
+	{#if pothole.status !== 'filled'}
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+				<Icon name="flag" size={14} class="text-sky-400 shrink-0" />
+				Report it officially too
+			</div>
+			<p class="text-zinc-400 text-sm">
+				This page creates public visibility. An official report creates a work order the road owner is expected to track.
+			</p>
+			<div class="grid gap-2 sm:grid-cols-2">
+				{#if officialCityLink}
+					<a
+						href={officialCityLink.href}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-sky-700 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-600"
+					>
+						<Icon name="external-link" size={13} class="shrink-0" />
+						File with {officialCityLink.label}
+					</a>
+				{/if}
+				<a
+					href={REGION_REPORT_LINK.href}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-2.5 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+				>
+					<Icon name="external-link" size={13} class="shrink-0" />
+					File with {REGION_REPORT_LINK.label}
+				</a>
+			</div>
+			<div class="rounded-lg bg-zinc-800/80 p-3 text-xs text-zinc-400 leading-relaxed space-y-1.5">
+				<p>
+					Local residential streets usually belong to the city. Major roads like King, Weber, Victoria, and Erb are often Regional roads.
+				</p>
+				<p>
+					Highways 401, 7/8, and 85 are provincial roads.
+					<a
+						href={MTO_REPORT_LINK.href}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-sky-400 underline underline-offset-2 hover:text-sky-300"
+					>
+						Report those to the Ontario Ministry of Transportation
+					</a>.
+				</p>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Photos -->
 	{#if photos.length > 0}
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
@@ -301,7 +382,7 @@ Thank you.`;
 			</div>
 			{#if photoPreview}
 				<div class="relative">
-					<img src={photoPreview} alt="Selected photo" class="w-full rounded-lg object-cover aspect-video" />
+					<img src={photoPreview} alt="Selected pothole preview" class="w-full rounded-lg object-cover aspect-video" />
 					<button
 						type="button"
 						onclick={clearPhoto}
@@ -339,8 +420,8 @@ Thank you.`;
 				type="file"
 				accept="image/jpeg,image/png,image/webp"
 				class="sr-only"
-			tabindex="-1"
-			aria-hidden="true"
+				tabindex="-1"
+				aria-hidden="true"
 				aria-label="Upload a pothole photo"
 				onchange={handlePhotoSelect}
 			/>

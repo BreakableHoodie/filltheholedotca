@@ -11,8 +11,14 @@ function getAdminClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
+const BOOLEAN_SETTING = z.enum(['true', 'false']);
+
 const SETTING_SCHEMAS: Record<string, z.ZodTypeAny> = {
-	confirmation_threshold: z.coerce.number().int().min(1).max(20)
+	confirmation_threshold: z.coerce.number().int().min(1).max(20),
+	pushover_enabled: BOOLEAN_SETTING,
+	pushover_notify_photos: BOOLEAN_SETTING,
+	pushover_notify_community: BOOLEAN_SETTING,
+	pushover_notify_security: BOOLEAN_SETTING
 };
 
 export const load: PageServerLoad = async ({ locals }) => {

@@ -54,15 +54,15 @@ function buildDescription(p: {
 	return parts.join(' ');
 }
 
-/** The timestamp that best represents when this pothole's status last changed. */
+/** Timestamp used for feed ordering: first-report time for open potholes, fill time for filled ones. */
 function eventTime(p: { status: string; created_at: string; filled_at: string | null }): string {
 	return p.filled_at ?? p.created_at;
 }
 
 export const GET: RequestHandler = async () => {
-	// Fetch the 50 most-recently-confirmed and 50 most-recently-filled potholes
-	// separately so that a pothole filled today (but created months ago) is not
-	// buried below newer reports in the feed. Merge and re-sort by event time.
+	// Fetch the 50 most-recently-reported (by created_at) and 50 most-recently-filled
+	// potholes separately so a fill today isn't buried by older reports. Merge and
+	// re-sort by event time (created_at for reported, filled_at for filled).
 	const [reportedResult, filledResult] = await Promise.all([
 		supabase
 			.from('potholes')

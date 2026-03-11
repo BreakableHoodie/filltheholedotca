@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import SocialShare from '$lib/components/SocialShare.svelte';
+	import { ABOUT_REPORT_LINKS } from '$lib/official-reporting';
 </script>
 
 <svelte:head>
@@ -40,42 +41,24 @@
 			is legally required to respond to. Do both.
 		</p>
 		<div class="space-y-2">
-			<a
-				href="https://www.kitchener.ca/en/transportation-and-parking/report-a-road-concern.aspx"
-				target="_blank"
-				rel="noopener noreferrer"
-				class="flex items-center gap-2 bg-sky-700 hover:bg-sky-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-			>
-				<Icon name="external-link" size={14} class="shrink-0" />
-				City of Kitchener — Report a Road Concern
-			</a>
-			<a
-				href="https://www.waterloo.ca/roads-and-cycling/report-a-road-trail-or-sidewalk-issue/"
-				target="_blank"
-				rel="noopener noreferrer"
-				class="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-			>
-				<Icon name="external-link" size={14} class="shrink-0" />
-				City of Waterloo — Report a Road Issue
-			</a>
-			<a
-				href="https://maps.cambridge.ca/gis/ServiceRequests/Pothole/"
-				target="_blank"
-				rel="noopener noreferrer"
-				class="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-			>
-				<Icon name="external-link" size={14} class="shrink-0" />
-				City of Cambridge — Report a Pothole
-			</a>
-			<a
-				href="https://www.regionofwaterloo.ca/en/living-here/roads-and-traffic.aspx"
-				target="_blank"
-				rel="noopener noreferrer"
-				class="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-			>
-				<Icon name="external-link" size={14} class="shrink-0" />
-				Region of Waterloo — Roads &amp; Traffic
-			</a>
+			{#each ABOUT_REPORT_LINKS as link (link.id)}
+				<a
+					href={link.href}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="flex items-center gap-2 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors {link.id === 'kitchener' ? 'bg-sky-700 hover:bg-sky-600' : 'bg-zinc-700 hover:bg-zinc-600'}"
+				>
+					<Icon name="external-link" size={14} class="shrink-0" />
+					{link.label}
+					{#if link.scope === 'city'}
+						— Report a pothole or road issue
+					{:else if link.scope === 'region'}
+						— Roads &amp; traffic
+					{:else}
+						— Report a provincial highway problem
+					{/if}
+				</a>
+			{/each}
 		</div>
 		<div class="bg-zinc-800 rounded-lg p-3 text-xs text-zinc-400 leading-relaxed space-y-2">
 			<p>
@@ -114,8 +97,7 @@
 					<div class="font-semibold text-white mb-1">1. Report</div>
 					<p class="text-sm text-zinc-400">
 						Standing next to a pothole? Open the app on your phone, lock your GPS location,
-						and submit. Three independent reports from the same location confirms it's real
-						and puts it on the map.
+						and submit. Independent reports from the same location help verify it and put it on the map.
 					</p>
 				</div>
 			</div>
@@ -184,8 +166,8 @@
 					Cookies &amp; local storage
 				</div>
 				<p class="text-sm text-zinc-400">
-					This site sets no cookies. A single entry (<code class="text-zinc-300 bg-zinc-800 px-1 rounded text-xs">fth-welcomed</code>)
-					is stored in your browser's local storage to remember that you've seen the welcome screen.
+					This site sets no cookies. A single entry (<code class="text-zinc-300 bg-zinc-800 px-1 rounded text-xs">fth-home-intro-dismissed</code>)
+					is stored in your browser's local storage to remember that you've dismissed the homepage introduction.
 					It contains no personal information and is never sent to any server.
 				</p>
 			</div>
@@ -272,7 +254,7 @@
 				<Icon name="rss" size={18} class="text-sky-400 shrink-0 mt-0.5" />
 				<div>
 					<div class="font-semibold text-white text-sm group-hover:text-sky-300 transition-colors">RSS feed</div>
-					<p class="text-xs text-zinc-400 mt-0.5">100 most recent confirmations &amp; fills. Subscribe in any RSS reader.</p>
+					<p class="text-xs text-zinc-400 mt-0.5">Recently reported and filled potholes, ordered by event time. Subscribe in any RSS reader.</p>
 				</div>
 			</a>
 		</div>

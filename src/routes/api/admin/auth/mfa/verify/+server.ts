@@ -14,6 +14,7 @@ import {
 import { decryptTotpSecret, verifyBackupCode, hashToken } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
+import { notify } from '$lib/server/pushover';
 
 function getAdminClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -209,6 +210,14 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		userAgent,
 		attemptType: 'mfa',
 		success: true
+	});
+
+	// Fire-and-forget — do not block the auth response on Pushover latency.
+	// Email omitted: it would be sent to a third-party API as PII.
+	void notify('security', {
+		title: '🔐 Admin login (MFA)',
+		message: `Successful MFA login${usedBackupCode ? ' — backup code used' : ''}`,
+		priority: usedBackupCode ? 0 : -1
 	});
 
 	const headers = new Headers({ 'Content-Type': 'application/json' });

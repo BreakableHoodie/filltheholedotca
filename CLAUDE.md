@@ -75,11 +75,11 @@ Copy `.env.example` → `.env` with real values:
 
 ## Project Structure
 
-```
+```text
 src/
   routes/
-    +page.svelte              # Map (Leaflet, clustering, ward heatmap, locate-me)
-    +layout.svelte            # Nav with live counts, WelcomeModal, Toaster
+    +page.svelte              # Map (Leaflet, clustering, ward heatmap, mobile tool tray, homepage intro card)
+    +layout.svelte            # Nav with live counts and Toaster
     +layout.server.ts         # Server layout loader
     +page.server.ts           # Loads potholes for map
     about/+page.svelte        # About page
@@ -106,7 +106,7 @@ src/
     wards.ts                  # COUNCILLORS array (ward/name/email/url)
     supabase.ts               # Supabase client (public anon)
     components/
-      WelcomeModal.svelte     # First-visit onboarding modal
+      HomeIntroCard.svelte    # Homepage-only intro card shown on first visit
 ```
 
 ## Database Schema
@@ -139,6 +139,7 @@ api_rate_limit_events (
 ```
 
 Run migrations in this order:
+
 1. `schema.sql` — initial setup
 2. `schema_update.sql` — confirmations table + security hardening
 3. `schema_photos.sql` — photo upload schema
@@ -147,13 +148,15 @@ Run migrations in this order:
 6. `schema_pr61_fixes.sql` — RLS policy hardening + pending pothole backfill
 7. `schema_security_hardening.sql` — revokes public EXECUTE on `increment_confirmation`; documents `deferred` photo status
 8. `schema_sprint3.sql` — drops public SELECT on `pothole_actions`; fixes pg_cron interval (90 days); adds pending-pothole expiry (14 days)
+
 Two `pg_cron` jobs run nightly:
+
 - `expire-old-potholes` (03:00 UTC): sets `status = 'expired'` on `reported` potholes older than 90 days.
 - `expire-stale-pending` (03:30 UTC): sets `status = 'expired'` on `pending` potholes older than 14 days (anti-suppression).
 
 ## Status Flow
 
-```
+```text
 pending → reported → filled
   (1 report)  (2 confirmations)  (city fixed it — via popup or detail page)
                     ↓
