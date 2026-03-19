@@ -47,16 +47,21 @@ _Objective: Maintain data quality and security._
 - [x] **Security Hardening:** Full audit sprint — rate limiting, MFA, CSRF nonce, CSP, state machine for status transitions, IP hashing, trusted device tokens.
 - [x] **Key Rotation Runbook:** `docs/key-rotation.md` covering all secrets and rotation procedures.
 
-## Phase 5: Platform Stability
+## Phase 5: Platform Stability ✅ Shipped
 
 _Objective: Ensure long-term maintainability._
 
-- [ ] **Error Tracking:** Integrate Sentry or similar for client/server error monitoring.
-- [ ] **Automated Backups:** Document and verify database backup strategy.
-- [ ] **E2E Tests:** Playwright coverage for critical user journeys (report, confirm, photo upload).
+- [x] **Error Tracking:** Sentry integrated via `@sentry/sveltekit` — captures server and client errors, disabled when `PUBLIC_SENTRY_DSN` is absent.
+- [x] **Automated Backups:** `docs/backup-strategy.md` — covers Supabase automated backups, pg_dump procedure, Storage bucket backups, restore checklist, and monthly verification schedule.
+- [x] **E2E Tests:** Playwright coverage across 11 spec files — report flow, map, navigation, geofence, stats, pothole detail, admin layout, API schema validation, open data endpoints, and security headers.
 
-## Future Ideas (Backlog)
+## Phase 6: Community & Reach (In Progress)
 
-- **Bluesky Bot:** Auto-post significant events (new confirmed pothole, hole filled).
-- **Councillor Integration:** Auto-email the relevant ward councillor when a pothole goes live.
-- **Multi-Region Support:** Abstract geofencing and ward data to support other cities.
+_Objective: Grow the community of reporters and make fixes more likely._
+
+- [ ] **Bluesky Bot:** Auto-post significant events (new confirmed pothole, hole filled) to a dedicated account. Drives organic discovery and keeps engaged followers informed.
+- [x] **Ward Accountability Grade:** Letter grade (A–F) per ward on the stats page — composite of fill rate (70%) and average response time (30%).
+- [x] **"I Hit This" Signal:** Button on pothole detail pages for drivers to record a physical encounter. Hit count shown publicly; helps surface high-impact potholes.
+- [x] **Repeat Pothole Detection:** Detail page warns when a nearby pothole was previously filled — flags recurring road issues for escalation.
+- [x] **Embed Widget:** `/api/embed/[id]` returns a self-contained embeddable card (iframe-friendly) showing pothole status and a CTA link back to the site.
+- [x] **PWA + Push Notifications:** Web App Manifest, service worker, and browser push notification infrastructure. Users can subscribe to fill alerts; requires `VAPID_PUBLIC_KEY` + `PUBLIC_VAPID_PUBLIC_KEY` env vars.

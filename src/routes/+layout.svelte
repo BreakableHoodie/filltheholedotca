@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
+	import PushNotifications from '$lib/components/PushNotifications.svelte';
 	import SocialShare from '$lib/components/SocialShare.svelte';
 	import type { Snippet } from 'svelte';
 	import { Toaster } from 'svelte-sonner';
@@ -55,6 +56,7 @@
 				</div>
 
 				<nav class="flex items-center gap-3 text-sm">
+					<PushNotifications />
 					<a href="/stats" class="text-zinc-400 hover:text-white transition-colors">
 						Stats
 					</a>

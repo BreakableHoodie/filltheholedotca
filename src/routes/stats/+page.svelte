@@ -205,6 +205,25 @@
 			.slice(0, 10)
 	);
 
+	// ── Ward accountability grade ──────────────────────────────────────────────
+	// Composite score: fill rate (70 pts) + response speed (30 pts).
+	// Requires ≥5 potholes to grade; fewer = '—' (not enough data).
+	function wardGrade(fillRate: number, avgDays: number | null, total: number): { grade: string; color: string } {
+		if (total < 5) return { grade: '—', color: 'text-zinc-600' };
+		let score = (fillRate / 100) * 70;
+		if (avgDays !== null) {
+			if (avgDays < 14)      score += 30;
+			else if (avgDays < 30) score += 22;
+			else if (avgDays < 60) score += 15;
+			else if (avgDays < 90) score += 7;
+		}
+		if (score >= 80) return { grade: 'A', color: 'text-green-400' };
+		if (score >= 60) return { grade: 'B', color: 'text-sky-400' };
+		if (score >= 40) return { grade: 'C', color: 'text-yellow-400' };
+		if (score >= 20) return { grade: 'D', color: 'text-orange-400' };
+		return { grade: 'F', color: 'text-red-400' };
+	}
+
 	// ── Helpers ────────────────────────────────────────────────────────────────
 	function fmt(n: number | null, decimals = 0): string {
 		return n === null ? '—' : n.toFixed(decimals);
@@ -392,7 +411,7 @@
 			</div>
 		{:else}
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden overflow-x-auto">
-				<table class="w-full text-sm min-w-[580px]">
+				<table class="w-full text-sm min-w-[600px]">
 					<thead>
 						<tr class="border-b border-zinc-800">
 							<th scope="col" class="text-left px-4 py-3 text-zinc-400 font-medium">City</th>
@@ -425,10 +444,18 @@
 									Avg days <span aria-hidden="true">{sortLabel('avgDays')}</span>
 								</button>
 							</th>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-zinc-400 font-medium"
+								title="Accountability grade: fill rate (70%) + speed (30%). Requires ≥5 potholes."
+							>
+								Grade
+							</th>
 						</tr>
 					</thead>
 					<tbody>
 					{#each wardRows as row (row.key)}
+							{@const g = wardGrade(row.fillRate, row.avgDays, row.total)}
 							<tr class="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
 								<td class="px-4 py-3 text-zinc-300 capitalize">{row.city}</td>
 								<td class="px-4 py-3 text-zinc-300">Ward {row.ward}</td>
@@ -453,6 +480,7 @@
 									{row.total === 0 ? '—' : `${fmt(row.fillRate, 0)}%`}
 								</td>
 								<td class="px-4 py-3 text-right text-zinc-400">{fmt(row.avgDays, 1)}</td>
+								<td class="px-4 py-3 text-right font-bold tabular-nums {g.color}" title="Grade: {g.grade}">{g.grade}</td>
 							</tr>
 						{/each}
 					</tbody>
@@ -460,6 +488,7 @@
 			</div>
 			<p class="text-xs text-zinc-600 mt-2">
 				Click column headers to sort. Potholes outside mapped ward boundaries may be excluded.
+				Grade = fill rate (70%) + response speed (30%); requires ≥5 potholes.
 			</p>
 		{/if}
 	</section>
