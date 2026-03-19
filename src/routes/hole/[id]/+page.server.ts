@@ -79,6 +79,35 @@ const E2E_DETAIL_FIXTURES: Record<string, E2eDetailFixture> = {
     hitCount: 0,
     nearbyFilled: [],
   },
+  // Fixture with nearbyFilled data — exercises the recurring-road-issue banner
+  "33333333-3333-4333-8333-333333333333": {
+    pothole: {
+      id: "33333333-3333-4333-8333-333333333333",
+      created_at: "2026-03-15T10:00:00.000Z",
+      lat: 43.4500,
+      lng: -80.5000,
+      address: "200 Queen Street North",
+      description: "Deep crack across the full lane width.",
+      status: "reported",
+      confirmed_count: 2,
+      filled_at: null,
+      expired_at: null,
+      photos_published: false,
+    },
+    councillor: null,
+    cityRepairRequests: [],
+    photos: [],
+    confirmationThreshold: 2,
+    hitCount: 1,
+    nearbyFilled: [
+      {
+        id: "44444444-4444-4444-8444-444444444444",
+        address: "198 Queen Street North",
+        filled_at: "2025-11-01T12:00:00.000Z",
+        created_at: "2025-10-15T09:00:00.000Z",
+      },
+    ],
+  },
 };
 
 async function fetchCityRepairRequests(
