@@ -1,6 +1,8 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError, ResolveOptions, RequestEvent } from '@sveltejs/kit';
 import { error, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
+import * as Sentry from '@sentry/sveltekit';
+import { env as publicEnv } from '$env/dynamic/public';
 import {
 	validateAdminSession,
 	checkSessionExpiry,
@@ -9,6 +11,17 @@ import {
 	SESSION_COOKIE
 } from '$lib/server/admin-auth';
 import { CSRF_HEADER, validateCsrfToken } from '$lib/server/admin-csrf';
+
+const sentryDsn = publicEnv.PUBLIC_SENTRY_DSN;
+
+Sentry.init({
+	dsn: sentryDsn || undefined,
+	// Don't send events when DSN is absent (local dev without Sentry configured).
+	enabled: !!sentryDsn,
+	// Ignore expected client errors — only capture genuine server faults.
+	ignoreErrors: [/^4\d\d /],
+	tracesSampleRate: 0.1
+});
 
 // In-memory coarse rate limit store: ip -> { count, resetAt }.
 // NOTE: on Netlify serverless this resets per cold start — treat it as a broad deterrent.
@@ -74,7 +87,7 @@ setInterval(() => {
 	}
 }, 5 * 60_000);
 
-export const handle: Handle = async ({ event, resolve }) => {
+const appHandle: Handle = async ({ event, resolve }) => {
 	// www → non-www redirect
 	if (event.url.hostname.startsWith('www.')) {
 		const url = new URL(event.url);
@@ -185,3 +198,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isEmbedRoute = event.url.pathname.startsWith('/api/embed/');
 	return applySecurityHeaders(response, isEmbedRoute);
 };
+
+// Wrap appHandle with Sentry's handle so requests are traced and errors captured.
+// sentryHandle() runs first (performance tracing), then our app logic.
+// Forward ResolveOptions (opts) so Sentry's response transformer (trace injection) applies correctly.
+export const handle: Handle = (input) =>
+	Sentry.sentryHandle()({
+		...input,
+		resolve: (event: RequestEvent, opts?: ResolveOptions) =>
+			appHandle({ event, resolve: (e) => input.resolve(e, opts) })
+	});
+
+export const handleError: HandleServerError = Sentry.handleErrorWithSentry();

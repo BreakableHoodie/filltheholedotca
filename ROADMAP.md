@@ -27,14 +27,14 @@ _Objective: Keep users coming back without requiring accounts._
   - [x] Footer share links + dedicated "Spread the word" section on About page.
   - [x] Road safety reminder on About page.
 
-## Phase 3: Data Openness ✅ Partially Shipped
+## Phase 3: Data Openness ✅ Shipped
 
 _Objective: Empower data activists and local journalists._
 
 - [x] **Open Data Feed:** `/api/feed.json` endpoint of recent confirmed potholes.
 - [x] **Stats Dashboard:** Resolution time, ward leaderboards, hotspot streets, fill rate trends.
-- [ ] **Open Data Export:** `/api/export.csv` for full dataset download.
-- [ ] **RSS/Atom Feed:** Newly confirmed potholes and fill events.
+- [x] **Open Data Export:** `/api/export.csv` for full dataset download.
+- [x] **RSS/Atom Feed:** `/api/feed.xml` — RSS 2.0 feed of recent confirmations and fills.
 
 ## Phase 4: Admin & Moderation ✅ Shipped
 

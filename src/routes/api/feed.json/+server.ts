@@ -16,7 +16,11 @@ export const GET: RequestHandler = async () => {
 		.order('created_at', { ascending: false })
 		.limit(500);
 
-	if (error) return json({ error: 'Failed to load' }, { status: 500 });
+	if (error)
+		return json(
+			{ error: 'Failed to load' },
+			{ status: 500, headers: { 'Cross-Origin-Resource-Policy': 'cross-origin' } }
+		);
 
 	const potholes = (data ?? []).map((p) => ({
 		...p,
