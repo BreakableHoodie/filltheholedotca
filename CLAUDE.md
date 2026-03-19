@@ -53,6 +53,7 @@ When in doubt about whether something belongs in the repo, leave it out.
 - **Leaflet** + `leaflet.markercluster` — always client-only, dynamically imported in `onMount`
 - **@fontsource/barlow-condensed** — local OG image font asset (no runtime CDN dependency)
 - **svelte-sonner** for toasts, **date-fns** for formatting, **zod** for API validation
+- **@sentry/sveltekit** — error tracking (server + client); disabled when `PUBLIC_SENTRY_DSN` is absent
 - Deployed to **Netlify** (`@sveltejs/adapter-netlify`)
 - **License**: GNU Affero General Public License v3.0 (AGPL-3.0)
 
@@ -72,6 +73,7 @@ Copy `.env.example` → `.env` with real values:
 - `ADMIN_SECRET` — bearer token for `/api/admin/*` endpoints
 - `SIGHTENGINE_API_USER` / `SIGHTENGINE_API_SECRET` — image moderation (optional)
 - `IP_HASH_SECRET` — server-only HMAC key for IP hashing
+- `PUBLIC_SENTRY_DSN` — Sentry project DSN (optional; omit to disable error tracking in dev)
 
 ## Project Structure
 

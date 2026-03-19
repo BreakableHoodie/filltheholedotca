@@ -27,14 +27,14 @@ _Objective: Keep users coming back without requiring accounts._
   - [x] Footer share links + dedicated "Spread the word" section on About page.
   - [x] Road safety reminder on About page.
 
-## Phase 3: Data Openness ✅ Partially Shipped
+## Phase 3: Data Openness ✅ Shipped
 
 _Objective: Empower data activists and local journalists._
 
 - [x] **Open Data Feed:** `/api/feed.json` endpoint of recent confirmed potholes.
 - [x] **Stats Dashboard:** Resolution time, ward leaderboards, hotspot streets, fill rate trends.
-- [ ] **Open Data Export:** `/api/export.csv` for full dataset download.
-- [ ] **RSS/Atom Feed:** Newly confirmed potholes and fill events.
+- [x] **Open Data Export:** `/api/export.csv` for full dataset download.
+- [x] **RSS/Atom Feed:** `/api/feed.xml` — RSS 2.0 feed of recent confirmations and fills.
 
 ## Phase 4: Admin & Moderation ✅ Shipped
 
@@ -47,16 +47,25 @@ _Objective: Maintain data quality and security._
 - [x] **Security Hardening:** Full audit sprint — rate limiting, MFA, CSRF nonce, CSP, state machine for status transitions, IP hashing, trusted device tokens.
 - [x] **Key Rotation Runbook:** `docs/key-rotation.md` covering all secrets and rotation procedures.
 
-## Phase 5: Platform Stability
+## Phase 5: Platform Stability ✅ Shipped
 
 _Objective: Ensure long-term maintainability._
 
-- [ ] **Error Tracking:** Integrate Sentry or similar for client/server error monitoring.
-- [ ] **Automated Backups:** Document and verify database backup strategy.
-- [ ] **E2E Tests:** Playwright coverage for critical user journeys (report, confirm, photo upload).
+- [x] **Error Tracking:** Sentry integrated via `@sentry/sveltekit` — captures server and client errors, disabled when `PUBLIC_SENTRY_DSN` is absent.
+- [x] **Automated Backups:** `docs/backup-strategy.md` — covers Supabase automated backups, pg_dump procedure, Storage bucket backups, restore checklist, and monthly verification schedule.
+- [x] **E2E Tests:** Playwright coverage across 11 spec files — report flow, map, navigation, geofence, stats, pothole detail, admin layout, API schema validation, open data endpoints, and security headers.
 
-## Future Ideas (Backlog)
+## Phase 6: Community & Reach (Planned)
 
-- **Bluesky Bot:** Auto-post significant events (new confirmed pothole, hole filled).
-- **Councillor Integration:** Auto-email the relevant ward councillor when a pothole goes live.
-- **Multi-Region Support:** Abstract geofencing and ward data to support other cities.
+_Objective: Grow the community of reporters and make fixes more likely._
+
+- [ ] **Bluesky Bot:** Auto-post significant events (new confirmed pothole, hole filled) to a dedicated account. Drives organic discovery and keeps engaged followers informed.
+- [ ] **Councillor Auto-Email:** When a pothole reaches `reported` status, send a formatted email to the ward councillor's public address. Reduces friction for residents who want to escalate.
+- [ ] **Shareable Ward Reports:** Generate a weekly PDF or web page per ward showing open potholes, confirmation counts, and average age. Give councillors a ready-made briefing.
+
+## Phase 7: Scale & Multi-Region (Backlog)
+
+_Objective: Make the codebase reusable for other municipalities._
+
+- [ ] **Multi-Region Support:** Abstract geofencing, ward data, and councillor lists into configuration so other cities can deploy their own instance without forking.
+- [ ] **Nomination Flow:** Let residents propose a new city — submit a region name, bounding box, and councillor CSV — and get a staging instance automatically.
