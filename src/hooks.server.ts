@@ -1,4 +1,4 @@
-import type { Handle, HandleServerError } from '@sveltejs/kit';
+import type { Handle, HandleServerError, ResolveOptions, RequestEvent } from '@sveltejs/kit';
 import { error, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import * as Sentry from '@sentry/sveltekit';
@@ -196,7 +196,12 @@ const appHandle: Handle = async ({ event, resolve }) => {
 
 // Wrap appHandle with Sentry's handle so requests are traced and errors captured.
 // sentryHandle() runs first (performance tracing), then our app logic.
+// Forward ResolveOptions (opts) so Sentry's response transformer (trace injection) applies correctly.
 export const handle: Handle = (input) =>
-	Sentry.sentryHandle()({ ...input, resolve: (event) => appHandle({ event, resolve: input.resolve }) });
+	Sentry.sentryHandle()({
+		...input,
+		resolve: (event: RequestEvent, opts?: ResolveOptions) =>
+			appHandle({ event, resolve: (e) => input.resolve(e, opts) })
+	});
 
 export const handleError: HandleServerError = Sentry.handleErrorWithSentry();
