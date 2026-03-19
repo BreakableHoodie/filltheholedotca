@@ -1,10 +1,18 @@
 import { supabase } from "$lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+import { PUBLIC_SUPABASE_URL } from "$env/static/public";
+import { env } from "$env/dynamic/private";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import type { Pothole, PotholePhoto } from "$lib/types";
 import { COUNCILLORS, lookupWard, type Councillor } from "$lib/wards";
 import { decodeHtmlEntities } from "$lib/escape";
 import { getConfirmationThreshold } from "$lib/server/settings";
+import { haversineMetres } from "$lib/geo";
+
+function getServiceClient() {
+  return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const CCC_URL =
   "https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Corporate_Contact_Centre_Requests/FeatureServer/0/query";
@@ -21,6 +29,8 @@ interface E2eDetailFixture {
   cityRepairRequests: CityRepairRequest[];
   photos: PotholePhoto[];
   confirmationThreshold: number;
+  hitCount: number;
+  nearbyFilled: { id: string; address: string | null; filled_at: string; created_at: string }[];
 }
 
 const E2E_DETAIL_FIXTURES: Record<string, E2eDetailFixture> = {
@@ -45,6 +55,8 @@ const E2E_DETAIL_FIXTURES: Record<string, E2eDetailFixture> = {
     ],
     photos: [],
     confirmationThreshold: 2,
+    hitCount: 3,
+    nearbyFilled: [],
   },
   "22222222-2222-4222-8222-222222222222": {
     pothole: {
@@ -65,6 +77,37 @@ const E2E_DETAIL_FIXTURES: Record<string, E2eDetailFixture> = {
     cityRepairRequests: [],
     photos: [],
     confirmationThreshold: 2,
+    hitCount: 0,
+    nearbyFilled: [],
+  },
+  // Fixture with nearbyFilled data — exercises the recurring-road-issue banner
+  "33333333-3333-4333-8333-333333333333": {
+    pothole: {
+      id: "33333333-3333-4333-8333-333333333333",
+      created_at: "2026-03-15T10:00:00.000Z",
+      lat: 43.4500,
+      lng: -80.5000,
+      address: "200 Queen Street North",
+      description: "Deep crack across the full lane width.",
+      status: "reported",
+      confirmed_count: 2,
+      filled_at: null,
+      expired_at: null,
+      photos_published: false,
+    },
+    councillor: null,
+    cityRepairRequests: [],
+    photos: [],
+    confirmationThreshold: 2,
+    hitCount: 1,
+    nearbyFilled: [
+      {
+        id: "44444444-4444-4444-8444-444444444444",
+        address: "198 Queen Street North",
+        filled_at: "2025-11-01T12:00:00.000Z",
+        created_at: "2025-10-15T09:00:00.000Z",
+      },
+    ],
   },
 };
 
@@ -148,7 +191,11 @@ export const load: PageServerLoad = async ({ params, url }) => {
     address: data.address ? decodeHtmlEntities(data.address) : null,
     description: data.description ? decodeHtmlEntities(data.description) : null,
   } as Pothole;
-  const [councillor, cityRepairRequests, photosResult, confirmationThreshold] =
+  // Bounding box for proximity queries — ~110m radius
+  const delta = 0.001;
+  const db = getServiceClient();
+
+  const [councillor, cityRepairRequests, photosResult, confirmationThreshold, hitCountResult, nearbyFilledResult] =
     await Promise.all([
       lookupWard(pothole.lat, pothole.lng),
       fetchCityRepairRequests(pothole.lat, pothole.lng),
@@ -159,6 +206,25 @@ export const load: PageServerLoad = async ({ params, url }) => {
         .eq("moderation_status", "approved")
         .order("created_at", { ascending: true }),
       getConfirmationThreshold(),
+      // Hit count via service-role — pothole_hits has no anon SELECT policy
+      db
+        .from("pothole_hits")
+        .select("*", { count: "exact", head: true })
+        .eq("pothole_id", params.id),
+      // Recently filled potholes nearby — surface repeat road issues.
+      // Fetch more rows than needed so haversine post-filter has enough candidates.
+      supabase
+        .from("potholes")
+        .select("id, address, lat, lng, filled_at, created_at")
+        .eq("status", "filled")
+        .neq("id", params.id)
+        .gte("lat", pothole.lat - delta)
+        .lte("lat", pothole.lat + delta)
+        .gte("lng", pothole.lng - delta)
+        .lte("lng", pothole.lng + delta)
+        .not("filled_at", "is", null)
+        .order("filled_at", { ascending: false })
+        .limit(10),
     ]);
 
   // Only expose photos publicly when admin has explicitly published them for this pothole.
@@ -175,6 +241,17 @@ export const load: PageServerLoad = async ({ params, url }) => {
       }))
     : [];
 
+  const hitCount = hitCountResult.count ?? 0;
+  const nearbyFilled = (nearbyFilledResult.data ?? [])
+    .filter((p) => haversineMetres(pothole.lat, pothole.lng, p.lat, p.lng) <= 110)
+    .slice(0, 3)
+    .map((p) => ({
+      id: p.id,
+      address: p.address ? decodeHtmlEntities(p.address) : null,
+      filled_at: p.filled_at as string,
+      created_at: p.created_at as string,
+    }));
+
   return {
     pothole,
     councillor,
@@ -182,5 +259,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
     photos,
     origin: url.origin,
     confirmationThreshold,
+    hitCount,
+    nearbyFilled,
   };
 };
