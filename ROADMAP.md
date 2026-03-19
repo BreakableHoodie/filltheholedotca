@@ -60,12 +60,3 @@ _Objective: Ensure long-term maintainability._
 _Objective: Grow the community of reporters and make fixes more likely._
 
 - [ ] **Bluesky Bot:** Auto-post significant events (new confirmed pothole, hole filled) to a dedicated account. Drives organic discovery and keeps engaged followers informed.
-- [ ] **Councillor Auto-Email:** When a pothole reaches `reported` status, send a formatted email to the ward councillor's public address. Reduces friction for residents who want to escalate.
-- [ ] **Shareable Ward Reports:** Generate a weekly PDF or web page per ward showing open potholes, confirmation counts, and average age. Give councillors a ready-made briefing.
-
-## Phase 7: Scale & Multi-Region (Backlog)
-
-_Objective: Make the codebase reusable for other municipalities._
-
-- [ ] **Multi-Region Support:** Abstract geofencing, ward data, and councillor lists into configuration so other cities can deploy their own instance without forking.
-- [ ] **Nomination Flow:** Let residents propose a new city — submit a region name, bounding box, and councillor CSV — and get a staging instance automatically.
