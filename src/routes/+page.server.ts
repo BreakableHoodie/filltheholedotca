@@ -7,7 +7,11 @@ import { decodeHtmlEntities } from '$lib/escape';
 // dataset grows. Tune with production telemetry if map coverage needs change.
 const MAX_POTHOLES_ON_HOME_PAGE = 2000;
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ setHeaders }) => {
+	// CDN caches the home page for 60 s and serves stale while revalidating for
+	// 5 min — repeat visitors get instant HTML without waiting for a DB query.
+	setHeaders({ 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' });
+
 	try {
 		const { data, error } = await supabase
 			.from('potholes')
