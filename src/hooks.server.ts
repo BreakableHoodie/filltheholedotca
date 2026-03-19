@@ -39,9 +39,12 @@ if (DISABLE_API_RATE_LIMIT && import.meta.env.PROD && !process.env.CI) {
 	throw new Error('[hooks] DISABLE_API_RATE_LIMIT must not be set in production. Aborting startup.');
 }
 
-/** Apply the standard security header set to any Response, including early returns. */
-function applySecurityHeaders(response: Response): Response {
-	response.headers.set('X-Frame-Options', 'DENY');
+/**
+ * Apply the standard security header set to any Response, including early returns.
+ * Pass allowFrame=true for routes that are intentionally embeddable (e.g. /api/embed/*).
+ */
+function applySecurityHeaders(response: Response, allowFrame = false): Response {
+	if (!allowFrame) response.headers.set('X-Frame-Options', 'DENY');
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 	// L7: preload enables HSTS preload list submission (https://hstspreload.org).
@@ -191,7 +194,9 @@ const appHandle: Handle = async ({ event, resolve }) => {
 
 	// CSP is configured in svelte.config.js (csp.mode: 'nonce').
 	// SvelteKit sets the header automatically on all HTML responses.
-	return applySecurityHeaders(response);
+	// Embed endpoints return their own CSP (frame-ancestors: *) and must not get X-Frame-Options: DENY.
+	const isEmbedRoute = event.url.pathname.startsWith('/api/embed/');
+	return applySecurityHeaders(response, isEmbedRoute);
 };
 
 // Wrap appHandle with Sentry's handle so requests are traced and errors captured.

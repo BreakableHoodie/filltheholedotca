@@ -28,6 +28,38 @@
 	let confirmationThreshold = $derived(data.confirmationThreshold);
 	let submitted = $derived($page.url.searchParams.get('submitted') === '1');
 	let officialCityLink = $derived(councillor ? CITY_REPORT_LINKS[councillor.city] : null);
+	let nearbyFilled = $derived(data.nearbyFilled ?? []);
+
+	// ── "I hit this" signal ────────────────────────────────────────────────
+	let hitCount = $state(data.hitCount ?? 0);
+	let hitSubmitted = $state(false);
+	let hittingIt = $state(false);
+
+	onMount(() => {
+		const key = `hit:${pothole.id}`;
+		hitSubmitted = localStorage.getItem(key) === '1';
+	});
+
+	async function recordHit() {
+		if (hitSubmitted || hittingIt) return;
+		hittingIt = true;
+		try {
+			const res = await fetch('/api/hit', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id: pothole.id })
+			});
+			const result = await res.json();
+			hitCount = result.count ?? hitCount;
+			localStorage.setItem(`hit:${pothole.id}`, '1');
+			hitSubmitted = true;
+			toast.success('Recorded! Your experience helps prioritize repairs.');
+		} catch {
+			toastError('Something went wrong. Try again.');
+		} finally {
+			hittingIt = false;
+		}
+	}
 
 	let ogDescription = $derived(
 		pothole.status === 'filled'
@@ -301,6 +333,61 @@ Thank you.`;
 					{/if}
 				{/each}
 			</div>
+		</div>
+	{/if}
+
+	<!-- "I hit this" signal -->
+	{#if pothole.status === 'reported'}
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+			<div class="flex items-center justify-between gap-3">
+				<div class="space-y-0.5">
+					<p class="text-sm font-semibold text-zinc-300 flex items-center gap-1.5">
+						<Icon name="zap" size={14} class="text-orange-400 shrink-0" />
+						Hit this pothole?
+					</p>
+					<p class="text-xs text-zinc-500">
+						{hitCount === 0 ? 'No hits recorded yet.' : `${hitCount} driver${hitCount === 1 ? '' : 's'} hit this.`}
+					</p>
+				</div>
+				<button
+					onclick={recordHit}
+					disabled={hitSubmitted || hittingIt}
+					aria-label={hitSubmitted ? 'Hit already recorded' : 'Record that you hit this pothole'}
+					class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors
+						{hitSubmitted
+							? 'bg-orange-900/30 border border-orange-800/60 text-orange-400 cursor-default'
+							: 'bg-zinc-800 border border-zinc-700 text-zinc-300 hover:border-orange-600 hover:text-orange-400'}"
+				>
+					{#if hittingIt}
+						<Icon name="loader" size={13} class="animate-spin shrink-0" />
+					{:else}
+						<Icon name="zap" size={13} class="shrink-0" />
+					{/if}
+					{hitSubmitted ? 'Recorded' : 'I hit this'}
+				</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Repeat pothole notice -->
+	{#if nearbyFilled.length > 0}
+		{@const mostRecent = nearbyFilled[0]}
+		<div class="bg-amber-950/30 border border-amber-800/50 rounded-xl p-4 space-y-1.5">
+			<div class="flex items-center gap-2 text-sm font-semibold text-amber-400">
+				<Icon name="alert-triangle" size={14} class="shrink-0" />
+				Recurring road issue
+			</div>
+			<p class="text-xs text-zinc-400 leading-relaxed">
+				A nearby pothole
+				{#if mostRecent.address}
+					at <span class="text-zinc-300">{mostRecent.address}</span>
+				{/if}
+				was previously filled on <span class="text-zinc-300">{format(new Date(mostRecent.filled_at), 'MMM d, yyyy')}</span>
+				— this location may need a permanent repair.
+			</p>
+			<p class="text-xs text-zinc-600">
+				{nearbyFilled.length === 1 ? '1 prior fill' : `${nearbyFilled.length} prior fills`} recorded within 110 m of this spot.
+			</p>
 		</div>
 	{/if}
 

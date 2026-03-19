@@ -31,7 +31,7 @@ const config = {
 				'object-src': ["'none'"],
 				'base-uri': ["'none'"],
 				'form-action': ["'self'"],
-				'worker-src': ["'none'"]
+				'worker-src': ["'self'"]  // 'self' required for service worker registration (/sw.js)
 			}
 		}
 	}

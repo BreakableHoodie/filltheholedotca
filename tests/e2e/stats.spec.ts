@@ -67,4 +67,28 @@ test.describe('Stats page', () => {
 	test('page title includes Stats', async ({ page }) => {
 		await expect(page).toHaveTitle(/Stats — fillthehole\.ca/i);
 	});
+
+	test('ward section resolves from loading into table or empty state', async ({ page }) => {
+		// The ward section passes through wardLoading=true ("Assigning wards…")
+		// before settling. Wait for the spinner to disappear, then check that
+		// either the grade-column table or the empty-state message is present.
+		// Both are valid outcomes — no live DB means empty state.
+		await page.locator('[aria-busy="true"]').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {
+			// aria-busy element may already be gone if GeoJSON loaded quickly
+		});
+		const hasTable = (await page.locator('th[title*="Accountability grade"]').count()) > 0;
+		const hasEmptyState = (await page.getByText(/No ward data available/i).count()) > 0;
+		expect(hasTable || hasEmptyState).toBe(true);
+	});
+
+	test('ward table grade cells contain valid grade values (A–F or —)', async ({ page }) => {
+		// Grade cells carry a title attribute set by the wardGrade() function.
+		// Conditional: skipped when there are no ward rows (no live DB connection).
+		const gradeCells = page.locator('td[title^="Grade:"]');
+		const count = await gradeCells.count();
+		for (let i = 0; i < count; i++) {
+			const text = (await gradeCells.nth(i).innerText()).trim();
+			expect(text).toMatch(/^[A-F—]$/);
+		}
+	});
 });
