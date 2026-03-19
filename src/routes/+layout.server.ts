@@ -1,11 +1,7 @@
 import { supabase } from '$lib/supabase';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ setHeaders }) => {
-	// Cache nav counts at the CDN for 60 s; serve stale for up to 5 min while
-	// revalidating in the background so repeat visitors never wait for this query.
-	setHeaders({ 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' });
-
+export const load: LayoutServerLoad = async () => {
 	try {
 		// Two lightweight COUNT queries in parallel — avoids fetching every row
 		// just to count statuses (the previous approach transferred the full table).
@@ -19,6 +15,9 @@ export const load: LayoutServerLoad = async ({ setHeaders }) => {
 				.select('*', { count: 'exact', head: true })
 				.eq('status', 'filled')
 		]);
+
+		if (reportedResult.error) console.error('Supabase load error (reported count):', reportedResult.error);
+		if (filledResult.error) console.error('Supabase load error (filled count):', filledResult.error);
 
 		return {
 			counts: {
