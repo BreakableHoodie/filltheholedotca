@@ -152,7 +152,7 @@ test.describe("Pothole detail page", () => {
 
     await expect(page.getByText(/Recurring road issue/i)).toBeVisible();
     await expect(
-      page.getByText(/the road may need a more permanent repair/i),
+      page.getByText(/this location may need a permanent repair/i),
     ).toBeVisible();
     // The nearby address is shown
     await expect(page.getByText(/198 Queen Street North/i)).toBeVisible();

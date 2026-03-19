@@ -372,23 +372,22 @@ Thank you.`;
 	<!-- Repeat pothole notice -->
 	{#if nearbyFilled.length > 0}
 		{@const mostRecent = nearbyFilled[0]}
-		{@const daysSinceFill = Math.floor((Date.now() - new Date(mostRecent.filled_at).getTime()) / 86_400_000)}
 		<div class="bg-amber-950/30 border border-amber-800/50 rounded-xl p-4 space-y-1.5">
 			<div class="flex items-center gap-2 text-sm font-semibold text-amber-400">
 				<Icon name="alert-triangle" size={14} class="shrink-0" />
 				Recurring road issue
 			</div>
 			<p class="text-xs text-zinc-400 leading-relaxed">
-				A pothole
+				A nearby pothole
 				{#if mostRecent.address}
 					at <span class="text-zinc-300">{mostRecent.address}</span>
 				{/if}
-				nearby was filled <span class="text-zinc-300">{daysSinceFill} day{daysSinceFill === 1 ? '' : 's'} ago</span>
-				— the road may need a more permanent repair.
+				was previously filled on <span class="text-zinc-300">{format(new Date(mostRecent.filled_at), 'MMM d, yyyy')}</span>
+				— this location may need a permanent repair.
 			</p>
-			{#if nearbyFilled.length > 1}
-				<p class="text-xs text-zinc-600">{nearbyFilled.length} prior fills recorded within 110 m.</p>
-			{/if}
+			<p class="text-xs text-zinc-600">
+				{nearbyFilled.length === 1 ? '1 prior fill' : `${nearbyFilled.length} prior fills`} recorded within 110 m of this spot.
+			</p>
 		</div>
 	{/if}
 

@@ -21,8 +21,8 @@ function escHtml(s: string): string {
 	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function daysSince(iso: string): number {
-	return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+function daysBetween(from: string, to: number | string = Date.now()): number {
+	return Math.floor((new Date(to as string).getTime() - new Date(from).getTime()) / 86_400_000);
 }
 
 /** Embeddable card widget — returns a full self-contained HTML document. */
@@ -39,7 +39,10 @@ export const GET: RequestHandler = async ({ params, url }) => {
 	const status = data.status as string;
 	const statusLabel = escHtml(STATUS_LABEL[status] ?? status);
 	const color = STATUS_COLOR[status] ?? '#71717a';
-	const days = daysSince(data.created_at);
+	// For filled potholes show how long it took to fix; for open ones show age.
+	const days = data.filled_at
+		? daysBetween(data.created_at, data.filled_at)
+		: daysBetween(data.created_at);
 	const origin = url.origin.replace('/api/embed', '');
 	const detailUrl = `${origin.startsWith('http') ? origin : 'https://fillthehole.ca'}/hole/${data.id}`;
 
@@ -70,7 +73,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="badge"><span class="dot"></span>${statusLabel}</div>
   <div class="address">${address}</div>
   <div class="meta">
-    ${status === 'filled' ? `Filled after <span>${days}</span> days` : `<span>${days}</span> day${days === 1 ? '' : 's'} open — unfilled`}
+    ${status === 'filled' ? `Filled after <span>${days}</span> day${days === 1 ? '' : 's'}` : `<span>${days}</span> day${days === 1 ? '' : 's'} open — unfilled`}
   </div>
   <a class="cta" href="${escHtml(detailUrl)}" target="_blank" rel="noopener noreferrer">View on FillTheHole.ca →</a>
   <p class="powered"><a href="https://fillthehole.ca" target="_blank" rel="noopener noreferrer">fillthehole.ca</a> — Waterloo Region pothole tracker</p>

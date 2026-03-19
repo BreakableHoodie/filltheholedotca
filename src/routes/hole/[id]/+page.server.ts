@@ -8,6 +8,7 @@ import type { Pothole, PotholePhoto } from "$lib/types";
 import { COUNCILLORS, lookupWard, type Councillor } from "$lib/wards";
 import { decodeHtmlEntities } from "$lib/escape";
 import { getConfirmationThreshold } from "$lib/server/settings";
+import { haversineMetres } from "$lib/geo";
 
 function getServiceClient() {
   return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -210,10 +211,11 @@ export const load: PageServerLoad = async ({ params, url }) => {
         .from("pothole_hits")
         .select("*", { count: "exact", head: true })
         .eq("pothole_id", params.id),
-      // Recently filled potholes nearby — surface repeat road issues
+      // Recently filled potholes nearby — surface repeat road issues.
+      // Fetch more rows than needed so haversine post-filter has enough candidates.
       supabase
         .from("potholes")
-        .select("id, address, filled_at, created_at")
+        .select("id, address, lat, lng, filled_at, created_at")
         .eq("status", "filled")
         .neq("id", params.id)
         .gte("lat", pothole.lat - delta)
@@ -222,7 +224,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
         .lte("lng", pothole.lng + delta)
         .not("filled_at", "is", null)
         .order("filled_at", { ascending: false })
-        .limit(3),
+        .limit(10),
     ]);
 
   // Only expose photos publicly when admin has explicitly published them for this pothole.
@@ -240,12 +242,15 @@ export const load: PageServerLoad = async ({ params, url }) => {
     : [];
 
   const hitCount = hitCountResult.count ?? 0;
-  const nearbyFilled = (nearbyFilledResult.data ?? []).map((p) => ({
-    id: p.id,
-    address: p.address ? decodeHtmlEntities(p.address) : null,
-    filled_at: p.filled_at as string,
-    created_at: p.created_at as string,
-  }));
+  const nearbyFilled = (nearbyFilledResult.data ?? [])
+    .filter((p) => haversineMetres(pothole.lat, pothole.lng, p.lat, p.lng) <= 110)
+    .slice(0, 3)
+    .map((p) => ({
+      id: p.id,
+      address: p.address ? decodeHtmlEntities(p.address) : null,
+      filled_at: p.filled_at as string,
+      created_at: p.created_at as string,
+    }));
 
   return {
     pothole,
