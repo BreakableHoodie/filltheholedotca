@@ -1,25 +1,33 @@
 import { supabase } from '$lib/supabase';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async () => {
+export const load: LayoutServerLoad = async ({ setHeaders }) => {
+	// Cache nav counts at the CDN for 60 s; serve stale for up to 5 min while
+	// revalidating in the background so repeat visitors never wait for this query.
+	setHeaders({ 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' });
+
 	try {
-		const { data, error } = await supabase
-			.from('potholes')
-			.select('status')
-			.neq('status', 'pending');
+		// Two lightweight COUNT queries in parallel — avoids fetching every row
+		// just to count statuses (the previous approach transferred the full table).
+		const [reportedResult, filledResult] = await Promise.all([
+			supabase
+				.from('potholes')
+				.select('*', { count: 'exact', head: true })
+				.eq('status', 'reported'),
+			supabase
+				.from('potholes')
+				.select('*', { count: 'exact', head: true })
+				.eq('status', 'filled')
+		]);
 
-		if (error) {
-			console.error('Supabase load error:', error);
-			return { counts: { reported: 0, filled: 0 } };
-		}
-
-		const reported = data?.filter((p) => p.status === 'reported').length ?? 0;
-		const filled = data?.filter((p) => p.status === 'filled').length ?? 0;
-
-		return { counts: { reported, filled } };
+		return {
+			counts: {
+				reported: reportedResult.count ?? 0,
+				filled: filledResult.count ?? 0
+			}
+		};
 	} catch (e) {
 		console.error('Supabase load exception:', e);
 		return { counts: { reported: 0, filled: 0 } };
 	}
-
 };
