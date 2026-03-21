@@ -5,5 +5,8 @@
 [build.environment]
   NODE_VERSION = "22"
   # BLUESKY_HANDLE is a public Bluesky username — not a secret. Its value appears
-  # in ROADMAP.md and .env.example intentionally. Omit it from secret scanning.
+  # in ROADMAP.md and README.md intentionally. Omit it from secret scanning.
   SECRETS_SCAN_OMIT_KEYS = "BLUESKY_HANDLE"
+  # SvelteKit embeds PUBLIC_* env vars directly into the server bundle (public.js).
+  # This is expected behaviour — exclude build output from secrets scanning.
+  SECRETS_SCAN_OMIT_PATHS = ".netlify,.svelte-kit"

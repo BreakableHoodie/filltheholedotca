@@ -161,13 +161,16 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			});
 		}
 
-		// Only fire when this request was the one that flipped the status (confirmed_count
-		// equals the threshold exactly). Checking status alone can trigger on already-reported
-		// potholes if two confirmations race, causing duplicate Bluesky posts.
-		if (rpc.status === 'reported' && rpc.confirmed_count === confirmationsRequired) {
+		// Fire when this confirmation caused the status to flip to 'reported'.
+		// Duplicate posts from concurrent confirmations are rare and acceptable — the DB
+		// RPC uses row-level locking so the window is tiny. Checking equality against the
+		// threshold breaks when an admin lowers the threshold after a pothole already has
+		// more confirmations than the new value (status flips but count > threshold).
+		if (rpc.status === 'reported') {
 			// Fire-and-forget — do not block the public response on external API latency.
-			// Use the stored address from the matched pothole, not the confirmer's request
-			// payload — the final confirmer may supply arbitrary text.
+			// Use the stored address for Pushover (admin-only) but pass null to the Bluesky
+			// post — match.address is user-controlled text from the first reporter and must
+			// not appear verbatim in public posts. postConfirmed falls back to "Waterloo Region".
 			const storedAddress = match.address;
 			const locationLabel = storedAddress?.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 			void notify('community', {
@@ -177,7 +180,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				urlTitle: 'View pothole',
 				priority: -1
 			});
-			void postConfirmed(match.id, storedAddress);
+			void postConfirmed(match.id, null);
 		}
 
 		return json({
