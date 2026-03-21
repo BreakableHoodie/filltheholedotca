@@ -202,6 +202,14 @@
 							{/if}
 						</div>
 
+						{#if photo.moderation_status === 'deferred'}
+							<div class="flex items-center gap-1.5 mt-1.5 px-1.5 py-1 rounded bg-amber-500/10 border border-amber-500/30">
+								<svg class="w-3 h-3 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+								</svg>
+								<span class="text-xs font-medium text-amber-400">Auto-mod skipped — review required</span>
+							</div>
+						{/if}
 						<div class="flex items-center justify-between mt-1.5">
 							<span
 								class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium {scoreColor(photo.moderation_score)}"

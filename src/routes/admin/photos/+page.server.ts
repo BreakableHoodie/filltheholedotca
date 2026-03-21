@@ -14,6 +14,7 @@ function getAdminClient() {
 type PhotoRow = {
 	id: string;
 	storage_path: string;
+	moderation_status: string;
 	moderation_score: number | null;
 	created_at: string;
 	potholes: {
@@ -30,13 +31,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
 	requireRole(locals.adminUser.role, 'viewer');
 
+	// Include 'deferred' photos (SightEngine unavailable — requires mandatory admin review)
+	// alongside normal 'pending' photos. Deferred photos are visually flagged in the UI.
 	const { data: rawPhotos } = await getAdminClient()
 		.from('pothole_photos')
 		.select(
-			`id, storage_path, moderation_score, created_at,
+			`id, storage_path, moderation_status, moderation_score, created_at,
        potholes!inner ( id, address, status, confirmed_count )`
 		)
-		.eq('moderation_status', 'pending')
+		.in('moderation_status', ['pending', 'deferred'])
+		.order('moderation_status', { ascending: true }) // 'deferred' < 'pending' — always surfaces first
 		.order('created_at', { ascending: true })
 		.limit(100);
 
