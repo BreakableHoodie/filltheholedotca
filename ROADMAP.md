@@ -59,7 +59,7 @@ _Objective: Ensure long-term maintainability._
 
 _Objective: Grow the community of reporters and make fixes more likely._
 
-- [ ] **Bluesky Bot:** Auto-post significant events (new confirmed pothole, hole filled) to a dedicated account. Drives organic discovery and keeps engaged followers informed.
+- [x] **Bluesky Bot:** Auto-post significant events (new confirmed pothole, hole filled) to a dedicated account (@fillthehole.bsky.social). Drives organic discovery and keeps engaged followers informed.
 - [x] **Ward Accountability Grade:** Letter grade (A–F) per ward on the stats page — composite of fill rate (70%) and average response time (30%).
 - [x] **"I Hit This" Signal:** Button on pothole detail pages for drivers to record a physical encounter. Hit count shown publicly; helps surface high-impact potholes.
 - [x] **Repeat Pothole Detection:** Detail page warns when a nearby pothole was previously filled — flags recurring road issues for escalation.
