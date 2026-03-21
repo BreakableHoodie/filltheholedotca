@@ -40,6 +40,7 @@ export const load: PageServerLoad = async ({ locals }) => {
        potholes!inner ( id, address, status, confirmed_count )`
 		)
 		.in('moderation_status', ['pending', 'deferred'])
+		.order('moderation_status', { ascending: true }) // 'deferred' < 'pending' — always surfaces first
 		.order('created_at', { ascending: true })
 		.limit(100);
 
