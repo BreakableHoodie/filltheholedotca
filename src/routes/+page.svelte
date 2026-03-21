@@ -435,6 +435,13 @@
 
 		mapReady = true;
 		watchlistCount = getWatchlist().length;
+
+		// If returning from a detail page with ?focus=ID, fly to and open that marker
+		const focusId = new URLSearchParams(window.location.search).get('focus');
+		if (focusId) {
+			await tick();
+			focusPothole(focusId);
+		}
 	});
 </script>
 
