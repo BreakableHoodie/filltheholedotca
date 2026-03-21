@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { getConfirmationThreshold } from '$lib/server/settings';
 import { notify } from '$lib/server/pushover';
+import { postConfirmed } from '$lib/server/bluesky';
 
 // Create Supabase client only when needed, not at module level
 function getSupabaseClient() {
@@ -161,7 +162,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		}
 
 		if (rpc.status === 'reported') {
-			// Fire-and-forget — do not block the public response on Pushover latency.
+			// Fire-and-forget — do not block the public response on external API latency.
 			const locationLabel = address?.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 			void notify('community', {
 				title: '🕳️ Pothole confirmed — now live',
@@ -170,6 +171,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				urlTitle: 'View pothole',
 				priority: -1
 			});
+			void postConfirmed(match.id, address);
 		}
 
 		return json({

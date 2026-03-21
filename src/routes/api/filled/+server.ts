@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { notify } from '$lib/server/pushover';
 import { broadcastPush } from '$lib/server/webpush';
+import { postFilled } from '$lib/server/bluesky';
 
 // L6: All pothole_actions queries use the service-role client — the public SELECT
 // policy on pothole_actions was a data-leak vector (ip_hash correlation). After
@@ -66,12 +67,14 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.neq('status', 'pending')
 		.neq('status', 'filled')
 		.neq('status', 'expired')
-		.select('id');
+		.select('id, address');
 
 	if (updateError) throw error(500, 'Failed to update status');
 	if (!updated || updated.length === 0) throw error(409, 'Pothole is not in a fillable state');
 
-	// Fire-and-forget — do not block the client response on Pushover or push latency.
+	const filledPothole = updated[0];
+
+	// Fire-and-forget — do not block the client response on external API latency.
 	void notify('community', {
 		title: '✅ Pothole marked filled',
 		message: 'A community member marked a pothole as filled.',
@@ -84,6 +87,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		body: 'A pothole in Waterloo Region was just marked as fixed.',
 		url: `https://fillthehole.ca/hole/${parsed.data.id}`
 	});
+	void postFilled(filledPothole.id, filledPothole.address);
 
 	return json({ ok: true });
 };

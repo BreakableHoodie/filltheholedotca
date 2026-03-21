@@ -74,6 +74,7 @@ Copy `.env.example` → `.env` with real values:
 - `SIGHTENGINE_API_USER` / `SIGHTENGINE_API_SECRET` — image moderation (optional)
 - `IP_HASH_SECRET` — server-only HMAC key for IP hashing
 - `PUBLIC_SENTRY_DSN` — Sentry project DSN (optional; omit to disable error tracking in dev)
+- `BLUESKY_HANDLE` / `BLUESKY_APP_PASSWORD` — Bluesky bot credentials (optional; omit both to disable auto-posting)
 
 ## Project Structure
 
