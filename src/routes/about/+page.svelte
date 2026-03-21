@@ -212,7 +212,7 @@
 				The operator is not liable for any damage to vehicles, injuries, or losses arising from reliance on information displayed here.
 			</p>
 			<p>
-				For official road hazard reporting, use the city links above. For emergencies, contact 311 or your local municipality directly.
+				For official road hazard reporting, use the city links above. To report an urgent road hazard, contact your municipality directly using the links above.
 			</p>
 		</div>
 	</section>

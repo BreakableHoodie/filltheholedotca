@@ -29,12 +29,7 @@
 			<div class="flex items-center justify-between gap-3 flex-wrap">
 				<!-- Logo mark + wordmark -->
 				<a href="/" class="flex items-center gap-2.5 group">
-					<!-- Pothole icon: concentric rings suggest depth/crater -->
-					<svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
-						<circle cx="13" cy="13" r="12" fill="#f97316"/>
-						<circle cx="13" cy="13" r="7.5" fill="#09090b"/>
-						<circle cx="13" cy="13" r="4" fill="rgba(249,115,22,0.15)"/>
-					</svg>
+					<img src="/icon-192.png" alt="" aria-hidden="true" width="26" height="26" class="shrink-0 rounded-sm" />
 					<span class="font-brand font-bold text-xl leading-none text-white group-hover:text-sky-400 transition-colors">
 						FillTheHole<span class="text-sky-500">.ca</span>
 					</span>
