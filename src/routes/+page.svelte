@@ -436,11 +436,23 @@
 		mapReady = true;
 		watchlistCount = getWatchlist().length;
 
-		// If returning from a detail page with ?focus=ID, fly to and open that marker
-		const focusId = new URLSearchParams(window.location.search).get('focus');
+		// If returning from a detail page with ?focus=ID, fly to and open that marker.
+		// The home page caps to 2000 records, so older potholes may not have a marker;
+		// fall back to flying to the coordinates encoded in ?lat= and ?lng= if present.
+		const focusParams = new URLSearchParams(window.location.search);
+		const focusId = focusParams.get('focus');
 		if (focusId) {
 			await tick();
-			focusPothole(focusId);
+			if (markersById[focusId]) {
+				focusPothole(focusId);
+			} else {
+				const lat = parseFloat(focusParams.get('lat') ?? '');
+				const lng = parseFloat(focusParams.get('lng') ?? '');
+				if (!isNaN(lat) && !isNaN(lng) && mapRef) {
+					mapRef.flyTo([lat, lng], 15, { duration: 0.6 });
+					toast.info('This pothole is not in the current map view.');
+				}
+			}
 		}
 	});
 </script>
