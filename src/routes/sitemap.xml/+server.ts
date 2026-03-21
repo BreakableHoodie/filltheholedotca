@@ -1,3 +1,4 @@
+import { error } from '@sveltejs/kit';
 import { supabase } from '$lib/supabase';
 import type { RequestHandler } from './$types';
 
@@ -10,12 +11,23 @@ const STATIC_PAGES = [
 	{ path: '/about', changefreq: 'monthly', priority: '0.5' }
 ];
 
+const PRIORITY: Record<string, string> = {
+	reported: '0.7',
+	filled: '0.5',
+	expired: '0.3'
+};
+
 export const GET: RequestHandler = async () => {
-	const { data: potholes } = await supabase
+	const { data: potholes, error: dbError } = await supabase
 		.from('potholes')
 		.select('id, created_at, filled_at, status')
-		.in('status', ['reported', 'filled'])
+		.in('status', ['reported', 'filled', 'expired'])
 		.order('created_at', { ascending: false });
+
+	if (dbError) {
+		console.error('sitemap: supabase error', dbError.message);
+		error(503, 'Sitemap temporarily unavailable');
+	}
 
 	const staticEntries = STATIC_PAGES.map(
 		({ path, changefreq, priority }) => `
@@ -26,15 +38,16 @@ export const GET: RequestHandler = async () => {
   </url>`
 	).join('');
 
-	const potholeEntries = (potholes ?? [])
+	const potholeEntries = potholes
 		.map(({ id, created_at, filled_at, status }) => {
 			const lastmod = (filled_at ?? created_at).slice(0, 10);
-			const priority = status === 'filled' ? '0.5' : '0.7';
+			const priority = PRIORITY[status] ?? '0.3';
+			const changefreq = status === 'reported' ? 'weekly' : 'monthly';
 			return `
   <url>
     <loc>${ORIGIN}/hole/${id}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
   </url>`;
 		})
