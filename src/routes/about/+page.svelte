@@ -77,6 +77,10 @@
 
 	<section class="space-y-4 text-zinc-300 leading-relaxed">
 		<h2 class="section-title text-xl text-white">How it works</h2>
+		<p class="text-sm text-zinc-400">
+			The basics are below.
+			<a href="/how-to" class="text-sky-400 underline hover:text-sky-300 transition-colors">Full how-to guide →</a>
+		</p>
 
 		<div class="flex gap-3 bg-amber-950/40 border border-amber-700/40 rounded-xl p-4 text-sm text-amber-200/90">
 			<Icon name="alert-triangle" size={18} class="text-amber-400 shrink-0 mt-0.5" />

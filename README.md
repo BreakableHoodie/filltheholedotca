@@ -10,12 +10,12 @@ Live at **[fillthehole.ca](https://fillthehole.ca)**
 
 Potholes in Kitchener, Waterloo, and Cambridge often sit unfilled for weeks. This app gives residents a way to:
 
-1. **Report** a pothole at their GPS location (or search by address / drop a pin)
-2. **Confirm** reports from others — by default, 2 independent confirmations are required before it goes live
-3. **Watch** potholes you care about — saved locally in your browser
+1. **Report** a pothole at their GPS location (or search by address / drop a pin), with an optional photo
+2. **Confirm** reports from others — 2 independent confirmations are required before a pothole goes live on the public map
+3. **Watch** potholes you care about — saved locally in your browser, no account needed
 4. **Celebrate** when the city finally fills it
 
-Each pothole page shows the ward councillor's contact info, any matching city repair requests, and a direct link to submit a service request.
+Each pothole page shows the ward councillor's contact info and a direct link to submit a service request. The `/stats` page tracks ward accountability grades, resolution times, and fill rate trends. All data is available as open data feeds for journalists and researchers.
 
 ---
 
@@ -26,6 +26,7 @@ Each pothole page shows the ward councillor's contact info, any matching city re
 - **[Supabase](https://supabase.com)** — Postgres with Row Level Security
 - **[Leaflet](https://leafletjs.com)** + `leaflet.markercluster` for the map
 - **[@fontsource/barlow-condensed](https://www.npmjs.com/package/@fontsource/barlow-condensed)** for local OG image font loading
+- **[@sentry/sveltekit](https://docs.sentry.io/platforms/javascript/guides/sveltekit/)** — error tracking (server + client)
 - **[Netlify](https://netlify.com)** for deployment
 
 ---
@@ -53,13 +54,17 @@ Run the migration files against your Supabase project in order:
 
 1. `schema.sql` — initial tables
 2. `schema_update.sql` — confirmation system
-3. `schema_photos.sql` — photo uploads
-4. `schema_photo_publishing.sql` — per-pothole photo publishing toggle
-5. `schema_site_settings.sql` — site settings table + `increment_confirmation` RPC
-6. `schema_pr61_fixes.sql` — RLS hardening
-7. `schema_security_hardening.sql` — revoke public RPC access, deferred photo status
-8. `schema_sprint3.sql` — pothole expiry pg_cron jobs, drop public pothole_actions SELECT
-9. `schema_pushover_settings.sql` — Pushover notification toggles (default: all enabled)
+3. `schema_actions.sql` — pothole_actions table + increment_confirmation RPC
+4. `schema_admin.sql` — admin users, sessions, trusted devices
+5. `schema_photos.sql` — photo uploads
+6. `schema_photo_publishing.sql` — per-pothole photo publishing toggle
+7. `schema_site_settings.sql` — site settings table + 3-param increment_confirmation RPC
+8. `schema_pr61_fixes.sql` — RLS hardening
+9. `schema_security_hardening.sql` — revoke public RPC access, deferred photo status
+10. `schema_sprint3.sql` — pothole expiry pg_cron jobs, drop public pothole_actions SELECT
+11. `schema_pushover_settings.sql` — Pushover notification toggles (default: all enabled)
+12. `schema_hits.sql` — "I Hit This" signal table
+13. `schema_push.sql` — web push subscription storage
 
 ### Run
 
@@ -81,15 +86,22 @@ App runs at `http://localhost:5173`.
 | `ADMIN_SECRET`              | Bearer token required for `/api/admin/*` routes                           |
 | `SIGHTENGINE_API_USER`      | Image moderation — optional                                               |
 | `SIGHTENGINE_API_SECRET`    | Image moderation — optional                                               |
+| `SIGHTENGINE_WORKFLOW_ID`   | SightEngine workflow ID for automated moderation rules — optional         |
 | `IP_HASH_SECRET`            | Server-only HMAC key for immediate IP hashing on ingestion                |
-| `ADMIN_SESSION_SECRET`      | 32-byte hex key for signing admin session cookies                         |
+| `ADMIN_SESSION_SECRET`      | 32-byte hex key for signing admin CSRF tokens                             |
 | `TOTP_ENCRYPTION_KEY`       | 32-byte hex AES-GCM key for encrypting TOTP secrets at rest               |
 | `ADMIN_BOOTSTRAP_SECRET`    | One-time secret for creating the first admin account — see section below  |
 | `PUSHOVER_APP_TOKEN`        | Pushover app token — optional, disables push notifications if absent      |
 | `PUSHOVER_USER_KEY`         | Pushover user/group key — required alongside `PUSHOVER_APP_TOKEN`         |
-| `SIGHTENGINE_WORKFLOW_ID`   | Optional SightEngine workflow ID for automated moderation rules            |
+| `PUBLIC_SENTRY_DSN`         | Sentry project DSN — optional, omit to disable error tracking             |
+| `VAPID_PUBLIC_KEY`          | VAPID public key for web push — generate with `npx web-push generate-vapid-keys` |
+| `VAPID_PRIVATE_KEY`         | VAPID private key for web push — server-only                              |
+| `PUBLIC_VAPID_PUBLIC_KEY`   | Same as `VAPID_PUBLIC_KEY`, exposed to the browser for subscription UI    |
+| `BLUESKY_HANDLE`            | Bluesky account handle for the bot — optional (e.g. `fillthehole.bsky.social`) |
+| `BLUESKY_APP_PASSWORD`      | Bluesky app password — generate in Settings → Privacy → App Passwords     |
+| `DISABLE_API_RATE_LIMIT`    | Set to any value to disable rate limiting in dev/test (never in production) |
 
-See `.env.example` for the full list. Pushover notification categories (photos, community events, security alerts) can be toggled on/off per-category from **Admin → Settings → Site** without a deployment.
+See `.env.example` for the full list with generation instructions. Pushover notification categories (photos, community events, security alerts) can be toggled on/off per-category from **Admin → Settings → Site** without a deployment.
 
 ---
 
@@ -134,17 +146,40 @@ pending → reported → filled
 
 The map includes an optional ward heatmap showing pothole density by ward across all three cities. Hovering a ward shows the councillor's name and the active hole count. Clicking through the pothole detail page lets you email the councillor directly.
 
-### City repair requests
+### Photo uploads
 
-The pothole detail page surfaces matching repair requests from the city's open data, so you can see if the city is already aware of the issue.
+Users can attach a photo when reporting or confirming a pothole. Photos are compressed client-side (max 800px, JPEG), then run through SightEngine automated moderation before landing in a queue for admin review. Photos are never shown publicly until an admin explicitly approves and publishes them per-pothole.
 
 ### Watchlist
 
 Potholes can be added to a personal watchlist stored in your browser's local storage — no account needed.
 
-### Stats
+### "I Hit This"
 
-The `/stats` page shows resolution time, ward leaderboards, fill rate trends, and other metrics across the dataset.
+The pothole detail page has an "I hit this" button for drivers to signal they physically drove over the pothole. Hit counts are shown publicly and help surface high-impact holes.
+
+### Ward accountability
+
+The `/stats` page shows resolution time, fill rate trends, hotspot streets, and a letter-grade accountability score (A–F) per ward based on fill rate and average response time.
+
+### Open data
+
+- `/api/feed.json` — JSON feed of recent confirmed potholes
+- `/api/export.csv` — full dataset download
+- `/api/feed.xml` — RSS 2.0 feed of recent confirmations and fills
+- `/api/embed/[id]` — embeddable iframe card for any pothole
+
+### Bluesky bot
+
+When a pothole is confirmed or filled, the bot (`@fillthehole.bsky.social`) auto-posts to Bluesky. Requires `BLUESKY_HANDLE` and `BLUESKY_APP_PASSWORD` env vars — silently disabled if absent.
+
+### Push notifications
+
+Users can subscribe to browser push notifications for fill events. Requires VAPID keys — silently disabled if absent.
+
+### Error tracking
+
+Sentry captures server and client errors. Requires `PUBLIC_SENTRY_DSN` — silently disabled if absent.
 
 ### Geofence
 

@@ -120,7 +120,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const delta = 0.0005;
 	const { data: nearby, error: queryError } = await supabase
 		.from('potholes')
-		.select('id, lat, lng, confirmed_count')
+		.select('id, lat, lng, confirmed_count, address')
 		.eq('status', 'pending')
 		.gte('lat', lat - delta)
 		.lte('lat', lat + delta)
@@ -161,9 +161,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			});
 		}
 
-		if (rpc.status === 'reported') {
+		// Only fire when this request was the one that flipped the status (confirmed_count
+		// equals the threshold exactly). Checking status alone can trigger on already-reported
+		// potholes if two confirmations race, causing duplicate Bluesky posts.
+		if (rpc.status === 'reported' && rpc.confirmed_count === confirmationsRequired) {
 			// Fire-and-forget — do not block the public response on external API latency.
-			const locationLabel = address?.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+			// Use the stored address from the matched pothole, not the confirmer's request
+			// payload — the final confirmer may supply arbitrary text.
+			const storedAddress = match.address;
+			const locationLabel = storedAddress?.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 			void notify('community', {
 				title: '🕳️ Pothole confirmed — now live',
 				message: `Pothole at ${locationLabel} reached the confirmation threshold and is now on the public map.`,
@@ -171,7 +177,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				urlTitle: 'View pothole',
 				priority: -1
 			});
-			void postConfirmed(match.id, address);
+			void postConfirmed(match.id, storedAddress);
 		}
 
 		return json({

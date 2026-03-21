@@ -86,6 +86,7 @@ src/
     +layout.server.ts         # Server layout loader
     +page.server.ts           # Loads potholes for map
     about/+page.svelte        # About page
+    how-to/+page.svelte       # User-facing how-to / help guide
     stats/
       +page.server.ts         # SSR load — potholes for metrics
       +page.svelte            # Metrics dashboard (resolution time, ward leaderboards, trends, fill rate)

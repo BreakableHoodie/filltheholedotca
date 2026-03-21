@@ -60,6 +60,9 @@
 					<a href="/stats" class="text-zinc-400 hover:text-white transition-colors">
 						Stats
 					</a>
+					<a href="/how-to" class="hidden sm:inline text-zinc-400 hover:text-white transition-colors">
+						How to
+					</a>
 					<a href="/about" class="text-zinc-400 hover:text-white transition-colors">
 						About
 					</a>
@@ -92,6 +95,8 @@
 		<p>Track potholes. Contact your councillor. Hold the city accountable.</p>
 		<p>
 			Community-sourced data — not official. Use at your own risk.
+			<a href="/how-to" class="underline hover:text-white transition-colors">How to use</a>
+			<span class="mx-1 text-zinc-600" aria-hidden="true">·</span>
 			<a href="/about#privacy" class="underline hover:text-white transition-colors">Privacy</a>
 			<span class="mx-1 text-zinc-600" aria-hidden="true">·</span>
 			<a href="/about#disclaimer" class="underline hover:text-white transition-colors">Disclaimer</a>
