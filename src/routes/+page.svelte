@@ -440,6 +440,10 @@
 
 <svelte:head>
 	<title>Waterloo Region Pothole Map — FillTheHole.ca</title>
+	<meta property="og:title" content="Waterloo Region Pothole Tracker — FillTheHole.ca" />
+	<meta property="og:description" content="Track potholes in Kitchener, Waterloo, and Cambridge. Report, confirm, and hold the city accountable." />
+	<meta property="og:url" content="https://fillthehole.ca/" />
+	<meta property="og:type" content="website" />
 </svelte:head>
 
 <h1 class="sr-only">Waterloo Region Pothole Map</h1>
