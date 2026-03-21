@@ -1,4 +1,5 @@
 import { supabase } from '$lib/supabase';
+import { decodeHtmlEntities } from '$lib/escape';
 import type { PageServerLoad } from './$types';
 import type { Pothole } from '$lib/types';
 
@@ -14,5 +15,10 @@ export const load: PageServerLoad = async () => {
 		return { potholes: [] as Pothole[] };
 	}
 
-	return { potholes: (data ?? []) as Pothole[] };
+	const potholes = (data ?? []).map((p) => ({
+		...p,
+		address: p.address ? decodeHtmlEntities(p.address) : null
+	})) as Pothole[];
+
+	return { potholes };
 };

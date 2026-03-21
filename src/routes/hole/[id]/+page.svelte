@@ -262,7 +262,7 @@ Thank you.`;
 	<!-- Header -->
 	<div>
 		<div class="flex items-center justify-between mb-3">
-			<a href="/?focus={pothole.id}" class="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+			<a href={pothole.status === 'reported' ? `/?focus=${pothole.id}` : '/'} class="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
 				<Icon name="arrow-left" size={14} />
 				Back to map
 			</a>
