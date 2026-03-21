@@ -506,13 +506,14 @@
 				No open potholes in this time window!
 			</div>
 		{:else}
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-				<table class="w-full text-sm">
+			<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden overflow-x-auto">
+				<table class="w-full text-sm min-w-[520px]">
 					<thead>
 						<tr class="border-b border-zinc-800">
 							<th scope="col" class="text-left px-4 py-3 text-zinc-400 font-medium">Location</th>
+							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium hidden sm:table-cell">Reported</th>
+							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Confirmations</th>
 							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Days open</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Status</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -523,8 +524,14 @@
 										href="/hole/{p.id}"
 										class="text-sky-400 hover:text-sky-300 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 rounded"
 									>
-										{p.lat.toFixed(4)}, {p.lng.toFixed(4)}
+										{p.address || `${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`}
 									</a>
+								</td>
+								<td class="px-4 py-3 text-right text-zinc-400 hidden sm:table-cell">
+									{format(new Date(p.created_at), 'MMM d, yyyy')}
+								</td>
+								<td class="px-4 py-3 text-right text-zinc-300 tabular-nums">
+									{p.confirmed_count ?? 1}
 								</td>
 								<td
 									class="px-4 py-3 text-right font-bold tabular-nums
@@ -532,12 +539,6 @@
 									aria-label="{p.days} days open"
 								>
 									{p.days}
-								</td>
-								<td class="px-4 py-3 text-right">
-									<span class="inline-flex items-center gap-1 text-orange-400 text-xs">
-										<Icon name="map-pin" size={11} class="shrink-0" />
-										Reported
-									</span>
 								</td>
 							</tr>
 						{/each}

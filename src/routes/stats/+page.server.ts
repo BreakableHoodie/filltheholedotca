@@ -5,7 +5,7 @@ import type { Pothole } from '$lib/types';
 export const load: PageServerLoad = async () => {
 	const { data, error } = await supabase
 		.from('potholes')
-		.select('id, created_at, lat, lng, status, filled_at, expired_at')
+		.select('id, created_at, lat, lng, status, filled_at, expired_at, address, confirmed_count')
 		.neq('status', 'pending')
 		.order('created_at', { ascending: false });
 
