@@ -61,7 +61,7 @@ const WARD_SOURCES: Record<City, { url: string; wardField: string }> = {
 
 // ── Per-city GeoJSON cache ────────────────────────────────────────────────────
 
-interface GeoJSONFeature {
+export interface GeoJSONFeature {
 	type: string;
 	properties: Record<string, unknown>;
 	geometry: {
@@ -98,7 +98,7 @@ function pointInPolygon(lng: number, lat: number, geometry: GeoJSONFeature['geom
 
 // ── Ward lookup ───────────────────────────────────────────────────────────────
 
-async function fetchWards(city: City): Promise<GeoJSONFeature[]> {
+export async function fetchWards(city: City): Promise<GeoJSONFeature[]> {
 	if (wardCache[city]) return wardCache[city]!;
 	const { url } = WARD_SOURCES[city];
 	const res = await fetch(url, { signal: AbortSignal.timeout(5000) });

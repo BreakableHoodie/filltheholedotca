@@ -10,6 +10,7 @@
 	} from '$lib/official-reporting';
 	import { resizeImage } from '$lib/image';
 	import { toastError } from '$lib/toast';
+	import { getPotholeEmailUrl } from '$lib/email';
 	import type { Pothole } from '$lib/types';
 	import type { Councillor } from '$lib/wards';
 	import { isWatched, toggleWatch } from '$lib/watchlist';
@@ -184,20 +185,7 @@
 		}
 	}
 
-	function getEmailUrl(councillor: Councillor, pothole: Pothole) {
-		const subject = `Pothole at ${pothole.address || 'my location'}`;
-		const body = `Hi ${councillor.name},
 
-I'd like to report an unfilled pothole in Ward ${councillor.ward}.
-
-Location: ${pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
-Tracked at: https://fillthehole.ca/hole/${pothole.id}
-
-This pothole has been reported and is awaiting city action. Please help get it on the city's radar.
-
-Thank you.`;
-		return `mailto:${councillor.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-	}
 </script>
 
 <svelte:head>
@@ -639,7 +627,7 @@ Thank you.`;
 			</p>
 			<div class="flex flex-wrap gap-2">
 				<a
-					href={getEmailUrl(councillor, pothole)}
+					href={getPotholeEmailUrl(councillor, pothole)}
 					class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg transition-colors"
 				>
 					<Icon name="mail" size={13} class="shrink-0" />
