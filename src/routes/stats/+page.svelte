@@ -6,6 +6,7 @@
 	import { COUNCILLORS } from '$lib/wards';
 	import { inWardFeature } from '$lib/geo';
 	import Icon from '$lib/components/Icon.svelte';
+	import { wardGrade } from '$lib/ward-grade';
 
 	let { data }: { data: PageData } = $props();
 	let allPotholes = $derived(data.potholes as Pothole[]);
@@ -204,25 +205,6 @@
 			.sort((a, b) => b.days - a.days)
 			.slice(0, 10)
 	);
-
-	// ── Ward accountability grade ──────────────────────────────────────────────
-	// Composite score: fill rate (70 pts) + response speed (30 pts).
-	// Requires ≥5 potholes to grade; fewer = '—' (not enough data).
-	function wardGrade(fillRate: number, avgDays: number | null, total: number): { grade: string; color: string } {
-		if (total < 5) return { grade: '—', color: 'text-zinc-600' };
-		let score = (fillRate / 100) * 70;
-		if (avgDays !== null) {
-			if (avgDays < 14)      score += 30;
-			else if (avgDays < 30) score += 22;
-			else if (avgDays < 60) score += 15;
-			else if (avgDays < 90) score += 7;
-		}
-		if (score >= 80) return { grade: 'A', color: 'text-green-400' };
-		if (score >= 60) return { grade: 'B', color: 'text-sky-400' };
-		if (score >= 40) return { grade: 'C', color: 'text-yellow-400' };
-		if (score >= 20) return { grade: 'D', color: 'text-orange-400' };
-		return { grade: 'F', color: 'text-red-400' };
-	}
 
 	// ── Helpers ────────────────────────────────────────────────────────────────
 	function fmt(n: number | null, decimals = 0): string {
