@@ -17,9 +17,46 @@ const WARD_FIELD: Record<City, string> = {
 };
 
 export const load: PageServerLoad = async ({ params, url }) => {
-  // 1. Validate params
   const city = params.city;
   const wardNum = parseInt(params.ward, 10);
+
+  // E2E fixture — returns static data to avoid network/DB calls in tests
+  if (
+    process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' &&
+    url.searchParams.get('__fixture') === '1'
+  ) {
+    if (city === 'kitchener' && wardNum === 9) {
+      const councillor = COUNCILLORS.find(c => c.city === 'kitchener' && c.ward === 9)!;
+      return {
+        councillor,
+        wardPotholes: [
+          {
+            id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            created_at: '2026-01-15T10:00:00.000Z',
+            lat: 43.447, lng: -80.489,
+            address: 'Weber St E',
+            status: 'reported',
+            confirmed_count: 3,
+            filled_at: null, expired_at: null, photos_published: false,
+          },
+          {
+            id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+            created_at: '2025-11-01T10:00:00.000Z',
+            lat: 43.448, lng: -80.490,
+            address: 'King St E',
+            status: 'filled',
+            confirmed_count: 2,
+            filled_at: '2025-12-01T10:00:00.000Z', expired_at: null, photos_published: false,
+          },
+        ] as Pothole[],
+        city: 'kitchener' as City,
+        ward: 9,
+        origin: url.origin,
+      };
+    }
+  }
+
+  // 1. Validate params
   if (!VALID_CITIES.has(city) || isNaN(wardNum) || wardNum < 1) {
     throw error(404, 'Ward not found');
   }
