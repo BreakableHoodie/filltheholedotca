@@ -439,8 +439,12 @@
 					{#each wardRows as row (row.key)}
 							{@const g = wardGrade(row.fillRate, row.avgDays, row.total)}
 							<tr class="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
-								<td class="px-4 py-3 text-zinc-300 capitalize">{row.city}</td>
-								<td class="px-4 py-3 text-zinc-300">Ward {row.ward}</td>
+								<td class="px-4 py-3 text-zinc-300 capitalize">
+									<a href="/stats/ward/{row.city}/{row.ward}" class="hover:text-sky-400 transition-colors">{row.city}</a>
+								</td>
+								<td class="px-4 py-3 text-zinc-300">
+									<a href="/stats/ward/{row.city}/{row.ward}" class="hover:text-sky-400 transition-colors">Ward {row.ward}</a>
+								</td>
 								<td class="px-4 py-3 hidden md:table-cell">
 									{#if row.councillorUrl}
 										<a
