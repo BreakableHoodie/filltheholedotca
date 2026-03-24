@@ -96,9 +96,9 @@ async function runModeration(
 				body: seForm,
 				signal: AbortSignal.timeout(10_000)
 			});
-			if (!res.ok) return { score: null, rejected: false };
+			if (!res.ok) return { score: null, rejected: false, deferred: true };
 			const data: SightEngineWorkflowResponse = await res.json();
-			if (data.status !== 'success' || !data.summary) return { score: null, rejected: false };
+			if (data.status !== 'success' || !data.summary) return { score: null, rejected: false, deferred: true };
 			return {
 				score: data.summary.reject_prob ?? null,
 				rejected: data.summary.action === 'reject'
@@ -112,9 +112,9 @@ async function runModeration(
 			body: seForm,
 			signal: AbortSignal.timeout(10_000)
 		});
-		if (!res.ok) return { score: null, rejected: false };
+		if (!res.ok) return { score: null, rejected: false, deferred: true };
 		const data: SightEngineResponse = await res.json();
-		if (data.status !== 'success') return { score: null, rejected: false };
+		if (data.status !== 'success') return { score: null, rejected: false, deferred: true };
 		const nudityScore = Math.max(data.nudity?.sexual_activity ?? 0, data.nudity?.sexual_display ?? 0);
 		const offensiveScore = data.offensive?.prob ?? 0;
 		const score = Math.max(nudityScore, offensiveScore);
