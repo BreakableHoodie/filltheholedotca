@@ -206,6 +206,31 @@
 			.slice(0, 10)
 	);
 
+	// ── Street hotspots ────────────────────────────────────────────────────────
+	/** Extract the street name from a geocoded address string.
+	 *  e.g. "123 King St N, Kitchener, ON" → "King St N" */
+	function extractStreet(address: string | null | undefined): string {
+		if (!address) return 'Unknown location';
+		const segment = address.split(',')[0].trim();
+		// Strip leading house number
+		return segment.replace(/^\d+\s+/, '').trim() || segment;
+	}
+
+	interface StreetRow { street: string; total: number; open: number; filled: number }
+
+	let streetHotspots = $derived.by((): StreetRow[] => {
+		const counts: Record<string, StreetRow> = {};
+		for (const p of filtered) {
+			const street = extractStreet(p.address);
+			if (!(street in counts)) counts[street] = { street, total: 0, open: 0, filled: 0 };
+			counts[street].total++;
+			if (p.status === 'reported' || p.status === 'expired') counts[street].open++;
+			else if (p.status === 'filled') counts[street].filled++;
+		}
+		return Object.values(counts)
+			.sort((a, b) => b.total - a.total)
+			.slice(0, 10);
+	});
 	// ── Helpers ────────────────────────────────────────────────────────────────
 	function fmt(n: number | null, decimals = 0): string {
 		return n === null ? '—' : n.toFixed(decimals);
@@ -479,6 +504,41 @@
 		{/if}
 	</section>
 
+	<!-- ── Street hotspots ───────────────────────────────────────────────────── -->
+	{#if streetHotspots.length > 0}
+		<section aria-labelledby="hotspots-heading">
+			<h2 id="hotspots-heading" class="flex items-center gap-2 text-lg font-semibold text-white mb-4">
+				<Icon name="flame" size={18} class="text-orange-400 shrink-0" />
+				Top streets
+			</h2>
+			<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+				<table class="w-full text-sm">
+					<thead>
+						<tr class="border-b border-zinc-800">
+							<th scope="col" class="text-left px-4 py-3 text-zinc-400 font-medium">#</th>
+							<th scope="col" class="text-left px-4 py-3 text-zinc-400 font-medium">Street</th>
+							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Total</th>
+							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Open</th>
+							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Filled</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each streetHotspots as row, i (row.street)}
+							<tr class="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
+								<td class="px-4 py-3 text-zinc-600 tabular-nums">{i + 1}</td>
+								<td class="px-4 py-3 font-medium text-white">{row.street}</td>
+								<td class="px-4 py-3 text-right font-semibold tabular-nums text-zinc-300">{row.total}</td>
+								<td class="px-4 py-3 text-right tabular-nums {row.open > 0 ? 'text-orange-400 font-semibold' : 'text-zinc-500'}">{row.open}</td>
+								<td class="px-4 py-3 text-right tabular-nums text-green-400">{row.filled}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+			<p class="text-xs text-zinc-600 mt-2">Street names extracted from geocoded addresses. Obeys the active time filter.</p>
+		</section>
+	{/if}
+
 	<!-- ── Worst offenders ────────────────────────────────────────────────────── -->
 	<section aria-labelledby="offenders-heading">
 		<h2 id="offenders-heading" class="section-title flex items-center gap-2 text-lg text-white mb-4">
@@ -510,7 +570,7 @@
 										href="/hole/{p.id}"
 										class="text-sky-400 hover:text-sky-300 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 rounded"
 									>
-										{p.address || `${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`}
+										{p.address ?? `${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`}
 									</a>
 								</td>
 								<td class="px-4 py-3 text-right text-zinc-400 hidden sm:table-cell">
