@@ -131,6 +131,29 @@
 		}
 	}
 
+	// Lightbox
+	let lightboxIndex = $state<number | null>(null);
+
+	function openLightbox(index: number) { lightboxIndex = index; }
+	function closeLightbox() { lightboxIndex = null; }
+	function prevPhoto() { if (lightboxIndex !== null) lightboxIndex = (lightboxIndex - 1 + photos.length) % photos.length; }
+	function nextPhoto() { if (lightboxIndex !== null) lightboxIndex = (lightboxIndex + 1) % photos.length; }
+
+	$effect(() => {
+		if (lightboxIndex === null) return;
+		document.body.style.overflow = 'hidden';
+		function onKeydown(e: KeyboardEvent) {
+			if (e.key === 'Escape') closeLightbox();
+			else if (e.key === 'ArrowLeft') prevPhoto();
+			else if (e.key === 'ArrowRight') nextPhoto();
+		}
+		window.addEventListener('keydown', onKeydown);
+		return () => {
+			document.body.style.overflow = '';
+			window.removeEventListener('keydown', onKeydown);
+		};
+	});
+
 	// Watch state — initialised on mount to avoid SSR/hydration mismatch
 	let watching = $state(false);
 	let watchMounted = $state(false);
@@ -441,15 +464,19 @@
 				{photos.length === 1 ? 'Photo' : 'Photos'}
 			</div>
 			<div class="grid grid-cols-2 gap-2">
-				{#each photos as photo (photo.id)}
-					<a href={photo.url} target="_blank" rel="noopener noreferrer" class="block rounded-lg overflow-hidden ring-1 ring-zinc-700 hover:ring-sky-500 transition-shadow">
+				{#each photos as photo, i (photo.id)}
+					<button
+						onclick={() => openLightbox(i)}
+						class="block rounded-lg overflow-hidden ring-1 ring-zinc-700 hover:ring-sky-500 transition-shadow cursor-zoom-in"
+						aria-label="View photo {i + 1} of {photos.length}"
+					>
 						<img
 							src={photo.url}
 							alt="Pothole at {pothole.address || 'this location'}"
 							class="w-full object-cover aspect-video"
 							loading="lazy"
 						/>
-					</a>
+					</button>
 				{/each}
 			</div>
 		</div>
@@ -676,3 +703,67 @@
 		</div>
 	</div>
 </div>
+
+<!-- Lightbox -->
+{#if lightboxIndex !== null}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+		role="dialog"
+		aria-modal="true"
+		aria-label="Photo viewer"
+		onclick={closeLightbox}
+	>
+		<!-- Close -->
+		<button
+			onclick={closeLightbox}
+			aria-label="Close photo viewer"
+			class="absolute top-4 right-4 p-2 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
+		>
+			<Icon name="x" size={20} />
+		</button>
+
+		<!-- Prev -->
+		{#if photos.length > 1}
+			<button
+				onclick={(e) => { e.stopPropagation(); prevPhoto(); }}
+				aria-label="Previous photo"
+				class="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
+			>
+				<Icon name="arrow-left" size={20} />
+			</button>
+		{/if}
+
+		<!-- Image -->
+		<img
+			src={photos[lightboxIndex].url}
+			alt="Pothole at {pothole.address || 'this location'} — photo {lightboxIndex + 1} of {photos.length}"
+			class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+			onclick={(e) => e.stopPropagation()}
+		/>
+
+		<!-- Next -->
+		{#if photos.length > 1}
+			<button
+				onclick={(e) => { e.stopPropagation(); nextPhoto(); }}
+				aria-label="Next photo"
+				class="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
+			>
+				<Icon name="arrow-right" size={20} />
+			</button>
+
+			<!-- Dots -->
+			<div
+				class="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2"
+				onclick={(e) => e.stopPropagation()}
+			>
+				{#each photos as photo, i (photo.id)}
+					<button
+						onclick={() => (lightboxIndex = i)}
+						aria-label="Go to photo {i + 1}"
+						class="w-1.5 h-1.5 rounded-full transition-colors {i === lightboxIndex ? 'bg-white' : 'bg-white/30 hover:bg-white/60'}"
+					/>
+				{/each}
+			</div>
+		{/if}
+	</div>
+{/if}
