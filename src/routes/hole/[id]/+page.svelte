@@ -756,7 +756,7 @@
 				class="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2"
 				onclick={(e) => e.stopPropagation()}
 			>
-				{#each photos as _, i (i)}
+				{#each photos as photo, i (photo.id)}
 					<button
 						onclick={() => (lightboxIndex = i)}
 						aria-label="Go to photo {i + 1}"
