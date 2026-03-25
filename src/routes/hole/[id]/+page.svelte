@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Icon from '$lib/components/Icon.svelte';
 	import { STATUS_CONFIG } from '$lib/constants';
 	import {
@@ -27,7 +27,7 @@
 	let cityRepairRequests = $derived(data.cityRepairRequests ?? []);
 	let photos = $derived(data.photos ?? []);
 	let confirmationThreshold = $derived(data.confirmationThreshold);
-	let submitted = $derived($page.url.searchParams.get('submitted') === '1');
+	let submitted = $derived(page.url.searchParams.get('submitted') === '1');
 	let officialCityLink = $derived(councillor ? CITY_REPORT_LINKS[councillor.city] : null);
 	let nearbyFilled = $derived(data.nearbyFilled ?? []);
 
@@ -50,6 +50,10 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ id: pothole.id })
 			});
+			if (!res.ok) {
+				toastError('Something went wrong. Try again.');
+				return;
+			}
 			const result = await res.json();
 			hitCount = result.count ?? hitCount;
 			localStorage.setItem(`hit:${pothole.id}`, '1');
@@ -574,7 +578,7 @@
 			</div>
 			<p class="text-zinc-300 font-semibold">This report has expired</p>
 			<p class="text-zinc-500 text-sm mt-1">
-				No activity for 6+ months. The pothole may have been filled — or may still be there.
+				No activity for 3+ months. The pothole may have been filled — or may still be there.
 			</p>
 		</div>
 	{/if}

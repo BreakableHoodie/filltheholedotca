@@ -12,6 +12,9 @@ function getServiceClient() {
 
 const schema = z.object({ id: z.string().uuid() });
 
+const HIT_RATE_LIMIT = 20;
+const HIT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const raw = await request.json().catch(() => null);
 	const parsed = schema.safeParse(raw);
@@ -19,6 +22,20 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	const ipHash = await hashIp(getClientAddress());
 	const db = getServiceClient();
+
+	// Persistent per-IP rate limit — prevents spraying hits across all potholes.
+	const windowStart = new Date(Date.now() - HIT_RATE_WINDOW_MS).toISOString();
+	const { count: recentHits, error: rateLimitError } = await db
+		.from('api_rate_limit_events')
+		.select('*', { count: 'exact', head: true })
+		.eq('ip_hash', ipHash)
+		.eq('scope', 'hit_submit')
+		.gte('created_at', windowStart);
+
+	if (rateLimitError) throw error(500, 'Failed to check rate limit');
+	if ((recentHits ?? 0) >= HIT_RATE_LIMIT) {
+		throw error(429, 'Too many requests. Please wait before trying again.');
+	}
 
 	const { error: insertError } = await db
 		.from('pothole_hits')
@@ -31,9 +48,17 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				.from('pothole_hits')
 				.select('*', { count: 'exact', head: true })
 				.eq('pothole_id', parsed.data.id);
-			return json({ ok: false, message: "Already recorded.", count: count ?? 0 });
+			return json({ ok: false, message: 'Already recorded.', count: count ?? 0 });
 		}
 		throw error(500, 'Failed to record hit');
+	}
+
+	// Non-fatal rate limit event record
+	const { error: rateLimitInsertError } = await db
+		.from('api_rate_limit_events')
+		.insert({ ip_hash: ipHash, scope: 'hit_submit' });
+	if (rateLimitInsertError) {
+		console.error('[hit] Failed to record rate limit event:', rateLimitInsertError.message);
 	}
 
 	const { count } = await db

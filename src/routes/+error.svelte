@@ -1,29 +1,29 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Icon from '$lib/components/Icon.svelte';
 </script>
 
 <svelte:head>
-	<title>{$page.status} — FillTheHole.ca</title>
+	<title>{page.status} — FillTheHole.ca</title>
 </svelte:head>
 
 <div class="max-w-lg mx-auto px-4 py-20 text-center space-y-6">
 	<div class="font-brand font-bold text-8xl text-zinc-800 tabular-nums select-none">
-		{$page.status}
+		{page.status}
 	</div>
 
 	<div class="space-y-2">
 		<h1 class="page-title text-xl sm:text-2xl text-white">
-			{#if $page.status === 404}
+			{#if page.status === 404}
 				Page not found
-			{:else if $page.status >= 500}
+			{:else if page.status >= 500}
 				Something went wrong
 			{:else}
 				An error occurred
 			{/if}
 		</h1>
 		<p class="text-zinc-400 text-sm">
-			{#if $page.status === 404}
+			{#if page.status === 404}
 				This pothole might have been filled — or the link is broken.
 			{:else}
 				We hit a bump. Try again in a moment.

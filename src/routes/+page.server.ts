@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 	try {
 		const { data, error } = await supabase
 			.from('potholes')
-			.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at, expired_at')
+			.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at, expired_at, photos_published')
 			.neq('status', 'pending')
 			.order('created_at', { ascending: false })
 			.limit(MAX_POTHOLES_ON_HOME_PAGE);

@@ -2,7 +2,7 @@
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
 	import { tick } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	interface Props {
 		data: LayoutData;
@@ -12,7 +12,7 @@
 	let { data, children }: Props = $props();
 
 	const user = $derived(data.adminUser);
-	const currentPath = $derived($page.url.pathname);
+	const currentPath = $derived(page.url.pathname);
 
 	let sidebarOpen = $state(false);
 	let isMobile = $state(false);
