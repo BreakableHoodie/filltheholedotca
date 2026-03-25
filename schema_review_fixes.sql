@@ -28,6 +28,6 @@ DROP POLICY IF EXISTS "Public insert confirmations" ON pothole_confirmations;
 -- policy in place until the deploy completes).
 -- NOTE: after deploying api/report/+server.ts changes, this INSERT policy
 -- can also be dropped since all confirmation writes will use service-role.
-CREATE POLICY IF NOT EXISTS "Public insert confirmations"
+CREATE POLICY "Public insert confirmations"
   ON pothole_confirmations FOR INSERT
   WITH CHECK (true);
