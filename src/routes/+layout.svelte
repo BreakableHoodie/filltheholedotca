@@ -4,7 +4,7 @@
 	import SocialShare from '$lib/components/SocialShare.svelte';
 	import type { Snippet } from 'svelte';
 	import { Toaster } from 'svelte-sonner';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import '../app.css';
 	import type { LayoutData } from './$types';
 
@@ -14,7 +14,7 @@
 
 <svelte:head>
 	<title>Waterloo Region Pothole Tracker — FillTheHole.ca</title>
-	<link rel="canonical" href="https://fillthehole.ca{$page.url.pathname}" />
+	<link rel="canonical" href="https://fillthehole.ca{page.url.pathname}" />
 </svelte:head>
 
 <div class="flex flex-col min-h-screen bg-zinc-950">

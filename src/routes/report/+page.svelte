@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Icon from '$lib/components/Icon.svelte';
 	import { resizeImage } from '$lib/image';
 	import { ICONS } from '$lib/icons';
@@ -236,7 +236,7 @@
 	});
 
 	onMount(() => {
-		const searchParams = $page.url.searchParams;
+		const searchParams = page.url.searchParams;
 		const hasLatParam = searchParams.has('lat');
 		const hasLngParam = searchParams.has('lng');
 		if (hasLatParam && hasLngParam) {

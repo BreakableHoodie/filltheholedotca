@@ -4,6 +4,7 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { hashIp } from '$lib/hash';
 
 function getServiceClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -21,13 +22,31 @@ const unsubscribeSchema = z.object({
 	endpoint: z.string().url().max(2048)
 });
 
+const SUBSCRIBE_RATE_LIMIT = 5;
+const SUBSCRIBE_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
 /** Save a push subscription. Idempotent — upserts by endpoint. */
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const raw = await request.json().catch(() => null);
 	const parsed = subscribeSchema.safeParse(raw);
 	if (!parsed.success) throw error(400, 'Invalid subscription');
 
+	const ipHash = await hashIp(getClientAddress());
 	const db = getServiceClient();
+
+	const windowStart = new Date(Date.now() - SUBSCRIBE_RATE_WINDOW_MS).toISOString();
+	const { count: recentSubs, error: rateLimitError } = await db
+		.from('api_rate_limit_events')
+		.select('*', { count: 'exact', head: true })
+		.eq('ip_hash', ipHash)
+		.eq('scope', 'push_subscribe')
+		.gte('created_at', windowStart);
+
+	if (rateLimitError) throw error(500, 'Failed to check rate limit');
+	if ((recentSubs ?? 0) >= SUBSCRIBE_RATE_LIMIT) {
+		throw error(429, 'Too many subscription attempts. Please wait before trying again.');
+	}
+
 	const { error: dbError } = await db.from('push_subscriptions').upsert(
 		{
 			endpoint: parsed.data.endpoint,
@@ -38,6 +57,14 @@ export const POST: RequestHandler = async ({ request }) => {
 	);
 
 	if (dbError) throw error(500, 'Failed to save subscription');
+
+	const { error: rateLimitInsertError } = await db
+		.from('api_rate_limit_events')
+		.insert({ ip_hash: ipHash, scope: 'push_subscribe' });
+	if (rateLimitInsertError) {
+		console.error('[subscribe] Failed to record rate limit event:', rateLimitInsertError.message);
+	}
+
 	return json({ ok: true });
 };
 

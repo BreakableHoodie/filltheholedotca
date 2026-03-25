@@ -213,7 +213,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
         .eq("pothole_id", params.id),
       // Recently filled potholes nearby — surface repeat road issues.
       // Fetch more rows than needed so haversine post-filter has enough candidates.
-      supabase
+      db
         .from("potholes")
         .select("id, address, lat, lng, filled_at, created_at")
         .eq("status", "filled")

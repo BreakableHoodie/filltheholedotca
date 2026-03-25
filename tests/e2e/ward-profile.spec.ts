@@ -25,8 +25,9 @@ test.describe('Ward profile page', () => {
   test('shows stat pills', async ({ page }) => {
     await page.goto(wardFixtureUrl('kitchener', 9));
     // 2 total potholes in fixture: 1 reported, 1 filled
-    await expect(page.getByText('2')).toBeVisible(); // total reported
-    await expect(page.getByText('1')).toBeVisible(); // filled
+    // Use exact:true to avoid partial matches against chart axis labels (e.g. "Apr 25")
+    await expect(page.getByText('2', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('1', { exact: true }).first()).toBeVisible();
   });
 
   test('shows open potholes list', async ({ page }) => {
@@ -60,8 +61,28 @@ test.describe('Ward profile page', () => {
   });
 
   test('stats page ward rows link to ward profile pages', async ({ page }) => {
+    // Mock the ward geojson so this test never hits external ArcGIS services in CI.
+    await page.route('**/api/wards.geojson', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          type: 'FeatureCollection',
+          features: [{
+            type: 'Feature',
+            geometry: {
+              type: 'Polygon',
+              coordinates: [[
+                [-80.55, 43.45], [-80.50, 43.45],
+                [-80.50, 43.40], [-80.55, 43.40], [-80.55, 43.45]
+              ]]
+            },
+            properties: { CITY: 'kitchener', WARDID_NORM: 9 }
+          }]
+        })
+      })
+    );
     await page.goto('/stats');
-    // Ward table is loaded client-side after geojson fetch — wait for it
     await page.waitForSelector('a[href*="/stats/ward/"]', { timeout: 10000 });
     const link = page.locator('a[href*="/stats/ward/"]').first();
     await expect(link).toBeVisible();

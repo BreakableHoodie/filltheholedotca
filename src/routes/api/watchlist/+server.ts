@@ -1,7 +1,13 @@
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/supabase';
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+import { env } from '$env/dynamic/private';
+import { createClient } from '@supabase/supabase-js';
 import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';
+
+function getServiceClient() {
+	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 /**
  * GET /api/watchlist?ids=uuid1,uuid2,...
@@ -34,7 +40,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		throw error(400, 'Invalid request: provide 1–50 comma-separated UUIDs in ?ids=');
 	}
 
-	const { data: potholes, error: dbError } = await supabase
+	const { data: potholes, error: dbError } = await getServiceClient()
 		.from('potholes')
 		.select('id, address, lat, lng, status, created_at, filled_at, photos_published')
 		.in('id', parsed.data.ids);

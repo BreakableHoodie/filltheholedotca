@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
@@ -8,16 +8,6 @@ import { hashIp } from '$lib/hash';
 import { getConfirmationThreshold } from '$lib/server/settings';
 import { notify } from '$lib/server/pushover';
 import { postConfirmed } from '$lib/server/bluesky';
-
-// Create Supabase client only when needed, not at module level
-function getSupabaseClient() {
-	try {
-		return createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
-	} catch (error) {
-		console.error('Failed to create Supabase client:', error);
-		throw new Error('Database connection failed');
-	}
-}
 
 // Kitchener–Waterloo–Cambridge (Waterloo Region), ON bounding box
 const GEOFENCE = {
@@ -84,14 +74,6 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	const ipHash = await hashIp(getClientAddress());
 
-	// Initialize Supabase client after geofence validation
-	let supabase;
-	try {
-		supabase = getSupabaseClient();
-	} catch {
-		throw error(500, 'Database connection failed');
-	}
-
 	// Persistent per-IP report throttling.
 	const windowStart = new Date(Date.now() - REPORT_RATE_WINDOW_MS).toISOString();
 	const { count: recentReports, error: reportRateError } = await getAdminClient()
@@ -118,7 +100,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Search for existing pending potholes nearby using a bounding box
 	const delta = 0.0005;
-	const { data: nearby, error: queryError } = await supabase
+	const { data: nearby, error: queryError } = await getAdminClient()
 		.from('potholes')
 		.select('id, lat, lng, confirmed_count, address')
 		.eq('status', 'pending')
@@ -194,7 +176,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// First report — insert as pending with count 1
-	const { data, error: insertError } = await supabase
+	const { data, error: insertError } = await getAdminClient()
 		.from('potholes')
 		.insert({
 			lat,
@@ -210,7 +192,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (insertError) throw error(500, 'Failed to submit report');
 
 	// Record the first confirmation — no conflict possible for a brand-new pothole
-	await supabase.from('pothole_confirmations').insert({ pothole_id: data.id, ip_hash: ipHash });
+	await getAdminClient().from('pothole_confirmations').insert({ pothole_id: data.id, ip_hash: ipHash });
 
 	return json({
 		id: data.id,

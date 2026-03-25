@@ -132,7 +132,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 				await getAdminClient()
 					.from('admin_trusted_devices')
 					.update({ last_used_at: new Date().toISOString() })
-					.eq('token', trustedToken);
+					.eq('token', trustedTokenHash);
 			}
 		}
 	}
