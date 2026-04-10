@@ -152,6 +152,7 @@ Run migrations in this order:
 6. `schema_pr61_fixes.sql` — RLS policy hardening + pending pothole backfill
 7. `schema_security_hardening.sql` — revokes public EXECUTE on `increment_confirmation`; documents `deferred` photo status
 8. `schema_sprint3.sql` — drops public SELECT on `pothole_actions`; fixes pg_cron interval (90 days); adds pending-pothole expiry (14 days)
+9. `schema_push_unsubscribe_ratelimit.sql` — adds `push_unsubscribe` scope to `api_rate_limit_events` constraint
 
 Two `pg_cron` jobs run nightly:
 
