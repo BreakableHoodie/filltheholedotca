@@ -17,7 +17,7 @@ export const CITY_REPORT_LINKS: Record<City, OfficialReportLink> = {
   kitchener: {
     id: "kitchener",
     label: CITY_LABELS.kitchener,
-    href: "https://www.kitchener.ca/en/transportation-and-parking/report-a-road-concern.aspx",
+    href: "https://form.kitchener.ca/CSD/CCS/Report-a-problem",
     scope: "city",
   },
   waterloo: {
@@ -37,7 +37,7 @@ export const CITY_REPORT_LINKS: Record<City, OfficialReportLink> = {
 export const REGION_REPORT_LINK: OfficialReportLink = {
   id: "region",
   label: "Region of Waterloo",
-  href: "https://www.regionofwaterloo.ca/en/living-here/roads-and-traffic.aspx",
+  href: "https://www.regionofwaterloo.ca/en/regional-government/submit-a-claim.aspx",
   scope: "region",
 };
 

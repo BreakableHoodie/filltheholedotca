@@ -657,6 +657,12 @@
 													<p class="mt-1 text-[11px] leading-relaxed text-zinc-400 line-clamp-2">
 														{pothole.description || 'Jump to this marker to review details, share it, or mark it fixed.'}
 													</p>
+													{#if pothole.photos_published}
+														<span class="mt-1.5 inline-flex items-center gap-1 text-[11px] text-zinc-500">
+															<Icon name="camera" size={11} />
+															Photo
+														</span>
+													{/if}
 												</div>
 												<span class="shrink-0 rounded-full bg-zinc-800 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-300">
 													Open

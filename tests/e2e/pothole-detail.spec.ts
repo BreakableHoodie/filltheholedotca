@@ -61,13 +61,13 @@ test.describe("Pothole detail page", () => {
       page.getByRole("link", { name: /File with City of Kitchener/i }),
     ).toHaveAttribute(
       "href",
-      "https://www.kitchener.ca/en/transportation-and-parking/report-a-road-concern.aspx",
+      "https://form.kitchener.ca/CSD/CCS/Report-a-problem",
     );
     await expect(
-      page.getByRole("link", { name: /File with Region of Waterloo/i }),
+      page.getByRole("link", { name: /Submit a claim — Region of Waterloo/i }),
     ).toHaveAttribute(
       "href",
-      "https://www.regionofwaterloo.ca/en/living-here/roads-and-traffic.aspx",
+      "https://www.regionofwaterloo.ca/en/regional-government/submit-a-claim.aspx",
     );
     await expect(
       page.getByRole("link", {

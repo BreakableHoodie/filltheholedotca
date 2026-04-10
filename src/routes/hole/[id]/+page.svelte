@@ -413,7 +413,7 @@
 				Report it officially too
 			</div>
 			<p class="text-zinc-400 text-sm">
-				This page creates public visibility. An official report creates a work order the road owner is expected to track.
+				This page creates public visibility. Reporting it to the road owner through official channels can help start their repair or claims process.
 			</p>
 			<div class="grid gap-2 sm:grid-cols-2">
 				{#if officialCityLink}
@@ -434,7 +434,7 @@
 					class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-2.5 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
 				>
 					<Icon name="external-link" size={13} class="shrink-0" />
-					File with {REGION_REPORT_LINK.label}
+					Submit a claim — {REGION_REPORT_LINK.label}
 				</a>
 			</div>
 			<div class="rounded-lg bg-zinc-800/80 p-3 text-xs text-zinc-400 leading-relaxed space-y-1.5">
