@@ -37,7 +37,7 @@ export const CITY_REPORT_LINKS: Record<City, OfficialReportLink> = {
 export const REGION_REPORT_LINK: OfficialReportLink = {
   id: "region",
   label: "Region of Waterloo",
-  href: "https://www.regionofwaterloo.ca/en/living-here/roads-and-traffic.aspx",
+  href: "https://www.regionofwaterloo.ca/en/regional-government/submit-a-claim.aspx",
   scope: "region",
 };
 
