@@ -91,7 +91,11 @@ export const DELETE: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(429, 'Too many unsubscribe attempts. Please wait before trying again.');
 	}
 
-	await db.from('push_subscriptions').delete().eq('endpoint', parsed.data.endpoint);
+	const { error: deleteError } = await db
+		.from('push_subscriptions')
+		.delete()
+		.eq('endpoint', parsed.data.endpoint);
+	if (deleteError) throw error(500, 'Failed to remove subscription');
 
 	const { error: rateLimitInsertError } = await db
 		.from('api_rate_limit_events')

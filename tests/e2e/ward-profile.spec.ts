@@ -82,7 +82,7 @@ test.describe('Ward profile page', () => {
         })
       })
     );
-    await page.goto('/stats');
+    await page.goto('/stats?__fixture=1');
     await page.waitForSelector('a[href*="/stats/ward/"]', { timeout: 10000 });
     const link = page.locator('a[href*="/stats/ward/"]').first();
     await expect(link).toBeVisible();
