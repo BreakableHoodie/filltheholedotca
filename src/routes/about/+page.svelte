@@ -53,7 +53,7 @@
 					{#if link.scope === 'city'}
 						— Report a pothole or road issue
 					{:else if link.scope === 'region'}
-						— Roads &amp; traffic
+						— Submit a claim for damages
 					{:else}
 						— Report a provincial highway problem
 					{/if}
