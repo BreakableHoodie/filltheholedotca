@@ -17,7 +17,7 @@ export const CITY_REPORT_LINKS: Record<City, OfficialReportLink> = {
   kitchener: {
     id: "kitchener",
     label: CITY_LABELS.kitchener,
-    href: "https://www.kitchener.ca/en/transportation-and-parking/report-a-road-concern.aspx",
+    href: "https://form.kitchener.ca/CSD/CCS/Report-a-problem",
     scope: "city",
   },
   waterloo: {
