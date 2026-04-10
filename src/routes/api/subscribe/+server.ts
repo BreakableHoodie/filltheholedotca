@@ -23,6 +23,7 @@ const unsubscribeSchema = z.object({
 });
 
 const SUBSCRIBE_RATE_LIMIT = 5;
+const UNSUBSCRIBE_RATE_LIMIT = 10;
 const SUBSCRIBE_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 /** Save a push subscription. Idempotent — upserts by endpoint. */
@@ -69,12 +70,39 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 };
 
 /** Remove a push subscription when the user revokes permission. */
-export const DELETE: RequestHandler = async ({ request }) => {
+export const DELETE: RequestHandler = async ({ request, getClientAddress }) => {
 	const raw = await request.json().catch(() => null);
 	const parsed = unsubscribeSchema.safeParse(raw);
 	if (!parsed.success) throw error(400, 'Invalid request');
 
+	const ipHash = await hashIp(getClientAddress());
 	const db = getServiceClient();
-	await db.from('push_subscriptions').delete().eq('endpoint', parsed.data.endpoint);
+
+	const windowStart = new Date(Date.now() - SUBSCRIBE_RATE_WINDOW_MS).toISOString();
+	const { count: recentUnsubs, error: rateLimitError } = await db
+		.from('api_rate_limit_events')
+		.select('*', { count: 'exact', head: true })
+		.eq('ip_hash', ipHash)
+		.eq('scope', 'push_unsubscribe')
+		.gte('created_at', windowStart);
+
+	if (rateLimitError) throw error(500, 'Failed to check rate limit');
+	if ((recentUnsubs ?? 0) >= UNSUBSCRIBE_RATE_LIMIT) {
+		throw error(429, 'Too many unsubscribe attempts. Please wait before trying again.');
+	}
+
+	const { error: deleteError } = await db
+		.from('push_subscriptions')
+		.delete()
+		.eq('endpoint', parsed.data.endpoint);
+	if (deleteError) throw error(500, 'Failed to remove subscription');
+
+	const { error: rateLimitInsertError } = await db
+		.from('api_rate_limit_events')
+		.insert({ ip_hash: ipHash, scope: 'push_unsubscribe' });
+	if (rateLimitInsertError) {
+		console.error('[subscribe] Failed to record unsubscribe rate limit event:', rateLimitInsertError.message);
+	}
+
 	return json({ ok: true });
 };

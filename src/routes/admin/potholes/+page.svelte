@@ -42,10 +42,11 @@
 	async function togglePhotosPublished(id: string) {
 		const next = !photosPublished[id];
 		localOverrides[id] = next;
+		const csrfToken = document.cookie.split('; ').find((c) => c.startsWith('admin_csrf='))?.split('=')[1] ?? '';
 		try {
 			const res = await fetch(`/api/admin/pothole/${id}`, {
 				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
 				body: JSON.stringify({ photos_published: next })
 			});
 			if (!res.ok) {
