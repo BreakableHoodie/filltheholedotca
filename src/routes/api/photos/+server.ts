@@ -81,11 +81,15 @@ async function runModeration(
 ): Promise<ModerationResult> {
 	const workflowId = env.SIGHTENGINE_WORKFLOW_ID;
 
+	const apiUser = env.SIGHTENGINE_API_USER;
+	const apiSecret = env.SIGHTENGINE_API_SECRET;
+	if (!apiUser || !apiSecret) return { score: null, rejected: false, deferred: true };
+
 	try {
 		const seForm = new FormData();
 		seForm.append('media', new Blob([buffer], { type: mimeType }), `photo.${ext}`);
-		seForm.append('api_user', env.SIGHTENGINE_API_USER);
-		seForm.append('api_secret', env.SIGHTENGINE_API_SECRET);
+		seForm.append('api_user', apiUser);
+		seForm.append('api_secret', apiSecret);
 
 		if (workflowId) {
 			// Workflow mode — rules and thresholds are configured in the SightEngine
