@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
 import { decodeHtmlEntities } from '$lib/escape';
+import { roundPublicCoord } from '$lib/geo';
 
 const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
@@ -54,6 +55,10 @@ function toRow(p: Row): string {
 		const val = p[col];
 		if ((col === 'address' || col === 'description') && typeof val === 'string') {
 			return csvField(neutralizeFormula(decodeHtmlEntities(val)));
+		}
+		if ((col === 'lat' || col === 'lng') && typeof val === 'number') {
+			// Round any historical rows stored at full precision before the write-time fix landed.
+			return csvField(roundPublicCoord(val));
 		}
 		return csvField(val);
 	}).join(',');

@@ -9,6 +9,7 @@ import { COUNCILLORS, lookupWard, type Councillor } from "$lib/wards";
 import { decodeHtmlEntities } from "$lib/escape";
 import { getConfirmationThreshold } from "$lib/server/settings";
 import { haversineMetres } from "$lib/geo";
+import { logError } from "$lib/server/observability";
 
 function getServiceClient() {
   return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -158,7 +159,10 @@ async function fetchCityRepairRequests(
       if (isNaN(date.getTime())) return [];
       return [{ intersection, date: date.toISOString().slice(0, 10) }];
     });
-  } catch {
+  } catch (err) {
+    // Detail page still renders if the Region's ArcGIS service is unreachable —
+    // just surface the failure so we notice chronic outages.
+    logError("hole/ccc", "fetchCityRepairRequests failed", err, { lat, lng });
     return [];
   }
 }

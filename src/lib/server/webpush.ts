@@ -2,6 +2,7 @@ import webpush from 'web-push';
 import { env } from '$env/dynamic/private';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
+import { logError } from './observability';
 
 let initialized = false;
 
@@ -30,10 +31,14 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 	if (!initialized) return; // VAPID keys not configured — skip silently
 
 	const db = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-	const { data: subscriptions } = await db
+	const { data: subscriptions, error: queryError } = await db
 		.from('push_subscriptions')
 		.select('endpoint, p256dh, auth');
 
+	if (queryError) {
+		logError('webpush', 'failed to load subscriptions', queryError);
+		return;
+	}
 	if (!subscriptions?.length) return;
 
 	const message = JSON.stringify(payload);
@@ -51,7 +56,9 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 				if (status === 410 || status === 404) {
 					expired.push(sub.endpoint); // Subscription has expired or been unsubscribed
 				} else {
-					console.error('[webpush] send failed:', status, sub.endpoint);
+					// Log endpoint origin only — the full URL is a device identifier.
+					const origin = (() => { try { return new URL(sub.endpoint).origin; } catch { return 'unknown'; } })();
+					logError('webpush', 'send failed', err, { status, endpointOrigin: origin });
 				}
 			}
 		})

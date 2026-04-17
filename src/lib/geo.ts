@@ -1,4 +1,17 @@
 /**
+ * Privacy precision for stored and published coordinates. 4 decimals ≈ 11m at
+ * Waterloo's latitude — enough to locate a block, not a house. Applied at
+ * write time in api/report and again at serialisation in every public
+ * endpoint (feeds, exports, embeds, OG) as defence in depth.
+ */
+export const PUBLIC_COORD_DECIMALS = 4;
+
+export function roundPublicCoord(n: number): number {
+	const factor = 10 ** PUBLIC_COORD_DECIMALS;
+	return Math.round(n * factor) / factor;
+}
+
+/**
  * Haversine distance between two lat/lng points, in metres.
  */
 export function haversineMetres(lat1: number, lng1: number, lat2: number, lng2: number): number {

@@ -106,9 +106,12 @@ src/
       admin/photo/[id]/+server.ts    # PATCH/DELETE — photo moderation
   lib/
     types.ts                  # Pothole, PotholeStatus types
-    geo.ts                    # Shared geo utilities (pipRing, inWardFeature)
+    geo.ts                    # Shared geo utilities (pipRing, inWardFeature, roundPublicCoord)
     wards.ts                  # COUNCILLORS array (ward/name/email/url)
     supabase.ts               # Supabase client (public anon)
+    server/
+      observability.ts        # logError() — console + Sentry with area tags
+      exif-strip.ts           # stripJpegMetadata() — lossless APP-segment stripper
     components/
       HomeIntroCard.svelte    # Homepage-only intro card shown on first visit
 ```
@@ -175,6 +178,8 @@ pending → reported → filled
 - **2 confirmations** from distinct IPs required to go live on the public map
 - **photos_published**: admin-only toggle per pothole; a live pothole does NOT mean its photos are shown — admin must explicitly publish them
 - **IP hashing**: HMAC-SHA-256 with `IP_HASH_SECRET`, never store raw IPs
+- **Coord privacy**: reporter lat/lng is rounded to `PUBLIC_COORD_DECIMALS` (≈11m at Waterloo latitude) at write-time via `roundPublicCoord()` in `$lib/geo`. Geofence + merge-radius logic runs on the raw input so decisions aren't shifted by rounding. Serialization paths (feed.json, feed.xml, export.csv, embed, OG) re-apply `roundPublicCoord` as defense-in-depth for any historical rows stored at full precision.
+- **Photo EXIF**: server-side strip in `stripJpegMetadata` (`$lib/server/exif-strip`) runs before moderation and storage upload. Drops APP1 (EXIF/GPS/XMP), APP2–APP15, and COM segments from JPEGs losslessly. PNG/WebP pass through untouched; they rarely carry camera EXIF from mobile uploads.
 - **Auto-expiry**: `reported` potholes expire after 90 days; `pending` potholes expire after 14 days (both via pg_cron)
 
 ## Svelte 5 Patterns (important — don't use Svelte 4 syntax)
@@ -193,3 +198,4 @@ $effect(() => { ... })             // NOT: $: { ... } for side effects
 - API routes validate with zod, return `json()` or throw `error()`
 - No auth system — all actions are public with IP-based deduplication
 - Leaflet imports must be inside `onMount` (SSR will break otherwise)
+- Server-side error logging: use `logError(area, message, err, context?)` from `$lib/server/observability` instead of bare `console.error`. It writes to the console AND forwards to Sentry with an `area` tag so issues surface in production. Bare `console.error` on a server route is a silent failure — nobody sees it.

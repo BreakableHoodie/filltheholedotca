@@ -3,6 +3,7 @@ import { COUNCILLORS, fetchWards, type GeoJSONFeature } from '$lib/wards';
 import { supabase } from '$lib/supabase';
 import { inWardFeature } from '$lib/geo';
 import { wardGrade } from '$lib/ward-grade';
+import { logError } from '$lib/server/observability';
 import type { RequestHandler } from './$types';
 import type { City } from '$lib/wards';
 import satori from 'satori';
@@ -23,7 +24,7 @@ async function loadFont(): Promise<ArrayBuffer> {
     fontCache = fontFile.buffer.slice(fontFile.byteOffset, fontFile.byteOffset + fontFile.byteLength);
     return fontCache;
   } catch (e) {
-    console.error('[og/ward] Font load failed:', e);
+    logError('og/ward', 'Font load failed', e);
     throw error(500, 'OG image generation unavailable');
   }
 }
@@ -58,10 +59,19 @@ export const GET: RequestHandler = async ({ params }) => {
   );
   if (!wardFeature) throw error(503, 'Ward boundary data unavailable');
 
-  const { data } = await supabase
+  const { data, error: dbError } = await supabase
     .from('potholes')
     .select('lat, lng, status, filled_at, created_at')
     .neq('status', 'pending');
+
+  // Previously destructured `data` without checking `error`. On a DB failure
+  // the card would render as "0 potholes · No data yet · A+" — a factually
+  // wrong accountability signal spread via social previews. Refuse to
+  // generate and let the OG fallback take over.
+  if (dbError) {
+    logError('og/ward', 'potholes query failed', dbError, { city, ward: wardNum });
+    throw error(503, 'Ward stats unavailable');
+  }
 
   const wardPotholes = (data ?? []).filter(
     (p) => inWardFeature(p.lng, p.lat, wardFeature.geometry)

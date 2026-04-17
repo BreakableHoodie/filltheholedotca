@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { notify } from '$lib/server/pushover';
+import { logError } from '$lib/server/observability';
+import { stripJpegMetadata } from '$lib/server/exif-strip';
 
 type DetectedMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
 type DetectedExtension = 'jpg' | 'png' | 'webp';
@@ -75,7 +77,7 @@ function detectImageType(bytes: Uint8Array): { mimeType: DetectedMimeType; ext: 
 type ModerationResult = { score: number | null; rejected: boolean; deferred?: boolean };
 
 async function runModeration(
-	buffer: ArrayBuffer,
+	bytes: Uint8Array,
 	mimeType: DetectedMimeType,
 	ext: DetectedExtension
 ): Promise<ModerationResult> {
@@ -87,7 +89,10 @@ async function runModeration(
 
 	try {
 		const seForm = new FormData();
-		seForm.append('media', new Blob([buffer], { type: mimeType }), `photo.${ext}`);
+		// Cast Uint8Array<ArrayBufferLike> → BlobPart: TS 6 widened typed-array
+		// buffers to accept SharedArrayBuffer, but at runtime bytes always comes
+		// from file.arrayBuffer() or stripJpegMetadata — both ArrayBuffer-backed.
+		seForm.append('media', new Blob([bytes as unknown as BlobPart], { type: mimeType }), `photo.${ext}`);
 		seForm.append('api_user', apiUser);
 		seForm.append('api_secret', apiSecret);
 
@@ -123,11 +128,11 @@ async function runModeration(
 		const offensiveScore = data.offensive?.prob ?? 0;
 		const score = Math.max(nudityScore, offensiveScore);
 		return { score, rejected: score > MODERATION_THRESHOLD };
-	} catch {
+	} catch (err) {
 		// H3 fix: fail to a distinct 'deferred' state rather than silently passing.
 		// An attacker who disrupts SightEngine would previously bypass automated moderation
 		// entirely. Now the photo is uploaded but flagged for mandatory admin review.
-		console.error('[photos] SightEngine check failed — photo will require manual admin review');
+		logError('photos/moderation', 'SightEngine check failed — photo will require manual admin review', err);
 		return { score: null, rejected: false, deferred: true };
 	}
 }
@@ -135,7 +140,7 @@ async function runModeration(
 async function cleanupStorageObject(storagePath: string): Promise<void> {
 	const { error: cleanupError } = await getAdminClient().storage.from('pothole-photos').remove([storagePath]);
 	if (cleanupError) {
-		console.error('[photos] Failed to clean up orphaned storage object:', cleanupError);
+		logError('photos/cleanup', 'Failed to clean up orphaned storage object', cleanupError, { storagePath });
 	}
 }
 
@@ -187,7 +192,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.from('api_rate_limit_events')
 		.insert({ ip_hash: ipHash, scope: 'photo_upload' });
 	if (rateLimitInsertError) {
-		console.error('[photos] Failed to record rate limit event:', rateLimitInsertError.message);
+		logError('photos/ratelimit', 'Failed to record rate limit event', rateLimitInsertError, { ipHashPrefix: ipHash.slice(0, 8) });
 	}
 
 	// Prevent unlimited media accumulation on a single pothole.
@@ -201,17 +206,24 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(409, 'This pothole already has the maximum number of active photos');
 	}
 
-	const buffer = await file.arrayBuffer();
-	const detectedType = detectImageType(new Uint8Array(buffer));
+	const rawBytes = new Uint8Array(await file.arrayBuffer());
+	const detectedType = detectImageType(rawBytes);
 	if (!detectedType || !ALLOWED_TYPES.has(detectedType.mimeType)) {
 		throw error(400, 'Invalid file type — JPEG, PNG, or WebP only');
 	}
 	const { mimeType, ext } = detectedType;
+
+	// Strip EXIF/XMP/ICC from JPEGs before the bytes are stored or moderated.
+	// Mobile cameras embed GPS coords, device serials, and timestamps that
+	// defeat the write-time coord rounding applied to the DB row. PNG/WebP
+	// rarely carry camera EXIF from mobile uploads and pass through untouched.
+	const cleanBytes = mimeType === 'image/jpeg' ? stripJpegMetadata(rawBytes) : rawBytes;
+
 	const photoId = crypto.randomUUID();
 	const storagePath = `${idParsed.data}/${photoId}.${ext}`;
 
 	// Run SightEngine moderation (non-blocking on failure)
-	const moderation = await runModeration(buffer, mimeType, ext);
+	const moderation = await runModeration(cleanBytes, mimeType, ext);
 
 	if (moderation.rejected) {
 		throw error(422, 'Photo rejected by content moderation');
@@ -220,10 +232,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	// Upload to Supabase Storage
 	const { error: uploadError } = await getAdminClient().storage
 		.from('pothole-photos')
-		.upload(storagePath, buffer, { contentType: mimeType, upsert: false });
+		.upload(storagePath, cleanBytes, { contentType: mimeType, upsert: false });
 
 	if (uploadError) {
-		console.error('[photos] Storage upload failed:', uploadError);
+		logError('photos/upload', 'Storage upload failed', uploadError, { storagePath });
 		throw error(500, 'Upload failed — please try again');
 	}
 
