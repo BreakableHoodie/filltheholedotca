@@ -82,5 +82,8 @@ export function stripJpegMetadata(input: Uint8Array): Uint8Array {
 		i += segLen;
 	}
 
-	return out.slice(0, w);
+	// Loop exited without hitting SOS or EOI → JPEG is truncated/malformed.
+	// Per the function contract, return the original bytes unchanged rather
+	// than a structurally incomplete stripped copy.
+	return input;
 }

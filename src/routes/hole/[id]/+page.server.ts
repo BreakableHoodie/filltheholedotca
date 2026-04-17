@@ -161,8 +161,10 @@ async function fetchCityRepairRequests(
     });
   } catch (err) {
     // Detail page still renders if the Region's ArcGIS service is unreachable —
-    // just surface the failure so we notice chronic outages.
-    logError("hole/ccc", "fetchCityRepairRequests failed", err, { lat, lng });
+    // just surface the failure so we notice chronic outages. Coordinates are
+    // intentionally omitted: this PR's whole point is keeping precise reporter
+    // locations out of third-party telemetry, and ArcGIS outages are regional.
+    logError("hole/ccc", "fetchCityRepairRequests failed", err);
     return [];
   }
 }

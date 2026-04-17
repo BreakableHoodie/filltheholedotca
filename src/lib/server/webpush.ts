@@ -2,7 +2,7 @@ import webpush from 'web-push';
 import { env } from '$env/dynamic/private';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
-import { logError } from './observability';
+import { logError } from '$lib/server/observability';
 
 let initialized = false;
 
