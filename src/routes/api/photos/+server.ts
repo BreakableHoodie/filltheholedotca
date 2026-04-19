@@ -255,6 +255,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.single();
 
 	if (insertError || !photo) {
+		logError('photos/insert', 'Failed to insert photo DB record — storage cleanup triggered', insertError ?? new Error('no photo returned'), { storagePath });
 		await cleanupStorageObject(storagePath);
 		throw error(500, 'Failed to save photo record');
 	}

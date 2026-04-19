@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private';
+import { logError } from '$lib/server/observability';
 
 const BSKY_PDS = 'https://bsky.social';
 
@@ -25,7 +26,8 @@ async function createSession(): Promise<Session | null> {
 	});
 
 	if (!res.ok) {
-		console.error('[bluesky] Auth failed:', res.status, await res.text().catch(() => ''));
+		const body = await res.text().catch(() => '');
+		logError('bluesky/session', `Auth failed with HTTP ${res.status}`, new Error(body || String(res.status)));
 		return null;
 	}
 
@@ -68,7 +70,8 @@ async function post(text: string, url: string): Promise<void> {
 	});
 
 	if (!res.ok) {
-		console.error('[bluesky] Post failed:', res.status, await res.text().catch(() => ''));
+		const body = await res.text().catch(() => '');
+		logError('bluesky/post', `Post failed with HTTP ${res.status}`, new Error(body || String(res.status)));
 	}
 }
 
@@ -89,14 +92,13 @@ export async function postConfirmed(id: string, address: string | null | undefin
 		const text = `🚧 New pothole confirmed at ${location}.\n\nIt's now live on the map — see it and help report it to the city:\n${url}`;
 
 		if ([...text].length > MAX_POST_LENGTH) {
-			// Shouldn't happen with 80-char address cap, but guard anyway.
-			console.error('[bluesky] postConfirmed: text too long, skipping');
+			logError('bluesky/post', 'postConfirmed: text too long, skipping', new Error('text exceeded MAX_POST_LENGTH'));
 			return;
 		}
 
 		await post(text, url);
 	} catch (e) {
-		console.error('[bluesky] postConfirmed failed:', e);
+		logError('bluesky/post', 'postConfirmed failed', e);
 	}
 }
 
@@ -111,12 +113,12 @@ export async function postFilled(id: string, address: string | null | undefined)
 		const text = `✅ Pothole at ${location} has been filled!\n\nThanks to everyone who reported and confirmed it. 🙌\n${url}`;
 
 		if ([...text].length > MAX_POST_LENGTH) {
-			console.error('[bluesky] postFilled: text too long, skipping');
+			logError('bluesky/post', 'postFilled: text too long, skipping', new Error('text exceeded MAX_POST_LENGTH'));
 			return;
 		}
 
 		await post(text, url);
 	} catch (e) {
-		console.error('[bluesky] postFilled failed:', e);
+		logError('bluesky/post', 'postFilled failed', e);
 	}
 }

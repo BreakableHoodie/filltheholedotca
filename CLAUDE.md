@@ -71,10 +71,17 @@ Copy `.env.example` → `.env` with real values:
 - `PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key
 - `SUPABASE_SERVICE_ROLE_KEY` — server-only key for admin routes and moderation
 - `ADMIN_SECRET` — bearer token for `/api/admin/*` endpoints
-- `SIGHTENGINE_API_USER` / `SIGHTENGINE_API_SECRET` — image moderation (optional)
+- `SIGHTENGINE_API_USER` / `SIGHTENGINE_API_SECRET` / `SIGHTENGINE_WORKFLOW_ID` — image moderation (optional)
 - `IP_HASH_SECRET` — server-only HMAC key for IP hashing
+- `ADMIN_SESSION_SECRET` — 32-byte hex key for signing admin CSRF tokens
+- `TOTP_ENCRYPTION_KEY` — 32-byte hex AES-GCM key for encrypting TOTP secrets at rest
+- `ADMIN_BOOTSTRAP_SECRET` — one-time secret for creating the first admin account
+- `PUSHOVER_APP_TOKEN` / `PUSHOVER_USER_KEY` — push notifications (optional; omit both to disable)
+- `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `PUBLIC_VAPID_PUBLIC_KEY` — web push VAPID keys (optional)
 - `PUBLIC_SENTRY_DSN` — Sentry project DSN (optional; omit to disable error tracking in dev)
 - `BLUESKY_HANDLE` / `BLUESKY_APP_PASSWORD` — Bluesky bot credentials (optional; omit both to disable auto-posting)
+- `PUBLIC_COORD_DECIMALS` — decimal places for rounding public coordinates (privacy; default 3 ≈ 11m)
+- `DISABLE_API_RATE_LIMIT` — set to any value to disable rate limiting in dev/test (never in production)
 
 ## Project Structure
 
@@ -149,13 +156,19 @@ Run migrations in this order:
 
 1. `schema.sql` — initial setup
 2. `schema_update.sql` — confirmations table + security hardening
-3. `schema_photos.sql` — photo upload schema
-4. `schema_photo_publishing.sql` — `photos_published` flag
-5. `schema_site_settings.sql` — site settings table + redefines `increment_confirmation` with 3-parameter signature (must run after step 4)
-6. `schema_pr61_fixes.sql` — RLS policy hardening + pending pothole backfill
-7. `schema_security_hardening.sql` — revokes public EXECUTE on `increment_confirmation`; documents `deferred` photo status
-8. `schema_sprint3.sql` — drops public SELECT on `pothole_actions`; fixes pg_cron interval (90 days); adds pending-pothole expiry (14 days)
-9. `schema_push_unsubscribe_ratelimit.sql` — adds `push_unsubscribe` scope to `api_rate_limit_events` constraint
+3. `schema_actions.sql` — pothole_actions table + increment_confirmation RPC
+4. `schema_admin.sql` — admin users, sessions, MFA, trusted devices
+5. `schema_photos.sql` — photo upload schema
+6. `schema_photo_publishing.sql` — `photos_published` flag
+7. `schema_site_settings.sql` — site settings table + redefines `increment_confirmation` with 3-parameter signature (must run after step 6)
+8. `schema_pr61_fixes.sql` — RLS policy hardening + pending pothole backfill
+9. `schema_security_hardening.sql` — revokes public EXECUTE on `increment_confirmation`; documents `deferred` photo status
+10. `schema_sprint3.sql` — drops public SELECT on `pothole_actions`; fixes pg_cron interval (90 days); adds pending-pothole expiry (14 days)
+11. `schema_pushover_settings.sql` — Pushover notification toggles
+12. `schema_hits.sql` — "I Hit This" signal table
+13. `schema_push.sql` — web push subscription storage
+14. `schema_push_unsubscribe_ratelimit.sql` — adds `push_unsubscribe` scope to `api_rate_limit_events` constraint
+15. `schema_review_fixes.sql` — RLS hardening; drops public read on `pothole_confirmations`
 
 Two `pg_cron` jobs run nightly:
 

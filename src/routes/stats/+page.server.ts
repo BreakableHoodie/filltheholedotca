@@ -2,6 +2,7 @@ import { supabase } from '$lib/supabase';
 import { decodeHtmlEntities } from '$lib/escape';
 import type { PageServerLoad } from './$types';
 import type { Pothole } from '$lib/types';
+import { logError } from '$lib/server/observability';
 
 // Fixture pothole for E2E tests. Coordinates fall inside the polygon used in
 // ward-profile.spec.ts (43.40–43.45 lat, -80.55 to -80.50 lng) so ward rows
@@ -31,10 +32,11 @@ export const load: PageServerLoad = async ({ url }) => {
 		.from('potholes')
 		.select('id, created_at, lat, lng, status, filled_at, expired_at, address, confirmed_count')
 		.neq('status', 'pending')
-		.order('created_at', { ascending: false });
+		.order('created_at', { ascending: false })
+		.limit(2000);
 
 	if (error) {
-		console.error('Failed to load stats potholes:', error);
+		logError('stats/load', 'Failed to load stats potholes', error);
 		return { potholes: [] as Pothole[] };
 	}
 

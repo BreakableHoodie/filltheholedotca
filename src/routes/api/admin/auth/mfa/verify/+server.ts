@@ -15,6 +15,7 @@ import { decryptTotpSecret, verifyBackupCode, hashToken } from '$lib/server/admi
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 import { notify } from '$lib/server/pushover';
+import { logError } from '$lib/server/observability';
 
 function getAdminClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -131,7 +132,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			}
 		} catch (e) {
 			if ((e as { status?: number }).status === 401) throw e;
-			console.error('[mfa/verify] TOTP decrypt/verify failed:', e);
+			logError('admin/mfa', 'TOTP decrypt/verify failed', e);
 		}
 	}
 
@@ -146,7 +147,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				remainingBackupCodes = result.remaining;
 			}
 		} catch (e) {
-			console.error('[mfa/verify] Backup code check failed:', e);
+			logError('admin/mfa', 'Backup code check failed', e);
 		}
 	}
 
@@ -250,7 +251,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			headers.append('Set-Cookie', deviceCookieParts.join('; '));
 		} catch (e) {
 			// Non-fatal — don't fail login if trusted device creation fails
-			console.error('[mfa/verify] Failed to create trusted device:', e);
+			logError('admin/trusted_device', 'Failed to create trusted device', e);
 		}
 	}
 

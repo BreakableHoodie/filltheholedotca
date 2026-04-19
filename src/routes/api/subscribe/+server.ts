@@ -5,6 +5,7 @@ import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
+import { logError } from '$lib/server/observability';
 
 function getServiceClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -63,7 +64,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.from('api_rate_limit_events')
 		.insert({ ip_hash: ipHash, scope: 'push_subscribe' });
 	if (rateLimitInsertError) {
-		console.error('[subscribe] Failed to record rate limit event:', rateLimitInsertError.message);
+		logError('subscribe/ratelimit', 'Failed to record rate limit event', rateLimitInsertError);
 	}
 
 	return json({ ok: true });
@@ -101,7 +102,7 @@ export const DELETE: RequestHandler = async ({ request, getClientAddress }) => {
 		.from('api_rate_limit_events')
 		.insert({ ip_hash: ipHash, scope: 'push_unsubscribe' });
 	if (rateLimitInsertError) {
-		console.error('[subscribe] Failed to record unsubscribe rate limit event:', rateLimitInsertError.message);
+		logError('subscribe/ratelimit', 'Failed to record unsubscribe rate limit event', rateLimitInsertError);
 	}
 
 	return json({ ok: true });
