@@ -24,8 +24,8 @@ const E2E_STATS_FIXTURE: Pothole[] = [
 ];
 
 export const load: PageServerLoad = async ({ url }) => {
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && url.searchParams.get('__fixture') === '1') {
-		return { potholes: E2E_STATS_FIXTURE };
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
+		return { potholes: url.searchParams.get('__fixture') === '1' ? E2E_STATS_FIXTURE : ([] as Pothole[]) };
 	}
 
 	const { data, error } = await supabase
