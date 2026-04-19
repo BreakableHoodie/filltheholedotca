@@ -80,7 +80,6 @@ Copy `.env.example` → `.env` with real values:
 - `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `PUBLIC_VAPID_PUBLIC_KEY` — web push VAPID keys (optional)
 - `PUBLIC_SENTRY_DSN` — Sentry project DSN (optional; omit to disable error tracking in dev)
 - `BLUESKY_HANDLE` / `BLUESKY_APP_PASSWORD` — Bluesky bot credentials (optional; omit both to disable auto-posting)
-- `PUBLIC_COORD_DECIMALS` — decimal places for rounding public coordinates (privacy; default 3 ≈ 11m)
 - `DISABLE_API_RATE_LIMIT` — set to any value to disable rate limiting in dev/test (never in production)
 
 ## Project Structure
@@ -191,7 +190,7 @@ pending → reported → filled
 - **2 confirmations** from distinct IPs required to go live on the public map
 - **photos_published**: admin-only toggle per pothole; a live pothole does NOT mean its photos are shown — admin must explicitly publish them
 - **IP hashing**: HMAC-SHA-256 with `IP_HASH_SECRET`, never store raw IPs
-- **Coord privacy**: reporter lat/lng is rounded to `PUBLIC_COORD_DECIMALS` (≈11m at Waterloo latitude) at write-time via `roundPublicCoord()` in `$lib/geo`. Geofence + merge-radius logic runs on the raw input so decisions aren't shifted by rounding. Serialization paths (feed.json, feed.xml, export.csv, embed, OG) re-apply `roundPublicCoord` as defense-in-depth for any historical rows stored at full precision.
+- **Coord privacy**: reporter lat/lng is rounded at write-time via `roundPublicCoord()` in `$lib/geo` using the fixed `PUBLIC_COORD_DECIMALS = 4` precision constant (≈11m at Waterloo latitude). Geofence + merge-radius logic runs on the raw input so decisions aren't shifted by rounding. Serialization paths (feed.json, feed.xml, export.csv, embed, OG) re-apply `roundPublicCoord` as defense-in-depth for any historical rows stored at full precision.
 - **Photo EXIF**: server-side strip in `stripJpegMetadata` (`$lib/server/exif-strip`) runs before moderation and storage upload. Drops APP1 (EXIF/GPS/XMP), APP2–APP15, and COM segments from JPEGs losslessly. PNG/WebP pass through untouched; they rarely carry camera EXIF from mobile uploads.
 - **Auto-expiry**: `reported` potholes expire after 90 days; `pending` potholes expire after 14 days (both via pg_cron)
 
