@@ -32,7 +32,8 @@ export const load: PageServerLoad = async ({ url }) => {
 		.from('potholes')
 		.select('id, created_at, lat, lng, status, filled_at, expired_at, address, confirmed_count')
 		.neq('status', 'pending')
-		.order('created_at', { ascending: false });
+		.order('created_at', { ascending: false })
+		.limit(2000);
 
 	if (error) {
 		logError('stats/load', 'Failed to load stats potholes', error);
