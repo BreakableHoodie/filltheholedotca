@@ -135,6 +135,7 @@
 	let lightboxIndex = $state<number | null>(null);
 	let lightboxTriggerEl: HTMLElement | null = null;
 	let lightboxCloseBtn: HTMLButtonElement | null = null;
+	let lightboxOpen = false; // non-reactive — tracks open/closed across effect re-runs
 
 	function openLightbox(index: number) {
 		lightboxTriggerEl = document.activeElement as HTMLElement;
@@ -147,9 +148,10 @@
 	$effect(() => {
 		if (lightboxIndex === null) return;
 		document.body.style.overflow = 'hidden';
-		// Move focus into the dialog so keyboard users don't get stranded outside.
-		// $effect runs after DOM paint so the button is guaranteed to exist here.
-		lightboxCloseBtn?.focus();
+		// Only move focus on initial open (null → non-null). Navigating prev/next
+		// re-runs this effect but must not yank focus back to the close button.
+		if (!lightboxOpen) lightboxCloseBtn?.focus();
+		lightboxOpen = true;
 		function onKeydown(e: KeyboardEvent) {
 			if (e.key === 'Escape') closeLightbox();
 			else if (e.key === 'ArrowLeft') prevPhoto();
@@ -158,10 +160,12 @@
 		window.addEventListener('keydown', onKeydown);
 		return () => {
 			window.removeEventListener('keydown', onKeydown);
-			// lightboxIndex is already null here when fully closing (not navigating).
+			// Always restore scroll — covers both normal close and component unmount
+			// (when lightboxIndex is still non-null and the page is being torn down).
+			document.body.style.overflow = '';
 			if (lightboxIndex === null) {
-				document.body.style.overflow = '';
 				lightboxTriggerEl?.focus();
+				lightboxOpen = false;
 			}
 		};
 	});

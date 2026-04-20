@@ -163,13 +163,16 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 
 		// Reuse an existing valid challenge if one exists — prevents unbounded
 		// row accumulation and makes repeated rapid logins idempotent.
-		const { data: existingChallenge } = await getAdminClient()
+		const { data: existingChallenge, error: challengeLookupError } = await getAdminClient()
 			.from('admin_mfa_challenges')
 			.select('token')
 			.eq('user_id', user.id)
 			.eq('used', false)
 			.gt('expires_at', new Date().toISOString())
+			.order('expires_at', { ascending: false })
+			.limit(1)
 			.maybeSingle();
+		if (challengeLookupError) logError('admin/mfa', 'Failed to look up existing MFA challenge', challengeLookupError, { userId: user.id });
 		if (existingChallenge) {
 			return json({ mfaRequired: true, mfaToken: existingChallenge.token });
 		}
