@@ -90,4 +90,14 @@ test.describe('stripJpegMetadata', () => {
 		const input = u8(SOI, app1);
 		expect(stripJpegMetadata(input)).toBe(input);
 	});
+
+	test('returns input unchanged when SOS is present but EOI is missing (truncated scan)', () => {
+		// Simulates an interrupted upload: SOS segment exists but scan data ends
+		// abruptly without FF D9. The function must not return a partially-stripped
+		// copy — the contract is to pass through malformed JPEGs unchanged.
+		const sosSeg = seg(0xda, [0x01]);
+		const scanData = [0xaa, 0xbb, 0xcc]; // no FF D9
+		const input = u8(SOI, sosSeg, scanData);
+		expect(stripJpegMetadata(input)).toBe(input);
+	});
 });

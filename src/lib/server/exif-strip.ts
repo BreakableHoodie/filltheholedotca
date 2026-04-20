@@ -66,6 +66,13 @@ export function stripJpegMetadata(input: Uint8Array): Uint8Array {
 			w += segLen;
 			i += segLen;
 			const rest = input.subarray(i);
+			// Require EOI (FF D9) at the tail — a JPEG truncated after SOS
+			// (e.g. an interrupted upload) has no EOI. Return the original rather
+			// than a partially-stripped copy, consistent with the malformed-input
+			// contract above.
+			if (rest.length < 2 || rest[rest.length - 2] !== 0xff || rest[rest.length - 1] !== 0xd9) {
+				return input;
+			}
 			out.set(rest, w);
 			w += rest.length;
 			return out.slice(0, w);
