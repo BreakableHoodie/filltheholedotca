@@ -13,7 +13,7 @@
 	import { getWatchlist } from '$lib/watchlist';
 	import type * as Leaflet from 'leaflet';
 	import type { Marker } from 'leaflet';
-	import { onMount, tick } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -454,6 +454,12 @@
 				}
 			}
 		}
+
+	});
+
+	onDestroy(() => {
+		mapRef?.remove();
+		mapRef = null;
 	});
 </script>
 

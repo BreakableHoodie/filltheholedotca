@@ -169,7 +169,7 @@ async function fetchCityRepairRequests(
   }
 }
 
-export const load: PageServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
   if (
     process.env.PLAYWRIGHT_E2E_FIXTURES === "true" &&
     url.searchParams.get("__fixture") === "1"
@@ -179,6 +179,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
       return { ...fixture, origin: url.origin };
     }
   }
+
+  setHeaders({ "Cache-Control": "public, max-age=300, stale-while-revalidate=600" });
 
   const { data, error: dbError } = await supabase
     .from("potholes")

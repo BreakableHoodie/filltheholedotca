@@ -161,6 +161,19 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		const mfaToken = crypto.randomUUID();
 		const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
+		// Reuse an existing valid challenge if one exists — prevents unbounded
+		// row accumulation and makes repeated rapid logins idempotent.
+		const { data: existingChallenge } = await getAdminClient()
+			.from('admin_mfa_challenges')
+			.select('token')
+			.eq('user_id', user.id)
+			.eq('used', false)
+			.gt('expires_at', new Date().toISOString())
+			.maybeSingle();
+		if (existingChallenge) {
+			return json({ mfaRequired: true, mfaToken: existingChallenge.token });
+		}
+
 		// Clean up expired/used challenges for this user
 		const { error: cleanupError } = await getAdminClient()
 			.from('admin_mfa_challenges')
