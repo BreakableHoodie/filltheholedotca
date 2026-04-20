@@ -133,8 +133,13 @@
 
 	// Lightbox
 	let lightboxIndex = $state<number | null>(null);
+	let lightboxTriggerEl: HTMLElement | null = null;
+	let lightboxCloseBtn: HTMLButtonElement | null = null;
 
-	function openLightbox(index: number) { lightboxIndex = index; }
+	function openLightbox(index: number) {
+		lightboxTriggerEl = document.activeElement as HTMLElement;
+		lightboxIndex = index;
+	}
 	function closeLightbox() { lightboxIndex = null; }
 	function prevPhoto() { if (lightboxIndex !== null) lightboxIndex = (lightboxIndex - 1 + photos.length) % photos.length; }
 	function nextPhoto() { if (lightboxIndex !== null) lightboxIndex = (lightboxIndex + 1) % photos.length; }
@@ -142,6 +147,9 @@
 	$effect(() => {
 		if (lightboxIndex === null) return;
 		document.body.style.overflow = 'hidden';
+		// Move focus into the dialog so keyboard users don't get stranded outside.
+		// $effect runs after DOM paint so the button is guaranteed to exist here.
+		lightboxCloseBtn?.focus();
 		function onKeydown(e: KeyboardEvent) {
 			if (e.key === 'Escape') closeLightbox();
 			else if (e.key === 'ArrowLeft') prevPhoto();
@@ -149,8 +157,12 @@
 		}
 		window.addEventListener('keydown', onKeydown);
 		return () => {
-			document.body.style.overflow = '';
 			window.removeEventListener('keydown', onKeydown);
+			// lightboxIndex is already null here when fully closing (not navigating).
+			if (lightboxIndex === null) {
+				document.body.style.overflow = '';
+				lightboxTriggerEl?.focus();
+			}
 		};
 	});
 
@@ -227,7 +239,7 @@
 	<meta property="og:type" content="website" />
 </svelte:head>
 
-<div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
+<div class="max-w-2xl mx-auto px-4 py-8 space-y-6" inert={lightboxIndex !== null}>
 	{#if submitted}
 		<div class="bg-sky-950/40 border border-sky-800 rounded-xl p-5 space-y-3">
 			<div class="flex items-start gap-3">
@@ -716,6 +728,7 @@
 	>
 		<!-- Close -->
 		<button
+			bind:this={lightboxCloseBtn}
 			onclick={closeLightbox}
 			aria-label="Close photo viewer"
 			class="absolute top-4 right-4 p-2 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"

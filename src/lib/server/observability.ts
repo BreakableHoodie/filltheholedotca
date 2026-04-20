@@ -2,6 +2,20 @@ import * as Sentry from '@sentry/sveltekit';
 
 type LogContext = Record<string, unknown>;
 
+// Keys that must never reach third-party telemetry, regardless of caller intent.
+const BLOCKED_CONTEXT_KEYS = new Set([
+	'lat', 'lng', 'latitude', 'longitude',
+	'email', 'address',
+	'ip', 'iphash', 'ip_hash',
+	'password', 'token', 'secret', 'key',
+]);
+
+function sanitizeContext(ctx: LogContext): LogContext {
+	return Object.fromEntries(
+		Object.entries(ctx).filter(([k]) => !BLOCKED_CONTEXT_KEYS.has(k.toLowerCase()))
+	);
+}
+
 /**
  * Log an error to console AND Sentry. Use this instead of bare `console.error`
  * inside any `try/catch` that swallows an error and keeps running. Sentry's
@@ -15,6 +29,6 @@ export function logError(area: string, message: string, err: unknown, context?: 
 	console.error(`[${area}] ${message}:`, err);
 	Sentry.captureException(err, {
 		tags: { area },
-		extra: { message, ...(context ?? {}) }
+		extra: { message, ...(context ? sanitizeContext(context) : {}) }
 	});
 }
