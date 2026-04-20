@@ -190,7 +190,7 @@ pending → reported → filled
 - **2 confirmations** from distinct IPs required to go live on the public map
 - **photos_published**: admin-only toggle per pothole; a live pothole does NOT mean its photos are shown — admin must explicitly publish them
 - **IP hashing**: HMAC-SHA-256 with `IP_HASH_SECRET`, never store raw IPs
-- **Coord privacy**: reporter lat/lng is rounded at write-time via `roundPublicCoord()` in `$lib/geo` using the fixed `PUBLIC_COORD_DECIMALS = 4` precision constant (≈11m at Waterloo latitude). Geofence + merge-radius logic runs on the raw input so decisions aren't shifted by rounding. Serialization paths (feed.json, feed.xml, export.csv, embed, OG) re-apply `roundPublicCoord` as defense-in-depth for any historical rows stored at full precision.
+- **Coord privacy**: reporter lat/lng is rounded to 4 decimal places (≈11m at Waterloo latitude) at write-time via `roundPublicCoord()` in `$lib/geo` — the precision is a hard-coded constant, not an env var. Geofence + merge-radius logic runs on the raw input so decisions aren't shifted by rounding. Serialization paths (feed.json, feed.xml, export.csv, embed, OG) re-apply `roundPublicCoord` as defense-in-depth for any historical rows stored at full precision.
 - **Photo EXIF**: server-side strip in `stripJpegMetadata` (`$lib/server/exif-strip`) runs before moderation and storage upload. Drops APP1 (EXIF/GPS/XMP), APP2–APP15, and COM segments from JPEGs losslessly. PNG/WebP pass through untouched; they rarely carry camera EXIF from mobile uploads.
 - **Auto-expiry**: `reported` potholes expire after 90 days; `pending` potholes expire after 14 days (both via pg_cron)
 
