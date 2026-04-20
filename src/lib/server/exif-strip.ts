@@ -1,5 +1,5 @@
 /**
- * Strip EXIF / XMP / ICC / comment segments from a JPEG, preserving pixels.
+ * Strip EXIF / XMP / ICC / comment segments from a JPEG, preserving scan data.
  *
  * Mobile cameras embed GPS lat/lng (sub-metre precision), device make/model,
  * serial numbers, and timestamps in the APP1 (EXIF) and APP2 (ICC/MPF) segments.

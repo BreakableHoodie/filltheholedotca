@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { stripJpegMetadata } from '../../src/lib/server/exif-strip.js';
+import { stripJpegMetadata } from '../../src/lib/server/exif-strip';
 
 // Build a segment: FF <marker> <len_hi> <len_lo> <payload>
 // Length field is big-endian and includes its own 2 bytes.
