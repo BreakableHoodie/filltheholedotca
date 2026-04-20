@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
+import { logError } from '$lib/server/observability';
 
 function getAdminClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -66,7 +67,11 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 
 	// Best-effort storage cleanup
 	if (photo?.storage_path) {
-		await getAdminClient().storage.from('pothole-photos').remove([photo.storage_path]);
+		const { error: storageError } = await getAdminClient()
+			.storage
+			.from('pothole-photos')
+			.remove([photo.storage_path]);
+		if (storageError) logError('photos/admin-delete', 'Storage cleanup failed after photo delete', storageError, { storagePath: photo.storage_path, photoId: id });
 	}
 
 	await writeAuditLog(

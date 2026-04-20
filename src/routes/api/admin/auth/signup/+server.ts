@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { checkAuthRateLimit, recordAuthAttempt } from '$lib/server/admin-auth';
 import { hashPassword } from '$lib/server/admin-crypto';
 import { hashIp } from '$lib/hash';
+import { logError } from '$lib/server/observability';
 
 function getAdminClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -111,7 +112,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.single();
 
 	if (insertError || !newUser) {
-		console.error('[signup] Insert failed:', insertError);
+		logError('admin-auth/signup', 'Failed to insert new admin user', insertError);
 		throw error(500, 'Failed to create account');
 	}
 
@@ -126,7 +127,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	if (!consumed || consumed.length === 0) {
 		// Another concurrent request consumed the invite first — roll back the created user.
-		await getAdminClient().from('admin_users').delete().eq('id', newUser.id);
+		const { error: rollbackError } = await getAdminClient()
+			.from('admin_users')
+			.delete()
+			.eq('id', newUser.id);
+		if (rollbackError) logError('admin-auth/signup', 'Failed to rollback user after invite race', rollbackError, { userId: newUser.id });
 		throw error(409, 'This invite code has already been used');
 	}
 

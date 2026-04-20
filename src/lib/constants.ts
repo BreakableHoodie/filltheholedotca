@@ -1,5 +1,16 @@
 import type { IconName } from '$lib/icons';
 
+/** Waterloo Region bounding box used for geofence checks and map views. */
+export const GEOFENCE = {
+	latMin: 43.32,
+	latMax: 43.53,
+	lngMin: -80.59,
+	lngMax: -80.22
+} as const;
+
+/** Radius within which two reports are merged into a single pothole (metres). */
+export const MERGE_RADIUS_M = 25;
+
 export const STATUS_CONFIG: Record<
 	string,
 	{ icon: IconName; label: string; colorClass: string; hex: string }

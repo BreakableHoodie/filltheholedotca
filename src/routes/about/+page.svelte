@@ -6,6 +6,7 @@
 
 <svelte:head>
 	<title>About — FillTheHole.ca</title>
+	<meta name="description" content="FillTheHole.ca is a community-run pothole tracker for Waterloo Region. Learn how it works and how to get involved." />
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-12 space-y-10">

@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
+import { logError } from '$lib/server/observability';
 
 // Client created per-call — $env/dynamic/private is not guaranteed to be
 // populated at module-init time in Vite SSR dev mode.
@@ -130,14 +131,19 @@ export async function validateAdminSession(
 }
 
 export async function touchSession(sessionId: string): Promise<void> {
-	await getAdminClient()
+	const { error: touchError } = await getAdminClient()
 		.from('admin_sessions')
 		.update({ last_activity_at: new Date().toISOString() })
 		.eq('id', sessionId);
+	if (touchError) logError('admin-auth/touch-session', 'Failed to update session activity', touchError);
 }
 
 export async function invalidateSession(sessionId: string): Promise<void> {
-	await getAdminClient().from('admin_sessions').delete().eq('id', sessionId);
+	const { error: deleteError } = await getAdminClient()
+		.from('admin_sessions')
+		.delete()
+		.eq('id', sessionId);
+	if (deleteError) logError('admin-auth/invalidate-session', 'Failed to invalidate session', deleteError);
 }
 
 export async function invalidateAllSessionsForUser(
@@ -146,7 +152,8 @@ export async function invalidateAllSessionsForUser(
 ): Promise<void> {
 	let query = getAdminClient().from('admin_sessions').delete().eq('user_id', userId);
 	if (exceptSessionId) query = query.neq('id', exceptSessionId);
-	await query;
+	const { error: deleteError } = await query;
+	if (deleteError) logError('admin-auth/invalidate-all-sessions', 'Failed to invalidate all sessions for user', deleteError, { userId });
 }
 
 // ---------------------------------------------------------------------------
@@ -192,10 +199,10 @@ export async function writeAuditLog(
 			ip_address: ipHash
 		});
 		// Supabase returns errors in the result, not as thrown exceptions.
-		if (auditError) console.error('[audit] Failed to write audit log:', auditError.message);
+		if (auditError) logError('audit', 'Failed to write audit log', auditError);
 	} catch (e) {
 		// Catch network-level failures separately.
-		console.error('[audit] Unexpected error writing audit log:', e);
+		logError('audit', 'Unexpected error writing audit log', e);
 	}
 }
 
@@ -243,7 +250,7 @@ export async function checkAuthRateLimit(
 	// Fail CLOSED on DB error — a broken rate-limit query must not silently
 	// allow unlimited login attempts. Log the error for observability.
 	if (emailIpResult.error || ipResult.error) {
-		console.error('[auth] Rate-limit query failed:', emailIpResult.error ?? ipResult.error);
+		logError('admin-auth/rate-limit', 'Rate-limit query failed', emailIpResult.error ?? ipResult.error);
 		return { allowed: false, remainingMinutes: Math.ceil(windowMs / 60_000) };
 	}
 

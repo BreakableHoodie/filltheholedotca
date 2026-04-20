@@ -2,6 +2,7 @@ import { supabase } from '$lib/supabase';
 import type { PageServerLoad } from './$types';
 import type { Pothole } from '$lib/types';
 import { decodeHtmlEntities } from '$lib/escape';
+import { logError } from '$lib/server/observability';
 
 // Cap root-page payload to keep SSR memory and transfer size bounded as the
 // dataset grows. Tune with production telemetry if map coverage needs change.
@@ -25,7 +26,7 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 			.limit(MAX_POTHOLES_ON_HOME_PAGE);
 
 		if (error) {
-			console.error('Failed to load potholes:', error);
+			logError('home/load', 'Failed to load potholes', error);
 			return { potholes: [] as Pothole[] };
 		}
 
@@ -36,7 +37,7 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 		})) as Pothole[];
 		return { potholes };
 	} catch (e) {
-		console.error('Supabase load exception:', e);
+		logError('home/load', 'Unexpected exception loading potholes', e);
 		return { potholes: [] as Pothole[] };
 	}
 };

@@ -2,6 +2,28 @@ import * as Sentry from '@sentry/sveltekit';
 
 type LogContext = Record<string, unknown>;
 
+// Tokens that must never reach third-party telemetry, regardless of caller intent.
+// Keys are normalized (lowercased, separators stripped) and blocked if they
+// contain any of these tokens as a substring — catches variants like ipHashPrefix.
+const BLOCKED_KEY_TOKENS = [
+	'lat', 'lng', 'latitude', 'longitude',
+	'email', 'address',
+	'ip', 'iphash', 'password', 'token', 'secret', 'key',
+];
+
+function normalizeKey(key: string): string {
+	return key.toLowerCase().replace(/[\s_-]+/g, '');
+}
+
+function sanitizeContext(ctx: LogContext): LogContext {
+	return Object.fromEntries(
+		Object.entries(ctx).filter(([k]) => {
+			const norm = normalizeKey(k);
+			return !BLOCKED_KEY_TOKENS.some((token) => norm.includes(token));
+		})
+	);
+}
+
 /**
  * Log an error to console AND Sentry. Use this instead of bare `console.error`
  * inside any `try/catch` that swallows an error and keeps running. Sentry's
@@ -15,6 +37,6 @@ export function logError(area: string, message: string, err: unknown, context?: 
 	console.error(`[${area}] ${message}:`, err);
 	Sentry.captureException(err, {
 		tags: { area },
-		extra: { message, ...(context ?? {}) }
+		extra: { message, ...(context ? sanitizeContext(context) : {}) }
 	});
 }

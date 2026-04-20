@@ -13,7 +13,7 @@
 	import { getWatchlist } from '$lib/watchlist';
 	import type * as Leaflet from 'leaflet';
 	import type { Marker } from 'leaflet';
-	import { onMount, tick } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -454,11 +454,18 @@
 				}
 			}
 		}
+
+	});
+
+	onDestroy(() => {
+		mapRef?.remove();
+		mapRef = null;
 	});
 </script>
 
 <svelte:head>
 	<title>Waterloo Region Pothole Map — FillTheHole.ca</title>
+	<meta name="description" content="Track potholes in Kitchener, Waterloo, and Cambridge. Report, confirm, and hold the city accountable." />
 	<meta property="og:title" content="Waterloo Region Pothole Tracker — FillTheHole.ca" />
 	<meta property="og:description" content="Track potholes in Kitchener, Waterloo, and Cambridge. Report, confirm, and hold the city accountable." />
 	<meta property="og:url" content="https://fillthehole.ca/" />
@@ -931,6 +938,12 @@
 		border: 3px solid white;
 		box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6);
 		animation: location-pulse 2s ease-out infinite;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(.location-dot) {
+			animation: none;
+		}
 	}
 
 	@keyframes -global-location-pulse {

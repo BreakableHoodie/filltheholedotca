@@ -32,6 +32,13 @@ body {
   font-family: var(--font-sans);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin,
+  .animate-pulse {
+    animation: none;
+  }
+}
+
 .page-title {
   font-family: var(--font-sans);
   font-weight: 700;

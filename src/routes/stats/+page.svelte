@@ -244,6 +244,7 @@
 
 <svelte:head>
 	<title>Stats — FillTheHole.ca</title>
+	<meta name="description" content="Pothole statistics for Waterloo Region — fill rates, resolution times, ward breakdowns, and trends over time." />
 </svelte:head>
 
 <div class="max-w-4xl mx-auto px-4 py-10 space-y-10">

@@ -5,21 +5,13 @@ import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
-import { roundPublicCoord } from '$lib/geo';
+import { roundPublicCoord, haversineMetres } from '$lib/geo';
+import { GEOFENCE, MERGE_RADIUS_M } from '$lib/constants';
 import { getConfirmationThreshold } from '$lib/server/settings';
 import { notify } from '$lib/server/pushover';
 import { postConfirmed } from '$lib/server/bluesky';
 import { logError } from '$lib/server/observability';
 
-// Kitchener–Waterloo–Cambridge (Waterloo Region), ON bounding box
-const GEOFENCE = {
-	latMin: 43.32,
-	latMax: 43.53,
-	lngMin: -80.59,
-	lngMax: -80.22
-};
-
-const MERGE_RADIUS_M = 25;
 const REPORT_RATE_LIMIT = 20;
 const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const SEVERITY_VALUES = ['Minor damage', 'Moderate damage', 'Severe damage', 'Hazardous'] as const;
@@ -39,17 +31,6 @@ const reportSchema = z.object({
 type ConfirmationResult =
 	| { duplicate: true }
 	| { duplicate: false; confirmed_count: number; status: string };
-
-function haversineMetres(lat1: number, lng1: number, lat2: number, lng2: number): number {
-	const R = 6371000;
-	const toRad = (d: number) => (d * Math.PI) / 180;
-	const dLat = toRad(lat2 - lat1);
-	const dLng = toRad(lng2 - lng1);
-	const a =
-		Math.sin(dLat / 2) ** 2 +
-		Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-	return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const raw = await request.json().catch(() => null);
