@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { logError } from '$lib/server/observability';
 
 type SourceConfig = {
 	city: 'kitchener' | 'waterloo' | 'cambridge';
@@ -119,7 +120,12 @@ export const GET: RequestHandler = async () => {
 
 	const results = await Promise.allSettled(SOURCES.map((source) => fetchWardSource(source)));
 
-	const features = results.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
+	const features = results.flatMap((r, i) => {
+		if (r.status === 'rejected') {
+			logError('wards/fetch', `Ward source failed: ${SOURCES[i].city}`, r.reason);
+		}
+		return r.status === 'fulfilled' ? r.value : [];
+	});
 	if (!features.length) {
 		if (cached) {
 			// Serve stale data on total upstream failure if we have any.

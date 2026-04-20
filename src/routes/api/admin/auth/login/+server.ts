@@ -135,10 +135,11 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 				const uaMatch = !storedUa || storedUa === 'unknown' || storedUa === userAgent;
 				if (uaMatch) {
 					skipMfa = true;
-					await getAdminClient()
+					const { error: touchError } = await getAdminClient()
 						.from('admin_trusted_devices')
 						.update({ last_used_at: new Date().toISOString() })
 						.eq('token', trustedTokenHash);
+					if (touchError) logError('admin/trusted-device', 'Failed to update last_used_at', touchError);
 				} else {
 					// UA mismatch — possible cookie theft from a different device.
 					// Don't skip MFA; surface for forensics.
@@ -161,11 +162,12 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
 		// Clean up expired/used challenges for this user
-		await getAdminClient()
+		const { error: cleanupError } = await getAdminClient()
 			.from('admin_mfa_challenges')
 			.delete()
 			.eq('user_id', user.id)
 			.or('used.eq.true,expires_at.lt.' + new Date().toISOString());
+		if (cleanupError) logError('admin/mfa', 'Failed to clean up stale MFA challenges', cleanupError, { userId: user.id });
 
 		await getAdminClient().from('admin_mfa_challenges').insert({
 			token: mfaToken,
