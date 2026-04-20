@@ -217,6 +217,7 @@
 
 <svelte:head>
 	<title>Pothole at {pothole.address || 'Unknown location'} — FillTheHole.ca</title>
+	<meta name="description" content={ogDescription} />
 	<meta property="og:title" content="Pothole at {pothole.address || 'Unknown location'} — FillTheHole.ca" />
 	<meta property="og:description" content={ogDescription} />
 	<meta property="og:image" content="{origin}/api/og/{pothole.id}" />

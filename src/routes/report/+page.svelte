@@ -400,6 +400,7 @@
 
 <svelte:head>
 	<title>Report a Pothole — FillTheHole.ca</title>
+	<meta name="description" content="Report a pothole in Kitchener, Waterloo, or Cambridge in about 30 seconds. No account required." />
 </svelte:head>
 
 <div class="max-w-lg mx-auto px-4 py-8">

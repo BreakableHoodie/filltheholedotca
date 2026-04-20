@@ -15,6 +15,7 @@ const schema = z.object({ id: z.string().uuid() });
 
 const HIT_RATE_LIMIT = 20;
 const HIT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const HIT_PER_POTHOLE_LIMIT = 50; // max hits any single pothole may receive per hour (cross-IP)
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const raw = await request.json().catch(() => null);
@@ -35,6 +36,18 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	if (rateLimitError) throw error(500, 'Failed to check rate limit');
 	if ((recentHits ?? 0) >= HIT_RATE_LIMIT) {
+		throw error(429, 'Too many requests. Please wait before trying again.');
+	}
+
+	// Per-pothole rate limit — prevents distributed bots from inflating a single
+	// pothole's hit count across many IPs within the per-IP ceiling.
+	const { count: potholeHits, error: potholeRateLimitError } = await db
+		.from('pothole_hits')
+		.select('*', { count: 'exact', head: true })
+		.eq('pothole_id', parsed.data.id)
+		.gte('created_at', windowStart);
+	if (potholeRateLimitError) throw error(500, 'Failed to check rate limit');
+	if ((potholeHits ?? 0) >= HIT_PER_POTHOLE_LIMIT) {
 		throw error(429, 'Too many requests. Please wait before trying again.');
 	}
 

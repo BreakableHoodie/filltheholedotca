@@ -39,13 +39,13 @@
 
 				<!-- Live stat dots -->
 				<div class="hidden sm:flex items-center gap-3 text-sm" aria-label="Pothole statistics">
-					<span class="flex items-center gap-1.5 text-zinc-400">
+					<span class="flex items-center gap-1.5 text-zinc-300">
 						<span class="w-2 h-2 rounded-full bg-orange-500 shrink-0"></span>
 						<span class="text-white font-semibold tabular-nums">{counts.reported}</span>
 						reported
 					</span>
 					<span class="text-zinc-700" aria-hidden="true">·</span>
-					<span class="flex items-center gap-1.5 text-zinc-400">
+					<span class="flex items-center gap-1.5 text-zinc-300">
 						<span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
 						<span class="text-white font-semibold tabular-nums">{counts.filled}</span>
 						filled
@@ -54,13 +54,13 @@
 
 				<nav class="flex items-center gap-3 text-sm">
 					<PushNotifications />
-					<a href="/stats" class="text-zinc-400 hover:text-white transition-colors">
+					<a href="/stats" class="text-zinc-300 hover:text-white transition-colors">
 						Stats
 					</a>
 					<a href="/how-to" class="hidden sm:inline text-zinc-400 hover:text-white transition-colors">
 						How to
 					</a>
-					<a href="/about" class="text-zinc-400 hover:text-white transition-colors">
+					<a href="/about" class="text-zinc-300 hover:text-white transition-colors">
 						About
 					</a>
 					<a
@@ -88,7 +88,7 @@
 		{@render children()}
 	</main>
 
-	<footer class="bg-zinc-900 border-t border-zinc-800 py-5 text-center text-zinc-400 text-xs px-4 space-y-1.5">
+	<footer class="bg-zinc-900 border-t border-zinc-800 py-5 text-center text-zinc-300 text-xs px-4 space-y-1.5">
 		<p>Track potholes. Contact your councillor. Hold the city accountable.</p>
 		<p>
 			Community-sourced data — not official. Use at your own risk.

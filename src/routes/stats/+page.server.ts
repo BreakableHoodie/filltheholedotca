@@ -23,16 +23,19 @@ const E2E_STATS_FIXTURE: Pothole[] = [
 	}
 ];
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, setHeaders }) => {
 	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
 		return { potholes: url.searchParams.get('__fixture') === '1' ? E2E_STATS_FIXTURE : ([] as Pothole[]) };
 	}
+
+	setHeaders({ 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' });
 
 	const { data, error } = await supabase
 		.from('potholes')
 		.select('id, created_at, lat, lng, status, filled_at, expired_at, address, confirmed_count')
 		.neq('status', 'pending')
-		.order('created_at', { ascending: false });
+		.order('created_at', { ascending: false })
+		.limit(5000);
 
 	if (error) {
 		logError('stats/load', 'Failed to load stats potholes', error);
