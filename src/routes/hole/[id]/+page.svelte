@@ -135,10 +135,12 @@
 	let lightboxIndex = $state<number | null>(null);
 	let lightboxTriggerEl: HTMLElement | null = null;
 	let lightboxCloseBtn: HTMLButtonElement | null = null;
+	let lightboxDialogEl: HTMLDivElement | null = null;
 	let lightboxOpen = false; // non-reactive — tracks open/closed across effect re-runs
 
 	function openLightbox(index: number) {
-		lightboxTriggerEl = document.activeElement as HTMLElement;
+		const active = document.activeElement;
+		lightboxTriggerEl = active instanceof HTMLElement ? active : null;
 		lightboxIndex = index;
 	}
 	function closeLightbox() { lightboxIndex = null; }
@@ -153,9 +155,23 @@
 		if (!lightboxOpen) lightboxCloseBtn?.focus();
 		lightboxOpen = true;
 		function onKeydown(e: KeyboardEvent) {
-			if (e.key === 'Escape') closeLightbox();
-			else if (e.key === 'ArrowLeft') prevPhoto();
-			else if (e.key === 'ArrowRight') nextPhoto();
+			if (e.key === 'Escape') { closeLightbox(); return; }
+			if (e.key === 'ArrowLeft') { prevPhoto(); return; }
+			if (e.key === 'ArrowRight') { nextPhoto(); return; }
+			// Trap Tab within the dialog — prevents focus escaping to header/nav.
+			if (e.key === 'Tab' && lightboxDialogEl) {
+				const focusable = Array.from(
+					lightboxDialogEl.querySelectorAll<HTMLElement>('button:not([disabled])')
+				);
+				if (focusable.length === 0) return;
+				const first = focusable[0];
+				const last = focusable[focusable.length - 1];
+				if (e.shiftKey) {
+					if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+				} else {
+					if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+				}
+			}
 		}
 		window.addEventListener('keydown', onKeydown);
 		return () => {
@@ -724,6 +740,7 @@
 <!-- Lightbox -->
 {#if lightboxIndex !== null}
 	<div
+		bind:this={lightboxDialogEl}
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
 		role="dialog"
 		aria-modal="true"
@@ -733,7 +750,7 @@
 		<!-- Close -->
 		<button
 			bind:this={lightboxCloseBtn}
-			onclick={closeLightbox}
+			onclick={(e) => { e.stopPropagation(); closeLightbox(); }}
 			aria-label="Close photo viewer"
 			class="absolute top-4 right-4 p-2 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
 		>

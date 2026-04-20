@@ -2,17 +2,25 @@ import * as Sentry from '@sentry/sveltekit';
 
 type LogContext = Record<string, unknown>;
 
-// Keys that must never reach third-party telemetry, regardless of caller intent.
-const BLOCKED_CONTEXT_KEYS = new Set([
+// Tokens that must never reach third-party telemetry, regardless of caller intent.
+// Keys are normalized (lowercased, separators stripped) and blocked if they
+// contain any of these tokens as a substring — catches variants like ipHashPrefix.
+const BLOCKED_KEY_TOKENS = [
 	'lat', 'lng', 'latitude', 'longitude',
 	'email', 'address',
-	'ip', 'iphash', 'ip_hash',
-	'password', 'token', 'secret', 'key',
-]);
+	'ip', 'iphash', 'password', 'token', 'secret', 'key',
+];
+
+function normalizeKey(key: string): string {
+	return key.toLowerCase().replace(/[\s_-]+/g, '');
+}
 
 function sanitizeContext(ctx: LogContext): LogContext {
 	return Object.fromEntries(
-		Object.entries(ctx).filter(([k]) => !BLOCKED_CONTEXT_KEYS.has(k.toLowerCase()))
+		Object.entries(ctx).filter(([k]) => {
+			const norm = normalizeKey(k);
+			return !BLOCKED_KEY_TOKENS.some((token) => norm.includes(token));
+		})
 	);
 }
 

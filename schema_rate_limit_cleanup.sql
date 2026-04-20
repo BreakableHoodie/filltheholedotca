@@ -5,8 +5,9 @@
 
 -- Purge api_rate_limit_events older than 90 days.
 -- Runs nightly at 04:00 UTC alongside the existing expiry jobs.
--- Unschedule first so the migration is safe to re-apply (idempotent).
-select cron.unschedule('purge-rate-limit-events');
+-- Unschedule by jobid first (safe no-op if job doesn't exist) so the migration
+-- is idempotent across pg_cron versions that lack the text overload.
+select cron.unschedule(jobid) from cron.job where jobname = 'purge-rate-limit-events';
 select cron.schedule(
     'purge-rate-limit-events',
     '0 4 * * *',
