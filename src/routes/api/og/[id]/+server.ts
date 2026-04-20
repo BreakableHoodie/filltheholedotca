@@ -7,6 +7,7 @@ import { Resvg } from '@resvg/resvg-js';
 import { decodeHtmlEntities } from '$lib/escape';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import { logError } from '$lib/server/observability';
 
 const paramsSchema = z.object({ id: z.string().uuid() });
 const require = createRequire(import.meta.url);
@@ -28,7 +29,7 @@ async function loadFont(): Promise<ArrayBuffer> {
 		return fontCache;
 	} catch (e) {
 		// Do not cache failures — next request should retry loading from disk.
-		console.error('[og] Font load failed:', e);
+		logError('og/pothole', 'Font load failed', e);
 		throw error(500, 'OG image generation unavailable');
 	}
 }

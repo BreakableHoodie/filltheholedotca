@@ -12,6 +12,10 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 	// 5 min — repeat visitors get instant HTML without waiting for a DB query.
 	setHeaders({ 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' });
 
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
+		return { potholes: [] as Pothole[] };
+	}
+
 	try {
 		const { data, error } = await supabase
 			.from('potholes')

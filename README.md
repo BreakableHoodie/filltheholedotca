@@ -65,6 +65,8 @@ Run the migration files against your Supabase project in order:
 11. `schema_pushover_settings.sql` — Pushover notification toggles (default: all enabled)
 12. `schema_hits.sql` — "I Hit This" signal table
 13. `schema_push.sql` — web push subscription storage
+14. `schema_push_unsubscribe_ratelimit.sql` — push unsubscribe rate limit scope
+15. `schema_review_fixes.sql` — RLS hardening; drops public read on `pothole_confirmations`
 
 ### Run
 

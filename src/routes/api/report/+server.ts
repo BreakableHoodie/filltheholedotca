@@ -5,9 +5,11 @@ import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
+import { roundPublicCoord } from '$lib/geo';
 import { getConfirmationThreshold } from '$lib/server/settings';
 import { notify } from '$lib/server/pushover';
 import { postConfirmed } from '$lib/server/bluesky';
+import { logError } from '$lib/server/observability';
 
 // Kitchener–Waterloo–Cambridge (Waterloo Region), ON bounding box
 const GEOFENCE = {
@@ -95,7 +97,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (reportRateInsertError) {
 		// Non-fatal: log and continue. A broken rate-limit table should not block
 		// legitimate reports — the next check will simply see a lower count.
-		console.error('[report] Failed to record rate limit event:', reportRateInsertError.message);
+		logError('report', 'Failed to record rate limit event', reportRateInsertError, { ipHashPrefix: ipHash.slice(0, 8) });
 	}
 
 	// Search for existing pending potholes nearby using a bounding box
@@ -175,12 +177,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		});
 	}
 
-	// First report — insert as pending with count 1
+	// First report — insert as pending with count 1.
+	// Round to ~11m precision before persistence so we never store a reporter's
+	// exact GPS fix. Geofence and merge-radius logic above used the raw input so
+	// that decisions aren't affected by rounding.
 	const { data, error: insertError } = await getAdminClient()
 		.from('potholes')
 		.insert({
-			lat,
-			lng,
+			lat: roundPublicCoord(lat),
+			lng: roundPublicCoord(lng),
 			address: address ?? null,
 			description: description ?? null,
 			status: 'pending',

@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { supabase } from '$lib/supabase';
 import { decodeHtmlEntities } from '$lib/escape';
+import { PUBLIC_COORD_DECIMALS, roundPublicCoord } from '$lib/geo';
 
 const STATUS_LABEL: Record<string, string> = {
 	reported: 'Open — awaiting fix',
@@ -35,7 +36,9 @@ export const GET: RequestHandler = async ({ params, url }) => {
 
 	if (!data) throw error(404, 'Not found');
 
-	const address = data.address ? escHtml(decodeHtmlEntities(data.address)) : `${data.lat.toFixed(4)}, ${data.lng.toFixed(4)}`;
+	const address = data.address
+		? escHtml(decodeHtmlEntities(data.address))
+		: `${roundPublicCoord(data.lat).toFixed(PUBLIC_COORD_DECIMALS)}, ${roundPublicCoord(data.lng).toFixed(PUBLIC_COORD_DECIMALS)}`;
 	const status = data.status as string;
 	const statusLabel = escHtml(STATUS_LABEL[status] ?? status);
 	const color = STATUS_COLOR[status] ?? '#71717a';

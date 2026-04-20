@@ -54,3 +54,8 @@ docs/plans/
 # Local editor workspace settings
 .vscode/
 .superpowers/
+
+# AI assistant local config (not team-shared)
+.claude/
+.serena/
+.mcp.json

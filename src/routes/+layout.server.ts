@@ -2,6 +2,10 @@ import { supabase } from '$lib/supabase';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async () => {
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
+		return { counts: { reported: 0, filled: 0 } };
+	}
+
 	try {
 		// Two lightweight COUNT queries in parallel — avoids fetching every row
 		// just to count statuses (the previous approach transferred the full table).

@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/private';
 import { getSetting } from '$lib/server/settings';
+import { logError } from '$lib/server/observability';
 
 export interface PushoverMessage {
 	message: string;
@@ -42,7 +43,7 @@ export async function notify(category: NotifyCategory, opts: PushoverMessage): P
 		if (!(await isCategoryEnabled(category))) return;
 		await sendPushover(opts);
 	} catch (e) {
-		console.error('[pushover] notify() failed:', e);
+		logError('pushover/notify', 'notify failed', e);
 	}
 }
 
@@ -77,9 +78,9 @@ async function sendPushover(opts: PushoverMessage): Promise<void> {
 
 		if (!res.ok) {
 			const data = await res.json().catch(() => null);
-			console.error('[pushover] API error:', res.status, data);
+			logError('pushover/send', `API error ${res.status}`, new Error(JSON.stringify(data)));
 		}
 	} catch (e) {
-		console.error('[pushover] Failed to send notification:', e);
+		logError('pushover/send', 'Failed to send notification', e);
 	}
 }

@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
 import { decodeHtmlEntities } from '$lib/escape';
+import { PUBLIC_COORD_DECIMALS, roundPublicCoord } from '$lib/geo';
 
 const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
@@ -46,7 +47,7 @@ function buildDescription(p: {
 		parts.push(`Severity: ${decodeHtmlEntities(p.description)}`);
 	}
 	parts.push(`Confirmed by ${p.confirmed_count} independent report${p.confirmed_count === 1 ? '' : 's'}.`);
-	parts.push(`Location: ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`);
+	parts.push(`Location: ${roundPublicCoord(p.lat).toFixed(PUBLIC_COORD_DECIMALS)}, ${roundPublicCoord(p.lng).toFixed(PUBLIC_COORD_DECIMALS)}`);
 	if (p.filled_at) {
 		parts.push(`Filled: ${new Date(p.filled_at).toUTCString()}`);
 	}

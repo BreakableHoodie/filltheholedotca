@@ -71,10 +71,16 @@ Copy `.env.example` → `.env` with real values:
 - `PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key
 - `SUPABASE_SERVICE_ROLE_KEY` — server-only key for admin routes and moderation
 - `ADMIN_SECRET` — bearer token for `/api/admin/*` endpoints
-- `SIGHTENGINE_API_USER` / `SIGHTENGINE_API_SECRET` — image moderation (optional)
+- `SIGHTENGINE_API_USER` / `SIGHTENGINE_API_SECRET` / `SIGHTENGINE_WORKFLOW_ID` — image moderation (optional)
 - `IP_HASH_SECRET` — server-only HMAC key for IP hashing
+- `ADMIN_SESSION_SECRET` — 32-byte hex key for signing admin CSRF tokens
+- `TOTP_ENCRYPTION_KEY` — 32-byte hex AES-GCM key for encrypting TOTP secrets at rest
+- `ADMIN_BOOTSTRAP_SECRET` — one-time secret for creating the first admin account
+- `PUSHOVER_APP_TOKEN` / `PUSHOVER_USER_KEY` — push notifications (optional; omit both to disable)
+- `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `PUBLIC_VAPID_PUBLIC_KEY` — web push VAPID keys (optional)
 - `PUBLIC_SENTRY_DSN` — Sentry project DSN (optional; omit to disable error tracking in dev)
 - `BLUESKY_HANDLE` / `BLUESKY_APP_PASSWORD` — Bluesky bot credentials (optional; omit both to disable auto-posting)
+- `DISABLE_API_RATE_LIMIT` — set to any value to disable rate limiting in dev/test (never in production)
 
 ## Project Structure
 
@@ -106,9 +112,12 @@ src/
       admin/photo/[id]/+server.ts    # PATCH/DELETE — photo moderation
   lib/
     types.ts                  # Pothole, PotholeStatus types
-    geo.ts                    # Shared geo utilities (pipRing, inWardFeature)
+    geo.ts                    # Shared geo utilities (pipRing, inWardFeature, roundPublicCoord)
     wards.ts                  # COUNCILLORS array (ward/name/email/url)
     supabase.ts               # Supabase client (public anon)
+    server/
+      observability.ts        # logError() — console + Sentry with area tags
+      exif-strip.ts           # stripJpegMetadata() — lossless APP-segment stripper
     components/
       HomeIntroCard.svelte    # Homepage-only intro card shown on first visit
 ```
@@ -146,13 +155,19 @@ Run migrations in this order:
 
 1. `schema.sql` — initial setup
 2. `schema_update.sql` — confirmations table + security hardening
-3. `schema_photos.sql` — photo upload schema
-4. `schema_photo_publishing.sql` — `photos_published` flag
-5. `schema_site_settings.sql` — site settings table + redefines `increment_confirmation` with 3-parameter signature (must run after step 4)
-6. `schema_pr61_fixes.sql` — RLS policy hardening + pending pothole backfill
-7. `schema_security_hardening.sql` — revokes public EXECUTE on `increment_confirmation`; documents `deferred` photo status
-8. `schema_sprint3.sql` — drops public SELECT on `pothole_actions`; fixes pg_cron interval (90 days); adds pending-pothole expiry (14 days)
-9. `schema_push_unsubscribe_ratelimit.sql` — adds `push_unsubscribe` scope to `api_rate_limit_events` constraint
+3. `schema_actions.sql` — pothole_actions table + increment_confirmation RPC
+4. `schema_admin.sql` — admin users, sessions, MFA, trusted devices
+5. `schema_photos.sql` — photo upload schema
+6. `schema_photo_publishing.sql` — `photos_published` flag
+7. `schema_site_settings.sql` — site settings table + redefines `increment_confirmation` with 3-parameter signature (must run after step 6)
+8. `schema_pr61_fixes.sql` — RLS policy hardening + pending pothole backfill
+9. `schema_security_hardening.sql` — revokes public EXECUTE on `increment_confirmation`; documents `deferred` photo status
+10. `schema_sprint3.sql` — drops public SELECT on `pothole_actions`; fixes pg_cron interval (90 days); adds pending-pothole expiry (14 days)
+11. `schema_pushover_settings.sql` — Pushover notification toggles
+12. `schema_hits.sql` — "I Hit This" signal table
+13. `schema_push.sql` — web push subscription storage
+14. `schema_push_unsubscribe_ratelimit.sql` — adds `push_unsubscribe` scope to `api_rate_limit_events` constraint
+15. `schema_review_fixes.sql` — RLS hardening; drops public read on `pothole_confirmations`
 
 Two `pg_cron` jobs run nightly:
 
@@ -175,6 +190,8 @@ pending → reported → filled
 - **2 confirmations** from distinct IPs required to go live on the public map
 - **photos_published**: admin-only toggle per pothole; a live pothole does NOT mean its photos are shown — admin must explicitly publish them
 - **IP hashing**: HMAC-SHA-256 with `IP_HASH_SECRET`, never store raw IPs
+- **Coord privacy**: reporter lat/lng is rounded to 4 decimal places (≈11m at Waterloo latitude) at write-time via `roundPublicCoord()` in `$lib/geo` — the precision is a hard-coded constant, not an env var. Geofence + merge-radius logic runs on the raw input so decisions aren't shifted by rounding. Serialization paths (feed.json, feed.xml, export.csv, embed, OG) re-apply `roundPublicCoord` as defense-in-depth for any historical rows stored at full precision.
+- **Photo EXIF**: server-side strip in `stripJpegMetadata` (`$lib/server/exif-strip`) runs before moderation and storage upload. Drops APP1 (EXIF/GPS/XMP), APP2–APP15, and COM segments from JPEGs losslessly. PNG/WebP pass through untouched; they rarely carry camera EXIF from mobile uploads.
 - **Auto-expiry**: `reported` potholes expire after 90 days; `pending` potholes expire after 14 days (both via pg_cron)
 
 ## Svelte 5 Patterns (important — don't use Svelte 4 syntax)
@@ -193,3 +210,4 @@ $effect(() => { ... })             // NOT: $: { ... } for side effects
 - API routes validate with zod, return `json()` or throw `error()`
 - No auth system — all actions are public with IP-based deduplication
 - Leaflet imports must be inside `onMount` (SSR will break otherwise)
+- Server-side error logging: use `logError(area, message, err, context?)` from `$lib/server/observability` instead of bare `console.error`. It writes to the console AND forwards to Sentry with an `area` tag so issues surface in production. Bare `console.error` on a server route is a silent failure — nobody sees it.

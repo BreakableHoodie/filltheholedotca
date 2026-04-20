@@ -15,6 +15,7 @@ import { verifyPassword, hashToken } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 import { notify } from '$lib/server/pushover';
+import { logError } from '$lib/server/observability';
 
 function getAdminClient() {
 	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -121,18 +122,35 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			const trustedTokenHash = await hashToken(trustedToken);
 			const { data: device } = await getAdminClient()
 				.from('admin_trusted_devices')
-				.select('user_id')
+				.select('user_id, user_agent')
 				.eq('token', trustedTokenHash)
 				.eq('user_id', user.id)
 				.gt('expires_at', new Date().toISOString())
 				.maybeSingle();
 			if (device) {
-				skipMfa = true;
-				// Update last_used_at
-				await getAdminClient()
-					.from('admin_trusted_devices')
-					.update({ last_used_at: new Date().toISOString() })
-					.eq('token', trustedTokenHash);
+				// Validate user agent — a changed UA likely means a different browser or
+				// device. IP is intentionally not checked: trusted devices last 30 days and
+				// legitimate users frequently change IPs (mobile↔WiFi, travel, VPN).
+				const storedUa = device.user_agent as string | null;
+				const uaMatch = !storedUa || storedUa === 'unknown' || storedUa === userAgent;
+				if (uaMatch) {
+					skipMfa = true;
+					await getAdminClient()
+						.from('admin_trusted_devices')
+						.update({ last_used_at: new Date().toISOString() })
+						.eq('token', trustedTokenHash);
+				} else {
+					// UA mismatch — possible cookie theft from a different device.
+					// Don't skip MFA; surface for forensics.
+					logError('admin/trusted_device', 'Trusted device UA mismatch — MFA not skipped', new Error('ua_mismatch'), {
+						ipHashPrefix: ipHash.slice(0, 8)
+					});
+					void notify('security', {
+						title: '⚠️ Trusted device UA mismatch',
+						message: 'A trusted device cookie was presented from an unexpected browser. MFA was not skipped.',
+						priority: 0
+					});
+				}
 			}
 		}
 	}
