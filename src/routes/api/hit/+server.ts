@@ -6,11 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { logError } from '$lib/server/observability';
-
-function getServiceClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
+import { getAdminClient } from '$lib/server/supabase';
 const schema = z.object({ id: z.string().uuid() });
 
 const HIT_RATE_LIMIT = 20;
@@ -23,7 +19,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!parsed.success) throw error(400, 'Invalid request');
 
 	const ipHash = await hashIp(getClientAddress());
-	const db = getServiceClient();
+	const db = getAdminClient();
 
 	// Persistent per-IP rate limit — prevents spraying hits across all potholes.
 	const windowStart = new Date(Date.now() - HIT_RATE_WINDOW_MS).toISOString();

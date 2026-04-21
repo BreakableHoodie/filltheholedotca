@@ -8,11 +8,7 @@ import { checkAuthRateLimit, recordAuthAttempt } from '$lib/server/admin-auth';
 import { hashPassword } from '$lib/server/admin-crypto';
 import { hashIp } from '$lib/hash';
 import { logError } from '$lib/server/observability';
-
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
+import { getAdminClient } from '$lib/server/supabase';
 const signupSchema = z.object({
 	inviteCode: z.string().min(1),
 	email: z.string().email().toLowerCase(),

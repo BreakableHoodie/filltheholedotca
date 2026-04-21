@@ -1,7 +1,4 @@
 import { supabase } from "$lib/supabase";
-import { createClient } from "@supabase/supabase-js";
-import { PUBLIC_SUPABASE_URL } from "$env/static/public";
-import { env } from "$env/dynamic/private";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import type { Pothole, PotholePhoto } from "$lib/types";
@@ -10,10 +7,7 @@ import { decodeHtmlEntities } from "$lib/escape";
 import { getConfirmationThreshold } from "$lib/server/settings";
 import { haversineMetres } from "$lib/geo";
 import { logError } from "$lib/server/observability";
-
-function getServiceClient() {
-  return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
+import { getAdminClient } from "$lib/server/supabase";
 
 const CCC_URL =
   "https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Corporate_Contact_Centre_Requests/FeatureServer/0/query";
@@ -201,7 +195,7 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
   } as Pothole;
   // Bounding box for proximity queries — ~110m radius
   const delta = 0.001;
-  const db = getServiceClient();
+  const db = getAdminClient();
 
   const [councillor, cityRepairRequests, photosResult, confirmationThreshold, hitCountResult, nearbyFilledResult] =
     await Promise.all([

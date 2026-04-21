@@ -6,11 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
-
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
+import { getAdminClient } from '$lib/server/supabase';
 const BOOLEAN_SETTING = z.enum(['true', 'false']);
 
 const SETTING_SCHEMAS: Record<string, z.ZodTypeAny> = {

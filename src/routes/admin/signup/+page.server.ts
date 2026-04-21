@@ -1,19 +1,13 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { env } from '$env/dynamic/private';
-import { createClient } from '@supabase/supabase-js';
 import { timingSafeEqual } from 'node:crypto';
+import { env } from '$env/dynamic/private';
 import { z } from 'zod';
 import { checkAuthRateLimit, recordAuthAttempt } from '$lib/server/admin-auth';
 import { hashPassword } from '$lib/server/admin-crypto';
 import { hashIp } from '$lib/hash';
+import { getAdminClient } from '$lib/server/supabase';
 
-// Client created inside request handlers — $env/dynamic/private is not
-// guaranteed to be populated at module-init time in Vite SSR dev mode.
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
 const MIN_BOOTSTRAP_SECRET_LENGTH = 32;
 
 function getConfiguredBootstrapSecret(): string | null {

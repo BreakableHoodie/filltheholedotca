@@ -16,11 +16,7 @@ import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 import { notify } from '$lib/server/pushover';
 import { logError } from '$lib/server/observability';
-
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
+import { getAdminClient } from '$lib/server/supabase';
 const loginSchema = z.object({
 	email: z.string().email().toLowerCase(),
 	password: z.string().min(1)

@@ -11,15 +11,11 @@ import { getConfirmationThreshold } from '$lib/server/settings';
 import { notify } from '$lib/server/pushover';
 import { postConfirmed } from '$lib/server/bluesky';
 import { logError } from '$lib/server/observability';
+import { getAdminClient } from '$lib/server/supabase';
 
 const REPORT_RATE_LIMIT = 20;
 const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const SEVERITY_VALUES = ['Minor damage', 'Moderate damage', 'Severe damage', 'Hazardous'] as const;
-
-// Service role client used only for persistent rate-limit tracking.
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
 
 const reportSchema = z.object({
 	lat: z.number().finite().min(-90).max(90),

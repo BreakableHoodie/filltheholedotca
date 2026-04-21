@@ -8,14 +8,11 @@ import { hashIp } from '$lib/hash';
 import { notify } from '$lib/server/pushover';
 import { broadcastPush } from '$lib/server/webpush';
 import { postFilled } from '$lib/server/bluesky';
+import { getAdminClient } from '$lib/server/supabase';
 
 // L6: All pothole_actions queries use the service-role client — the public SELECT
 // policy on pothole_actions was a data-leak vector (ip_hash correlation). After
 // dropping that policy the anon key cannot read the table; service-role is required.
-function getServiceClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
 const schema = z.object({ id: z.string().uuid() });
 
 // Persistent per-IP fill rate limit: max 10 per hour.
@@ -30,7 +27,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!parsed.success) throw error(400, 'Invalid request');
 
 	const ipHash = await hashIp(getClientAddress());
-	const db = getServiceClient();
+	const db = getAdminClient();
 
 	// Persistent rate limit — query the DB so this survives cold starts
 	const windowStart = new Date(Date.now() - FILL_RATE_WINDOW_MS).toISOString();

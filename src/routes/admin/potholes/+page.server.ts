@@ -7,11 +7,7 @@ import { z } from 'zod';
 import type { PotholeStatus } from '$lib/types';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
-
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
+import { getAdminClient } from '$lib/server/supabase';
 const VALID_STATUSES: PotholeStatus[] = ['pending', 'reported', 'filled', 'expired'];
 const VALID_SORT_COLS = ['created_at', 'address', 'status', 'confirmed_count'] as const;
 const VALID_PAGE_SIZES = [25, 50, 100] as const;

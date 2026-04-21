@@ -3,13 +3,10 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
 import { logError } from '$lib/server/observability';
+import { getAdminClient } from '$lib/server/supabase';
 
 // Client created per-call — $env/dynamic/private is not guaranteed to be
 // populated at module-init time in Vite SSR dev mode.
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
 // ---------------------------------------------------------------------------
 // RBAC
 // ---------------------------------------------------------------------------

@@ -13,11 +13,7 @@ import {
 	verifyBackupCode
 } from '$lib/server/admin-crypto';
 import { generateTotpSecret, verifyTotpCode, generateTotpUri } from '$lib/server/admin-totp';
-
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
+import { getAdminClient } from '$lib/server/supabase';
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
 	// Re-fetch totp_enabled fresh so UI reflects DB state, not session cache

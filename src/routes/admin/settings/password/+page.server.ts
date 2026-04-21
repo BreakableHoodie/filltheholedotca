@@ -7,11 +7,7 @@ import { z } from 'zod';
 import { writeAuditLog } from '$lib/server/admin-auth';
 import { hashPassword, verifyPassword } from '$lib/server/admin-crypto';
 import { hashIp } from '$lib/hash';
-
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
+import { getAdminClient } from '$lib/server/supabase';
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
 	return {};

@@ -6,11 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { logError } from '$lib/server/observability';
-
-function getServiceClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
+import { getAdminClient } from '$lib/server/supabase';
 const subscribeSchema = z.object({
 	endpoint: z.string().url().max(2048),
 	keys: z.object({
@@ -34,7 +30,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!parsed.success) throw error(400, 'Invalid subscription');
 
 	const ipHash = await hashIp(getClientAddress());
-	const db = getServiceClient();
+	const db = getAdminClient();
 
 	const windowStart = new Date(Date.now() - SUBSCRIBE_RATE_WINDOW_MS).toISOString();
 	const { count: recentSubs, error: rateLimitError } = await db
@@ -77,7 +73,7 @@ export const DELETE: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!parsed.success) throw error(400, 'Invalid request');
 
 	const ipHash = await hashIp(getClientAddress());
-	const db = getServiceClient();
+	const db = getAdminClient();
 
 	const windowStart = new Date(Date.now() - SUBSCRIBE_RATE_WINDOW_MS).toISOString();
 	const { count: recentUnsubs, error: rateLimitError } = await db

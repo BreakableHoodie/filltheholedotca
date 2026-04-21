@@ -8,6 +8,7 @@ import { hashIp } from '$lib/hash';
 import { notify } from '$lib/server/pushover';
 import { logError } from '$lib/server/observability';
 import { stripJpegMetadata } from '$lib/server/exif-strip';
+import { getAdminClient } from '$lib/server/supabase';
 
 type DetectedMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
 type DetectedExtension = 'jpg' | 'png' | 'webp';
@@ -22,10 +23,6 @@ const PHOTO_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 // Service role client — bypasses RLS for storage and DB writes.
 // Never use this key in client-side code.
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
 interface SightEngineResponse {
 	status: string;
 	nudity?: { sexual_activity?: number; sexual_display?: number };

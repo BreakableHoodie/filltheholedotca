@@ -7,11 +7,7 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 import { logError } from '$lib/server/observability';
-
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
+import { getAdminClient } from '$lib/server/supabase';
 const bodySchema = z.object({ action: z.enum(['approve', 'reject']) });
 
 export const PATCH: RequestHandler = async ({ request, params, locals, getClientAddress }) => {

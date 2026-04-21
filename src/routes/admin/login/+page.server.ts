@@ -15,11 +15,7 @@ import {
 } from '$lib/server/admin-auth';
 import { generateCsrfToken, CSRF_COOKIE } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
-
-function getAdminClient() {
-	return createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
+import { getAdminClient } from '$lib/server/supabase';
 export const load: PageServerLoad = async ({ cookies, url }) => {
 	// Redirect logged-in users away from login page
 	const sessionId = cookies.get(SESSION_COOKIE);
