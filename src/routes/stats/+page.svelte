@@ -1,15 +1,11 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { format } from 'date-fns';
 	import type { PageData } from './$types';
-	import type { Pothole } from '$lib/types';
-	import { COUNCILLORS } from '$lib/wards';
-	import { inWardFeature } from '$lib/geo';
 	import Icon from '$lib/components/Icon.svelte';
 	import { wardGrade } from '$lib/ward-grade';
 
 	let { data }: { data: PageData } = $props();
-	let allPotholes = $derived(data.potholes as Pothole[]);
+	let allPotholes = $derived(data.potholes);
 
 	// ── Time filter ────────────────────────────────────────────────────────────
 	type WindowDays = 30 | 90 | 365 | null;
@@ -74,23 +70,6 @@
 	);
 
 	// ── Ward leaderboard ───────────────────────────────────────────────────────
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let wardGeojson = $state<any>(null);
-	let wardLoading = $state(false);
-	let wardError   = $state(false);
-
-	onMount(async () => {
-		wardLoading = true;
-		try {
-			const res = await fetch('/api/wards.geojson');
-			if (!res.ok) throw new Error(`${res.status}`);
-			wardGeojson = await res.json();
-		} catch {
-			wardError = true;
-		} finally {
-			wardLoading = false;
-		}
-	});
 
 	interface WardRow {
 		city: string; ward: number; key: string;
@@ -107,45 +86,32 @@
 		if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = false; }
 	}
 
+	// Ward keys were assigned server-side via point-in-polygon on load.
+	// Aggregation here is O(n) over filtered potholes with no GeoJSON fetch needed.
 	let wardRows = $derived.by((): WardRow[] => {
-		if (!wardGeojson?.features?.length) return [];
-
 		const stats: Record<string, WardRow> = {};
 		const filledTimes: Record<string, number[]> = {};
 
-		for (const f of wardGeojson.features) {
-			const city = String(f.properties?.CITY ?? '');
-			const ward = Number(f.properties?.WARDID_NORM ?? 0);
-			if (!city || !ward) continue;
-			const key = `${city}-${ward}`;
-			if (key in stats) continue;
-			const councillor = COUNCILLORS.find(c => c.city === city && c.ward === ward);
-			stats[key] = {
-				city, ward, key,
-				councillorName: councillor?.name ?? '—',
-				councillorUrl:  councillor?.url  ?? '',
+		for (const w of data.wards) {
+			stats[w.key] = {
+				city: w.city, ward: w.ward, key: w.key,
+				councillorName: w.councillorName, councillorUrl: w.councillorUrl,
 				open: 0, filled: 0, total: 0, fillRate: 0, avgDays: null
 			};
 		}
 
 		for (const p of filtered) {
-			for (const f of wardGeojson.features) {
-				if (!inWardFeature(p.lng, p.lat, f.geometry)) continue;
-				const city = String(f.properties?.CITY ?? '');
-				const ward = Number(f.properties?.WARDID_NORM ?? 0);
-				const key  = `${city}-${ward}`;
-				if (!(key in stats)) break;
-				stats[key].total++;
-				if (p.status === 'filled') {
-					stats[key].filled++;
-					if (p.filled_at) {
-						const days = (new Date(p.filled_at).getTime() - new Date(p.created_at).getTime()) / 86_400_000;
-						(filledTimes[key] ??= []).push(days);
-					}
-				} else if (p.status === 'reported' || p.status === 'expired') {
-					stats[key].open++;
+			const key = p.ward_key;
+			if (!key || !(key in stats)) continue;
+			stats[key].total++;
+			if (p.status === 'filled') {
+				stats[key].filled++;
+				if (p.filled_at) {
+					const days = (new Date(p.filled_at).getTime() - new Date(p.created_at).getTime()) / 86_400_000;
+					(filledTimes[key] ??= []).push(days);
 				}
-				break;
+			} else if (p.status === 'reported' || p.status === 'expired') {
+				stats[key].open++;
 			}
 		}
 
@@ -400,20 +366,9 @@
 	<section aria-labelledby="ward-heading">
 		<div class="flex items-center justify-between mb-4 flex-wrap gap-2">
 			<h2 id="ward-heading" class="section-title text-lg text-white">By ward</h2>
-			{#if wardLoading}
-				<span class="text-xs text-zinc-500 animate-pulse" role="status" aria-live="polite">Loading ward boundaries…</span>
-			{/if}
 		</div>
 
-		{#if wardError}
-			<div role="alert" class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500 text-sm">
-				Could not load ward boundaries. Try refreshing the page.
-			</div>
-		{:else if wardLoading}
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500 text-sm animate-pulse" aria-busy="true">
-				Assigning wards…
-			</div>
-		{:else if wardRows.length === 0}
+		{#if wardRows.length === 0}
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500 text-sm">
 				No ward data available for the selected window.
 			</div>
