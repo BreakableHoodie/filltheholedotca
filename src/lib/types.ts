@@ -10,8 +10,10 @@ export interface PotholePhoto {
 	moderation_status: PhotoModerationStatus;
 	moderation_score: number | null;
 	created_at: string;
-	/** Constructed server-side from storage_path. */
+	/** Full-resolution public URL, constructed server-side from storage_path. */
 	url: string;
+	/** Resized thumbnail URL via Supabase Image Transformation (800 px wide). Falls back to url if the feature is not enabled. */
+	thumbnailUrl: string;
 }
 
 export interface Pothole {

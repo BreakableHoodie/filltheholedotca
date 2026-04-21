@@ -504,7 +504,7 @@
 						aria-label="View photo {i + 1} of {photos.length}"
 					>
 						<img
-							src={photo.url}
+							src={photo.thumbnailUrl}
 							alt="Pothole at {pothole.address || 'this location'}"
 							class="w-full object-cover aspect-video"
 							loading="lazy"

@@ -232,15 +232,22 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
   // Only expose photos publicly when admin has explicitly published them for this pothole.
   // A reported (live) pothole does not imply its photos are visible.
   const photos: PotholePhoto[] = pothole.photos_published
-    ? (photosResult.data ?? []).map((p) => ({
-        ...p,
-        pothole_id: params.id,
-        moderation_status: "approved" as const,
-        moderation_score: null,
-        url: supabase.storage
-          .from("pothole-photos")
-          .getPublicUrl(p.storage_path).data.publicUrl,
-      }))
+    ? (photosResult.data ?? []).map((p) => {
+        const storage = supabase.storage.from("pothole-photos");
+        return {
+          ...p,
+          pothole_id: params.id,
+          moderation_status: "approved" as const,
+          moderation_score: null,
+          url: storage.getPublicUrl(p.storage_path).data.publicUrl,
+          // Supabase Image Transformation (Pro feature): serve an 800px-wide
+          // JPEG for the thumbnail strip to avoid loading multi-megapixel originals.
+          // Falls back to the original URL if Image Transformation is not enabled.
+          thumbnailUrl: storage.getPublicUrl(p.storage_path, {
+            transform: { width: 800, quality: 80, resize: 'contain' }
+          }).data.publicUrl,
+        };
+      })
     : [];
 
   const hitCount = hitCountResult.count ?? 0;
