@@ -171,6 +171,18 @@ export const actions: Actions = {
 			}
 
 			// MFA required — create challenge.
+			// SEC-1 fix: invalidate any existing valid challenges for this user before
+			// inserting a new one. Without this, rapid repeat submissions accumulate
+			// multiple simultaneously valid tokens that collectively expand the
+			// attacker's TOTP-guess window.
+			const now = new Date().toISOString();
+			await getAdminClient()
+				.from('admin_mfa_challenges')
+				.update({ used: true, used_at: now })
+				.eq('user_id', user.id)
+				.eq('used', false)
+				.gt('expires_at', now);
+
 			// M2 fix: token is stored in an HttpOnly cookie rather than the URL query string.
 			// A URL token leaks into browser history, server logs, and Referer headers.
 			const mfaToken = crypto.randomUUID();
