@@ -435,7 +435,7 @@
 						type="button"
 						onclick={() => (locationMode = tab.mode)}
 						onkeydown={(event) => handleLocationTabKeydown(event, tab.mode)}
-						class="flex-1 py-1.5 px-2 rounded-md text-xs font-semibold transition-colors
+						class="flex-1 min-h-[44px] py-1.5 px-2 rounded-md text-xs font-semibold transition-colors
 							{locationMode === tab.mode
 								? 'bg-zinc-700 text-white'
 								: 'text-zinc-400 hover:text-zinc-200'}"
@@ -531,7 +531,7 @@
 								<li>
 									<button
 										type="button"
-										class="w-full text-left px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-700"
+										class="w-full text-left px-3 py-2.5 min-h-[44px] text-sm text-zinc-200 hover:bg-zinc-700"
 										onclick={() => selectSuggestion(s)}
 									>
 										{s.display_name}
@@ -650,7 +650,7 @@
 			<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
 		</div>
 
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3" aria-live="polite" aria-atomic="true">
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3" role="status" aria-live="polite" aria-atomic="true">
 			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
 				<Icon name="check-circle" size={14} class={hasLocation ? 'text-green-400' : 'text-zinc-400'} />
 				Ready to submit

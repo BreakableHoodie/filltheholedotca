@@ -492,7 +492,7 @@
 			<div
 				class="absolute top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1001] flex flex-wrap items-center gap-2 sm:gap-3 bg-zinc-950 border border-sky-600 rounded-xl px-4 py-3 shadow-xl"
 			>
-				<span class="text-sm text-white grow" aria-live="polite" aria-atomic="true">
+				<span class="text-sm text-white grow" role="status" aria-live="polite" aria-atomic="true">
 					Tap the map where the pothole is
 				</span>
 				{#if reportLatLng}

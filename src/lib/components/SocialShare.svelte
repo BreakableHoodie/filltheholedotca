@@ -109,7 +109,7 @@
 			</a>
 		{/each}
 		<!-- aria-live announces the "Copied!" state change to screen readers -->
-		<span class="sr-only" aria-live="polite">{copied ? 'Link copied to clipboard' : ''}</span>
+		<span class="sr-only" role="status" aria-live="polite">{copied ? 'Link copied to clipboard' : ''}</span>
 		<button
 			type="button"
 			onclick={copyLink}

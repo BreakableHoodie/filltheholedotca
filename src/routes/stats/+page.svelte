@@ -285,24 +285,24 @@
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
 				<p class="text-xs text-zinc-500 uppercase tracking-wide">Total reported</p>
-				<p class="text-3xl font-bold text-white" aria-live="polite">{totalConfirmed}</p>
+				<p class="text-3xl font-bold text-white" role="status" aria-live="polite">{totalConfirmed}</p>
 				<p class="text-xs text-zinc-500">confirmed potholes</p>
 			</div>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
 				<p class="text-xs text-zinc-500 uppercase tracking-wide">Currently open</p>
-				<p class="text-3xl font-bold text-orange-400" aria-live="polite">{totalOpen}</p>
+				<p class="text-3xl font-bold text-orange-400" role="status" aria-live="polite">{totalOpen}</p>
 				<p class="text-xs text-zinc-500">unfilled, on the map</p>
 			</div>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
 				<p class="text-xs text-zinc-500 uppercase tracking-wide">Fill rate</p>
-				<p class="text-3xl font-bold text-sky-400" aria-live="polite">
+				<p class="text-3xl font-bold text-sky-400" role="status" aria-live="polite">
 					{fillRate === null ? '—' : `${fmt(fillRate, 0)}%`}
 				</p>
 				<p class="text-xs text-zinc-500">{totalFilled} of {totalConfirmed} filled</p>
 			</div>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
 				<p class="text-xs text-zinc-500 uppercase tracking-wide">Avg days to fill</p>
-				<p class="text-3xl font-bold {avgDaysToFill === null ? 'text-zinc-500' : 'text-green-400'}" aria-live="polite">
+				<p class="text-3xl font-bold {avgDaysToFill === null ? 'text-zinc-500' : 'text-green-400'}" role="status" aria-live="polite">
 					{avgDaysToFill === null ? '—' : fmt(avgDaysToFill, 1)}
 				</p>
 				<p class="text-xs text-zinc-500">from report to fixed</p>
@@ -401,7 +401,7 @@
 		<div class="flex items-center justify-between mb-4 flex-wrap gap-2">
 			<h2 id="ward-heading" class="section-title text-lg text-white">By ward</h2>
 			{#if wardLoading}
-				<span class="text-xs text-zinc-500 animate-pulse" aria-live="polite">Loading ward boundaries…</span>
+				<span class="text-xs text-zinc-500 animate-pulse" role="status" aria-live="polite">Loading ward boundaries…</span>
 			{/if}
 		</div>
 
