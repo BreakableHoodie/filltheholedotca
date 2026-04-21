@@ -37,14 +37,17 @@ export function pipRing(lng: number, lat: number, ring: number[][]): boolean {
 	return inside;
 }
 
+type PolygonGeometry = { type: 'Polygon'; coordinates: number[][][] };
+type MultiPolygonGeometry = { type: 'MultiPolygon'; coordinates: number[][][][] };
+type WardGeometry = PolygonGeometry | MultiPolygonGeometry | { type: string };
+
 /**
  * Returns true if the point (lng, lat) falls within a GeoJSON Polygon or
  * MultiPolygon geometry.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function inWardFeature(lng: number, lat: number, geometry: any): boolean {
-	if (geometry.type === 'Polygon') return pipRing(lng, lat, geometry.coordinates[0]);
+export function inWardFeature(lng: number, lat: number, geometry: WardGeometry): boolean {
+	if (geometry.type === 'Polygon') return pipRing(lng, lat, (geometry as PolygonGeometry).coordinates[0]);
 	if (geometry.type === 'MultiPolygon')
-		return geometry.coordinates.some((p: number[][][]) => pipRing(lng, lat, p[0]));
+		return (geometry as MultiPolygonGeometry).coordinates.some((p) => pipRing(lng, lat, p[0]));
 	return false;
 }

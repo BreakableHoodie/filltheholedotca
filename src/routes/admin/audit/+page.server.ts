@@ -1,8 +1,5 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { env } from '$env/dynamic/private';
-import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { requireRole } from '$lib/server/admin-auth';
 import { getAdminClient } from '$lib/server/supabase';

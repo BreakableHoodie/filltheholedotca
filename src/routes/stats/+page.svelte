@@ -469,7 +469,7 @@
 									<a href="/stats/ward/{row.city}/{row.ward}" class="hover:text-sky-400 transition-colors">{row.city}</a>
 								</td>
 								<td class="px-4 py-3 text-zinc-300">
-									<a href="/stats/ward/{row.city}/{row.ward}" class="hover:text-sky-400 transition-colors">Ward {row.ward}</a>
+									<a href="/stats/ward/{row.city}/{row.ward}" aria-label="{row.city} Ward {row.ward}" class="hover:text-sky-400 transition-colors">Ward {row.ward}</a>
 								</td>
 								<td class="px-4 py-3 hidden md:table-cell">
 									{#if row.councillorUrl}

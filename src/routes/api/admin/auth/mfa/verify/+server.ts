@@ -1,8 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
-import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { verifyTotpCode } from '$lib/server/admin-totp';
 import {

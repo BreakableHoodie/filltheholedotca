@@ -1,8 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
-import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { verifyPassword, hashToken } from '$lib/server/admin-crypto';
 import {

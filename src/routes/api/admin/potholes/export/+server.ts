@@ -1,8 +1,5 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { env } from '$env/dynamic/private';
-import { createClient } from '@supabase/supabase-js';
 import { requireRole } from '$lib/server/admin-auth';
 import type { PotholeStatus } from '$lib/types';
 import { getAdminClient } from '$lib/server/supabase';

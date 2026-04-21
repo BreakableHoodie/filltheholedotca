@@ -1,7 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
-import { createClient } from '@supabase/supabase-js';
 import { logError } from '$lib/server/observability';
 import { getAdminClient } from '$lib/server/supabase';
 
