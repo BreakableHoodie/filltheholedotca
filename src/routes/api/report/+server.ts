@@ -160,8 +160,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// First report — insert as pending with count 1.
 	// Round to ~11m precision before persistence so we never store a reporter's
-	// exact GPS fix. Geofence and merge-radius logic above used the raw input so
-	// that decisions aren't affected by rounding.
+	// exact GPS fix. The geofence check and the new-report side of the merge
+	// haversine use raw coords; stored pothole coords are already rounded, so
+	// merge comparisons carry ≤ ~7 m precision loss — accepted given the 25 m radius.
 	const { data, error: insertError } = await getAdminClient()
 		.from('potholes')
 		.insert({
