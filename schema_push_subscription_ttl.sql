@@ -1,0 +1,19 @@
+-- schema_push_subscription_ttl.sql
+-- Adds last_used_at tracking to push_subscriptions and a pg_cron cleanup job
+-- that purges subscriptions not refreshed in 180 days (PRIV-5 / PIPEDA data minimization).
+
+alter table push_subscriptions
+    add column if not exists last_used_at timestamptz not null default now();
+
+-- Back-fill: treat existing rows as last used at creation time.
+update push_subscriptions set last_used_at = created_at where last_used_at = now();
+
+-- Nightly job: delete push subscriptions not refreshed in 180 days.
+select cron.schedule(
+    'purge-stale-push-subscriptions',
+    '30 4 * * *',
+    $$
+        delete from push_subscriptions
+        where last_used_at < now() - interval '180 days';
+    $$
+);

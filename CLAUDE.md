@@ -169,12 +169,14 @@ Run migrations in this order:
 14. `schema_push_unsubscribe_ratelimit.sql` — adds `push_unsubscribe` scope to `api_rate_limit_events` constraint
 15. `schema_review_fixes.sql` — RLS hardening; drops public read on `pothole_confirmations`
 16. `schema_rate_limit_cleanup.sql` — pg_cron purge job for `api_rate_limit_events` older than 90 days (PIPEDA data minimization)
+17. `schema_push_subscription_ttl.sql` — adds `last_used_at` to `push_subscriptions`; pg_cron purge job for subscriptions not refreshed in 180 days (PIPEDA data minimization)
 
-Three `pg_cron` jobs run nightly:
+Four `pg_cron` jobs run nightly:
 
 - `expire-old-potholes` (03:00 UTC): sets `status = 'expired'` on `reported` potholes older than 90 days.
 - `expire-stale-pending` (03:30 UTC): sets `status = 'expired'` on `pending` potholes older than 14 days (anti-suppression).
 - `purge-rate-limit-events` (04:00 UTC): deletes `api_rate_limit_events` rows older than 90 days (PIPEDA data minimization).
+- `purge-stale-push-subscriptions` (04:30 UTC): deletes `push_subscriptions` rows where `last_used_at` is older than 180 days (PIPEDA data minimization).
 
 ## Status Flow
 
