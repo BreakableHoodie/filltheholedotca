@@ -15,7 +15,7 @@
 	import type { Councillor } from '$lib/wards';
 	import { isWatched, toggleWatch } from '$lib/watchlist';
 	import { format } from 'date-fns';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -32,7 +32,7 @@
 	let nearbyFilled = $derived(data.nearbyFilled ?? []);
 
 	// ── "I hit this" signal ────────────────────────────────────────────────
-	let hitCount = $state(data.hitCount ?? 0);
+	let hitCount = $state(untrack(() => data.hitCount) ?? 0);
 	let hitSubmitted = $state(false);
 	let hittingIt = $state(false);
 
@@ -134,8 +134,8 @@
 	// Lightbox
 	let lightboxIndex = $state<number | null>(null);
 	let lightboxTriggerEl: HTMLElement | null = null;
-	let lightboxCloseBtn: HTMLButtonElement | null = null;
-	let lightboxDialogEl: HTMLDivElement | null = null;
+	let lightboxCloseBtn = $state<HTMLButtonElement | null>(null);
+	let lightboxDialogEl = $state<HTMLDivElement | null>(null);
 	let lightboxOpen = false; // non-reactive — tracks open/closed across effect re-runs
 
 	function openLightbox(index: number) {
@@ -745,7 +745,9 @@
 		role="dialog"
 		aria-modal="true"
 		aria-label="Photo viewer"
+		tabindex="-1"
 		onclick={closeLightbox}
+		onkeydown={(e) => { if (e.key === 'Escape') closeLightbox(); }}
 	>
 		<!-- Close -->
 		<button
@@ -769,12 +771,13 @@
 		{/if}
 
 		<!-- Image -->
-		<img
-			src={photos[lightboxIndex].url}
-			alt="Pothole at {pothole.address || 'this location'} — photo {lightboxIndex + 1} of {photos.length}"
-			class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-			onclick={(e) => e.stopPropagation()}
-		/>
+		<div role="presentation" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+			<img
+				src={photos[lightboxIndex].url}
+				alt="Pothole at {pothole.address || 'this location'} — photo {lightboxIndex + 1} of {photos.length}"
+				class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+			/>
+		</div>
 
 		<!-- Next -->
 		{#if photos.length > 1}
@@ -788,15 +791,17 @@
 
 			<!-- Dots -->
 			<div
+				role="presentation"
 				class="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2"
 				onclick={(e) => e.stopPropagation()}
+				onkeydown={(e) => e.stopPropagation()}
 			>
 				{#each photos as photo, i (photo.id)}
 					<button
 						onclick={() => (lightboxIndex = i)}
 						aria-label="Go to photo {i + 1}"
 						class="w-1.5 h-1.5 rounded-full transition-colors {i === lightboxIndex ? 'bg-white' : 'bg-white/30 hover:bg-white/60'}"
-					/>
+					></button>
 				{/each}
 			</div>
 		{/if}
