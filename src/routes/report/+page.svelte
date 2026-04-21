@@ -707,7 +707,7 @@
 			{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location are needed before a pothole appears on the public map.
 		</p>
 		<p class="text-xs text-zinc-400 text-center">
-			Submitting collects your approximate location (±11 m) and a hashed device identifier. No account or name required. <a href="/about#privacy" class="underline hover:text-white">Privacy →</a>
+			By submitting you consent to collection of your rounded GPS location (±11 m), a hashed IP address for deduplication, and any photos you attach (reviewed before publishing). No account required. <a href="/about#privacy" class="underline hover:text-white">Privacy policy →</a>
 		</p>
 		<p class="text-xs text-zinc-400 text-center">
 			On a major road? It may be maintained by the Region of Waterloo, not the city. <a href="/about" class="underline hover:text-white">Learn more →</a>

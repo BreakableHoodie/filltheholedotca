@@ -57,7 +57,7 @@
 					<a href="/stats" class="text-zinc-300 hover:text-white transition-colors">
 						Stats
 					</a>
-					<a href="/how-to" class="hidden sm:inline text-zinc-400 hover:text-white transition-colors">
+					<a href="/how-to" class="hidden sm:inline text-zinc-300 hover:text-white transition-colors">
 						How to
 					</a>
 					<a href="/about" class="text-zinc-300 hover:text-white transition-colors">
@@ -67,7 +67,7 @@
 						href="https://github.com/BreakableHoodie/filltheholedotca"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="hidden sm:inline-flex text-zinc-400 hover:text-white transition-colors"
+						class="hidden sm:inline-flex text-zinc-300 hover:text-white transition-colors"
 						aria-label="View source on GitHub"
 					>
 						<Icon name="github" size={18} />
