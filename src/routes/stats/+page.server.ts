@@ -44,16 +44,17 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
 	setHeaders({ 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' });
 
 	// Fetch potholes and pre-warm the ward boundary cache in parallel.
-	// lookupWard() re-uses these cached results for every per-pothole PIP call.
+	// fetchWards() now never rejects (errors are caught and cached as []) so
+	// Promise.all is safe here, but ward failures must not break the pothole query.
 	const [{ data, error }] = await Promise.all([
 		supabase
 			.from('potholes')
 			.select('id, created_at, lat, lng, status, filled_at, expired_at, address, confirmed_count')
 			.neq('status', 'pending')
 			.order('created_at', { ascending: false }),
-		fetchWards('kitchener'),
-		fetchWards('waterloo'),
-		fetchWards('cambridge')
+		fetchWards('kitchener').catch(() => []),
+		fetchWards('waterloo').catch(() => []),
+		fetchWards('cambridge').catch(() => [])
 	]);
 
 	if (error) {

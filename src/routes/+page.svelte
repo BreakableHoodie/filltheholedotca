@@ -42,6 +42,13 @@
 			.slice(0, 4)
 	);
 
+	// Pre-sorted list for the sr-only aside — avoids inline sort on every render.
+	let reportedPotholesSorted = $derived(
+		potholes
+			.filter((p) => p.status === 'reported')
+			.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
+	);
+
 	// Report-here pin-drop mode
 	let reportMode = $state(false);
 	let reportLatLng = $state<{ lat: number; lng: number } | null>(null);
@@ -485,9 +492,14 @@
 		<p>No active potholes reported.</p>
 	{:else}
 		<ul>
-			{#each potholes.filter(p => p.status === 'reported').sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)) as pothole (pothole.id)}
+			{#each reportedPotholesSorted as pothole (pothole.id)}
 				<li>
-					<a href="/hole/{pothole.id}">
+					<!-- Skip-link pattern: the link becomes a fixed overlay on keyboard focus
+					     so sighted keyboard users see where focus is. -->
+					<a
+						href="/hole/{pothole.id}"
+						class="focus:fixed focus:top-4 focus:left-4 focus:z-[2000] focus:bg-zinc-950 focus:text-sky-400 focus:px-4 focus:py-2 focus:rounded-lg focus:border focus:border-zinc-700 focus:shadow-xl focus:text-sm focus:font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+					>
 						{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
 						— confirmed by {pothole.confirmed_count} report{pothole.confirmed_count === 1 ? '' : 's'}
 					</a>

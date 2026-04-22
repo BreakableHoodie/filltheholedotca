@@ -173,6 +173,7 @@
 				{#if potholes.length > PAGE_SIZE}
 					<div class="mt-4 text-center">
 						<button
+							type="button"
 							onclick={() => (showAll = !showAll)}
 							class="text-xs font-medium text-zinc-500 hover:text-sky-400 transition-colors"
 						>

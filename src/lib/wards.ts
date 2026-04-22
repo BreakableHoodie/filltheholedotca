@@ -99,13 +99,22 @@ function pointInPolygon(lng: number, lat: number, geometry: GeoJSONFeature['geom
 // ── Ward lookup ───────────────────────────────────────────────────────────────
 
 export async function fetchWards(city: City): Promise<GeoJSONFeature[]> {
-	if (wardCache[city]) return wardCache[city]!;
-	const { url } = WARD_SOURCES[city];
-	const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-	if (!res.ok) return [];
-	const geojson = await res.json();
-	wardCache[city] = geojson.features ?? [];
-	return wardCache[city]!;
+	// Cache hit (success or previously failed) — return without a network call.
+	if (city in wardCache) return wardCache[city]!;
+	try {
+		const { url } = WARD_SOURCES[city];
+		const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+		if (!res.ok) {
+			wardCache[city] = []; // Cache failure to prevent thundering herd on retry
+			return [];
+		}
+		const geojson = await res.json();
+		wardCache[city] = geojson.features ?? [];
+		return wardCache[city]!;
+	} catch {
+		wardCache[city] = []; // Network error — cache empty to avoid repeated fetches
+		return [];
+	}
 }
 
 export async function lookupWard(lat: number, lng: number): Promise<Councillor | null> {

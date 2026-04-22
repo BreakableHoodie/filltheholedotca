@@ -33,6 +33,12 @@
 	let totalOpen      = $derived(filtered.filter(p => p.status === 'reported' || p.status === 'expired').length);
 	let fillRate       = $derived(totalConfirmed === 0 ? null : (totalFilled / totalConfirmed) * 100);
 
+	// True when potholes exist in the window but none could be assigned a ward —
+	// indicates an ArcGIS/ward-boundary fetch failure rather than "no data".
+	let wardLookupFailed = $derived(
+		filtered.length > 0 && filtered.every((p) => (p as { ward_key: string | null }).ward_key === null)
+	);
+
 	let avgDaysToFill = $derived.by(() => {
 		const done = filtered.filter(p => p.status === 'filled' && p.filled_at);
 		if (!done.length) return null;
@@ -368,7 +374,11 @@
 			<h2 id="ward-heading" class="section-title text-lg text-white">By ward</h2>
 		</div>
 
-		{#if wardRows.length === 0}
+		{#if wardLookupFailed}
+			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500 text-sm" role="status">
+				Ward boundary data is temporarily unavailable. City-level totals above are unaffected.
+			</div>
+		{:else if wardRows.length === 0}
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500 text-sm">
 				No ward data available for the selected window.
 			</div>

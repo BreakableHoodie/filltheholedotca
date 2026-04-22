@@ -241,8 +241,8 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
           moderation_score: null,
           url: storage.getPublicUrl(p.storage_path).data.publicUrl,
           // Supabase Image Transformation (Pro feature): serve an 800px-wide
-          // JPEG for the thumbnail strip to avoid loading multi-megapixel originals.
-          // Falls back to the original URL if Image Transformation is not enabled.
+          // resized image for the thumbnail strip. The img onerror handler falls
+          // back to url if transformation is unavailable.
           thumbnailUrl: storage.getPublicUrl(p.storage_path, {
             transform: { width: 800, quality: 80, resize: 'contain' }
           }).data.publicUrl,

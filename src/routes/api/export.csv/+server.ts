@@ -88,7 +88,8 @@ export const GET: RequestHandler = async ({ request }) => {
 		);
 		return t > max ? t : max;
 	}, 0);
-	const lastModified = new Date(lastModifiedMs || Date.now()).toUTCString();
+	// Use epoch (not Date.now()) when empty so the value is stable across requests.
+	const lastModified = new Date(lastModifiedMs).toUTCString();
 
 	// 304 Not Modified: skip sending the body if the CDN/client has current data.
 	const ifModifiedSince = request.headers.get('if-modified-since');
@@ -98,7 +99,8 @@ export const GET: RequestHandler = async ({ request }) => {
 			headers: {
 				'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
 				'Last-Modified': lastModified,
-				'Access-Control-Allow-Origin': '*'
+				'Access-Control-Allow-Origin': '*',
+				'Cross-Origin-Resource-Policy': 'cross-origin'
 			}
 		});
 	}

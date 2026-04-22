@@ -531,6 +531,7 @@
 							alt="Pothole at {pothole.address || 'this location'}"
 							class="w-full object-cover aspect-video"
 							loading="lazy"
+							onerror={(e) => { (e.currentTarget as HTMLImageElement).src = photo.url; }}
 						/>
 					</button>
 				{/each}

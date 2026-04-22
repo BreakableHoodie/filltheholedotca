@@ -120,6 +120,10 @@
 
 	function onAddressInput() {
 		if (addressDebounce) clearTimeout(addressDebounce);
+		// Clear any previously selected location — user is searching for a new one.
+		lat = null;
+		lng = null;
+		address = null;
 		addressDebounce = setTimeout(() => searchAddress(addressQuery), 300);
 	}
 
@@ -523,7 +527,7 @@
 					/>
 					{#if addressSearching}
 						<p class="text-xs text-zinc-400 mt-1">Searching…</p>
-					{:else if !addressSearching && addressQuery.length > 2 && addressSuggestions.length === 0 && lat === null}
+					{:else if addressQuery.length > 2 && addressSuggestions.length === 0 && lat === null}
 						<p class="text-xs text-zinc-400 mt-1" role="status" aria-live="polite">No results found — try a different address or street name.</p>
 					{/if}
 					{#if addressSuggestions.length > 0}

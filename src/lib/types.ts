@@ -12,7 +12,7 @@ export interface PotholePhoto {
 	created_at: string;
 	/** Full-resolution public URL, constructed server-side from storage_path. */
 	url: string;
-	/** Resized thumbnail URL via Supabase Image Transformation (800 px wide). Falls back to url if the feature is not enabled. */
+	/** Resized thumbnail URL via Supabase Image Transformation (800 px wide). The img element should onerror-fallback to url. */
 	thumbnailUrl: string;
 }
 

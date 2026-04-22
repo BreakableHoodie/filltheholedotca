@@ -96,8 +96,8 @@ export const GET: RequestHandler = async ({ request }) => {
 	);
 
 	const potholes = merged.slice(0, 100);
-	const now = new Date().toUTCString();
-	const lastBuild = potholes[0] ? new Date(eventTime(potholes[0])).toUTCString() : now;
+	// Use epoch when empty so Last-Modified is stable and 304s remain effective.
+	const lastBuild = potholes[0] ? new Date(eventTime(potholes[0])).toUTCString() : new Date(0).toUTCString();
 
 	const items = potholes
 		.map((p) => {
@@ -139,7 +139,8 @@ ${items}
 			headers: {
 				'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
 				'Last-Modified': lastBuild,
-				'Access-Control-Allow-Origin': '*'
+				'Access-Control-Allow-Origin': '*',
+				'Cross-Origin-Resource-Policy': 'cross-origin'
 			}
 		});
 	}
