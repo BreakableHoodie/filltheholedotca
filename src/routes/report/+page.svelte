@@ -21,6 +21,7 @@
 	let lat = $state<number | null>(null);
 	let lng = $state<number | null>(null);
 	let gpsStatus = $state<'idle' | 'loading' | 'got' | 'error'>('idle');
+	let gpsAccuracy = $state<number | null>(null);
 	let address = $state<string | null>(null);
 	let severity = $state<string | null>(null);
 	let submitting = $state(false);
@@ -314,6 +315,7 @@
 		function onSuccess(pos: GeolocationPosition) {
 			lat = pos.coords.latitude;
 			lng = pos.coords.longitude;
+			gpsAccuracy = pos.coords.accuracy ?? null;
 			gpsStatus = 'got';
 			toast.success('Location locked in');
 			reverseGeocode(pos.coords.latitude, pos.coords.longitude);
@@ -469,7 +471,7 @@
 						Getting your location…
 					{:else if gpsStatus === 'got'}
 						<Icon name="check" size={15} strokeWidth={2.5} class="shrink-0" />
-						GPS locked
+						GPS locked{gpsAccuracy !== null ? ` · ±${Math.round(gpsAccuracy)}m` : ''}
 					{:else if gpsStatus === 'error'}
 						<Icon name="alert-triangle" size={15} class="shrink-0" />
 						GPS failed — retry
@@ -521,6 +523,8 @@
 					/>
 					{#if addressSearching}
 						<p class="text-xs text-zinc-400 mt-1">Searching…</p>
+					{:else if !addressSearching && addressQuery.length > 2 && addressSuggestions.length === 0 && lat === null}
+						<p class="text-xs text-zinc-400 mt-1" role="status" aria-live="polite">No results found — try a different address or street name.</p>
 					{/if}
 					{#if addressSuggestions.length > 0}
 						<ul

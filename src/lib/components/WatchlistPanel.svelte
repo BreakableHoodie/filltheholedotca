@@ -15,12 +15,16 @@
 		photos_published: boolean;
 	};
 
+	const PAGE_SIZE = 6;
+
 	let { count = $bindable(0) }: { count?: number } = $props();
 
 	let ids = $state<string[]>([]);
 	let potholes = $state<WatchedPothole[]>([]);
 	let loading = $state(false);
 	let fetchError = $state(false);
+	let showAll = $state(false);
+	let visiblePotholes = $derived(showAll ? potholes : potholes.slice(0, PAGE_SIZE));
 
 	// Keep the bound count in sync whenever ids changes
 	$effect(() => {
@@ -85,15 +89,24 @@
 			</div>
 
 			{#if loading}
-				<div class="flex items-center gap-2 text-zinc-500 text-sm py-2">
-					<Icon name="loader" size={14} class="animate-spin shrink-0" />
-					Loading…
+				<!-- Skeleton cards — match expected layout to prevent CLS -->
+				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+					{#each { length: Math.min(ids.length, PAGE_SIZE) } as _}
+						<div class="relative bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 h-[100px] animate-pulse">
+							<div class="absolute inset-y-0 left-0 w-[3px] bg-zinc-700"></div>
+							<div class="pl-5 pr-3 pt-3.5 pb-3.5 flex flex-col gap-2.5">
+								<div class="h-4 bg-zinc-700 rounded w-3/4"></div>
+								<div class="h-3 bg-zinc-800 rounded w-1/2"></div>
+								<div class="h-3 bg-zinc-800 rounded w-1/3"></div>
+							</div>
+						</div>
+					{/each}
 				</div>
 			{:else if fetchError}
 				<p class="text-zinc-500 text-sm">Couldn't load watchlist status. Try refreshing.</p>
 			{:else if potholes.length > 0}
 				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-					{#each potholes as pothole (pothole.id)}
+					{#each visiblePotholes as pothole (pothole.id)}
 						{@const info =
 							STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ??
 							STATUS_CONFIG.reported}
@@ -157,6 +170,16 @@
 						</div>
 					{/each}
 				</div>
+				{#if potholes.length > PAGE_SIZE}
+					<div class="mt-4 text-center">
+						<button
+							onclick={() => (showAll = !showAll)}
+							class="text-xs font-medium text-zinc-500 hover:text-sky-400 transition-colors"
+						>
+							{showAll ? 'Show fewer' : `Show ${potholes.length - PAGE_SIZE} more`}
+						</button>
+					</div>
+				{/if}
 			{/if}
 		</div>
 	</section>

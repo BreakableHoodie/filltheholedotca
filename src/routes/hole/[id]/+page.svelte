@@ -72,6 +72,28 @@
 			: `Unfilled pothole at ${pothole.address || 'this location'} in Waterloo Region. Help get it filled.`
 	);
 
+	let jsonLd = $derived(
+		JSON.stringify({
+			'@context': 'https://schema.org',
+			'@type': 'Place',
+			name: `Pothole at ${pothole.address || 'unknown location'}`,
+			description: ogDescription,
+			geo: {
+				'@type': 'GeoCoordinates',
+				latitude: pothole.lat,
+				longitude: pothole.lng
+			},
+			url: `${origin}/hole/${pothole.id}`,
+			dateCreated: pothole.created_at,
+			...(pothole.filled_at ? { dateModified: pothole.filled_at } : {}),
+			additionalProperty: [
+				{ '@type': 'PropertyValue', name: 'status', value: pothole.status },
+				{ '@type': 'PropertyValue', name: 'confirmedBy', value: pothole.confirmed_count }
+			]
+		// Prevent closing-tag sequences from ending this inline script prematurely.
+		}).replace(new RegExp('<' + '/script', 'gi'), '<\\/script')
+	);
+
 	let submitting = $state(false);
 	let showFilledForm = $state(false);
 
@@ -257,6 +279,7 @@
 	<meta property="og:image:height" content="630" />
 	<meta property="og:url" content="{origin}/hole/{pothole.id}" />
 	<meta property="og:type" content="website" />
+	{@html `<script type="application/ld+json">${jsonLd}</script>`}
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6" inert={lightboxIndex !== null}>
@@ -770,13 +793,19 @@
 			</button>
 		{/if}
 
-		<!-- Image -->
+		<!-- Image — render current + ±1 adjacent so prev/next navigate instantly -->
 		<div role="presentation" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
-			<img
-				src={photos[lightboxIndex].url}
-				alt="Pothole at {pothole.address || 'this location'} — photo {lightboxIndex + 1} of {photos.length}"
-				class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-			/>
+			{#each photos as photo, i (photo.id)}
+				{#if Math.abs(i - lightboxIndex) <= 1}
+					<img
+						src={photo.url}
+						alt="Pothole at {pothole.address || 'this location'} — photo {i + 1} of {photos.length}"
+						class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+						class:hidden={i !== lightboxIndex}
+						aria-hidden={i !== lightboxIndex}
+					/>
+				{/if}
+			{/each}
 		</div>
 
 		<!-- Next -->
