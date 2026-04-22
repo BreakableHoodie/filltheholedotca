@@ -91,7 +91,7 @@
 			{#if loading}
 				<!-- Skeleton cards — match expected layout to prevent CLS -->
 				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-					{#each { length: Math.min(ids.length, PAGE_SIZE) } as _}
+					{#each [...Array(Math.min(ids.length, PAGE_SIZE)).keys()] as i (i)}
 						<div class="relative bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 h-[100px] animate-pulse">
 							<div class="absolute inset-y-0 left-0 w-[3px] bg-zinc-700"></div>
 							<div class="pl-5 pr-3 pt-3.5 pb-3.5 flex flex-col gap-2.5">

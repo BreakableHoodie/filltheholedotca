@@ -1,5 +1,4 @@
 import { error } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
 import { logError } from '$lib/server/observability';
 import { getAdminClient } from '$lib/server/supabase';
 

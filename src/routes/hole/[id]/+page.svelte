@@ -72,7 +72,13 @@
 			: `Unfilled pothole at ${pothole.address || 'this location'} in Waterloo Region. Help get it filled.`
 	);
 
-	let jsonLd = $derived(
+	// Build the full JSON-LD <script> block as a plain string in TypeScript context.
+	// {@html jsonLdScript} then takes a simple identifier — svelte-eslint-parser handles
+	// that without issue. Embedding the template literal directly in {@html} caused the
+	// parser to enter "script element" mode on seeing "<script type=..." and then fail
+	// on the ${} expression inside it.
+	let jsonLdScript = $derived(
+		'<script type="application/ld+json">' +
 		JSON.stringify({
 			'@context': 'https://schema.org',
 			'@type': 'Place',
@@ -90,8 +96,8 @@
 				{ '@type': 'PropertyValue', name: 'status', value: pothole.status },
 				{ '@type': 'PropertyValue', name: 'confirmedBy', value: pothole.confirmed_count }
 			]
-		// Prevent closing-tag sequences from ending this inline script prematurely.
-		}).replace(new RegExp('<' + '/script', 'gi'), '<\\/script')
+		}).replace(new RegExp('<' + '/script', 'gi'), '<\\/script') +
+		'<' + '/script>'
 	);
 
 	let submitting = $state(false);
@@ -279,7 +285,8 @@
 	<meta property="og:image:height" content="630" />
 	<meta property="og:url" content="{origin}/hole/{pothole.id}" />
 	<meta property="og:type" content="website" />
-	{@html `<script type="application/ld+json">${jsonLd}</script>`}
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html jsonLdScript}
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6" inert={lightboxIndex !== null}>

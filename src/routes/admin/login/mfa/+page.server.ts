@@ -1,6 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { env } from '$env/dynamic/private';
 import { verifyTotpCode } from '$lib/server/admin-totp';
 import { decryptTotpSecret, verifyBackupCode, hashToken } from '$lib/server/admin-crypto';
 import {
