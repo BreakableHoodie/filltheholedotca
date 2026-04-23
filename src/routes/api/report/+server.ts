@@ -9,9 +9,7 @@ import { notify } from '$lib/server/pushover';
 import { postConfirmed } from '$lib/server/bluesky';
 import { logError } from '$lib/server/observability';
 import { getAdminClient } from '$lib/server/supabase';
-
-type FixturePothole = { id: string; lat: number; lng: number; confirmed_count: number };
-const fixturePotholes = new Map<string, FixturePothole>();
+import { fixturePotholes } from '$lib/server/fixture-store';
 
 const REPORT_RATE_LIMIT = 20;
 const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
@@ -58,20 +56,26 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
+		const confirmationsRequired = await getConfirmationThreshold();
 		const match = [...fixturePotholes.values()]
-			.map((p) => ({ ...p, dist: haversineMetres(lat, lng, p.lat, p.lng) }))
+			.map((p) => ({ id: p.id, dist: haversineMetres(lat, lng, p.lat, p.lng) }))
 			.filter((p) => p.dist <= MERGE_RADIUS_M)
 			.sort((a, b) => a.dist - b.dist)[0];
 
 		if (match) {
-			match.confirmed_count += 1;
-			const confirmed = match.confirmed_count >= 2;
+			const existing = fixturePotholes.get(match.id);
+			// `match.id` comes from `fixturePotholes.values()` — the entry must exist.
+			// If it's somehow missing (e.g. concurrent delete), fall through to create a new entry.
+			if (!existing) throw error(500, 'Fixture state inconsistency: pothole vanished between lookup and update');
+			const confirmed_count = existing.confirmed_count + 1;
+			fixturePotholes.set(match.id, { ...existing, confirmed_count });
+			const confirmed = confirmed_count >= confirmationsRequired;
 			return json({
 				id: match.id,
 				confirmed,
 				message: confirmed
 					? '✅ Confirmed — pothole is now live on the map!'
-					: `📍 Confirmation noted (${match.confirmed_count}/2 needed).`
+					: `📍 Confirmation noted (${confirmed_count}/${confirmationsRequired} needed).`
 			});
 		}
 
