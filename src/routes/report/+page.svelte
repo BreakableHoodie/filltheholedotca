@@ -21,6 +21,7 @@
 	let lat = $state<number | null>(null);
 	let lng = $state<number | null>(null);
 	let gpsStatus = $state<'idle' | 'loading' | 'got' | 'error'>('idle');
+	let gpsAccuracy = $state<number | null>(null);
 	let address = $state<string | null>(null);
 	let severity = $state<string | null>(null);
 	let submitting = $state(false);
@@ -119,6 +120,10 @@
 
 	function onAddressInput() {
 		if (addressDebounce) clearTimeout(addressDebounce);
+		// Clear any previously selected location — user is searching for a new one.
+		lat = null;
+		lng = null;
+		address = null;
 		addressDebounce = setTimeout(() => searchAddress(addressQuery), 300);
 	}
 
@@ -314,6 +319,7 @@
 		function onSuccess(pos: GeolocationPosition) {
 			lat = pos.coords.latitude;
 			lng = pos.coords.longitude;
+			gpsAccuracy = pos.coords.accuracy ?? null;
 			gpsStatus = 'got';
 			toast.success('Location locked in');
 			reverseGeocode(pos.coords.latitude, pos.coords.longitude);
@@ -435,7 +441,7 @@
 						type="button"
 						onclick={() => (locationMode = tab.mode)}
 						onkeydown={(event) => handleLocationTabKeydown(event, tab.mode)}
-						class="flex-1 py-1.5 px-2 rounded-md text-xs font-semibold transition-colors
+						class="flex-1 min-h-[44px] py-1.5 px-2 rounded-md text-xs font-semibold transition-colors
 							{locationMode === tab.mode
 								? 'bg-zinc-700 text-white'
 								: 'text-zinc-400 hover:text-zinc-200'}"
@@ -469,7 +475,7 @@
 						Getting your location…
 					{:else if gpsStatus === 'got'}
 						<Icon name="check" size={15} strokeWidth={2.5} class="shrink-0" />
-						GPS locked
+						GPS locked{gpsAccuracy !== null ? ` · ±${Math.round(gpsAccuracy)}m` : ''}
 					{:else if gpsStatus === 'error'}
 						<Icon name="alert-triangle" size={15} class="shrink-0" />
 						GPS failed — retry
@@ -493,7 +499,7 @@
 					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
 						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address}
-						<span class="text-zinc-600" aria-hidden="true">· via <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-zinc-400">OpenStreetMap</a></span>
+						<span>· via <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-zinc-300">OpenStreetMap</a></span>
 					</p>
 				{:else if gpsStatus === 'got'}
 					<p class="text-xs text-zinc-400">Looking up address via OpenStreetMap…</p>
@@ -521,6 +527,8 @@
 					/>
 					{#if addressSearching}
 						<p class="text-xs text-zinc-400 mt-1">Searching…</p>
+					{:else if addressQuery.length > 2 && addressSuggestions.length === 0 && lat === null}
+						<p class="text-xs text-zinc-400 mt-1" role="status" aria-live="polite">No results found — try a different address or street name.</p>
 					{/if}
 					{#if addressSuggestions.length > 0}
 						<ul
@@ -531,7 +539,7 @@
 								<li>
 									<button
 										type="button"
-										class="w-full text-left px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-700"
+										class="w-full text-left px-3 py-2.5 min-h-[44px] text-sm text-zinc-200 hover:bg-zinc-700"
 										onclick={() => selectSuggestion(s)}
 									>
 										{s.display_name}
@@ -650,7 +658,7 @@
 			<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
 		</div>
 
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3" aria-live="polite" aria-atomic="true">
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3" role="status" aria-live="polite" aria-atomic="true">
 			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
 				<Icon name="check-circle" size={14} class={hasLocation ? 'text-green-400' : 'text-zinc-400'} />
 				Ready to submit

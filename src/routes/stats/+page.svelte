@@ -1,15 +1,11 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { format } from 'date-fns';
 	import type { PageData } from './$types';
-	import type { Pothole } from '$lib/types';
-	import { COUNCILLORS } from '$lib/wards';
-	import { inWardFeature } from '$lib/geo';
 	import Icon from '$lib/components/Icon.svelte';
 	import { wardGrade } from '$lib/ward-grade';
 
 	let { data }: { data: PageData } = $props();
-	let allPotholes = $derived(data.potholes as Pothole[]);
+	let allPotholes = $derived(data.potholes);
 
 	// ── Time filter ────────────────────────────────────────────────────────────
 	type WindowDays = 30 | 90 | 365 | null;
@@ -36,6 +32,12 @@
 	let totalFilled    = $derived(filtered.filter(p => p.status === 'filled').length);
 	let totalOpen      = $derived(filtered.filter(p => p.status === 'reported' || p.status === 'expired').length);
 	let fillRate       = $derived(totalConfirmed === 0 ? null : (totalFilled / totalConfirmed) * 100);
+
+	// True when potholes exist in the window but none could be assigned a ward —
+	// indicates an ArcGIS/ward-boundary fetch failure rather than "no data".
+	let wardLookupFailed = $derived(
+		filtered.length > 0 && filtered.every((p) => (p as { ward_key: string | null }).ward_key === null)
+	);
 
 	let avgDaysToFill = $derived.by(() => {
 		const done = filtered.filter(p => p.status === 'filled' && p.filled_at);
@@ -74,23 +76,6 @@
 	);
 
 	// ── Ward leaderboard ───────────────────────────────────────────────────────
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let wardGeojson = $state<any>(null);
-	let wardLoading = $state(false);
-	let wardError   = $state(false);
-
-	onMount(async () => {
-		wardLoading = true;
-		try {
-			const res = await fetch('/api/wards.geojson');
-			if (!res.ok) throw new Error(`${res.status}`);
-			wardGeojson = await res.json();
-		} catch {
-			wardError = true;
-		} finally {
-			wardLoading = false;
-		}
-	});
 
 	interface WardRow {
 		city: string; ward: number; key: string;
@@ -107,45 +92,32 @@
 		if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = false; }
 	}
 
+	// Ward keys were assigned server-side via point-in-polygon on load.
+	// Aggregation here is O(n) over filtered potholes with no GeoJSON fetch needed.
 	let wardRows = $derived.by((): WardRow[] => {
-		if (!wardGeojson?.features?.length) return [];
-
 		const stats: Record<string, WardRow> = {};
 		const filledTimes: Record<string, number[]> = {};
 
-		for (const f of wardGeojson.features) {
-			const city = String(f.properties?.CITY ?? '');
-			const ward = Number(f.properties?.WARDID_NORM ?? 0);
-			if (!city || !ward) continue;
-			const key = `${city}-${ward}`;
-			if (key in stats) continue;
-			const councillor = COUNCILLORS.find(c => c.city === city && c.ward === ward);
-			stats[key] = {
-				city, ward, key,
-				councillorName: councillor?.name ?? '—',
-				councillorUrl:  councillor?.url  ?? '',
+		for (const w of data.wards) {
+			stats[w.key] = {
+				city: w.city, ward: w.ward, key: w.key,
+				councillorName: w.councillorName, councillorUrl: w.councillorUrl,
 				open: 0, filled: 0, total: 0, fillRate: 0, avgDays: null
 			};
 		}
 
 		for (const p of filtered) {
-			for (const f of wardGeojson.features) {
-				if (!inWardFeature(p.lng, p.lat, f.geometry)) continue;
-				const city = String(f.properties?.CITY ?? '');
-				const ward = Number(f.properties?.WARDID_NORM ?? 0);
-				const key  = `${city}-${ward}`;
-				if (!(key in stats)) break;
-				stats[key].total++;
-				if (p.status === 'filled') {
-					stats[key].filled++;
-					if (p.filled_at) {
-						const days = (new Date(p.filled_at).getTime() - new Date(p.created_at).getTime()) / 86_400_000;
-						(filledTimes[key] ??= []).push(days);
-					}
-				} else if (p.status === 'reported' || p.status === 'expired') {
-					stats[key].open++;
+			const key = p.ward_key;
+			if (!key || !(key in stats)) continue;
+			stats[key].total++;
+			if (p.status === 'filled') {
+				stats[key].filled++;
+				if (p.filled_at) {
+					const days = (new Date(p.filled_at).getTime() - new Date(p.created_at).getTime()) / 86_400_000;
+					(filledTimes[key] ??= []).push(days);
 				}
-				break;
+			} else if (p.status === 'reported' || p.status === 'expired') {
+				stats[key].open++;
 			}
 		}
 
@@ -285,24 +257,24 @@
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
 				<p class="text-xs text-zinc-500 uppercase tracking-wide">Total reported</p>
-				<p class="text-3xl font-bold text-white" aria-live="polite">{totalConfirmed}</p>
+				<p class="text-3xl font-bold text-white" role="status" aria-live="polite">{totalConfirmed}</p>
 				<p class="text-xs text-zinc-500">confirmed potholes</p>
 			</div>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
 				<p class="text-xs text-zinc-500 uppercase tracking-wide">Currently open</p>
-				<p class="text-3xl font-bold text-orange-400" aria-live="polite">{totalOpen}</p>
+				<p class="text-3xl font-bold text-orange-400" role="status" aria-live="polite">{totalOpen}</p>
 				<p class="text-xs text-zinc-500">unfilled, on the map</p>
 			</div>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
 				<p class="text-xs text-zinc-500 uppercase tracking-wide">Fill rate</p>
-				<p class="text-3xl font-bold text-sky-400" aria-live="polite">
+				<p class="text-3xl font-bold text-sky-400" role="status" aria-live="polite">
 					{fillRate === null ? '—' : `${fmt(fillRate, 0)}%`}
 				</p>
 				<p class="text-xs text-zinc-500">{totalFilled} of {totalConfirmed} filled</p>
 			</div>
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
 				<p class="text-xs text-zinc-500 uppercase tracking-wide">Avg days to fill</p>
-				<p class="text-3xl font-bold {avgDaysToFill === null ? 'text-zinc-500' : 'text-green-400'}" aria-live="polite">
+				<p class="text-3xl font-bold {avgDaysToFill === null ? 'text-zinc-500' : 'text-green-400'}" role="status" aria-live="polite">
 					{avgDaysToFill === null ? '—' : fmt(avgDaysToFill, 1)}
 				</p>
 				<p class="text-xs text-zinc-500">from report to fixed</p>
@@ -400,18 +372,11 @@
 	<section aria-labelledby="ward-heading">
 		<div class="flex items-center justify-between mb-4 flex-wrap gap-2">
 			<h2 id="ward-heading" class="section-title text-lg text-white">By ward</h2>
-			{#if wardLoading}
-				<span class="text-xs text-zinc-500 animate-pulse" aria-live="polite">Loading ward boundaries…</span>
-			{/if}
 		</div>
 
-		{#if wardError}
-			<div role="alert" class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500 text-sm">
-				Could not load ward boundaries. Try refreshing the page.
-			</div>
-		{:else if wardLoading}
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500 text-sm animate-pulse" aria-busy="true">
-				Assigning wards…
+		{#if wardLookupFailed}
+			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500 text-sm" role="status">
+				Ward boundary data is temporarily unavailable. City-level totals above are unaffected.
 			</div>
 		{:else if wardRows.length === 0}
 			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500 text-sm">

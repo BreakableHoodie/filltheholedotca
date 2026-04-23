@@ -293,7 +293,7 @@ test.describe("Map page smoke test", () => {
     await expect(marker).toBeVisible({ timeout: 10000 });
     await marker.click();
 
-    await expect(page.getByText("123 Test Street")).toBeVisible();
+    await expect(page.getByText("123 Test Street", { exact: true })).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Open details" }),
     ).toHaveAttribute("href", `/hole/${seededReportedPothole.id}`);

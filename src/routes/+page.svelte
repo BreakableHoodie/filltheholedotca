@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Sentry from '@sentry/sveltekit';
 	import { goto } from '$app/navigation';
 	import HomeIntroCard from '$lib/components/HomeIntroCard.svelte';
 	import Icon from '$lib/components/Icon.svelte';
@@ -39,6 +40,13 @@
 			.filter((pothole) => pothole.status === 'reported')
 			.sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at))
 			.slice(0, 4)
+	);
+
+	// Pre-sorted list for the sr-only aside — avoids inline sort on every render.
+	let reportedPotholesSorted = $derived(
+		potholes
+			.filter((p) => p.status === 'reported')
+			.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
 	);
 
 	// Report-here pin-drop mode
@@ -243,7 +251,7 @@
 			layers.wards = true;
 		} catch (err) {
 			toastError('Could not load ward boundaries. Try again later.');
-			console.error('[ward heatmap]', err);
+			Sentry.captureException(err, { tags: { area: 'ward-heatmap' } });
 		} finally {
 			wardLoading = false;
 		}
@@ -397,9 +405,13 @@
 
 					// Move marker from reported layer to filled layer.
 					if (result.ok) {
-						clientPotholes = potholes.map((pothole) =>
-							pothole.id === id ? { ...pothole, status: 'filled', filled_at: new Date().toISOString() } : pothole
-						);
+						// Targeted delta: mutate only the changed element so $derived consumers
+						// don't recalculate the full array on every fill action.
+						if (!clientPotholes) clientPotholes = (potholes as Pothole[]).slice();
+						const idx = clientPotholes.findIndex((p) => p.id === id);
+						if (idx !== -1) {
+							clientPotholes[idx] = { ...clientPotholes[idx], status: 'filled', filled_at: new Date().toISOString() };
+						}
 						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						const marker = (e as any).popup._source;
 						clusterGroups['reported']?.removeLayer(marker);
@@ -474,6 +486,29 @@
 
 <h1 class="sr-only">Waterloo Region Pothole Map</h1>
 
+<aside class="sr-only" aria-label="Pothole list">
+	<h2>Active potholes ({liveReportedCount})</h2>
+	{#if liveReportedCount === 0}
+		<p>No active potholes reported.</p>
+	{:else}
+		<ul>
+			{#each reportedPotholesSorted as pothole (pothole.id)}
+				<li>
+					<!-- Skip-link pattern: the link becomes a fixed overlay on keyboard focus
+					     so sighted keyboard users see where focus is. -->
+					<a
+						href="/hole/{pothole.id}"
+						class="focus:fixed focus:top-4 focus:left-4 focus:z-[2000] focus:bg-zinc-950 focus:text-sky-400 focus:px-4 focus:py-2 focus:rounded-lg focus:border focus:border-zinc-700 focus:shadow-xl focus:text-sm focus:font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+					>
+						{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
+						— confirmed by {pothole.confirmed_count} report{pothole.confirmed_count === 1 ? '' : 's'}
+					</a>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+</aside>
+
 <div class="relative w-full isolate" style="height: calc(100dvh - 57px - env(safe-area-inset-top))">
 	<div bind:this={mapEl} class="w-full h-full bg-zinc-900"></div>
 	<HomeIntroCard />
@@ -492,7 +527,7 @@
 			<div
 				class="absolute top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1001] flex flex-wrap items-center gap-2 sm:gap-3 bg-zinc-950 border border-sky-600 rounded-xl px-4 py-3 shadow-xl"
 			>
-				<span class="text-sm text-white grow" aria-live="polite" aria-atomic="true">
+				<span class="text-sm text-white grow" role="status" aria-live="polite" aria-atomic="true">
 					Tap the map where the pothole is
 				</span>
 				{#if reportLatLng}

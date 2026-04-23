@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { notify } from '$lib/server/pushover';
 import { logError } from '$lib/server/observability';
-import { stripJpegMetadata } from '$lib/server/exif-strip';
+import { stripJpegMetadata, stripPngMetadata, stripWebpMetadata } from '$lib/server/exif-strip';
 import { getAdminClient } from '$lib/server/supabase';
 
 type DetectedMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
@@ -208,11 +208,14 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 	const { mimeType, ext } = detectedType;
 
-	// Strip EXIF/XMP/ICC from JPEGs before the bytes are stored or moderated.
-	// Mobile cameras embed GPS coords, device serials, and timestamps that
-	// defeat the write-time coord rounding applied to the DB row. PNG/WebP
-	// rarely carry camera EXIF from mobile uploads and pass through untouched.
-	const cleanBytes = mimeType === 'image/jpeg' ? stripJpegMetadata(rawBytes) : rawBytes;
+	// Strip embedded metadata before storage and before sending bytes to
+	// SightEngine. Mobile cameras embed GPS coords (sub-metre precision),
+	// device serials, and timestamps — removing them ensures stored files
+	// don't reveal reporter locations beyond the rounded DB coords.
+	let cleanBytes: Uint8Array;
+	if (mimeType === 'image/jpeg') cleanBytes = stripJpegMetadata(rawBytes);
+	else if (mimeType === 'image/png') cleanBytes = stripPngMetadata(rawBytes);
+	else cleanBytes = stripWebpMetadata(rawBytes);
 
 	const photoId = crypto.randomUUID();
 	const storagePath = `${idParsed.data}/${photoId}.${ext}`;

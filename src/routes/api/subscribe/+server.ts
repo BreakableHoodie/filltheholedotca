@@ -46,7 +46,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		{
 			endpoint: parsed.data.endpoint,
 			p256dh: parsed.data.keys.p256dh,
-			auth: parsed.data.keys.auth
+			auth: parsed.data.keys.auth,
+			last_used_at: new Date().toISOString()
 		},
 		{ onConflict: 'endpoint' }
 	);

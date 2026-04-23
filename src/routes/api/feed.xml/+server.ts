@@ -60,7 +60,7 @@ function eventTime(p: { status: string; created_at: string; filled_at: string | 
 	return p.filled_at ?? p.created_at;
 }
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ request }) => {
 	// Fetch the 50 most-recently-reported (by created_at) and 50 most-recently-filled
 	// potholes separately so a fill today isn't buried by older reports. Merge and
 	// re-sort by event time (created_at for reported, filled_at for filled).
@@ -96,8 +96,8 @@ export const GET: RequestHandler = async () => {
 	);
 
 	const potholes = merged.slice(0, 100);
-	const now = new Date().toUTCString();
-	const lastBuild = potholes[0] ? new Date(eventTime(potholes[0])).toUTCString() : now;
+	// Use epoch when empty so Last-Modified is stable and 304s remain effective.
+	const lastBuild = potholes[0] ? new Date(eventTime(potholes[0])).toUTCString() : new Date(0).toUTCString();
 
 	const items = potholes
 		.map((p) => {
@@ -130,10 +130,26 @@ ${items}
   </channel>
 </rss>`;
 
+	// 304 Not Modified: skip sending the body if the CDN/client has current data.
+	// lastBuild is already the most recent event time in this feed.
+	const ifModifiedSince = request.headers.get('if-modified-since');
+	if (ifModifiedSince && new Date(ifModifiedSince) >= new Date(lastBuild)) {
+		return new Response(null, {
+			status: 304,
+			headers: {
+				'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
+				'Last-Modified': lastBuild,
+				'Access-Control-Allow-Origin': '*',
+				'Cross-Origin-Resource-Policy': 'cross-origin'
+			}
+		});
+	}
+
 	return new Response(xml, {
 		headers: {
 			'Content-Type': 'application/rss+xml; charset=utf-8',
-			'Cache-Control': 'public, max-age=300',
+			'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
+			'Last-Modified': lastBuild,
 			'Access-Control-Allow-Origin': '*',
 			'Cross-Origin-Resource-Policy': 'cross-origin'
 		}

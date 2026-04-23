@@ -71,6 +71,9 @@ export interface GeoJSONFeature {
 }
 
 const wardCache: Partial<Record<City, GeoJSONFeature[]>> = {};
+// Timestamp of the last fetch failure per city. Successful fetches clear this.
+const wardCacheFailedAt: Partial<Record<City, number>> = {};
+const WARD_FAILURE_RETRY_MS = 5 * 60 * 1000; // retry failed fetches after 5 minutes
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
 
@@ -99,13 +102,31 @@ function pointInPolygon(lng: number, lat: number, geometry: GeoJSONFeature['geom
 // ── Ward lookup ───────────────────────────────────────────────────────────────
 
 export async function fetchWards(city: City): Promise<GeoJSONFeature[]> {
-	if (wardCache[city]) return wardCache[city]!;
-	const { url } = WARD_SOURCES[city];
-	const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-	if (!res.ok) return [];
-	const geojson = await res.json();
-	wardCache[city] = geojson.features ?? [];
-	return wardCache[city]!;
+	if (city in wardCache) {
+		// Success cache — features are permanent; never re-fetch.
+		if (wardCache[city]!.length > 0) return wardCache[city]!;
+		// Failure cache — hold for 5 min to prevent thundering herd, then retry.
+		if (Date.now() - (wardCacheFailedAt[city] ?? 0) < WARD_FAILURE_RETRY_MS) {
+			return wardCache[city]!;
+		}
+	}
+	try {
+		const { url } = WARD_SOURCES[city];
+		const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+		if (!res.ok) {
+			wardCache[city] = [];
+			wardCacheFailedAt[city] = Date.now();
+			return [];
+		}
+		const geojson = await res.json();
+		wardCache[city] = geojson.features ?? [];
+		delete wardCacheFailedAt[city];
+		return wardCache[city]!;
+	} catch {
+		wardCache[city] = [];
+		wardCacheFailedAt[city] = Date.now();
+		return [];
+	}
 }
 
 export async function lookupWard(lat: number, lng: number): Promise<Councillor | null> {

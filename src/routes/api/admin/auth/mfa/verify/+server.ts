@@ -1,6 +1,5 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { env } from '$env/dynamic/private';
 import { z } from 'zod';
 import { verifyTotpCode } from '$lib/server/admin-totp';
 import {

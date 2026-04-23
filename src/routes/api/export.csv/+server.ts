@@ -64,7 +64,7 @@ function toRow(p: Row): string {
 	}).join(',');
 }
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ request }) => {
 	// Export all publicly visible potholes — pending suppressed (not confirmed).
 	// The anon key SELECT policy on `potholes` already excludes no rows beyond RLS,
 	// so we filter status explicitly to match the public intent.
@@ -78,6 +78,33 @@ export const GET: RequestHandler = async () => {
 	if (dbError) throw error(500, 'Failed to load data');
 
 	const rows = data ?? [];
+
+	// Compute Last-Modified from the most recent event in this export.
+	const lastModifiedMs = rows.reduce((max, p) => {
+		const t = Math.max(
+			new Date(p.created_at).getTime(),
+			p.filled_at ? new Date(p.filled_at).getTime() : 0,
+			p.expired_at ? new Date(p.expired_at).getTime() : 0
+		);
+		return t > max ? t : max;
+	}, 0);
+	// Use epoch (not Date.now()) when empty so the value is stable across requests.
+	const lastModified = new Date(lastModifiedMs).toUTCString();
+
+	// 304 Not Modified: skip sending the body if the CDN/client has current data.
+	const ifModifiedSince = request.headers.get('if-modified-since');
+	if (ifModifiedSince && new Date(ifModifiedSince) >= new Date(lastModified)) {
+		return new Response(null, {
+			status: 304,
+			headers: {
+				'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
+				'Last-Modified': lastModified,
+				'Access-Control-Allow-Origin': '*',
+				'Cross-Origin-Resource-Policy': 'cross-origin'
+			}
+		});
+	}
+
 	const header = COLUMNS.join(',');
 	const csv = [header, ...rows.map((p) => toRow(p as Row))].join('\r\n');
 
@@ -85,7 +112,8 @@ export const GET: RequestHandler = async () => {
 		headers: {
 			'Content-Type': 'text/csv; charset=utf-8',
 			'Content-Disposition': 'attachment; filename="fillthehole-potholes.csv"',
-			'Cache-Control': 'public, max-age=300',
+			'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
+			'Last-Modified': lastModified,
 			'Access-Control-Allow-Origin': '*',
 			'Cross-Origin-Resource-Policy': 'cross-origin',
 			'X-Row-Limit': String(ROW_LIMIT),

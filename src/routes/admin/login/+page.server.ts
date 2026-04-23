@@ -1,6 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { env } from '$env/dynamic/private';
 import { z } from 'zod';
 import { verifyPassword, hashToken } from '$lib/server/admin-crypto';
 import {
@@ -14,6 +13,7 @@ import {
 import { generateCsrfToken, CSRF_COOKIE } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 export const load: PageServerLoad = async ({ cookies, url }) => {
 	// Redirect logged-in users away from login page
 	const sessionId = cookies.get(SESSION_COOKIE);
@@ -171,6 +171,23 @@ export const actions: Actions = {
 			}
 
 			// MFA required — create challenge.
+			// SEC-1 fix: invalidate any existing valid challenges for this user before
+			// inserting a new one. Without this, rapid repeat submissions accumulate
+			// multiple simultaneously valid tokens that collectively expand the
+			// attacker's TOTP-guess window.
+			const now = new Date().toISOString();
+			const { error: invalidateError } = await getAdminClient()
+				.from('admin_mfa_challenges')
+				.update({ used: true, used_at: now })
+				.eq('user_id', user.id)
+				.eq('used', false)
+				.gt('expires_at', now);
+
+			if (invalidateError) {
+				logError('admin/login', 'Failed to invalidate prior MFA challenges', invalidateError, { userId: user.id });
+				return fail(500, { error: 'Login failed. Please try again.', email });
+			}
+
 			// M2 fix: token is stored in an HttpOnly cookie rather than the URL query string.
 			// A URL token leaks into browser history, server logs, and Referer headers.
 			const mfaToken = crypto.randomUUID();
