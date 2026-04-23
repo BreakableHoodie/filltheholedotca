@@ -10,9 +10,9 @@ async function submitLoginForm(
 	await expect(
 		page.getByRole('heading', { name: 'Sign in' }),
 	).toBeVisible()
-	await page.fill('input[name="email"]', email)
-	await page.fill('input[name="password"]', password)
-	await page.click('button[type="submit"]')
+	await page.getByLabel('Email').fill(email)
+	await page.getByLabel('Password').fill(password)
+	await page.getByRole('button', { name: 'Sign in' }).click()
 }
 
 // Helper: log in with fixture credentials and complete MFA, returning the CSRF
@@ -25,11 +25,11 @@ async function loginWithMfa(
 	await page.waitForURL(/\/admin\/login\/mfa/)
 
 	if (rememberDevice) {
-		await page.check('input[name="rememberDevice"]')
+		await page.getByLabel(/remember/i).check()
 	}
 
 	// The MFA page auto-submits on 6 digits — filling triggers the $effect.
-	await page.fill('input[name="code"]', '000000')
+	await page.getByLabel('Authenticator code').fill('000000')
 	await page.waitForURL(/\/admin\//)
 
 	const csrfToken = await page.evaluate(() =>
@@ -69,8 +69,8 @@ test.describe('Admin — MFA login flow', () => {
 		await submitLoginForm(page, 'e2e-mfa@test.local', 'e2e-password')
 		await page.waitForURL(/\/admin\/login\/mfa/)
 
-		await page.fill('input[name="code"]', '999999')
-		await page.click('button[type="submit"]')
+		// The $effect auto-submits on 6 digits — no explicit click needed.
+		await page.getByLabel('Authenticator code').fill('999999')
 		await expect(
 			page.getByText('Invalid code. Please try again.'),
 		).toBeVisible()
@@ -95,14 +95,14 @@ test.describe('Admin — MFA login flow', () => {
 		).toBeVisible()
 
 		// Switch to backup code mode
-		await page.click('button:has-text("Use a backup code instead")')
+		await page.getByRole('button', { name: 'Use a backup code instead' }).click()
 		await expect(
 			page.getByRole('heading', { name: 'Enter backup code' }),
 		).toBeVisible()
 		await expect(page.getByLabel('Backup code')).toBeVisible()
 
 		// Switch back
-		await page.click('button:has-text("Use authenticator code instead")')
+		await page.getByRole('button', { name: 'Use authenticator code instead' }).click()
 		await expect(
 			page.getByRole('heading', { name: 'Two-factor authentication' }),
 		).toBeVisible()
@@ -128,13 +128,26 @@ test.describe('Admin — MFA login flow', () => {
 		// First login with "remember device"
 		await loginWithMfa(page, { rememberDevice: true })
 
-		// Navigate away (simulate a new session start by going back to login)
+		// Capture the trusted-device token before clearing all session state.
+		// admin_session is HttpOnly so it can't be cleared via JS — use the context API.
+		const allCookies = await page.context().cookies()
+		const trustedCookie = allCookies.find((c) => c.name === 'admin_trusted_device')
+		expect(trustedCookie).toBeDefined()
+
+		// Clear every cookie (removes admin_session + admin_csrf), then restore
+		// only the trusted-device token so the login load() won't redirect us.
+		await page.context().clearCookies()
+		if (trustedCookie) {
+			await page.context().addCookies([trustedCookie])
+		}
+
+		// Navigate to login — no session present, so the form should render
 		await page.goto('/admin/login')
 
-		// Log in again — trusted device cookie should skip the MFA challenge
-		await page.fill('input[name="email"]', 'e2e-mfa@test.local')
-		await page.fill('input[name="password"]', 'e2e-password')
-		await page.click('button[type="submit"]')
+		// Log in — trusted device should bypass the MFA step entirely
+		await page.getByLabel('Email').fill('e2e-mfa@test.local')
+		await page.getByLabel('Password').fill('e2e-password')
+		await page.getByRole('button', { name: 'Sign in' }).click()
 
 		// Should land in admin without passing through /mfa
 		await expect(page).toHaveURL(/\/admin\//)
@@ -144,7 +157,7 @@ test.describe('Admin — MFA login flow', () => {
 	test('back link on MFA page returns to login', async ({ page }) => {
 		await submitLoginForm(page, 'e2e-mfa@test.local', 'e2e-password')
 		await page.waitForURL(/\/admin\/login\/mfa/)
-		await page.click('a:has-text("Back to sign in")')
+		await page.getByRole('link', { name: 'Back to sign in' }).click()
 		await expect(page).toHaveURL(/\/admin\/login$/)
 	})
 
