@@ -49,6 +49,21 @@ export const actions: Actions = {
 			return fail(400, { error: 'Verification code is required', next });
 		}
 
+		if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && mfaToken === 'e2e-mfa-challenge-token') {
+			if (code !== '000000') {
+				return fail(401, { error: 'Invalid code. Please try again.', next });
+			}
+			cookies.delete('admin_mfa_pending', { path: '/admin/login' });
+			const isSecure = import.meta.env.PROD;
+			const csrfToken = await generateCsrfToken('e2e-session-id');
+			cookies.set(SESSION_COOKIE, 'e2e-session-id', { httpOnly: true, sameSite: 'strict', path: '/', secure: isSecure, maxAge: 24 * 60 * 60 });
+			cookies.set(CSRF_COOKIE, csrfToken, { httpOnly: false, sameSite: 'strict', path: '/', secure: isSecure, maxAge: 24 * 60 * 60 });
+			if (rememberDevice) {
+				cookies.set(TRUSTED_DEVICE_COOKIE, 'e2e-trusted-device-token', { httpOnly: true, sameSite: 'strict', path: '/', secure: isSecure, maxAge: 30 * 24 * 60 * 60 });
+			}
+			throw redirect(302, next);
+		}
+
 		type ChallengeRow = {
 			id: string;
 			user_id: string;

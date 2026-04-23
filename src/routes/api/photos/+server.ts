@@ -8,6 +8,9 @@ import { logError } from '$lib/server/observability';
 import { stripJpegMetadata, stripPngMetadata, stripWebpMetadata } from '$lib/server/exif-strip';
 import { getAdminClient } from '$lib/server/supabase';
 
+type FixturePhoto = { id: string; potholeId: string; moderationStatus: 'pending' | 'deferred' };
+const fixturePhotos = new Map<string, FixturePhoto>();
+
 type DetectedMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
 type DetectedExtension = 'jpg' | 'png' | 'webp';
 
@@ -139,6 +142,12 @@ async function cleanupStorageObject(storagePath: string): Promise<void> {
 	}
 }
 
+export const DELETE: RequestHandler = async () => {
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true') throw error(405, 'Method not allowed');
+	fixturePhotos.clear();
+	return json({ ok: true });
+};
+
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	let formData: FormData;
 	try {
@@ -155,6 +164,19 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	if (!(file instanceof File)) throw error(400, 'No photo provided');
 	if (file.size > MAX_SIZE_BYTES) throw error(413, 'Photo too large (max 5 MB)');
+
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
+		const rawBytesFixture = new Uint8Array(await file.arrayBuffer());
+		const detectedFixture = detectImageType(rawBytesFixture);
+		if (!detectedFixture) throw error(400, 'Invalid file type — JPEG, PNG, or WebP only');
+		if (request.headers.get('x-e2e-moderation') === 'reject') {
+			throw error(422, 'Photo rejected by content moderation');
+		}
+		const id = crypto.randomUUID();
+		const moderationStatus = request.headers.get('x-e2e-moderation') === 'deferred' ? 'deferred' : 'pending';
+		fixturePhotos.set(id, { id, potholeId: idParsed.data, moderationStatus });
+		return json({ ok: true, id });
+	}
 
 	const ipHash = await hashIp(getClientAddress());
 

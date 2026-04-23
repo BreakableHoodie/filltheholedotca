@@ -20,6 +20,10 @@ export const PATCH: RequestHandler = async ({ request, params, locals, getClient
 	const { id } = idParsed.data;
 	const moderation_status = bodyParsed.data.action === 'approve' ? 'approved' : 'rejected';
 
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
+		return json({ ok: true, moderation_status });
+	}
+
 	const { error: updateError } = await getAdminClient()
 		.from('pothole_photos')
 		.update({ moderation_status })
@@ -47,6 +51,10 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 	if (!idParsed.success) throw error(400, 'Invalid ID');
 
 	const { id } = idParsed.data;
+
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
+		return json({ ok: true });
+	}
 
 	// Look up storage path before deleting the record
 	const { data: photo } = await getAdminClient()
