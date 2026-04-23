@@ -499,7 +499,7 @@
 					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
 						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address}
-						<span aria-hidden="true">· via <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener noreferrer" tabindex="-1" class="underline hover:text-zinc-300">OpenStreetMap</a></span>
+						<span>· via <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-zinc-300">OpenStreetMap</a></span>
 					</p>
 				{:else if gpsStatus === 'got'}
 					<p class="text-xs text-zinc-400">Looking up address via OpenStreetMap…</p>

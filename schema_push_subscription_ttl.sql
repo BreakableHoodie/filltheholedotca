@@ -18,6 +18,8 @@ alter table push_subscriptions
     alter column last_used_at set not null;
 
 -- Nightly job: delete push subscriptions not refreshed in 180 days.
+-- Unschedule first (safe no-op if job doesn't exist) to keep the migration idempotent.
+select cron.unschedule(jobid) from cron.job where jobname = 'purge-stale-push-subscriptions';
 select cron.schedule(
     'purge-stale-push-subscriptions',
     '30 4 * * *',
