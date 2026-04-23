@@ -58,20 +58,27 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
-		const match = [...fixturePotholes.values()]
-			.map((p) => ({ ...p, dist: haversineMetres(lat, lng, p.lat, p.lng) }))
-			.filter((p) => p.dist <= MERGE_RADIUS_M)
-			.sort((a, b) => a.dist - b.dist)[0];
+		// Iterate Map values directly so we hold a reference to the stored object
+		// (not a spread copy) and can mutate confirmed_count in place.
+		let closestMatch: FixturePothole | undefined;
+		let closestDist = Infinity;
+		for (const p of fixturePotholes.values()) {
+			const dist = haversineMetres(lat, lng, p.lat, p.lng);
+			if (dist <= MERGE_RADIUS_M && dist < closestDist) {
+				closestMatch = p;
+				closestDist = dist;
+			}
+		}
 
-		if (match) {
-			match.confirmed_count += 1;
-			const confirmed = match.confirmed_count >= 2;
+		if (closestMatch) {
+			closestMatch.confirmed_count += 1;
+			const confirmed = closestMatch.confirmed_count >= 2;
 			return json({
-				id: match.id,
+				id: closestMatch.id,
 				confirmed,
 				message: confirmed
 					? '✅ Confirmed — pothole is now live on the map!'
-					: `📍 Confirmation noted (${match.confirmed_count}/2 needed).`
+					: `📍 Confirmation noted (${closestMatch.confirmed_count}/2 needed).`
 			});
 		}
 

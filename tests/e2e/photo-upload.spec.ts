@@ -43,11 +43,12 @@ async function uploadPhoto(
 // Log in with fixture credentials and return the CSRF token from the cookie.
 async function adminLogin(page: import("@playwright/test").Page) {
   await page.goto("/admin/login");
-  await page.fill('input[name="email"]', "e2e-mfa@test.local");
-  await page.fill('input[name="password"]', "e2e-password");
-  await page.click('button[type="submit"]');
+  await page.getByLabel("Email").fill("e2e-mfa@test.local");
+  await page.getByLabel("Password").fill("e2e-password");
+  await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/admin\/login\/mfa/);
-  await page.fill('input[name="code"]', "000000");
+  // The MFA page auto-submits on 6 digits — filling triggers the $effect.
+  await page.getByLabel("Authenticator code").fill("000000");
   await page.waitForURL(/\/admin\//);
 
   return page.evaluate(() =>

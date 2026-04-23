@@ -85,7 +85,7 @@ const E2E_FIXTURE_SESSION_ID = 'e2e-session-id';
 
 const E2E_FIXTURE_USER: AdminUser = {
 	id: '00000000-0000-4000-8000-000000000099',
-	email: 'e2e-admin@test.local',
+	email: 'e2e-mfa@test.local',
 	firstName: 'E2E',
 	lastName: 'Admin',
 	role: 'admin',
