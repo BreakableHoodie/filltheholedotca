@@ -48,6 +48,7 @@ When in doubt about whether something belongs in the repo, leave it out.
 ## Workflow
 
 - **Create PRs proactively** — when a logical chunk of work is complete on a branch, open a PR without waiting to be asked. Use judgment: a multi-file feature, a security fix, or anything that should go through CI before merging warrants a PR. Trivial one-liner fixes on `main` may not.
+- **Security incidents** — follow `INCIDENT_RESPONSE.md` in the repo root. It covers PIPEDA breach notification obligations, per-secret rotation procedures, OPC reporting timelines, and post-incident review.
 
 ## Stack
 
