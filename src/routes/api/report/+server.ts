@@ -10,6 +10,9 @@ import { postConfirmed } from '$lib/server/bluesky';
 import { logError } from '$lib/server/observability';
 import { getAdminClient } from '$lib/server/supabase';
 
+type FixturePothole = { id: string; lat: number; lng: number; confirmed_count: number };
+const fixturePotholes = new Map<string, FixturePothole>();
+
 const REPORT_RATE_LIMIT = 20;
 const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const SEVERITY_VALUES = ['Minor damage', 'Moderate damage', 'Severe damage', 'Hazardous'] as const;
@@ -24,6 +27,12 @@ const reportSchema = z.object({
 type ConfirmationResult =
 	| { duplicate: true }
 	| { duplicate: false; confirmed_count: number; status: string };
+
+export const DELETE: RequestHandler = async () => {
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true') throw error(405, 'Method not allowed');
+	fixturePotholes.clear();
+	return json({ ok: true });
+};
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const raw = await request.json().catch(() => null);
@@ -46,6 +55,40 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			422,
 			"That location isn't in the Waterloo Region. This tool covers Kitchener, Waterloo, and Cambridge."
 		);
+	}
+
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
+		// Iterate Map values directly so we hold a reference to the stored object
+		// (not a spread copy) and can mutate confirmed_count in place.
+		let closestMatch: FixturePothole | undefined;
+		let closestDist = Infinity;
+		for (const p of fixturePotholes.values()) {
+			const dist = haversineMetres(lat, lng, p.lat, p.lng);
+			if (dist <= MERGE_RADIUS_M && dist < closestDist) {
+				closestMatch = p;
+				closestDist = dist;
+			}
+		}
+
+		if (closestMatch) {
+			closestMatch.confirmed_count += 1;
+			const confirmed = closestMatch.confirmed_count >= 2;
+			return json({
+				id: closestMatch.id,
+				confirmed,
+				message: confirmed
+					? '✅ Confirmed — pothole is now live on the map!'
+					: `📍 Confirmation noted (${closestMatch.confirmed_count}/2 needed).`
+			});
+		}
+
+		const id = crypto.randomUUID();
+		fixturePotholes.set(id, { id, lat: roundPublicCoord(lat), lng: roundPublicCoord(lng), confirmed_count: 1 });
+		return json({
+			id,
+			confirmed: false,
+			message: '📍 Pothole logged. More independent reports from this location will put it on the map.'
+		});
 	}
 
 	const ipHash = await hashIp(getClientAddress());

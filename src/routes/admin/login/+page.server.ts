@@ -36,6 +36,24 @@ export const actions: Actions = {
 		// Prevent open redirect
 		const next = rawNext.startsWith('/admin') ? rawNext : '/admin/photos';
 
+		if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && email === 'e2e-mfa@test.local') {
+			if (password !== 'e2e-password') {
+				return fail(401, { error: 'Invalid email or password', email });
+			}
+			const isSecure = import.meta.env.PROD;
+			const trustedToken = cookies.get(TRUSTED_DEVICE_COOKIE);
+			if (trustedToken === 'e2e-trusted-device-token') {
+				const csrfToken = await generateCsrfToken('e2e-session-id');
+				cookies.set(SESSION_COOKIE, 'e2e-session-id', { httpOnly: true, sameSite: 'strict', path: '/', secure: isSecure, maxAge: 24 * 60 * 60 });
+				cookies.set(CSRF_COOKIE, csrfToken, { httpOnly: false, sameSite: 'strict', path: '/', secure: isSecure, maxAge: 24 * 60 * 60 });
+				throw redirect(302, next);
+			}
+			cookies.set('admin_mfa_pending', 'e2e-mfa-challenge-token', {
+				httpOnly: true, sameSite: 'strict', path: '/admin/login', secure: isSecure, maxAge: 5 * 60
+			});
+			throw redirect(302, `/admin/login/mfa?next=${encodeURIComponent(next)}`);
+		}
+
 		const ipHash = await hashIp(getClientAddress());
 		const userAgent = request.headers.get('user-agent') ?? 'unknown';
 		// M1: Use build-time flag — url.protocol can be spoofed via reverse proxy.

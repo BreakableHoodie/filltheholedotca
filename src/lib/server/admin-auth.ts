@@ -81,9 +81,34 @@ export async function createAdminSession(
 	return sessionId;
 }
 
+const E2E_FIXTURE_SESSION_ID = 'e2e-session-id';
+
+const E2E_FIXTURE_USER: AdminUser = {
+	id: '00000000-0000-4000-8000-000000000099',
+	email: 'e2e-mfa@test.local',
+	firstName: 'E2E',
+	lastName: 'Admin',
+	role: 'admin',
+	isActive: true,
+	totpEnabled: true
+};
+
 export async function validateAdminSession(
 	sessionId: string
 ): Promise<{ user: AdminUser; session: AdminSession } | null> {
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && sessionId === E2E_FIXTURE_SESSION_ID) {
+		const now = new Date();
+		return {
+			user: E2E_FIXTURE_USER,
+			session: {
+				id: E2E_FIXTURE_SESSION_ID,
+				userId: E2E_FIXTURE_USER.id,
+				expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+				createdAt: now,
+				lastActivityAt: now
+			}
+		};
+	}
 	const { data, error: queryError } = await getAdminClient()
 		.from('admin_sessions')
 		.select(
