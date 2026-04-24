@@ -20,7 +20,7 @@ export const PATCH: RequestHandler = async ({ request, params, locals, getClient
 	const { id } = idParsed.data;
 	const moderation_status = bodyParsed.data.action === 'approve' ? 'approved' : 'rejected';
 
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true') {
 		return json({ ok: true, moderation_status });
 	}
 
@@ -52,7 +52,7 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 
 	const { id } = idParsed.data;
 
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true') {
 		return json({ ok: true });
 	}
 

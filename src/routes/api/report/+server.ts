@@ -27,7 +27,7 @@ type ConfirmationResult =
 	| { duplicate: false; confirmed_count: number; status: string };
 
 export const DELETE: RequestHandler = async () => {
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true') throw error(405, 'Method not allowed');
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true' || process.env.CI !== 'true') throw error(405, 'Method not allowed');
 	fixturePotholes.clear();
 	return json({ ok: true });
 };
@@ -55,8 +55,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		);
 	}
 
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
-		const confirmationsRequired = await getConfirmationThreshold();
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true') {
+		// Use a fixed threshold of 2 in fixture mode — avoids Supabase calls
+		// when the preview server runs with placeholder/closed-port credentials.
+		const confirmationsRequired = 2;
 		const match = [...fixturePotholes.values()]
 			.map((p) => ({ id: p.id, dist: haversineMetres(lat, lng, p.lat, p.lng) }))
 			.filter((p) => p.dist <= MERGE_RADIUS_M)
@@ -64,19 +66,21 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 		if (match) {
 			const existing = fixturePotholes.get(match.id);
-			// `match.id` comes from `fixturePotholes.values()` — the entry must exist.
-			// If it's somehow missing (e.g. concurrent delete), fall through to create a new entry.
-			if (!existing) throw error(500, 'Fixture state inconsistency: pothole vanished between lookup and update');
-			const confirmed_count = existing.confirmed_count + 1;
-			fixturePotholes.set(match.id, { ...existing, confirmed_count });
-			const confirmed = confirmed_count >= confirmationsRequired;
-			return json({
-				id: match.id,
-				confirmed,
-				message: confirmed
-					? '✅ Confirmed — pothole is now live on the map!'
-					: `📍 Confirmation noted (${confirmed_count}/${confirmationsRequired} needed).`
-			});
+			// `match.id` comes from `fixturePotholes.values()` so the entry should
+			// exist. If it has somehow been concurrently deleted, fall through and
+			// create a new entry at this location rather than crashing the test.
+			if (existing) {
+				const confirmed_count = existing.confirmed_count + 1;
+				fixturePotholes.set(match.id, { ...existing, confirmed_count });
+				const confirmed = confirmed_count >= confirmationsRequired;
+				return json({
+					id: match.id,
+					confirmed,
+					message: confirmed
+						? '✅ Confirmed — pothole is now live on the map!'
+						: `📍 Confirmation noted (${confirmed_count}/${confirmationsRequired} needed).`
+				});
+			}
 		}
 
 		const id = crypto.randomUUID();

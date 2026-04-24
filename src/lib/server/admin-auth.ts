@@ -96,7 +96,7 @@ const E2E_FIXTURE_USER: AdminUser = {
 export async function validateAdminSession(
 	sessionId: string
 ): Promise<{ user: AdminUser; session: AdminSession } | null> {
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && sessionId === E2E_FIXTURE_SESSION_ID) {
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true' && sessionId === E2E_FIXTURE_SESSION_ID) {
 		const now = new Date();
 		return {
 			user: E2E_FIXTURE_USER,
