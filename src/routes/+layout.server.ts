@@ -6,7 +6,7 @@ type Counts = { reported: number; filled: number };
 
 let cachedCounts: Counts | null = null;
 let cacheTimestamp = 0;
-const CACHE_TTL_MS = 60_000;
+const CACHE_TTL_MS = 5 * 60_000;
 
 export const load: LayoutServerLoad = async () => {
 	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
