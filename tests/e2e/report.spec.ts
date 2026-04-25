@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type StorageState } from '@playwright/test';
 
-const STORAGE_STATE = {
-	cookies: [] as never[],
+const STORAGE_STATE: StorageState = {
+	cookies: [],
 	origins: [
 		{
 			origin: 'http://localhost:4173',
@@ -34,8 +34,9 @@ test.describe('Report page readiness summary', () => {
 test.describe('GPS denial auto-redirect', () => {
 	test.use({ storageState: STORAGE_STATE });
 
-	test('switches to address tab and focuses it when geolocation is denied', async ({ page }) => {
-		// Stub getCurrentPosition to immediately invoke the error callback with PERMISSION_DENIED.
+	test('auto-switches to address tab when geolocation is denied on mount', async ({ page }) => {
+		// Stub getCurrentPosition before navigation so onMount's automatic getLocation()
+		// call immediately receives PERMISSION_DENIED — no user interaction needed.
 		await page.addInitScript(() => {
 			Object.defineProperty(navigator, 'geolocation', {
 				value: {
@@ -52,12 +53,7 @@ test.describe('GPS denial auto-redirect', () => {
 
 		await page.goto('/report');
 
-		// Scope to the GPS panel to avoid ARIA name ambiguity from the icon SVG prefix.
-		const gpsPanel = page.locator('#location-panel-gps');
-		await expect(gpsPanel).toBeVisible();
-		await gpsPanel.locator('button[type="button"]').click();
-
-		// Address tab should become selected and its panel visible.
+		// Address tab should be auto-selected (no click required).
 		const addressTab = page.getByRole('tab', { name: 'Address' });
 		await expect(addressTab).toHaveAttribute('aria-selected', 'true');
 		await expect(page.getByRole('tabpanel', { name: 'Address' })).toBeVisible();
