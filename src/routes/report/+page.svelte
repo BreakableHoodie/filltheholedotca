@@ -519,6 +519,11 @@
 					<input
 						id="address-search-input"
 						type="text"
+						role="combobox"
+						aria-autocomplete="list"
+						aria-expanded={addressSuggestions.length > 0}
+						aria-controls="address-suggestions-list"
+						aria-haspopup="listbox"
 						placeholder="Enter an address or intersection…"
 						bind:value={addressQuery}
 						oninput={onAddressInput}
@@ -532,13 +537,17 @@
 					{/if}
 					{#if addressSuggestions.length > 0}
 						<ul
+							id="address-suggestions-list"
+							role="listbox"
+							aria-label="Address suggestions"
 							data-testid="address-suggestions"
 							class="absolute z-10 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl overflow-hidden"
 						>
 							{#each addressSuggestions as s (s.display_name)}
-								<li>
+								<li role="option" aria-selected="false">
 									<button
 										type="button"
+										tabindex="-1"
 										class="w-full text-left px-3 py-2.5 min-h-[44px] text-sm text-zinc-200 hover:bg-zinc-700"
 										onclick={() => selectSuggestion(s)}
 									>

@@ -103,7 +103,7 @@
 					{/each}
 				</div>
 			{:else if fetchError}
-				<p class="text-zinc-500 text-sm">Couldn't load watchlist status. Try refreshing.</p>
+				<p class="text-zinc-400 text-sm">Couldn't load watchlist status. Try refreshing.</p>
 			{:else if potholes.length > 0}
 				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 					{#each visiblePotholes as pothole (pothole.id)}
@@ -117,7 +117,7 @@
 						{@const pillColor =
 							pothole.status === 'reported' ? 'bg-orange-500/10 text-orange-400' :
 							pothole.status === 'filled'   ? 'bg-green-500/10 text-green-400' :
-							'bg-zinc-700/60 text-zinc-500'}
+							'bg-zinc-700/60 text-zinc-400'}
 						<div class="relative bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-colors">
 							<!-- Status accent strip -->
 							<div class="absolute inset-y-0 left-0 w-[3px] {accentColor}"></div>
@@ -154,7 +154,7 @@
 								<div class="flex items-center justify-between gap-2 pt-0.5">
 									<a
 										href="/hole/{pothole.id}"
-										class="text-xs font-medium text-zinc-500 hover:text-sky-400 transition-colors"
+										class="text-xs font-medium text-zinc-400 hover:text-sky-400 transition-colors"
 										aria-label="View details for {pothole.address || 'this pothole'}"
 									>
 										View details →
@@ -175,7 +175,7 @@
 						<button
 							type="button"
 							onclick={() => (showAll = !showAll)}
-							class="text-xs font-medium text-zinc-500 hover:text-sky-400 transition-colors"
+							class="text-xs font-medium text-zinc-400 hover:text-sky-400 transition-colors"
 						>
 							{showAll ? 'Show fewer' : `Show ${potholes.length - PAGE_SIZE} more`}
 						</button>

@@ -700,7 +700,7 @@
 														{pothole.description || 'Jump to this marker to review details, share it, or mark it fixed.'}
 													</p>
 													{#if pothole.photos_published}
-														<span class="mt-1.5 inline-flex items-center gap-1 text-[11px] text-zinc-500">
+														<span class="mt-1.5 inline-flex items-center gap-1 text-[11px] text-zinc-400">
 															<Icon name="camera" size={11} />
 															Photo
 														</span>
