@@ -49,7 +49,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Verification code is required', next });
 		}
 
-		if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && mfaToken === 'e2e-mfa-challenge-token') {
+		if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true' && mfaToken === 'e2e-mfa-challenge-token') {
 			if (code !== '000000') {
 				return fail(401, { error: 'Invalid code. Please try again.', next });
 			}

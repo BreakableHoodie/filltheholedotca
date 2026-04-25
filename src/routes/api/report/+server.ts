@@ -9,9 +9,7 @@ import { notify } from '$lib/server/pushover';
 import { postConfirmed } from '$lib/server/bluesky';
 import { logError } from '$lib/server/observability';
 import { getAdminClient } from '$lib/server/supabase';
-
-type FixturePothole = { id: string; lat: number; lng: number; confirmed_count: number };
-const fixturePotholes = new Map<string, FixturePothole>();
+import { fixturePotholes } from '$lib/server/fixture-store';
 
 const REPORT_RATE_LIMIT = 20;
 const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
@@ -29,7 +27,7 @@ type ConfirmationResult =
 	| { duplicate: false; confirmed_count: number; status: string };
 
 export const DELETE: RequestHandler = async () => {
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true') throw error(405, 'Method not allowed');
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true' || process.env.CI !== 'true') throw error(405, 'Method not allowed');
 	fixturePotholes.clear();
 	return json({ ok: true });
 };
@@ -57,30 +55,34 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		);
 	}
 
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
-		// Iterate Map values directly so we hold a reference to the stored object
-		// (not a spread copy) and can mutate confirmed_count in place.
-		let closestMatch: FixturePothole | undefined;
-		let closestDist = Infinity;
-		for (const p of fixturePotholes.values()) {
-			const dist = haversineMetres(lat, lng, p.lat, p.lng);
-			if (dist <= MERGE_RADIUS_M && dist < closestDist) {
-				closestMatch = p;
-				closestDist = dist;
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true') {
+		// Use a fixed threshold of 2 in fixture mode — avoids Supabase calls
+		// when the preview server runs with placeholder/closed-port credentials.
+		const confirmationsRequired = 2;
+		const match = [...fixturePotholes.values()]
+			.map((p) => ({ id: p.id, dist: haversineMetres(lat, lng, p.lat, p.lng) }))
+			.filter((p) => p.dist <= MERGE_RADIUS_M)
+			.sort((a, b) => a.dist - b.dist)[0];
+
+		if (match) {
+			const existing = fixturePotholes.get(match.id);
+			// `match.id` comes from `fixturePotholes.values()` so the entry should
+			// exist. If it has somehow been concurrently deleted, fall through and
+			// create a new entry at this location rather than crashing the test.
+			if (existing) {
+				const confirmed_count = existing.confirmed_count + 1;
+				fixturePotholes.set(match.id, { ...existing, confirmed_count });
+				const confirmed = confirmed_count >= confirmationsRequired;
+				return json({
+					id: match.id,
+					confirmed,
+					message: confirmed
+						? '✅ Confirmed — pothole is now live on the map!'
+						: `📍 Confirmation noted (${confirmed_count}/${confirmationsRequired} needed).`
+				});
 			}
 		}
 
-		if (closestMatch) {
-			closestMatch.confirmed_count += 1;
-			const confirmed = closestMatch.confirmed_count >= 2;
-			return json({
-				id: closestMatch.id,
-				confirmed,
-				message: confirmed
-					? '✅ Confirmed — pothole is now live on the map!'
-					: `📍 Confirmation noted (${closestMatch.confirmed_count}/2 needed).`
-			});
-		}
 
 		const id = crypto.randomUUID();
 		fixturePotholes.set(id, { id, lat: roundPublicCoord(lat), lng: roundPublicCoord(lng), confirmed_count: 1 });

@@ -4,12 +4,18 @@ import adapter from '@sveltejs/adapter-netlify';
 const config = {
 	kit: {
 		adapter: adapter(),
-		// Disable SvelteKit's built-in Origin check in E2E test builds so that
-		// Playwright's APIRequestContext can POST multipart/form-data to /api/photos
-		// without a framework-level 403. Custom CSRF protection for admin routes
-		// lives in hooks.server.ts and is unaffected by this flag.
+		// Disable SvelteKit's built-in Origin check only for CI-backed E2E test
+		// builds so that Playwright's APIRequestContext can POST
+		// multipart/form-data to /api/photos without a framework-level 403.
+		// Custom CSRF protection for admin routes lives in hooks.server.ts and
+		// is unaffected by this flag. Requiring CI reduces the impact of an
+		// environment misconfiguration that might otherwise disable origin
+		// checks outside automated test runs.
 		csrf: {
-			checkOrigin: process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true'
+			checkOrigin: !(
+				process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' &&
+				process.env.CI === 'true'
+			)
 		},
 		// H2: Nonce-based CSP removes the need for 'unsafe-inline' in script-src.
 		// SvelteKit generates a fresh nonce per request, injects it into all inline

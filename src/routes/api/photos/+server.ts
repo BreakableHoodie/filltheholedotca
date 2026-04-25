@@ -7,6 +7,7 @@ import { notify } from '$lib/server/pushover';
 import { logError } from '$lib/server/observability';
 import { stripJpegMetadata, stripPngMetadata, stripWebpMetadata } from '$lib/server/exif-strip';
 import { getAdminClient } from '$lib/server/supabase';
+import { fixturePotholes } from '$lib/server/fixture-store';
 
 type FixturePhoto = { id: string; potholeId: string; moderationStatus: 'pending' | 'deferred' };
 const fixturePhotos = new Map<string, FixturePhoto>();
@@ -143,7 +144,7 @@ async function cleanupStorageObject(storagePath: string): Promise<void> {
 }
 
 export const DELETE: RequestHandler = async () => {
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true') throw error(405, 'Method not allowed');
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true' || process.env.CI !== 'true') throw error(405, 'Method not allowed');
 	fixturePhotos.clear();
 	return json({ ok: true });
 };
@@ -165,7 +166,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!(file instanceof File)) throw error(400, 'No photo provided');
 	if (file.size > MAX_SIZE_BYTES) throw error(413, 'Photo too large (max 5 MB)');
 
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true') {
+		// Mirror the real endpoint's pothole existence check against the fixture store.
+		if (!fixturePotholes.has(idParsed.data)) throw error(404, 'Pothole not found');
 		const rawBytesFixture = new Uint8Array(await file.arrayBuffer());
 		const detectedFixture = detectImageType(rawBytesFixture);
 		if (!detectedFixture) throw error(400, 'Invalid file type — JPEG, PNG, or WebP only');

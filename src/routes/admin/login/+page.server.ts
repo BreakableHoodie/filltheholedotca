@@ -36,7 +36,7 @@ export const actions: Actions = {
 		// Prevent open redirect
 		const next = rawNext.startsWith('/admin') ? rawNext : '/admin/photos';
 
-		if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && email === 'e2e-mfa@test.local') {
+		if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true' && email === 'e2e-mfa@test.local') {
 			if (password !== 'e2e-password') {
 				return fail(401, { error: 'Invalid email or password', email });
 			}
