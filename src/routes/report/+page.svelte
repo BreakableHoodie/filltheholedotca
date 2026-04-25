@@ -379,20 +379,26 @@
 				try {
 					const photoRes = await fetch('/api/photos', { method: 'POST', body: fd });
 					if (!photoRes.ok) {
-						let uploadMessage = 'Photo upload failed';
-						try {
-							const photoResult = await photoRes.json();
-							if (typeof photoResult?.message === 'string' && photoResult.message.length > 0) {
-								uploadMessage = photoResult.message;
+						let uploadMessage: string;
+						if (photoRes.status === 422) {
+							uploadMessage = 'Photo flagged by content moderation — please upload a photo of the pothole only.';
+						} else if (photoRes.status === 429) {
+							uploadMessage = 'Too many photo uploads this hour — try again later.';
+						} else {
+							try {
+								const photoResult = await photoRes.json();
+								uploadMessage =
+									typeof photoResult?.message === 'string' && photoResult.message.length > 0
+										? photoResult.message
+										: 'Upload failed — try again in a moment.';
+							} catch {
+								uploadMessage = 'Upload failed — try again in a moment.';
 							}
-						} catch {
-							// Keep generic message when response body is not JSON.
 						}
-						toastError(`Report submitted, but photo was not uploaded: ${uploadMessage}`);
+						toastError(`Your report was saved, but the photo wasn't uploaded. ${uploadMessage}`);
 					}
 				} catch {
-					// Photo upload failure does not block navigation
-					toastError('Report submitted, but photo was not uploaded due to a network error');
+					toastError('Your report was saved, but the photo wasn\'t uploaded due to a network error — try again in a moment.');
 				}
 			}
 
