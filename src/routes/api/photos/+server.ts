@@ -12,9 +12,6 @@ import { fixturePotholes } from '$lib/server/fixture-store';
 type FixturePhoto = { id: string; potholeId: string; moderationStatus: 'pending' | 'deferred' };
 const fixturePhotos = new Map<string, FixturePhoto>();
 
-type FixturePhoto = { id: string; potholeId: string; moderationStatus: 'pending' | 'deferred' };
-const fixturePhotos = new Map<string, FixturePhoto>();
-
 type DetectedMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
 type DetectedExtension = 'jpg' | 'png' | 'webp';
 

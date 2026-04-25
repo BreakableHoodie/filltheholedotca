@@ -11,9 +11,6 @@ import { logError } from '$lib/server/observability';
 import { getAdminClient } from '$lib/server/supabase';
 import { fixturePotholes } from '$lib/server/fixture-store';
 
-type FixturePothole = { id: string; lat: number; lng: number; confirmed_count: number };
-const fixturePotholes = new Map<string, FixturePothole>();
-
 const REPORT_RATE_LIMIT = 20;
 const REPORT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const SEVERITY_VALUES = ['Minor damage', 'Moderate damage', 'Severe damage', 'Hazardous'] as const;

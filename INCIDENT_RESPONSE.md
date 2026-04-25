@@ -168,8 +168,8 @@ for questions.
 
 ### Record Keeping
 
-**All breaches** — regardless of RROSH — must be recorded and retained for **24 months**
-from the date the breach occurred (not discovery date).
+**All breaches** — regardless of RROSH — must be recorded and retained for **at least 24 months**
+from the date the organization determines that a breach has occurred.
 
 Maintain a private breach log (not in the public repo) with:
 - Date of breach / Date of discovery
