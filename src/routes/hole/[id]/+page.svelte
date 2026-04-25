@@ -302,9 +302,12 @@
 						<p class="text-sm text-zinc-300">
 							Your report is saved and waiting for independent confirmation before it appears on the public map.
 						</p>
-						<p class="text-xs text-zinc-400 tabular-nums">
-							Progress: {pothole.confirmed_count}/{confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}
-						</p>
+						<div class="space-y-1">
+							<div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden" role="progressbar" aria-valuenow={pothole.confirmed_count} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-label="Confirmation progress">
+								<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{Math.min(100, (pothole.confirmed_count / confirmationThreshold) * 100)}%"></div>
+							</div>
+							<p class="text-xs text-zinc-500 tabular-nums">{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</p>
+						</div>
 					{:else if pothole.status === 'reported'}
 						<p class="text-sm text-zinc-300">
 							This pothole is now live on the public map. Share the link or report it officially to help it get fixed faster.
@@ -374,8 +377,8 @@
 
 	<!-- Pending notice -->
 	{#if pothole.status === 'pending'}
-		<div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 text-center space-y-1.5">
-			<p class="flex items-center justify-center gap-2 text-zinc-300 font-semibold">
+		<div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 space-y-3">
+			<p class="flex items-center gap-2 text-zinc-300 font-semibold">
 				<Icon name="clock" size={16} class="text-zinc-400 shrink-0" />
 				Awaiting confirmation
 			</p>
@@ -383,9 +386,15 @@
 				This pothole needs independent reports from others physically at this location before
 				it appears on the public map.
 			</p>
-			<p class="text-zinc-600 text-xs mt-2 tabular-nums">
-				Confirmations: {pothole.confirmed_count}/{data.confirmationThreshold}
-			</p>
+			<div class="space-y-1.5">
+				<div class="flex items-center justify-between text-xs text-zinc-500 tabular-nums">
+					<span>{pothole.confirmed_count} of {data.confirmationThreshold} confirmation{data.confirmationThreshold === 1 ? '' : 's'}</span>
+					<span>{data.confirmationThreshold - pothole.confirmed_count} more needed</span>
+				</div>
+				<div class="h-2 bg-zinc-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={pothole.confirmed_count} aria-valuemin={0} aria-valuemax={data.confirmationThreshold} aria-label="Confirmation progress">
+					<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{Math.min(100, (pothole.confirmed_count / data.confirmationThreshold) * 100)}%"></div>
+				</div>
+			</div>
 		</div>
 	{/if}
 
