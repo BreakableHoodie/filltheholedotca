@@ -7,6 +7,13 @@
 	import { page } from '$app/state';
 	import '../app.css';
 	import type { LayoutData } from './$types';
+	// ?url tells Vite to emit the file as an asset and resolve to its hashed URL,
+	// giving us correct preload hrefs without hardcoding build-time hashes.
+	import barlowBold from '@fontsource/barlow-condensed/files/barlow-condensed-latin-700-normal.woff2?url';
+	import publicSans400 from '@fontsource/public-sans/files/public-sans-latin-400-normal.woff2?url';
+	import publicSans500 from '@fontsource/public-sans/files/public-sans-latin-500-normal.woff2?url';
+	import publicSans600 from '@fontsource/public-sans/files/public-sans-latin-600-normal.woff2?url';
+	import publicSans700 from '@fontsource/public-sans/files/public-sans-latin-700-normal.woff2?url';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 	let counts = $derived(data.counts);
@@ -15,6 +22,12 @@
 <svelte:head>
 	<title>Waterloo Region Pothole Tracker — FillTheHole.ca</title>
 	<link rel="canonical" href="https://fillthehole.ca{page.url.pathname}" />
+	<!-- Preload critical fonts — eliminates the CSS @import waterfall for first paint -->
+	<link rel="preload" href={barlowBold} as="font" type="font/woff2" crossorigin="anonymous" />
+	<link rel="preload" href={publicSans400} as="font" type="font/woff2" crossorigin="anonymous" />
+	<link rel="preload" href={publicSans500} as="font" type="font/woff2" crossorigin="anonymous" />
+	<link rel="preload" href={publicSans600} as="font" type="font/woff2" crossorigin="anonymous" />
+	<link rel="preload" href={publicSans700} as="font" type="font/woff2" crossorigin="anonymous" />
 </svelte:head>
 
 <div class="flex flex-col min-h-screen bg-zinc-950">
