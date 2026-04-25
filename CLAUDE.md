@@ -175,13 +175,16 @@ Run migrations in this order:
 15. `schema_review_fixes.sql` — RLS hardening; drops public read on `pothole_confirmations`
 16. `schema_rate_limit_cleanup.sql` — pg_cron purge job for `api_rate_limit_events` older than 90 days (PIPEDA data minimization)
 17. `schema_push_subscription_ttl.sql` — adds `last_used_at` to `push_subscriptions`; pg_cron purge job for subscriptions not refreshed in 180 days (PIPEDA data minimization)
+18. `schema_audit_ttl.sql` — pg_cron purge jobs for `admin_auth_attempts` (90 days) and `admin_audit_log` (24 months) (PIPEDA data minimization)
 
-Four `pg_cron` jobs run nightly:
+Six `pg_cron` jobs run nightly:
 
 - `expire-old-potholes` (03:00 UTC): sets `status = 'expired'` on `reported` potholes older than 90 days.
 - `expire-stale-pending` (03:30 UTC): sets `status = 'expired'` on `pending` potholes older than 14 days (anti-suppression).
 - `purge-rate-limit-events` (04:00 UTC): deletes `api_rate_limit_events` rows older than 90 days (PIPEDA data minimization).
 - `purge-stale-push-subscriptions` (04:30 UTC): deletes `push_subscriptions` rows where `last_used_at` is older than 180 days (PIPEDA data minimization).
+- `purge-admin-auth-attempts` (05:00 UTC): deletes `admin_auth_attempts` rows older than 90 days (PIPEDA data minimization).
+- `purge-admin-audit-log` (05:30 UTC): deletes `admin_audit_log` rows older than 24 months (PIPEDA breach investigation minimum).
 
 ## Status Flow
 
