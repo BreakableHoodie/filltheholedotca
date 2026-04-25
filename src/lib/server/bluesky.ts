@@ -31,7 +31,12 @@ async function createSession(): Promise<Session | null> {
 		return null;
 	}
 
-	return res.json() as Promise<Session>;
+	try {
+		return (await res.json()) as Session;
+	} catch (e) {
+		logError('bluesky/session', 'Failed to parse Bluesky session response', e);
+		return null;
+	}
 }
 
 /**
