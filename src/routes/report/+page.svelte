@@ -310,8 +310,8 @@
 
 	async function getLocation() {
 		if (!navigator.geolocation) {
-			toastError('Geolocation not supported on this device');
-			gpsStatus = 'error';
+			locationMode = 'address';
+			toastError('Geolocation not supported — enter an address instead');
 			return;
 		}
 		gpsStatus = 'loading';
@@ -327,8 +327,10 @@
 
 		function onError(err: GeolocationPositionError) {
 			if (err.code === 1) {
-				gpsStatus = 'error';
-				toastError('Location access denied — enable it in your browser settings and retry');
+				// Permission denied — retry won't help; switch to address entry automatically.
+				locationMode = 'address';
+				gpsStatus = 'idle';
+				toastError('Location access denied — enter an address instead');
 				return;
 			}
 
