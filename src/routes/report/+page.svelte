@@ -66,9 +66,29 @@
 	let addressQuery = $state('');
 	let addressSuggestions = $state<Array<{ lat: string; lon: string; display_name: string }>>([]);
 	let addressSearching = $state(false);
+	let addressActiveIndex = $state(-1);
 	let addressDebounce: ReturnType<typeof setTimeout> | null = null;
 	let addressAbortController: AbortController | null = null;
 	let reverseGeocodeAbortController: AbortController | null = null;
+
+	// Reset keyboard-active option whenever the suggestion list changes.
+	$effect(() => { void addressSuggestions; addressActiveIndex = -1; });
+
+	function onAddressKeydown(e: KeyboardEvent) {
+		if (addressSuggestions.length === 0) return;
+		if (e.key === 'ArrowDown') {
+			e.preventDefault();
+			addressActiveIndex = (addressActiveIndex + 1) % addressSuggestions.length;
+		} else if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			addressActiveIndex = (addressActiveIndex - 1 + addressSuggestions.length) % addressSuggestions.length;
+		} else if (e.key === 'Enter' && addressActiveIndex >= 0) {
+			e.preventDefault();
+			selectSuggestion(addressSuggestions[addressActiveIndex]);
+		} else if (e.key === 'Escape') {
+			addressSuggestions = [];
+		}
+	}
 
 	// Waterloo Region bounding box for Nominatim: minLon,minLat,maxLon,maxLat
 	const WR_VIEWBOX = '-80.59,43.32,-80.22,43.53';
@@ -522,11 +542,19 @@
 						role="combobox"
 						aria-autocomplete="list"
 						aria-expanded={addressSuggestions.length > 0}
-						aria-controls="address-suggestions-list"
+						aria-controls={addressSuggestions.length > 0 ? 'address-suggestions-list' : undefined}
+						aria-activedescendant={addressActiveIndex >= 0 ? `address-suggestion-${addressActiveIndex}` : undefined}
 						aria-haspopup="listbox"
 						placeholder="Enter an address or intersection…"
 						bind:value={addressQuery}
 						oninput={onAddressInput}
+						onkeydown={onAddressKeydown}
+						onblur={(e: FocusEvent) => {
+							const related = e.relatedTarget as HTMLElement | null;
+							if (!related?.closest('#address-suggestions-list')) {
+								addressSuggestions = [];
+							}
+						}}
 						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500"
 						autocomplete="off"
 					/>
@@ -543,12 +571,12 @@
 							data-testid="address-suggestions"
 							class="absolute z-10 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl overflow-hidden"
 						>
-							{#each addressSuggestions as s (s.display_name)}
-								<li role="option" aria-selected="false">
+							{#each addressSuggestions as s, i (s.display_name)}
+								<li id="address-suggestion-{i}" role="option" aria-selected={i === addressActiveIndex}>
 									<button
 										type="button"
 										tabindex="-1"
-										class="w-full text-left px-3 py-2.5 min-h-[44px] text-sm text-zinc-200 hover:bg-zinc-700"
+										class="w-full text-left px-3 py-2.5 min-h-[44px] text-sm text-zinc-200 hover:bg-zinc-700 {i === addressActiveIndex ? 'bg-zinc-700' : ''}"
 										onclick={() => selectSuggestion(s)}
 									>
 										{s.display_name}
