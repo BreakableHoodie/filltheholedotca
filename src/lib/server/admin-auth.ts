@@ -297,20 +297,24 @@ export async function recordAuthAttempt(params: {
 	success: boolean;
 	failureReason?: string;
 }): Promise<void> {
-	const { error: insertError } = await getAdminClient().from('admin_auth_attempts').insert({
-		user_id: params.userId ?? null,
-		email: params.email,
-		ip_address: params.ipHash,
-		user_agent: params.userAgent,
-		attempt_type: params.attemptType,
-		success: params.success,
-		failure_reason: params.failureReason ?? null
-	});
-	if (insertError) {
-		logError('admin-auth/record-attempt', 'Failed to record auth attempt — audit trail entry lost', insertError, {
-			attemptType: params.attemptType,
-			success: params.success
+	try {
+		const { error: insertError } = await getAdminClient().from('admin_auth_attempts').insert({
+			user_id: params.userId ?? null,
+			email: params.email,
+			ip_address: params.ipHash,
+			user_agent: params.userAgent,
+			attempt_type: params.attemptType,
+			success: params.success,
+			failure_reason: params.failureReason ?? null
 		});
+		if (insertError) {
+			logError('admin-auth/record-attempt', 'Failed to record auth attempt — audit trail entry lost', insertError, {
+				attemptType: params.attemptType,
+				success: params.success
+			});
+		}
+	} catch (e) {
+		logError('admin-auth/record-attempt', 'Unexpected error recording auth attempt', e);
 	}
 }
 
