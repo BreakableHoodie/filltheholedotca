@@ -308,9 +308,16 @@
 		}
 	}
 
+	function focusAddressTab() {
+		queueMicrotask(() => {
+			(document.getElementById('location-tab-address') as HTMLButtonElement | null)?.focus();
+		});
+	}
+
 	async function getLocation() {
 		if (!navigator.geolocation) {
 			locationMode = 'address';
+			focusAddressTab();
 			toastError('Geolocation not supported — enter an address instead');
 			return;
 		}
@@ -330,6 +337,7 @@
 				// Permission denied — retry won't help; switch to address entry automatically.
 				locationMode = 'address';
 				gpsStatus = 'idle';
+				focusAddressTab();
 				toastError('Location access denied — enter an address instead');
 				return;
 			}
