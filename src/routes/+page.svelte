@@ -272,6 +272,24 @@
 
 		LRef = L;
 
+		// Pre-build one divIcon per status — reused for every marker of that type.
+		const markerIcons: Record<string, import('leaflet').DivIcon> = {};
+		for (const [status, info] of Object.entries(STATUS_CONFIG)) {
+			markerIcons[status] = L.divIcon({
+				html: `<div class="pothole-marker pothole-marker--${status}" title="${info.label}">${makeSvgIcon(info.icon)}</div>`,
+				className: '',
+				iconSize: [32, 32],
+				iconAnchor: [16, 16]
+			});
+		}
+		// Report-mode pin shares the 'reported' style but anchors at bottom-center.
+		const reportPinIcon = L.divIcon({
+			html: `<div class="pothole-marker pothole-marker--reported">${makeSvgIcon('map-pin')}</div>`,
+			className: '',
+			iconSize: [32, 32],
+			iconAnchor: [16, 32]
+		});
+
 		const map = L.map(mapEl, {
 			center: [43.425, -80.42],
 			zoom: 11
@@ -308,13 +326,7 @@
 			if (!(layerKey in clusterGroups)) continue;
 
 			const info = STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported;
-			const svgContent = makeSvgIcon(info.icon);
-			const icon = L.divIcon({
-				html: `<div class="pothole-marker pothole-marker--${pothole.status}" title="${info.label}">${svgContent}</div>`,
-				className: '',
-				iconSize: [32, 32],
-				iconAnchor: [16, 16]
-			});
+			const icon = markerIcons[pothole.status] ?? markerIcons['reported'];
 			const marker = L.marker([pothole.lat, pothole.lng], { icon });
 			markersById[pothole.id] = marker;
 
@@ -431,13 +443,7 @@
 			if (reportPin) {
 				reportPin.setLatLng(e.latlng);
 			} else {
-				const reportIcon = L.divIcon({
-					html: `<div class="pothole-marker pothole-marker--reported">${makeSvgIcon('map-pin')}</div>`,
-					className: '',
-					iconSize: [32, 32],
-					iconAnchor: [16, 32]
-				});
-				reportPin = L.marker(e.latlng, { draggable: true, zIndexOffset: 1000, icon: reportIcon }).addTo(map);
+				reportPin = L.marker(e.latlng, { draggable: true, zIndexOffset: 1000, icon: reportPinIcon }).addTo(map);
 				reportPin.on('dragend', () => {
 					const pos = reportPin!.getLatLng();
 					reportLatLng = { lat: pos.lat, lng: pos.lng };
