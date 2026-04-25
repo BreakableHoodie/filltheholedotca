@@ -65,6 +65,7 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 	);
 
 	if (expired.length > 0) {
-		await db.from('push_subscriptions').delete().in('endpoint', expired);
+		const { error: deleteError } = await db.from('push_subscriptions').delete().in('endpoint', expired);
+		if (deleteError) logError('webpush', 'Failed to remove expired push subscriptions', deleteError);
 	}
 }
