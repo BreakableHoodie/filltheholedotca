@@ -761,9 +761,22 @@
 		</div>
 	{/if}
 
-	{#if potholes.length === 0}
-		<div class="absolute top-4 left-1/2 -translate-x-1/2 bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2 text-sm text-zinc-400 z-[1000]">
-			No potholes yet —&nbsp;<a href="/report" class="text-sky-400 hover:text-sky-300 underline">be the first to report one!</a>
+	{#if potholes.length === 0 && mapReady}
+		<div class="absolute inset-0 flex items-center justify-center z-[1000] pointer-events-none">
+			<div class="pointer-events-auto bg-zinc-950/95 border border-zinc-700 rounded-2xl px-8 py-6 max-w-xs w-full mx-4 text-center shadow-2xl">
+				<div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-3">
+					<Icon name="map-pin" size={18} class="text-sky-400" />
+				</div>
+				<h2 class="text-sm font-semibold text-white mb-1">No potholes reported yet</h2>
+				<p class="text-xs text-zinc-400 mb-4">Be the first to put Waterloo Region's roads on the map.</p>
+				<a
+					href="/report"
+					class="inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+				>
+					<Icon name="plus" size={13} strokeWidth={2.5} />
+					Report a pothole
+				</a>
+			</div>
 		</div>
 	{/if}
 

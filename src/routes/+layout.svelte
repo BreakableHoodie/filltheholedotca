@@ -106,4 +106,7 @@
 	</footer>
 </div>
 
-<Toaster richColors position="bottom-center" />
+<!-- Fixed overlay keeps Toaster out of document flow regardless of hydration timing. -->
+<div style="position:fixed;inset:0;z-index:9999;pointer-events:none" aria-live="off">
+	<Toaster richColors position="bottom-center" />
+</div>
