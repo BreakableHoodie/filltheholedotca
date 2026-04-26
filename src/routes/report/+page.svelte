@@ -328,10 +328,17 @@
 		}
 	}
 
+	function focusAddressTab() {
+		queueMicrotask(() => {
+			(document.getElementById('location-tab-address') as HTMLButtonElement | null)?.focus();
+		});
+	}
+
 	async function getLocation() {
 		if (!navigator.geolocation) {
-			toastError('Geolocation not supported on this device');
-			gpsStatus = 'error';
+			locationMode = 'address';
+			focusAddressTab();
+			toastError('Geolocation not supported — enter an address instead');
 			return;
 		}
 		gpsStatus = 'loading';
@@ -347,8 +354,11 @@
 
 		function onError(err: GeolocationPositionError) {
 			if (err.code === 1) {
-				gpsStatus = 'error';
-				toastError('Location access denied — enable it in your browser settings and retry');
+				// Permission denied — retry won't help; switch to address entry automatically.
+				locationMode = 'address';
+				gpsStatus = 'idle';
+				focusAddressTab();
+				toastError('Location access denied — enter an address instead');
 				return;
 			}
 
@@ -397,20 +407,26 @@
 				try {
 					const photoRes = await fetch('/api/photos', { method: 'POST', body: fd });
 					if (!photoRes.ok) {
-						let uploadMessage = 'Photo upload failed';
-						try {
-							const photoResult = await photoRes.json();
-							if (typeof photoResult?.message === 'string' && photoResult.message.length > 0) {
-								uploadMessage = photoResult.message;
+						let uploadMessage: string;
+						if (photoRes.status === 422) {
+							uploadMessage = 'Photo flagged by content moderation — please upload a photo of the pothole only.';
+						} else if (photoRes.status === 429) {
+							uploadMessage = 'Too many photo uploads this hour — try again later.';
+						} else {
+							try {
+								const photoResult = await photoRes.json();
+								uploadMessage =
+									typeof photoResult?.message === 'string' && photoResult.message.length > 0
+										? photoResult.message
+										: 'Upload failed — try again in a moment.';
+							} catch {
+								uploadMessage = 'Upload failed — try again in a moment.';
 							}
-						} catch {
-							// Keep generic message when response body is not JSON.
 						}
-						toastError(`Report submitted, but photo was not uploaded: ${uploadMessage}`);
+						toastError(`Your report was saved, but the photo wasn't uploaded. ${uploadMessage}`);
 					}
 				} catch {
-					// Photo upload failure does not block navigation
-					toastError('Report submitted, but photo was not uploaded due to a network error');
+					toastError('Your report was saved, but the photo wasn\'t uploaded due to a network error — try again in a moment.');
 				}
 			}
 
@@ -507,7 +523,7 @@
 
 				{#if gpsStatus === 'error'}
 					<p class="text-xs text-red-400" role="alert">
-						Location access was denied or unavailable. Enable it in your browser settings, or use address or map mode instead.
+						Could not get your location — signal may be weak. Try moving outside, or use address or map mode instead.
 					</p>
 					<p class="text-xs text-zinc-400">
 						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-zinc-300 transition-colors">Enter an address</button>

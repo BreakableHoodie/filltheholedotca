@@ -1,17 +1,17 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('Report page readiness summary', () => {
-	test.use({
-		storageState: {
-			cookies: [],
-			origins: [
-				{
-					origin: 'http://localhost:4173',
-					localStorage: [{ name: 'fth-home-intro-dismissed', value: '1' }]
-				}
-			]
+const STORAGE_STATE = {
+	cookies: [] as never[],
+	origins: [
+		{
+			origin: 'http://localhost:4173',
+			localStorage: [{ name: 'fth-home-intro-dismissed', value: '1' }]
 		}
-	});
+	]
+};
+
+test.describe('Report page readiness summary', () => {
+	test.use({ storageState: STORAGE_STATE });
 
 	test('prompts for a location before submit is enabled', async ({ page }) => {
 		await page.goto('/report');
@@ -30,3 +30,50 @@ test.describe('Report page readiness summary', () => {
 		await expect(page.getByRole('button', { name: /Submit report/i })).toBeEnabled();
 	});
 });
+
+test.describe('GPS denial auto-redirect', () => {
+	test.use({ storageState: STORAGE_STATE });
+
+	test('auto-switches to address tab when geolocation is denied on mount', async ({ page }) => {
+		// Stub getCurrentPosition before navigation so onMount's automatic getLocation()
+		// call immediately receives PERMISSION_DENIED — no user interaction needed.
+		await page.addInitScript(() => {
+			Object.defineProperty(navigator, 'geolocation', {
+				value: {
+					getCurrentPosition: (
+						_success: PositionCallback,
+						error: PositionErrorCallback
+					) => {
+						error({ code: 1, message: 'Permission denied', PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 } as GeolocationPositionError);
+					}
+				},
+				configurable: true
+			});
+		});
+
+		await page.goto('/report');
+
+		// Address tab should be auto-selected (no click required).
+		const addressTab = page.getByRole('tab', { name: 'Address' });
+		await expect(addressTab).toHaveAttribute('aria-selected', 'true');
+		await expect(page.getByRole('tabpanel', { name: 'Address' })).toBeVisible();
+	});
+
+	test('auto-switches to address tab when geolocation is unsupported', async ({ page }) => {
+		// Remove navigator.geolocation entirely to simulate an unsupported browser.
+		await page.addInitScript(() => {
+			Object.defineProperty(navigator, 'geolocation', {
+				value: undefined,
+				configurable: true
+			});
+		});
+
+		await page.goto('/report');
+
+		// onMount detects missing geolocation and auto-switches without any click.
+		const addressTab = page.getByRole('tab', { name: 'Address' });
+		await expect(addressTab).toHaveAttribute('aria-selected', 'true');
+		await expect(page.getByRole('tabpanel', { name: 'Address' })).toBeVisible();
+	});
+});
+
