@@ -105,7 +105,8 @@ test.describe("Pothole detail page", () => {
     await expect(
       page.getByText(/waiting for independent confirmation/i),
     ).toBeVisible();
-    await expect(page.getByText(/Progress: 1\/2 confirmations/i)).toBeVisible();
+    await expect(page.getByRole('progressbar', { name: /Confirmation progress/i })).toBeVisible();
+    await expect(page.getByText(/1 of 2 confirmations/i)).toBeVisible();
     await expect(
       page.getByRole("heading", {
         level: 1,

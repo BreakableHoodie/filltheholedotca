@@ -303,8 +303,10 @@
 							Your report is saved and waiting for independent confirmation before it appears on the public map.
 						</p>
 						<div class="space-y-1">
-							<div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden" role="progressbar" aria-valuenow={pothole.confirmed_count} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-label="Confirmation progress">
-								<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{Math.min(100, (pothole.confirmed_count / confirmationThreshold) * 100)}%"></div>
+							{@const clampedCount = Math.min(pothole.confirmed_count, confirmationThreshold)}
+							{@const progressPct = confirmationThreshold > 0 ? Math.min(100, (clampedCount / confirmationThreshold) * 100) : 0}
+							<div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-label="Confirmation progress">
+								<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{progressPct}%"></div>
 							</div>
 							<p class="text-xs text-zinc-500 tabular-nums">{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</p>
 						</div>
@@ -387,12 +389,15 @@
 				it appears on the public map.
 			</p>
 			<div class="space-y-1.5">
+				{@const clampedCount = Math.min(pothole.confirmed_count, data.confirmationThreshold)}
+				{@const remaining = Math.max(0, data.confirmationThreshold - pothole.confirmed_count)}
+				{@const progressPct = data.confirmationThreshold > 0 ? Math.min(100, (clampedCount / data.confirmationThreshold) * 100) : 0}
 				<div class="flex items-center justify-between text-xs text-zinc-500 tabular-nums">
 					<span>{pothole.confirmed_count} of {data.confirmationThreshold} confirmation{data.confirmationThreshold === 1 ? '' : 's'}</span>
-					<span>{data.confirmationThreshold - pothole.confirmed_count} more needed</span>
+					<span>{remaining} more needed</span>
 				</div>
-				<div class="h-2 bg-zinc-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={pothole.confirmed_count} aria-valuemin={0} aria-valuemax={data.confirmationThreshold} aria-label="Confirmation progress">
-					<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{Math.min(100, (pothole.confirmed_count / data.confirmationThreshold) * 100)}%"></div>
+				<div class="h-2 bg-zinc-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedCount} aria-valuemin={0} aria-valuemax={data.confirmationThreshold} aria-label="Confirmation progress">
+					<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{progressPct}%"></div>
 				</div>
 			</div>
 		</div>

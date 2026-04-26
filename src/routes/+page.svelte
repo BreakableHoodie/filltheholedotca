@@ -771,7 +771,7 @@
 				<p class="text-xs text-zinc-400 mb-4">Be the first to put Waterloo Region's roads on the map.</p>
 				<a
 					href="/report"
-					class="inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+					class="inline-flex items-center gap-1.5 bg-sky-700 hover:bg-sky-600 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
 				>
 					<Icon name="plus" size={13} strokeWidth={2.5} />
 					Report a pothole
