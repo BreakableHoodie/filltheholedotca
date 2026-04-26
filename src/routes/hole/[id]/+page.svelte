@@ -27,6 +27,11 @@
 	let cityRepairRequests = $derived(data.cityRepairRequests ?? []);
 	let photos = $derived(data.photos ?? []);
 	let confirmationThreshold = $derived(data.confirmationThreshold);
+	let clampedConfirmationCount = $derived(Math.min(pothole.confirmed_count, confirmationThreshold));
+	let remainingConfirmations = $derived(Math.max(0, confirmationThreshold - pothole.confirmed_count));
+	let confirmationProgressPct = $derived(
+		confirmationThreshold > 0 ? Math.min(100, (clampedConfirmationCount / confirmationThreshold) * 100) : 0
+	);
 	let submitted = $derived(page.url.searchParams.get('submitted') === '1');
 	let officialCityLink = $derived(councillor ? CITY_REPORT_LINKS[councillor.city] : null);
 	let nearbyFilled = $derived(data.nearbyFilled ?? []);
@@ -303,10 +308,8 @@
 							Your report is saved and waiting for independent confirmation before it appears on the public map.
 						</p>
 						<div class="space-y-1">
-							{@const clampedCount = Math.min(pothole.confirmed_count, confirmationThreshold)}
-							{@const progressPct = confirmationThreshold > 0 ? Math.min(100, (clampedCount / confirmationThreshold) * 100) : 0}
-							<div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-label="Confirmation progress">
-								<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{progressPct}%"></div>
+							<div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-label="Confirmation progress">
+								<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{confirmationProgressPct}%"></div>
 							</div>
 							<p class="text-xs text-zinc-500 tabular-nums">{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</p>
 						</div>
@@ -389,15 +392,12 @@
 				it appears on the public map.
 			</p>
 			<div class="space-y-1.5">
-				{@const clampedCount = Math.min(pothole.confirmed_count, data.confirmationThreshold)}
-				{@const remaining = Math.max(0, data.confirmationThreshold - pothole.confirmed_count)}
-				{@const progressPct = data.confirmationThreshold > 0 ? Math.min(100, (clampedCount / data.confirmationThreshold) * 100) : 0}
 				<div class="flex items-center justify-between text-xs text-zinc-500 tabular-nums">
-					<span>{pothole.confirmed_count} of {data.confirmationThreshold} confirmation{data.confirmationThreshold === 1 ? '' : 's'}</span>
-					<span>{remaining} more needed</span>
+					<span>{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</span>
+					<span>{remainingConfirmations} more needed</span>
 				</div>
-				<div class="h-2 bg-zinc-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedCount} aria-valuemin={0} aria-valuemax={data.confirmationThreshold} aria-label="Confirmation progress">
-					<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{progressPct}%"></div>
+				<div class="h-2 bg-zinc-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-label="Confirmation progress">
+					<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{confirmationProgressPct}%"></div>
 				</div>
 			</div>
 		</div>
