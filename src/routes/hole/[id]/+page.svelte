@@ -302,16 +302,19 @@
 					<Icon name="check-circle" size={18} class="text-sky-400" />
 				</div>
 				<div class="space-y-1.5">
-					<h2 class="text-base font-semibold text-white">Report received</h2>
+					<h2 id="submitted-card-heading" class="text-base font-semibold text-white">Report received</h2>
 					{#if pothole.status === 'pending'}
 						<p class="text-sm text-zinc-300">
 							Your report is saved and waiting for independent confirmation before it appears on the public map.
 						</p>
 						<div class="space-y-1">
-							<div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-label="Confirmation progress">
+							<div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-labelledby="submitted-card-heading">
 								<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{confirmationProgressPct}%"></div>
 							</div>
-							<p class="text-xs text-zinc-500 tabular-nums">{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</p>
+							<div class="flex items-center justify-between text-xs text-zinc-500 tabular-nums">
+								<span>{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</span>
+								<span>{remainingConfirmations} more needed</span>
+							</div>
 						</div>
 					{:else if pothole.status === 'reported'}
 						<p class="text-sm text-zinc-300">
@@ -383,7 +386,7 @@
 	<!-- Pending notice -->
 	{#if pothole.status === 'pending'}
 		<div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 space-y-3">
-			<p class="flex items-center gap-2 text-zinc-300 font-semibold">
+			<p id="pending-notice-heading" class="flex items-center gap-2 text-zinc-300 font-semibold">
 				<Icon name="clock" size={16} class="text-zinc-400 shrink-0" />
 				Awaiting confirmation
 			</p>
@@ -396,7 +399,7 @@
 					<span>{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</span>
 					<span>{remainingConfirmations} more needed</span>
 				</div>
-				<div class="h-2 bg-zinc-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-label="Confirmation progress">
+				<div class="h-2 bg-zinc-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-labelledby="pending-notice-heading">
 					<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{confirmationProgressPct}%"></div>
 				</div>
 			</div>
