@@ -27,6 +27,11 @@
 	let cityRepairRequests = $derived(data.cityRepairRequests ?? []);
 	let photos = $derived(data.photos ?? []);
 	let confirmationThreshold = $derived(data.confirmationThreshold);
+	let clampedConfirmationCount = $derived(Math.min(pothole.confirmed_count, confirmationThreshold));
+	let remainingConfirmations = $derived(Math.max(0, confirmationThreshold - pothole.confirmed_count));
+	let confirmationProgressPct = $derived(
+		confirmationThreshold > 0 ? Math.min(100, (clampedConfirmationCount / confirmationThreshold) * 100) : 0
+	);
 	let submitted = $derived(page.url.searchParams.get('submitted') === '1');
 	let officialCityLink = $derived(councillor ? CITY_REPORT_LINKS[councillor.city] : null);
 	let nearbyFilled = $derived(data.nearbyFilled ?? []);
@@ -297,14 +302,20 @@
 					<Icon name="check-circle" size={18} class="text-sky-400" />
 				</div>
 				<div class="space-y-1.5">
-					<h2 class="text-base font-semibold text-white">Report received</h2>
+					<h2 id="submitted-card-heading" class="text-base font-semibold text-white">Report received</h2>
 					{#if pothole.status === 'pending'}
 						<p class="text-sm text-zinc-300">
 							Your report is saved and waiting for independent confirmation before it appears on the public map.
 						</p>
-						<p class="text-xs text-zinc-400 tabular-nums">
-							Progress: {pothole.confirmed_count}/{confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}
-						</p>
+						<div class="space-y-1">
+							<div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-labelledby="submitted-card-heading">
+								<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{confirmationProgressPct}%"></div>
+							</div>
+							<div class="flex items-center justify-between text-xs text-zinc-500 tabular-nums">
+								<span>{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</span>
+								<span>{remainingConfirmations} more needed</span>
+							</div>
+						</div>
 					{:else if pothole.status === 'reported'}
 						<p class="text-sm text-zinc-300">
 							This pothole is now live on the public map. Share the link or report it officially to help it get fixed faster.
@@ -374,8 +385,8 @@
 
 	<!-- Pending notice -->
 	{#if pothole.status === 'pending'}
-		<div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 text-center space-y-1.5">
-			<p class="flex items-center justify-center gap-2 text-zinc-300 font-semibold">
+		<div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 space-y-3">
+			<p id="pending-notice-heading" class="flex items-center gap-2 text-zinc-300 font-semibold">
 				<Icon name="clock" size={16} class="text-zinc-400 shrink-0" />
 				Awaiting confirmation
 			</p>
@@ -383,9 +394,15 @@
 				This pothole needs independent reports from others physically at this location before
 				it appears on the public map.
 			</p>
-			<p class="text-zinc-600 text-xs mt-2 tabular-nums">
-				Confirmations: {pothole.confirmed_count}/{data.confirmationThreshold}
-			</p>
+			<div class="space-y-1.5">
+				<div class="flex items-center justify-between text-xs text-zinc-500 tabular-nums">
+					<span>{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</span>
+					<span>{remainingConfirmations} more needed</span>
+				</div>
+				<div class="h-2 bg-zinc-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-labelledby="pending-notice-heading">
+					<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{confirmationProgressPct}%"></div>
+				</div>
+			</div>
 		</div>
 	{/if}
 
