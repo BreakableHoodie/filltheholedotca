@@ -58,4 +58,22 @@ test.describe('GPS denial auto-redirect', () => {
 		await expect(addressTab).toHaveAttribute('aria-selected', 'true');
 		await expect(page.getByRole('tabpanel', { name: 'Address' })).toBeVisible();
 	});
+
+	test('auto-switches to address tab when geolocation is unsupported', async ({ page }) => {
+		// Remove navigator.geolocation entirely to simulate an unsupported browser.
+		await page.addInitScript(() => {
+			Object.defineProperty(navigator, 'geolocation', {
+				value: undefined,
+				configurable: true
+			});
+		});
+
+		await page.goto('/report');
+
+		// onMount detects missing geolocation and auto-switches without any click.
+		const addressTab = page.getByRole('tab', { name: 'Address' });
+		await expect(addressTab).toHaveAttribute('aria-selected', 'true');
+		await expect(page.getByRole('tabpanel', { name: 'Address' })).toBeVisible();
+	});
 });
+

@@ -503,7 +503,7 @@
 
 				{#if gpsStatus === 'error'}
 					<p class="text-xs text-red-400" role="alert">
-						Location access was denied or unavailable. Enable it in your browser settings, or use address or map mode instead.
+						Could not get your location — signal may be weak. Try moving outside, or use address or map mode instead.
 					</p>
 					<p class="text-xs text-zinc-400">
 						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-zinc-300 transition-colors">Enter an address</button>
