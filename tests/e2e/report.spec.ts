@@ -1,7 +1,7 @@
-import { expect, test, type StorageState } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
-const STORAGE_STATE: StorageState = {
-	cookies: [],
+const STORAGE_STATE = {
+	cookies: [] as never[],
 	origins: [
 		{
 			origin: 'http://localhost:4173',
