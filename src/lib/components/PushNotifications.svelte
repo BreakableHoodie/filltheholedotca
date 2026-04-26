@@ -105,7 +105,7 @@
 		Blocked
 	</span>
 {:else if notifState === 'pending'}
-	<span class="inline-flex items-center gap-1.5 text-xs text-zinc-500 animate-pulse">
+	<span class="inline-flex items-center gap-1.5 text-xs text-zinc-400 animate-pulse">
 		<Icon name="bell" size={13} />
 		…
 	</span>
