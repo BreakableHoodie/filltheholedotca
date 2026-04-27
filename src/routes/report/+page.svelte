@@ -121,7 +121,8 @@
 				bounded: '1'
 			});
 			const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
-				signal: controller.signal
+				signal: controller.signal,
+				headers: { 'User-Agent': 'fillthehole.ca/1.0 (https://fillthehole.ca)' }
 			});
 			if (!res.ok) throw new Error(`Address search failed: ${res.status}`);
 			const suggestions = await res.json();
@@ -311,7 +312,7 @@
 		try {
 			const res = await fetch(
 				`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-				{ signal: controller.signal }
+				{ signal: controller.signal, headers: { 'User-Agent': 'fillthehole.ca/1.0 (https://fillthehole.ca)' } }
 			);
 			const data = await res.json();
 			if (controller.signal.aborted) return;
@@ -555,6 +556,7 @@
 					<input
 						id="address-search-input"
 						type="text"
+						maxlength="255"
 						role="combobox"
 						aria-autocomplete="list"
 						aria-expanded={addressSuggestions.length > 0}

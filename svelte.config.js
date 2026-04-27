@@ -38,7 +38,8 @@ const config = {
 				'connect-src': [
 					"'self'",
 					'https://*.supabase.co',
-					'https://nominatim.openstreetmap.org'
+					'https://nominatim.openstreetmap.org',
+					'https://*.sentry.io'
 				],
 				'frame-ancestors': ["'none'"],
 				'object-src': ["'none'"],

@@ -217,7 +217,13 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (insertError) throw error(500, 'Failed to submit report');
 
 	// Record the first confirmation — no conflict possible for a brand-new pothole
-	await getAdminClient().from('pothole_confirmations').insert({ pothole_id: data.id, ip_hash: ipHash });
+	const { error: confirmInsertError } = await getAdminClient()
+		.from('pothole_confirmations')
+		.insert({ pothole_id: data.id, ip_hash: ipHash });
+	if (confirmInsertError) {
+		logError('report/confirmation', 'Failed to record first confirmation — pothole exists but dedup is broken', confirmInsertError, { potholeId: data.id });
+		throw error(500, 'Failed to submit report');
+	}
 
 	return json({
 		id: data.id,

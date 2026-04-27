@@ -51,10 +51,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (insertError) {
 		if (insertError.code === '23505') {
 			// Already recorded — return current count without error
-			const { count } = await db
+			const { count, error: countErr } = await db
 				.from('pothole_hits')
 				.select('*', { count: 'exact', head: true })
 				.eq('pothole_id', parsed.data.id);
+			if (countErr) throw error(500, 'Failed to fetch hit count');
 			return json({ ok: false, message: 'Already recorded.', count: count ?? 0 });
 		}
 		throw error(500, 'Failed to record hit');
