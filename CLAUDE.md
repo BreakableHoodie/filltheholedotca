@@ -192,11 +192,11 @@ Ten `pg_cron` jobs run nightly:
 - `purge-rate-limit-events` (04:00 UTC): deletes `api_rate_limit_events` rows older than 90 days (PIPEDA data minimization).
 - `purge-pothole-hits` (04:15 UTC): deletes `pothole_hits` rows older than 90 days (PIPEDA data minimization).
 - `purge-pothole-actions` (04:30 UTC): deletes `pothole_actions` rows older than 90 days (PIPEDA data minimization).
+- `purge-pothole-confirmations` (04:45 UTC): deletes `pothole_confirmations` for potholes that have been `filled` or `expired` for > 90 days (PIPEDA data minimization).
 - `purge-stale-push-subscriptions` (05:00 UTC): deletes `push_subscriptions` rows where `last_used_at` is older than 180 days (PIPEDA data minimization).
+- `purge-fill-subscriptions` (05:15 UTC): deletes `pothole_fill_subscriptions` for potholes that have been `expired` for > 7 days (safety net; subscriptions are normally deleted on send).
 - `purge-admin-auth-attempts` (05:30 UTC): deletes `admin_auth_attempts` rows older than 90 days (PIPEDA data minimization).
 - `purge-admin-audit-log` (06:00 UTC): deletes `admin_audit_log` rows older than 24 months (PIPEDA breach investigation minimum).
-- `purge-pothole-confirmations` (04:45 UTC): deletes `pothole_confirmations` for potholes that have been `filled` or `expired` for > 90 days (PIPEDA data minimization).
-- `purge-fill-subscriptions` (05:15 UTC): deletes `pothole_fill_subscriptions` for potholes that have been `expired` for > 7 days (safety net; subscriptions are normally deleted on send).
 
 ## Status Flow
 

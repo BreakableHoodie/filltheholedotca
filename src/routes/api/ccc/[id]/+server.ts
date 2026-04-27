@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { z } from 'zod';
 import { supabase } from '$lib/supabase';
 import { logError } from '$lib/server/observability';
+import { roundPublicCoord } from '$lib/geo';
 
 const CCC_URL =
 	'https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Corporate_Contact_Centre_Requests/FeatureServer/0/query';
@@ -25,9 +26,11 @@ export const GET: RequestHandler = async ({ params }) => {
 	if (dbErr || !data) throw error(404, 'Pothole not found');
 
 	const { lat, lng } = data;
+	// Round coords before sending to ArcGIS — matches ~11 m public precision
+	// disclosure and prevents full-precision leakage for historical rows.
 	const params2 = new URLSearchParams({
 		where: "REQUEST_NAME='Potholes_Hot_Mix_Repairs'",
-		geometry: `${lng},${lat}`,
+		geometry: `${roundPublicCoord(lng)},${roundPublicCoord(lat)}`,
 		geometryType: 'esriGeometryPoint',
 		inSR: '4326',
 		spatialRel: 'esriSpatialRelIntersects',

@@ -56,6 +56,18 @@ test.describe('Stats page', () => {
 		).toBeVisible();
 	});
 
+	test('monthly activity chart has a screen-reader accessible table (WCAG 1.1.1)', async ({ page }) => {
+		// The sr-only table is the accessible equivalent of the visual bar chart.
+		// It must be in the DOM (visually hidden, not display:none) so screen readers can reach it.
+		const table = page.locator('table').filter({ has: page.locator('caption') });
+		await expect(table).toBeAttached();
+		await expect(table.locator('th', { hasText: 'Month' })).toBeAttached();
+		await expect(table.locator('th', { hasText: 'Reported' })).toBeAttached();
+		await expect(table.locator('th', { hasText: 'Filled' })).toBeAttached();
+		// 18 months are always rendered (even with no data)
+		await expect(table.locator('tbody tr')).toHaveCount(18);
+	});
+
 	test('ward leaderboard section is present', async ({ page }) => {
 		await expect(page.getByRole('heading', { name: /By ward/i })).toBeVisible();
 	});

@@ -30,6 +30,27 @@
 	// Loaded client-side after paint to keep ArcGIS latency off the SSR critical path.
 	// In E2E fixture mode data.cityRepairRequests is pre-populated and no fetch is needed.
 	let cityRepairRequests = $state<CityRepairRequest[]>(untrack(() => data.cityRepairRequests) ?? []);
+
+	// Re-fetch CCC data whenever the pothole changes (handles client-side navigation
+	// between detail pages, where onMount doesn't re-run). Gate to Kitchener-only —
+	// the CCC dataset covers Kitchener city repairs; fetching for Waterloo/Cambridge
+	// potholes sends coordinates to ArcGIS unnecessarily.
+	$effect(() => {
+		const id = pothole.id;
+		const prefetched = data.cityRepairRequests;
+		const city = councillor?.city;
+
+		cityRepairRequests = prefetched ?? [];
+		if (prefetched !== null || city !== 'kitchener') return;
+
+		const controller = new AbortController();
+		fetch(`/api/ccc/${id}`, { signal: controller.signal })
+			.then((r) => (r.ok ? r.json() : []))
+			.then((result) => { cityRepairRequests = result; })
+			.catch(() => {}); // AbortError on navigation; other errors = CCC card stays hidden
+
+		return () => controller.abort();
+	});
 	let photos = $derived(data.photos ?? []);
 	let confirmationThreshold = $derived(data.confirmationThreshold);
 	let clampedConfirmationCount = $derived(Math.min(pothole.confirmed_count, confirmationThreshold));
@@ -49,15 +70,6 @@
 	onMount(async () => {
 		const key = `hit:${pothole.id}`;
 		hitSubmitted = localStorage.getItem(key) === '1';
-
-		if (data.cityRepairRequests === null) {
-			try {
-				const res = await fetch(`/api/ccc/${pothole.id}`);
-				if (res.ok) cityRepairRequests = await res.json();
-			} catch {
-				// non-fatal — CCC card stays hidden if ArcGIS is unreachable
-			}
-		}
 
 		// Initialise fill notification state.
 		if (vapidKey && 'serviceWorker' in navigator && 'PushManager' in window && pothole.status === 'reported') {
