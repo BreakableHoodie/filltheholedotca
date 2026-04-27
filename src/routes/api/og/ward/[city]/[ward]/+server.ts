@@ -4,6 +4,7 @@ import { supabase } from '$lib/supabase';
 import { inWardFeature } from '$lib/geo';
 import { wardGrade } from '$lib/ward-grade';
 import { logError } from '$lib/server/observability';
+import { el } from '$lib/server/og-helpers';
 import type { RequestHandler } from './$types';
 import type { City } from '$lib/wards';
 import satori from 'satori';
@@ -27,11 +28,6 @@ async function loadFont(): Promise<ArrayBuffer> {
     logError('og/ward', 'Font load failed', e);
     throw error(500, 'OG image generation unavailable');
   }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function el(type: string, props: Record<string, any>, ...children: any[]): any {
-  return { type, props: { ...props, children: children.length === 1 ? children[0] : children } };
 }
 
 const VALID_CITIES = new Set<string>(['kitchener', 'waterloo', 'cambridge']);

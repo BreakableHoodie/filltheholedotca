@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 const patchSchema = z
 	.object({
 		status: z.enum(['pending', 'reported', 'filled', 'expired']).optional(),
@@ -86,7 +87,14 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 	const { id } = parsed.data;
 
 	// Confirmations cascade-delete via FK — delete explicitly for safety
-	await getAdminClient().from('pothole_confirmations').delete().eq('pothole_id', id);
+	const { error: confirmDeleteError } = await getAdminClient()
+		.from('pothole_confirmations')
+		.delete()
+		.eq('pothole_id', id);
+	if (confirmDeleteError) {
+		logError('admin/pothole-delete', 'Failed to delete confirmations — aborting pothole delete to avoid orphaned records', confirmDeleteError, { potholeId: id });
+		throw error(500, 'Failed to delete');
+	}
 
 	const { error: deleteError } = await getAdminClient().from('potholes').delete().eq('id', id);
 	if (deleteError) throw error(500, 'Failed to delete');

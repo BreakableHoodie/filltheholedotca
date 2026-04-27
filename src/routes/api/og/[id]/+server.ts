@@ -8,6 +8,7 @@ import { decodeHtmlEntities } from '$lib/escape';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { logError } from '$lib/server/observability';
+import { el } from '$lib/server/og-helpers';
 
 const paramsSchema = z.object({ id: z.string().uuid() });
 const require = createRequire(import.meta.url);
@@ -32,14 +33,6 @@ async function loadFont(): Promise<ArrayBuffer> {
 		logError('og/pothole', 'Font load failed', e);
 		throw error(500, 'OG image generation unavailable');
 	}
-}
-
-// Lightweight satori element helper — avoids React dependency.
-// props intentionally typed as any: satori's CSS style values are mixed types
-// and the return must satisfy satori's internal ReactNode-compatible signature.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function el(type: string, props: Record<string, any>, ...children: any[]): any {
-	return { type, props: { ...props, children: children.length === 1 ? children[0] : children } };
 }
 
 // Colours kept in sync with STATUS_CONFIG hex values in src/lib/constants.ts
