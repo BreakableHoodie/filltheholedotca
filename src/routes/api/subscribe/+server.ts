@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { logError } from '$lib/server/observability';
 import { getAdminClient } from '$lib/server/supabase';
-import { isSafePushEndpoint } from '$lib/server/webpush';
+import { isSafePushEndpoint } from '$lib/server/ssrf';
 
 const subscribeSchema = z.object({
 	endpoint: z.string().url().max(2048),
