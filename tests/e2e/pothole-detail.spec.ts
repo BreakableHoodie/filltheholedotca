@@ -166,4 +166,29 @@ test.describe("Pothole detail page", () => {
 
     await expect(page.getByText(/Recurring road issue/i)).not.toBeVisible();
   });
+
+  test("shows CCC repair card when fixture provides cityRepairRequests", async ({
+    page,
+  }) => {
+    // Fixture 11111111-… includes one CCC request — card should appear without
+    // any client-side fetch (data.cityRepairRequests is pre-populated).
+    await page.goto(fixtureDetailUrl(seededReportedPothole.id));
+
+    await expect(
+      page.getByText(/City repair request on file/i),
+    ).toBeVisible();
+    await expect(page.getByText(/King St W & Union St W/i)).toBeVisible();
+  });
+
+  test("does not show CCC card for a Waterloo (non-Kitchener) pothole fixture", async ({
+    page,
+  }) => {
+    // Fixture 22222222-… is in Waterloo — cityRepairRequests is [] and the
+    // client-side $effect skips the fetch because councillor.city !== 'kitchener'.
+    await page.goto(fixtureDetailUrl(seededPendingPothole.id));
+
+    await expect(
+      page.getByText(/City repair request/i),
+    ).not.toBeVisible();
+  });
 });

@@ -4,6 +4,30 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
 import { logError } from '$lib/server/observability';
 
+/**
+ * Returns true only for HTTPS endpoints that are not loopback, link-local,
+ * or private-network addresses. Used before storing or dispatching a push
+ * endpoint to prevent SSRF.
+ */
+export function isSafePushEndpoint(endpoint: string): boolean {
+	let url: URL;
+	try {
+		url = new URL(endpoint);
+	} catch {
+		return false;
+	}
+	if (url.protocol !== 'https:') return false;
+	const h = url.hostname.toLowerCase();
+	if (h === 'localhost') return false;
+	if (/^127\./.test(h)) return false;
+	if (h === '::1' || h === '[::1]') return false;
+	if (/^10\./.test(h)) return false;
+	if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return false;
+	if (/^192\.168\./.test(h)) return false;
+	if (/^169\.254\./.test(h)) return false;
+	return true;
+}
+
 let initialized = false;
 
 function init() {
@@ -46,6 +70,10 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 
 	await Promise.allSettled(
 		subscriptions.map(async (sub) => {
+			if (!isSafePushEndpoint(sub.endpoint)) {
+				expired.push(sub.endpoint); // Treat unsafe endpoints as expired — purge them.
+				return;
+			}
 			try {
 				await webpush.sendNotification(
 					{ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
@@ -68,4 +96,58 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 		const { error: deleteError } = await db.from('push_subscriptions').delete().in('endpoint', expired);
 		if (deleteError) logError('webpush', 'failed to remove expired push subscriptions', deleteError);
 	}
+}
+
+/**
+ * Send a fill notification to all per-pothole subscribers, then delete the rows.
+ * One-shot: subscriptions are consumed on send regardless of delivery outcome.
+ * Fire-and-forget safe: logs errors but does not throw.
+ */
+export async function notifyFillSubscribers(potholeId: string, address: string | null): Promise<void> {
+	init();
+	if (!initialized) return;
+
+	const db = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+	const { data: subscriptions, error: queryError } = await db
+		.from('pothole_fill_subscriptions')
+		.select('endpoint, p256dh, auth')
+		.eq('pothole_id', potholeId);
+
+	if (queryError) {
+		logError('webpush/fill', 'failed to load fill subscriptions', queryError, { potholeId });
+		return;
+	}
+	if (!subscriptions?.length) return;
+
+	const body = address ? `${address} was marked as fixed.` : 'A pothole you were watching was marked as fixed.';
+	const message = JSON.stringify({
+		title: '✅ Pothole filled!',
+		body,
+		url: `/hole/${potholeId}`
+	});
+
+	await Promise.allSettled(
+		subscriptions.map(async (sub) => {
+			if (!isSafePushEndpoint(sub.endpoint)) return; // Skip unsafe endpoints — they're deleted below anyway.
+			try {
+				await webpush.sendNotification(
+					{ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+					message
+				);
+			} catch (err: unknown) {
+				const status = (err as { statusCode?: number }).statusCode;
+				if (status !== 410 && status !== 404) {
+					const origin = (() => { try { return new URL(sub.endpoint).origin; } catch { return 'unknown'; } })();
+					logError('webpush/fill', 'send failed', err, { status, endpointOrigin: origin });
+				}
+			}
+		})
+	);
+
+	// Delete all subscriptions for this pothole — one-shot regardless of send outcome.
+	const { error: deleteError } = await db
+		.from('pothole_fill_subscriptions')
+		.delete()
+		.eq('pothole_id', potholeId);
+	if (deleteError) logError('webpush/fill', 'failed to delete fill subscriptions after send', deleteError, { potholeId });
 }

@@ -333,6 +333,27 @@
 				{/each}
 			</div>
 		</div>
+
+		<!-- Screen-reader equivalent of the bar chart (WCAG 1.1.1) -->
+		<table class="sr-only">
+			<caption>Monthly pothole reports and fills over the last 18 months</caption>
+			<thead>
+				<tr>
+					<th scope="col">Month</th>
+					<th scope="col">Reported</th>
+					<th scope="col">Filled</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each monthlyData as m (m.key)}
+					<tr>
+						<td>{m.label}</td>
+						<td>{m.reported}</td>
+						<td>{m.filled}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
 	</section>
 
 	<!-- ── City breakdown ─────────────────────────────────────────────────────── -->

@@ -18,13 +18,39 @@
 	import { onMount, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
+	import type { CityRepairRequest } from './+page.server';
+	import { env } from '$env/dynamic/public';
+	import { urlBase64ToUint8Array } from '$lib/push';
 
 	let { data }: { data: PageData } = $props();
 	let pothole = $derived(data.pothole as Pothole);
 	let info = $derived(STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported);
 	let councillor = $derived(data.councillor as Councillor | null);
 	let origin = $derived(data.origin as string);
-	let cityRepairRequests = $derived(data.cityRepairRequests ?? []);
+	// Loaded client-side after paint to keep ArcGIS latency off the SSR critical path.
+	// In E2E fixture mode data.cityRepairRequests is pre-populated and no fetch is needed.
+	let cityRepairRequests = $state<CityRepairRequest[]>(untrack(() => data.cityRepairRequests) ?? []);
+
+	// Re-fetch CCC data whenever the pothole changes (handles client-side navigation
+	// between detail pages, where onMount doesn't re-run). Gate to Kitchener-only —
+	// the CCC dataset covers Kitchener city repairs; fetching for Waterloo/Cambridge
+	// potholes sends coordinates to ArcGIS unnecessarily.
+	$effect(() => {
+		const id = pothole.id;
+		const prefetched = data.cityRepairRequests;
+		const city = councillor?.city;
+
+		cityRepairRequests = prefetched ?? [];
+		if (prefetched !== null || city !== 'kitchener') return;
+
+		const controller = new AbortController();
+		fetch(`/api/ccc/${id}`, { signal: controller.signal })
+			.then((r) => (r.ok ? r.json() : []))
+			.then((result) => { cityRepairRequests = result; })
+			.catch(() => {}); // AbortError on navigation; other errors = CCC card stays hidden
+
+		return () => controller.abort();
+	});
 	let photos = $derived(data.photos ?? []);
 	let confirmationThreshold = $derived(data.confirmationThreshold);
 	let clampedConfirmationCount = $derived(Math.min(pothole.confirmed_count, confirmationThreshold));
@@ -42,9 +68,52 @@
 	let hittingIt = $state(false);
 
 	onMount(() => {
-		const key = `hit:${pothole.id}`;
-		hitSubmitted = localStorage.getItem(key) === '1';
+		hitSubmitted = localStorage.getItem(`hit:${pothole.id}`) === '1';
 	});
+
+	async function subscribeFillNotification() {
+		if (!swRegistration || !vapidKey) return;
+		fillNotifState = 'pending';
+		try {
+			let sub = await swRegistration.pushManager.getSubscription();
+			if (!sub) {
+				sub = await swRegistration.pushManager.subscribe({
+					userVisibleOnly: true,
+					applicationServerKey: urlBase64ToUint8Array(vapidKey).buffer as ArrayBuffer
+				});
+			}
+			const { endpoint, keys } = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } };
+			const res = await fetch(`/api/notify/${pothole.id}`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ endpoint, keys })
+			});
+			if (!res.ok) throw new Error('subscribe failed');
+			localStorage.setItem(`fill-notify:${pothole.id}`, '1');
+			fillNotifState = 'subscribed';
+		} catch {
+			fillNotifState = Notification.permission === 'denied' ? 'denied' : 'unsubscribed';
+		}
+	}
+
+	async function unsubscribeFillNotification() {
+		if (!swRegistration) return;
+		fillNotifState = 'pending';
+		try {
+			const sub = await swRegistration.pushManager.getSubscription();
+			if (sub) {
+				await fetch(`/api/notify/${pothole.id}`, {
+					method: 'DELETE',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ endpoint: sub.endpoint })
+				});
+			}
+			localStorage.removeItem(`fill-notify:${pothole.id}`);
+			fillNotifState = 'unsubscribed';
+		} catch {
+			fillNotifState = 'subscribed';
+		}
+	}
 
 	async function recordHit() {
 		if (hitSubmitted || hittingIt) return;
@@ -104,6 +173,34 @@
 		}).replace(new RegExp('<' + '/script', 'gi'), '<\\/script') +
 		'<' + '/script>'
 	);
+
+	// ── Fill notification ─────────────────────────────────────────────────────
+	type FillNotifState = 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed' | 'pending';
+	let fillNotifState = $state<FillNotifState>('unsupported');
+	let swRegistration = $state<ServiceWorkerRegistration | null>(null);
+	const vapidKey = env.PUBLIC_VAPID_PUBLIC_KEY ?? '';
+
+	// Re-run on navigation (pothole.id changes) so fillNotifState resets correctly
+	// when the user moves between detail pages via client-side routing.
+	$effect(() => {
+		const id = pothole.id;
+		const status = pothole.status;
+		fillNotifState = 'unsupported';
+		if (!vapidKey || !('serviceWorker' in navigator) || !('PushManager' in window) || status !== 'reported') return;
+		(async () => {
+			try {
+				if (!untrack(() => swRegistration)) {
+					swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+				}
+				fillNotifState =
+					Notification.permission === 'denied' ? 'denied'
+					: localStorage.getItem(`fill-notify:${id}`) === '1' ? 'subscribed'
+					: 'unsubscribed';
+			} catch {
+				// fillNotifState stays 'unsupported'
+			}
+		})();
+	});
 
 	let submitting = $state(false);
 	let showFilledForm = $state(false);
@@ -460,6 +557,58 @@
 					{/if}
 					{hitSubmitted ? 'Recorded' : 'I hit this'}
 				</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Fill notification -->
+	{#if pothole.status === 'reported' && fillNotifState !== 'unsupported'}
+		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+			<div class="flex items-center justify-between gap-3">
+				<div class="space-y-0.5">
+					<p class="text-sm font-semibold text-zinc-300 flex items-center gap-1.5">
+						<Icon name="bell" size={14} class="text-sky-400 shrink-0" />
+						Get notified when filled
+					</p>
+					<p class="text-xs text-zinc-500">
+						{#if fillNotifState === 'subscribed'}
+							You'll get a push notification when this pothole is marked as fixed.
+						{:else if fillNotifState === 'denied'}
+							Notifications are blocked — change in your browser settings.
+						{:else}
+							We'll send you a one-time push when this pothole is marked as fixed.
+						{/if}
+					</p>
+				</div>
+				{#if fillNotifState === 'unsubscribed'}
+					<button
+						onclick={subscribeFillNotification}
+						aria-label="Notify me when this pothole is filled"
+						class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors bg-zinc-800 border border-zinc-700 text-zinc-300 hover:border-sky-600 hover:text-sky-400"
+					>
+						<Icon name="bell" size={13} class="shrink-0" />
+						Notify me
+					</button>
+				{:else if fillNotifState === 'subscribed'}
+					<button
+						onclick={unsubscribeFillNotification}
+						aria-label="Subscribed — tap to cancel fill notification"
+						class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors bg-sky-900/30 border border-sky-800/60 text-sky-400 hover:border-zinc-600 hover:text-zinc-300"
+					>
+						<Icon name="bell" size={13} class="shrink-0" />
+						Subscribed
+					</button>
+				{:else if fillNotifState === 'pending'}
+					<span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-sm text-zinc-500">
+						<Icon name="loader" size={13} class="animate-spin shrink-0" />
+						…
+					</span>
+				{:else if fillNotifState === 'denied'}
+					<span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-sm text-zinc-600 cursor-not-allowed">
+						<Icon name="bell-off" size={13} class="shrink-0" />
+						Blocked
+					</span>
+				{/if}
 			</div>
 		</div>
 	{/if}

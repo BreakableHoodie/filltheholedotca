@@ -189,6 +189,13 @@
 					<a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">Supabase</a>.
 					Each of these services has its own privacy policy.
 				</p>
+				<p class="text-sm text-zinc-400">
+					On individual pothole pages, the pothole's coordinates (rounded to ~11 m precision)
+					are sent to
+					<a href="https://www.esri.com/en-us/privacy/main" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">Esri ArcGIS</a>
+					to check whether Kitchener's 311 system has a matching repair request on file.
+					No personal information is included in this query — only the location.
+				</p>
 			</div>
 		</div>
 

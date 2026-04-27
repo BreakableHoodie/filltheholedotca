@@ -6,12 +6,7 @@ import { COUNCILLORS, lookupWard, type Councillor } from "$lib/wards";
 import { decodeHtmlEntities } from "$lib/escape";
 import { getConfirmationThreshold } from "$lib/server/settings";
 import { haversineMetres } from "$lib/geo";
-import { logError } from "$lib/server/observability";
 import { getAdminClient } from "$lib/server/supabase";
-
-const CCC_URL =
-  "https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Corporate_Contact_Centre_Requests/FeatureServer/0/query";
-const CCC_RADIUS_M = 200;
 
 export interface CityRepairRequest {
   intersection: string;
@@ -106,63 +101,6 @@ const E2E_DETAIL_FIXTURES: Record<string, E2eDetailFixture> = {
   },
 };
 
-async function fetchCityRepairRequests(
-  lat: number,
-  lng: number,
-): Promise<CityRepairRequest[]> {
-  const params = new URLSearchParams({
-    where: "REQUEST_NAME='Potholes_Hot_Mix_Repairs'",
-    geometry: `${lng},${lat}`,
-    geometryType: "esriGeometryPoint",
-    inSR: "4326",
-    spatialRel: "esriSpatialRelIntersects",
-    distance: String(CCC_RADIUS_M),
-    units: "esriSRUnit_Meter",
-    outFields: "INTERSECTION,CREATE_DATE",
-    orderByFields: "CREATE_DATE DESC",
-    resultRecordCount: "5",
-    returnGeometry: "false",
-    f: "json",
-  });
-
-  try {
-    const res = await fetch(`${CCC_URL}?${params}`, {
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    const features: unknown[] = Array.isArray(json.features)
-      ? json.features
-      : [];
-    return features.flatMap((f) => {
-      // Validate shape — ArcGIS response may be missing fields if the service
-      // returns an unexpected schema version.
-      if (
-        typeof f !== "object" ||
-        f === null ||
-        !("attributes" in f) ||
-        typeof (f as Record<string, unknown>).attributes !== "object"
-      )
-        return [];
-      const attrs = (f as { attributes: Record<string, unknown> }).attributes;
-      const intersection = attrs.INTERSECTION;
-      const createDate = attrs.CREATE_DATE;
-      if (typeof intersection !== "string" || !intersection) return [];
-      if (typeof createDate !== "number") return [];
-      const date = new Date(createDate);
-      if (isNaN(date.getTime())) return [];
-      return [{ intersection, date: date.toISOString().slice(0, 10) }];
-    });
-  } catch (err) {
-    // Detail page still renders if the Region's ArcGIS service is unreachable —
-    // just surface the failure so we notice chronic outages. Coordinates are
-    // intentionally omitted: this PR's whole point is keeping precise reporter
-    // locations out of third-party telemetry, and ArcGIS outages are regional.
-    logError("hole/ccc", "fetchCityRepairRequests failed", err);
-    return [];
-  }
-}
-
 export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
   if (
     process.env.PLAYWRIGHT_E2E_FIXTURES === "true" &&
@@ -197,10 +135,9 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
   const delta = 0.001;
   const db = getAdminClient();
 
-  const [councillor, cityRepairRequests, photosResult, confirmationThreshold, hitCountResult, nearbyFilledResult] =
+  const [councillor, photosResult, confirmationThreshold, hitCountResult, nearbyFilledResult] =
     await Promise.all([
       lookupWard(pothole.lat, pothole.lng),
-      fetchCityRepairRequests(pothole.lat, pothole.lng),
       supabase
         .from("pothole_photos")
         .select("id, storage_path, created_at")
@@ -264,7 +201,7 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
   return {
     pothole,
     councillor,
-    cityRepairRequests,
+    cityRepairRequests: null as CityRepairRequest[] | null,
     photos,
     origin: url.origin,
     confirmationThreshold,
