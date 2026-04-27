@@ -51,8 +51,7 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
 			.from('potholes')
 			.select('id, created_at, lat, lng, status, filled_at, expired_at, address, confirmed_count')
 			.neq('status', 'pending')
-			.order('created_at', { ascending: false })
-			.limit(5000),
+			.order('created_at', { ascending: false }),
 		fetchWards('kitchener').catch(() => []),
 		fetchWards('waterloo').catch(() => []),
 		fetchWards('cambridge').catch(() => [])

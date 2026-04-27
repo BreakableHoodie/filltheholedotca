@@ -90,9 +90,6 @@
 		}
 	}
 
-	// Waterloo Region bounding box for Nominatim: minLon,minLat,maxLon,maxLat
-	const WR_VIEWBOX = '-80.59,43.32,-80.22,43.53';
-
 	async function searchAddress(query: string) {
 		const trimmedQuery = query.trim();
 		if (trimmedQuery.length < 3) {
@@ -113,16 +110,9 @@
 
 		addressSearching = true;
 		try {
-			const params = new URLSearchParams({
-				q: trimmedQuery,
-				format: 'json',
-				limit: '5',
-				viewbox: WR_VIEWBOX,
-				bounded: '1'
-			});
-			const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
-				signal: controller.signal,
-				headers: { 'User-Agent': 'fillthehole.ca/1.0 (https://fillthehole.ca)' }
+			const params = new URLSearchParams({ q: trimmedQuery, limit: '5' });
+			const res = await fetch(`/api/geocode/search?${params}`, {
+				signal: controller.signal
 			});
 			if (!res.ok) throw new Error(`Address search failed: ${res.status}`);
 			const suggestions = await res.json();
@@ -310,10 +300,9 @@
 		reverseGeocodeAbortController = new AbortController();
 		const controller = reverseGeocodeAbortController;
 		try {
-			const res = await fetch(
-				`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-				{ signal: controller.signal, headers: { 'User-Agent': 'fillthehole.ca/1.0 (https://fillthehole.ca)' } }
-			);
+			const res = await fetch(`/api/geocode/reverse?lat=${lat}&lon=${lng}`, {
+				signal: controller.signal
+			});
 			const data = await res.json();
 			if (controller.signal.aborted) return;
 			const a = data.address ?? {};
