@@ -4,6 +4,30 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createClient } from '@supabase/supabase-js';
 import { logError } from '$lib/server/observability';
 
+/**
+ * Returns true only for HTTPS endpoints that are not loopback, link-local,
+ * or private-network addresses. Used before storing or dispatching a push
+ * endpoint to prevent SSRF.
+ */
+export function isSafePushEndpoint(endpoint: string): boolean {
+	let url: URL;
+	try {
+		url = new URL(endpoint);
+	} catch {
+		return false;
+	}
+	if (url.protocol !== 'https:') return false;
+	const h = url.hostname.toLowerCase();
+	if (h === 'localhost') return false;
+	if (/^127\./.test(h)) return false;
+	if (h === '::1' || h === '[::1]') return false;
+	if (/^10\./.test(h)) return false;
+	if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return false;
+	if (/^192\.168\./.test(h)) return false;
+	if (/^169\.254\./.test(h)) return false;
+	return true;
+}
+
 let initialized = false;
 
 function init() {
@@ -46,6 +70,10 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 
 	await Promise.allSettled(
 		subscriptions.map(async (sub) => {
+			if (!isSafePushEndpoint(sub.endpoint)) {
+				expired.push(sub.endpoint); // Treat unsafe endpoints as expired — purge them.
+				return;
+			}
 			try {
 				await webpush.sendNotification(
 					{ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
@@ -100,6 +128,7 @@ export async function notifyFillSubscribers(potholeId: string, address: string |
 
 	await Promise.allSettled(
 		subscriptions.map(async (sub) => {
+			if (!isSafePushEndpoint(sub.endpoint)) return; // Skip unsafe endpoints — they're deleted below anyway.
 			try {
 				await webpush.sendNotification(
 					{ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },

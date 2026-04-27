@@ -67,25 +67,8 @@
 	let hitSubmitted = $state(false);
 	let hittingIt = $state(false);
 
-	onMount(async () => {
-		const key = `hit:${pothole.id}`;
-		hitSubmitted = localStorage.getItem(key) === '1';
-
-		// Initialise fill notification state.
-		if (vapidKey && 'serviceWorker' in navigator && 'PushManager' in window && pothole.status === 'reported') {
-			try {
-				swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-				if (Notification.permission === 'denied') {
-					fillNotifState = 'denied';
-				} else if (localStorage.getItem(`fill-notify:${pothole.id}`) === '1') {
-					fillNotifState = 'subscribed';
-				} else {
-					fillNotifState = 'unsubscribed';
-				}
-			} catch {
-				// SW unavailable — leave as 'unsupported'
-			}
-		}
+	onMount(() => {
+		hitSubmitted = localStorage.getItem(`hit:${pothole.id}`) === '1';
 	});
 
 	async function subscribeFillNotification() {
@@ -196,6 +179,28 @@
 	let fillNotifState = $state<FillNotifState>('unsupported');
 	let swRegistration = $state<ServiceWorkerRegistration | null>(null);
 	const vapidKey = env.PUBLIC_VAPID_PUBLIC_KEY ?? '';
+
+	// Re-run on navigation (pothole.id changes) so fillNotifState resets correctly
+	// when the user moves between detail pages via client-side routing.
+	$effect(() => {
+		const id = pothole.id;
+		const status = pothole.status;
+		fillNotifState = 'unsupported';
+		if (!vapidKey || !('serviceWorker' in navigator) || !('PushManager' in window) || status !== 'reported') return;
+		(async () => {
+			try {
+				if (!untrack(() => swRegistration)) {
+					swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+				}
+				fillNotifState =
+					Notification.permission === 'denied' ? 'denied'
+					: localStorage.getItem(`fill-notify:${id}`) === '1' ? 'subscribed'
+					: 'unsubscribed';
+			} catch {
+				// fillNotifState stays 'unsupported'
+			}
+		})();
+	});
 
 	let submitting = $state(false);
 	let showFilledForm = $state(false);
@@ -587,7 +592,7 @@
 				{:else if fillNotifState === 'subscribed'}
 					<button
 						onclick={unsubscribeFillNotification}
-						aria-label="Cancel fill notification for this pothole"
+						aria-label="Subscribed — tap to cancel fill notification"
 						class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors bg-sky-900/30 border border-sky-800/60 text-sky-400 hover:border-zinc-600 hover:text-zinc-300"
 					>
 						<Icon name="bell" size={13} class="shrink-0" />

@@ -184,6 +184,7 @@ Run migrations in this order:
 19. `schema_hits_ttl.sql` — pg_cron purge jobs for `pothole_hits` and `pothole_actions` older than 90 days (PIPEDA data minimization)
 20. `schema_pothole_confirmations_ttl.sql` — pg_cron purge job for `pothole_confirmations` on resolved potholes older than 90 days (PIPEDA data minimization)
 21. `schema_fill_notifications.sql` — `pothole_fill_subscriptions` table; pg_cron cleanup for subscriptions on potholes expired > 7 days
+22. `schema_fill_notify_ratelimit.sql` — extends `api_rate_limit_events_scope_check` to include `fill_notify_subscribe` and `push_unsubscribe`
 
 Ten `pg_cron` jobs run nightly:
 
