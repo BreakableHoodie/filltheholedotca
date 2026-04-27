@@ -64,12 +64,16 @@
 
 	// ── "I hit this" signal ────────────────────────────────────────────────
 	let hitCount = $state(untrack(() => data.hitCount) ?? 0);
-	let hitSubmitted = $state(false);
-	let hittingIt = $state(false);
-
-	$effect(() => {
-		hitSubmitted = localStorage.getItem(`hit:${pothole.id}`) === '1';
+	// Bumped after a successful hit to force $derived to re-read localStorage immediately.
+	let _hitVersion = $state(0);
+	// $derived.by re-runs on navigation (pothole.id changes) and after a successful hit
+	// (_hitVersion bumped). localStorage is unavailable during SSR so we guard it.
+	let hitSubmitted = $derived.by(() => {
+		void _hitVersion; // read to track as reactive dependency; bumped after localStorage write
+		if (typeof localStorage === 'undefined') return false;
+		return localStorage.getItem(`hit:${pothole.id}`) === '1';
 	});
+	let hittingIt = $state(false);
 
 	async function subscribeFillNotification() {
 		if (!swRegistration || !vapidKey) return;
@@ -131,7 +135,7 @@
 			const result = await res.json();
 			hitCount = result.count ?? hitCount;
 			localStorage.setItem(`hit:${pothole.id}`, '1');
-			hitSubmitted = true;
+			_hitVersion++;
 			toast.success('Recorded! Your experience helps prioritize repairs.');
 		} catch {
 			toastError('Something went wrong. Try again.');
