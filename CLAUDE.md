@@ -113,6 +113,9 @@ src/
       feed.json/+server.ts    # GET — JSON feed of recent potholes
       export.csv/+server.ts   # GET — CSV export of all reported/filled potholes (open data)
       feed.xml/+server.ts     # GET — RSS 2.0 feed of recent confirmations/fills (open data)
+      ccc/[id]/+server.ts           # GET — ArcGIS CCC repair data proxy (off SSR path)
+      geocode/search/+server.ts     # GET — Nominatim search proxy (sets User-Agent server-side)
+      geocode/reverse/+server.ts    # GET — Nominatim reverse geocode proxy
       admin/pothole/[id]/+server.ts  # DELETE — admin moderation
       admin/photo/[id]/+server.ts    # PATCH/DELETE — photo moderation
   lib/
@@ -178,8 +181,9 @@ Run migrations in this order:
 17. `schema_push_subscription_ttl.sql` — adds `last_used_at` to `push_subscriptions`; pg_cron purge job for subscriptions not refreshed in 180 days (PIPEDA data minimization)
 18. `schema_audit_ttl.sql` — pg_cron purge jobs for `admin_auth_attempts` (90 days) and `admin_audit_log` (24 months) (PIPEDA data minimization)
 19. `schema_hits_ttl.sql` — pg_cron purge jobs for `pothole_hits` and `pothole_actions` older than 90 days (PIPEDA data minimization)
+20. `schema_pothole_confirmations_ttl.sql` — pg_cron purge job for `pothole_confirmations` on resolved potholes older than 90 days (PIPEDA data minimization)
 
-Eight `pg_cron` jobs run nightly:
+Nine `pg_cron` jobs run nightly:
 
 - `expire-old-potholes` (03:00 UTC): sets `status = 'expired'` on `reported` potholes older than 90 days.
 - `expire-stale-pending` (03:30 UTC): sets `status = 'expired'` on `pending` potholes older than 14 days (anti-suppression).
@@ -189,6 +193,7 @@ Eight `pg_cron` jobs run nightly:
 - `purge-stale-push-subscriptions` (05:00 UTC): deletes `push_subscriptions` rows where `last_used_at` is older than 180 days (PIPEDA data minimization).
 - `purge-admin-auth-attempts` (05:30 UTC): deletes `admin_auth_attempts` rows older than 90 days (PIPEDA data minimization).
 - `purge-admin-audit-log` (06:00 UTC): deletes `admin_audit_log` rows older than 24 months (PIPEDA breach investigation minimum).
+- `purge-pothole-confirmations` (04:45 UTC): deletes `pothole_confirmations` for potholes that have been `filled` or `expired` for > 90 days (PIPEDA data minimization).
 
 ## Status Flow
 

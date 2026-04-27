@@ -18,13 +18,16 @@
 	import { onMount, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
+	import type { CityRepairRequest } from './+page.server';
 
 	let { data }: { data: PageData } = $props();
 	let pothole = $derived(data.pothole as Pothole);
 	let info = $derived(STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported);
 	let councillor = $derived(data.councillor as Councillor | null);
 	let origin = $derived(data.origin as string);
-	let cityRepairRequests = $derived(data.cityRepairRequests ?? []);
+	// Loaded client-side after paint to keep ArcGIS latency off the SSR critical path.
+	// In E2E fixture mode data.cityRepairRequests is pre-populated and no fetch is needed.
+	let cityRepairRequests = $state<CityRepairRequest[]>(untrack(() => data.cityRepairRequests) ?? []);
 	let photos = $derived(data.photos ?? []);
 	let confirmationThreshold = $derived(data.confirmationThreshold);
 	let clampedConfirmationCount = $derived(Math.min(pothole.confirmed_count, confirmationThreshold));
@@ -41,9 +44,18 @@
 	let hitSubmitted = $state(false);
 	let hittingIt = $state(false);
 
-	onMount(() => {
+	onMount(async () => {
 		const key = `hit:${pothole.id}`;
 		hitSubmitted = localStorage.getItem(key) === '1';
+
+		if (data.cityRepairRequests === null) {
+			try {
+				const res = await fetch(`/api/ccc/${pothole.id}`);
+				if (res.ok) cityRepairRequests = await res.json();
+			} catch {
+				// non-fatal — CCC card stays hidden if ArcGIS is unreachable
+			}
+		}
 	});
 
 	async function recordHit() {
