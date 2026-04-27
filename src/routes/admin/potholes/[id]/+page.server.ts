@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 const uuidSchema = z.string().uuid();
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -159,7 +160,11 @@ export const actions: Actions = {
 		if (!uuidSchema.safeParse(id).success) return fail(400, { error: 'Invalid ID' });
 
 		// Confirmations cascade-delete via FK — explicit delete for safety
-		await getAdminClient().from('pothole_confirmations').delete().eq('pothole_id', id);
+		const { error: confirmDeleteError } = await getAdminClient()
+			.from('pothole_confirmations')
+			.delete()
+			.eq('pothole_id', id);
+		if (confirmDeleteError) logError('admin/potholes', 'Failed to delete pothole confirmations', confirmDeleteError, { potholeId: id });
 
 		const { error: dbErr } = await getAdminClient().from('potholes').delete().eq('id', id);
 		if (dbErr) return fail(500, { error: 'Failed to delete pothole' });

@@ -439,8 +439,8 @@
 	<div class="mb-6">
 		<h1 class="page-title text-3xl sm:text-4xl text-white mb-1">Report a pothole</h1>
 		<p class="page-intro text-zinc-300 text-sm">Report the location in about 30 seconds. No account required.</p>
-		<p class="text-xs text-zinc-400 mt-2">Independent community tracker for Waterloo Region. For official repair action, report to the city too.</p>
-		<p class="flex items-start gap-1.5 text-xs text-zinc-400 mt-2">
+		<p class="text-xs text-zinc-300 mt-2">Independent community tracker for Waterloo Region. For official repair action, report to the city too.</p>
+		<p class="flex items-start gap-1.5 text-xs text-zinc-300 mt-2">
 			<Icon name="alert-triangle" size={13} class="text-amber-500 shrink-0 mt-0.5" />
 			Stay safe — report from the sidewalk or after pulling over. Never stop in a live traffic lane.
 		</p>
@@ -453,7 +453,7 @@
 				<Icon name="crosshair" size={14} class="text-sky-400" />
 				Location
 			</div>
-			<p class="text-xs text-zinc-400">Use your current location for the fastest report, or switch to address search or map pin if needed.</p>
+			<p class="text-xs text-zinc-300">Use your current location for the fastest report, or switch to address search or map pin if needed.</p>
 
 			<!-- Tab bar -->
 			<div role="tablist" aria-label="Choose a location source" class="flex gap-1 bg-zinc-800 rounded-lg p-1">
@@ -515,20 +515,20 @@
 					<p class="text-xs text-red-400" role="alert">
 						Could not get your location — signal may be weak. Try moving outside, or use address or map mode instead.
 					</p>
-					<p class="text-xs text-zinc-400">
-						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-zinc-300 transition-colors">Enter an address</button>
-						or <button type="button" onclick={() => (locationMode = 'map')} class="underline hover:text-zinc-300 transition-colors">pin on the map</button>.
+					<p class="text-xs text-zinc-300">
+						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-white transition-colors">Enter an address</button>
+						or <button type="button" onclick={() => (locationMode = 'map')} class="underline hover:text-white transition-colors">pin on the map</button>.
 					</p>
 				{/if}
 
 				{#if address}
-					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
+					<p class="flex items-center gap-1.5 text-xs text-zinc-300">
 						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address}
-						<span>· via <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-zinc-300">OpenStreetMap</a></span>
+						<span>· via <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-white">OpenStreetMap</a></span>
 					</p>
 				{:else if gpsStatus === 'got'}
-					<p class="text-xs text-zinc-400">Looking up address via OpenStreetMap…</p>
+					<p class="text-xs text-zinc-300">Looking up address via OpenStreetMap…</p>
 				{/if}
 			</div>
 
@@ -566,9 +566,9 @@
 						autocomplete="off"
 					/>
 					{#if addressSearching}
-						<p class="text-xs text-zinc-400 mt-1">Searching…</p>
+						<p class="text-xs text-zinc-300 mt-1">Searching…</p>
 					{:else if addressQuery.length > 2 && addressSuggestions.length === 0 && lat === null}
-						<p class="text-xs text-zinc-400 mt-1" role="status" aria-live="polite">No results found — try a different address or street name.</p>
+						<p class="text-xs text-zinc-300 mt-1" role="status" aria-live="polite">No results found — try a different address or street name.</p>
 					{/if}
 					{#if addressSuggestions.length > 0}
 						<ul
@@ -594,7 +594,7 @@
 					{/if}
 				</div>
 				{#if lat !== null && addressQuery && addressSuggestions.length === 0}
-					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
+					<p class="flex items-center gap-1.5 text-xs text-zinc-300">
 						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address}
 					</p>
@@ -611,12 +611,12 @@
 			>
 				<div bind:this={miniMapEl} class="w-full rounded-lg overflow-hidden" style="height: 260px;"></div>
 				{#if lat !== null}
-					<p class="flex items-center gap-1.5 text-xs text-zinc-400">
+					<p class="flex items-center gap-1.5 text-xs text-zinc-300">
 						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
 					</p>
 				{:else}
-					<p class="text-xs text-zinc-400">Tap the map to place a pin</p>
+					<p class="text-xs text-zinc-300">Tap the map to place a pin</p>
 				{/if}
 			</div>
 		</div>
@@ -625,9 +625,9 @@
 		<fieldset class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
 			<legend class="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-2">
 				<Icon name="alert-triangle" size={14} class="text-zinc-400" />
-				How severe is the damage? <span class="text-zinc-400 font-normal">(optional)</span>
+				How severe is the damage? <span class="text-zinc-300 font-normal">(optional)</span>
 			</legend>
-			<p class="text-xs text-zinc-400">This helps other residents understand urgency at a glance.</p>
+			<p class="text-xs text-zinc-300">This helps other residents understand urgency at a glance.</p>
 			<div class="grid grid-cols-2 gap-2">
 				{#each SEVERITY_OPTIONS as opt (opt.value)}
 					<label
@@ -654,7 +654,7 @@
 							{/each}
 						</div>
 						<span class="text-sm font-semibold text-white leading-tight">{opt.label}</span>
-						<span class="text-xs text-zinc-400 leading-tight">{opt.sub}</span>
+						<span class="text-xs text-zinc-300 leading-tight">{opt.sub}</span>
 					</label>
 				{/each}
 			</div>
@@ -662,11 +662,19 @@
 
 		<!-- Photo (optional) -->
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+			<label for="photo-input" class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
 				<Icon name="camera" size={14} class="text-sky-400" />
-				Photo <span class="text-zinc-400 font-normal">(optional)</span>
-			</div>
+				Photo <span class="text-zinc-300 font-normal">(optional)</span>
+			</label>
 
+			<input
+				bind:this={photoInput}
+				id="photo-input"
+				type="file"
+				accept="image/jpeg,image/png,image/webp"
+				class="sr-only"
+				onchange={handlePhotoSelect}
+			/>
 			{#if photoPreview}
 				<div class="relative">
 					<img src={photoPreview} alt="Selected" class="w-full rounded-lg object-cover aspect-video" />
@@ -688,18 +696,9 @@
 					<Icon name="camera" size={15} class="shrink-0" />
 					Add a photo
 				</button>
-				<input
-					bind:this={photoInput}
-					id="photo-input"
-					type="file"
-					accept="image/jpeg,image/png,image/webp"
-					class="sr-only"
-					aria-label="Upload a pothole photo"
-					onchange={handlePhotoSelect}
-				/>
 			{/if}
 
-			<p class="text-xs text-zinc-400">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
+			<p class="text-xs text-zinc-300">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
 		</div>
 
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3" role="status" aria-live="polite" aria-atomic="true">
@@ -719,16 +718,16 @@
 					</div>
 					<div class="grid gap-2 sm:grid-cols-2">
 						<div class="rounded-lg bg-zinc-800/60 p-3">
-							<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">Severity</p>
+							<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-300">Severity</p>
 							<p class="mt-1 text-sm text-zinc-300">{severity ?? 'Optional — not added yet'}</p>
 						</div>
 						<div class="rounded-lg bg-zinc-800/60 p-3">
-							<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">Photo</p>
+							<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-300">Photo</p>
 							<p class="mt-1 text-sm text-zinc-300">{photoFile ? 'Attached and ready to upload' : 'Optional — not added yet'}</p>
 						</div>
 					</div>
 				</div>
-				<p class="text-xs text-zinc-400 leading-relaxed">
+				<p class="text-xs text-zinc-300 leading-relaxed">
 					After you submit, a pothole page is created right away. It appears on the public map after
 					{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location.
 				</p>
@@ -736,11 +735,15 @@
 				<p class="text-sm text-zinc-300">
 					Choose a location above to unlock the report button.
 				</p>
-				<p class="text-xs text-zinc-400">
+				<p class="text-xs text-zinc-300">
 					Use GPS for the fastest report, or switch to address search or map pin if location access fails.
 				</p>
 			{/if}
 		</div>
+
+		<p class="text-xs text-zinc-300 text-center">
+			By submitting you consent to collection of your rounded GPS location (±11 m), a hashed IP address for deduplication, and any photos you attach (reviewed before publishing). No account required. <a href="/about#privacy" class="underline hover:text-white">Privacy policy →</a>
+		</p>
 
 		<button
 			type="submit"
@@ -756,13 +759,10 @@
 			{/if}
 		</button>
 
-		<p class="text-xs text-zinc-400 text-center">
+		<p class="text-xs text-zinc-300 text-center">
 			{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location are needed before a pothole appears on the public map.
 		</p>
-		<p class="text-xs text-zinc-400 text-center">
-			By submitting you consent to collection of your rounded GPS location (±11 m), a hashed IP address for deduplication, and any photos you attach (reviewed before publishing). No account required. <a href="/about#privacy" class="underline hover:text-white">Privacy policy →</a>
-		</p>
-		<p class="text-xs text-zinc-400 text-center">
+		<p class="text-xs text-zinc-300 text-center">
 			On a major road? It may be maintained by the Region of Waterloo, not the city. <a href="/about" class="underline hover:text-white">Learn more →</a>
 		</p>
 	</form>

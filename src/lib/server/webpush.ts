@@ -1,9 +1,8 @@
 import webpush from 'web-push';
 import { env } from '$env/dynamic/private';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { createClient } from '@supabase/supabase-js';
 import { logError } from '$lib/server/observability';
 import { isSafePushEndpoint } from '$lib/server/ssrf';
+import { getAdminClient } from '$lib/server/supabase';
 
 let initialized = false;
 
@@ -31,7 +30,7 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 	init();
 	if (!initialized) return; // VAPID keys not configured — skip silently
 
-	const db = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+	const db = getAdminClient();
 	const { data: subscriptions, error: queryError } = await db
 		.from('push_subscriptions')
 		.select('endpoint, p256dh, auth');
@@ -84,7 +83,7 @@ export async function notifyFillSubscribers(potholeId: string, address: string |
 	init();
 	if (!initialized) return;
 
-	const db = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+	const db = getAdminClient();
 	const { data: subscriptions, error: queryError } = await db
 		.from('pothole_fill_subscriptions')
 		.select('endpoint, p256dh, auth')

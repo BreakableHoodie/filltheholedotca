@@ -172,10 +172,16 @@ export const actions: Actions = {
 						secure: isSecure,
 						maxAge: 24 * 60 * 60
 					});
+					const now = new Date().toISOString();
 					await getAdminClient()
 						.from('admin_users')
-						.update({ last_login_at: new Date().toISOString() })
+						.update({ last_login_at: now })
 						.eq('id', user.id);
+					const { error: trustedUpdateErr } = await getAdminClient()
+						.from('admin_trusted_devices')
+						.update({ last_used_at: now })
+						.eq('id', trusted.id);
+					if (trustedUpdateErr) logError('admin/login', 'Failed to update trusted device last_used_at', trustedUpdateErr, { userId: user.id });
 					await recordAuthAttempt({
 						userId: user.id,
 						email,
