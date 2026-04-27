@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { notify } from '$lib/server/pushover';
-import { broadcastPush } from '$lib/server/webpush';
+import { broadcastPush, notifyFillSubscribers } from '$lib/server/webpush';
 import { postFilled } from '$lib/server/bluesky';
 import { getAdminClient } from '$lib/server/supabase';
 
@@ -81,6 +81,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		body: 'A pothole in Waterloo Region was just marked as fixed.',
 		url: `https://fillthehole.ca/hole/${parsed.data.id}`
 	});
+	void notifyFillSubscribers(filledPothole.id, filledPothole.address);
 	void postFilled(filledPothole.id, filledPothole.address);
 
 	return json({ ok: true });

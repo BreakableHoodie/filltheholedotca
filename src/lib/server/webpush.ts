@@ -69,3 +69,56 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 		if (deleteError) logError('webpush', 'failed to remove expired push subscriptions', deleteError);
 	}
 }
+
+/**
+ * Send a fill notification to all per-pothole subscribers, then delete the rows.
+ * One-shot: subscriptions are consumed on send regardless of delivery outcome.
+ * Fire-and-forget safe: logs errors but does not throw.
+ */
+export async function notifyFillSubscribers(potholeId: string, address: string | null): Promise<void> {
+	init();
+	if (!initialized) return;
+
+	const db = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+	const { data: subscriptions, error: queryError } = await db
+		.from('pothole_fill_subscriptions')
+		.select('endpoint, p256dh, auth')
+		.eq('pothole_id', potholeId);
+
+	if (queryError) {
+		logError('webpush/fill', 'failed to load fill subscriptions', queryError, { potholeId });
+		return;
+	}
+	if (!subscriptions?.length) return;
+
+	const body = address ? `${address} was marked as fixed.` : 'A pothole you were watching was marked as fixed.';
+	const message = JSON.stringify({
+		title: '✅ Pothole filled!',
+		body,
+		url: `/hole/${potholeId}`
+	});
+
+	await Promise.allSettled(
+		subscriptions.map(async (sub) => {
+			try {
+				await webpush.sendNotification(
+					{ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+					message
+				);
+			} catch (err: unknown) {
+				const status = (err as { statusCode?: number }).statusCode;
+				if (status !== 410 && status !== 404) {
+					const origin = (() => { try { return new URL(sub.endpoint).origin; } catch { return 'unknown'; } })();
+					logError('webpush/fill', 'send failed', err, { status, endpointOrigin: origin });
+				}
+			}
+		})
+	);
+
+	// Delete all subscriptions for this pothole — one-shot regardless of send outcome.
+	const { error: deleteError } = await db
+		.from('pothole_fill_subscriptions')
+		.delete()
+		.eq('pothole_id', potholeId);
+	if (deleteError) logError('webpush/fill', 'failed to delete fill subscriptions after send', deleteError, { potholeId });
+}

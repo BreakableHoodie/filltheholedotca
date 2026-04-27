@@ -114,6 +114,7 @@ src/
       export.csv/+server.ts   # GET — CSV export of all reported/filled potholes (open data)
       feed.xml/+server.ts     # GET — RSS 2.0 feed of recent confirmations/fills (open data)
       ccc/[id]/+server.ts           # GET — ArcGIS CCC repair data proxy (off SSR path)
+      notify/[id]/+server.ts        # POST/DELETE — per-pothole fill notification subscription
       geocode/search/+server.ts     # GET — Nominatim search proxy (sets User-Agent server-side)
       geocode/reverse/+server.ts    # GET — Nominatim reverse geocode proxy
       admin/pothole/[id]/+server.ts  # DELETE — admin moderation
@@ -182,8 +183,9 @@ Run migrations in this order:
 18. `schema_audit_ttl.sql` — pg_cron purge jobs for `admin_auth_attempts` (90 days) and `admin_audit_log` (24 months) (PIPEDA data minimization)
 19. `schema_hits_ttl.sql` — pg_cron purge jobs for `pothole_hits` and `pothole_actions` older than 90 days (PIPEDA data minimization)
 20. `schema_pothole_confirmations_ttl.sql` — pg_cron purge job for `pothole_confirmations` on resolved potholes older than 90 days (PIPEDA data minimization)
+21. `schema_fill_notifications.sql` — `pothole_fill_subscriptions` table; pg_cron cleanup for subscriptions on potholes expired > 7 days
 
-Nine `pg_cron` jobs run nightly:
+Ten `pg_cron` jobs run nightly:
 
 - `expire-old-potholes` (03:00 UTC): sets `status = 'expired'` on `reported` potholes older than 90 days.
 - `expire-stale-pending` (03:30 UTC): sets `status = 'expired'` on `pending` potholes older than 14 days (anti-suppression).
@@ -194,6 +196,7 @@ Nine `pg_cron` jobs run nightly:
 - `purge-admin-auth-attempts` (05:30 UTC): deletes `admin_auth_attempts` rows older than 90 days (PIPEDA data minimization).
 - `purge-admin-audit-log` (06:00 UTC): deletes `admin_audit_log` rows older than 24 months (PIPEDA breach investigation minimum).
 - `purge-pothole-confirmations` (04:45 UTC): deletes `pothole_confirmations` for potholes that have been `filled` or `expired` for > 90 days (PIPEDA data minimization).
+- `purge-fill-subscriptions` (05:15 UTC): deletes `pothole_fill_subscriptions` for potholes that have been `expired` for > 7 days (safety net; subscriptions are normally deleted on send).
 
 ## Status Flow
 
