@@ -61,9 +61,9 @@ test.describe('Stats page', () => {
 		// It must be in the DOM (visually hidden, not display:none) so screen readers can reach it.
 		const table = page.getByRole('table', { name: /Monthly pothole reports/i });
 		await expect(table).toBeAttached();
-		await expect(page.getByRole('columnheader', { name: 'Month' })).toBeAttached();
-		await expect(page.getByRole('columnheader', { name: 'Reported' })).toBeAttached();
-		await expect(page.getByRole('columnheader', { name: 'Filled' })).toBeAttached();
+		await expect(table.getByRole('columnheader', { name: 'Month' })).toBeAttached();
+		await expect(table.getByRole('columnheader', { name: 'Reported' })).toBeAttached();
+		await expect(table.getByRole('columnheader', { name: 'Filled' })).toBeAttached();
 		// 18 months are always rendered (even with no data)
 		await expect(table.locator('tbody tr')).toHaveCount(18);
 	});

@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { logError } from '$lib/server/observability';
 import { getAdminClient } from '$lib/server/supabase';
+import { isSafePushEndpoint } from '$lib/server/ssrf';
+
 const subscribeSchema = z.object({
 	endpoint: z.string().url().max(2048),
 	keys: z.object({
@@ -25,6 +27,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const raw = await request.json().catch(() => null);
 	const parsed = subscribeSchema.safeParse(raw);
 	if (!parsed.success) throw error(400, 'Invalid subscription');
+	if (!isSafePushEndpoint(parsed.data.endpoint)) throw error(400, 'Invalid subscription');
 
 	const ipHash = await hashIp(getClientAddress());
 	const db = getAdminClient();

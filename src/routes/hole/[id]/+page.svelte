@@ -15,7 +15,7 @@
 	import type { Councillor } from '$lib/wards';
 	import { isWatched, toggleWatch } from '$lib/watchlist';
 	import { format } from 'date-fns';
-	import { onMount, untrack } from 'svelte';
+	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 	import type { CityRepairRequest } from './+page.server';
@@ -64,12 +64,16 @@
 
 	// ── "I hit this" signal ────────────────────────────────────────────────
 	let hitCount = $state(untrack(() => data.hitCount) ?? 0);
-	let hitSubmitted = $state(false);
-	let hittingIt = $state(false);
-
-	onMount(() => {
-		hitSubmitted = localStorage.getItem(`hit:${pothole.id}`) === '1';
+	// Bumped after a successful hit to force $derived to re-read localStorage immediately.
+	let _hitVersion = $state(0);
+	// $derived.by re-runs on navigation (pothole.id changes) and after a successful hit
+	// (_hitVersion bumped). localStorage is unavailable during SSR so we guard it.
+	let hitSubmitted = $derived.by(() => {
+		void _hitVersion; // read to track as reactive dependency; bumped after localStorage write
+		if (typeof localStorage === 'undefined') return false;
+		return localStorage.getItem(`hit:${pothole.id}`) === '1';
 	});
+	let hittingIt = $state(false);
 
 	async function subscribeFillNotification() {
 		if (!swRegistration || !vapidKey) return;
@@ -131,7 +135,7 @@
 			const result = await res.json();
 			hitCount = result.count ?? hitCount;
 			localStorage.setItem(`hit:${pothole.id}`, '1');
-			hitSubmitted = true;
+			_hitVersion++;
 			toast.success('Recorded! Your experience helps prioritize repairs.');
 		} catch {
 			toastError('Something went wrong. Try again.');
@@ -182,16 +186,20 @@
 
 	// Re-run on navigation (pothole.id changes) so fillNotifState resets correctly
 	// when the user moves between detail pages via client-side routing.
+	// The cancelled flag prevents a stale async completion (e.g. slow SW registration)
+	// from overwriting state after the user has already navigated to a different pothole.
 	$effect(() => {
 		const id = pothole.id;
 		const status = pothole.status;
 		fillNotifState = 'unsupported';
 		if (!vapidKey || !('serviceWorker' in navigator) || !('PushManager' in window) || status !== 'reported') return;
+		let cancelled = false;
 		(async () => {
 			try {
 				if (!untrack(() => swRegistration)) {
 					swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
 				}
+				if (cancelled) return;
 				fillNotifState =
 					Notification.permission === 'denied' ? 'denied'
 					: localStorage.getItem(`fill-notify:${id}`) === '1' ? 'subscribed'
@@ -200,6 +208,7 @@
 				// fillNotifState stays 'unsupported'
 			}
 		})();
+		return () => { cancelled = true; };
 	});
 
 	let submitting = $state(false);
@@ -316,11 +325,12 @@
 		};
 	});
 
-	// Watch state — initialised on mount to avoid SSR/hydration mismatch
+	// Watch state — initialised in $effect (client-only) to avoid SSR/hydration mismatch.
+	// $effect re-runs on navigation so watching reflects the correct pothole.
 	let watching = $state(false);
 	let watchMounted = $state(false);
 
-	onMount(() => {
+	$effect(() => {
 		watching = isWatched(pothole.id);
 		watchMounted = true;
 	});

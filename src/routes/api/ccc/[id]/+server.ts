@@ -14,7 +14,7 @@ const CCC_RADIUS_M = 200;
 // Fetches Kitchener CCC repair request data near the pothole from ArcGIS.
 // Running server-side keeps pothole coordinates off the browser→ArcGIS path
 // and moves the ArcGIS latency (up to 5 s) off the SSR critical path —
-// callers fetch this endpoint from onMount after the page has painted.
+// callers fetch this endpoint from a $effect after the page has painted.
 export const GET: RequestHandler = async ({ params }) => {
 	const parsed = z.object({ id: z.string().uuid() }).safeParse(params);
 	if (!parsed.success) throw error(400, 'Invalid ID');
