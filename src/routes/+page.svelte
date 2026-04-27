@@ -87,8 +87,7 @@
 		mobileToolsOpen = false;
 		goto(`/report?lat=${reportLatLng.lat}&lng=${reportLatLng.lng}`);
 	}
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let wardLayerRef: any = null;
+	let wardLayerRef: Leaflet.GeoJSON | null = null;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let clusterGroups: Record<string, any> = {};
 
@@ -249,6 +248,7 @@
 
 			if (wardLayerRef) wardLayerRef.bringToBack();
 			layers.wards = true;
+			toast.success('Ward heatmap loaded.');
 		} catch (err) {
 			toastError('Could not load ward boundaries. Try again later.');
 			Sentry.captureException(err, { tags: { area: 'ward-heatmap' } });
@@ -493,7 +493,7 @@
 <h1 class="sr-only">Waterloo Region Pothole Map</h1>
 
 <aside class="sr-only" aria-label="Pothole list">
-	<h2>Active potholes ({liveReportedCount})</h2>
+	<h2 aria-live="polite" aria-atomic="true">Active potholes ({liveReportedCount})</h2>
 	{#if liveReportedCount === 0}
 		<p>No active potholes reported.</p>
 	{:else}
@@ -642,7 +642,7 @@
 				<div class="flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-zinc-800/80">
 					<div class="min-w-0">
 						<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-300">Map tools</p>
-						<p class="text-sm text-white font-semibold">{liveReportedCount} live pothole{liveReportedCount === 1 ? '' : 's'} on the public map</p>
+						<p class="text-sm text-white font-semibold" aria-live="polite" aria-atomic="true">{liveReportedCount} live pothole{liveReportedCount === 1 ? '' : 's'} on the public map</p>
 						<p class="text-[11px] text-zinc-400">Tap a marker for details or drop a pin to report a new one.</p>
 					</div>
 					<button
