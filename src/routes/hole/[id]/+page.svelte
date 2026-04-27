@@ -525,7 +525,7 @@
 						<div class="transition-colors {isPast ? cfg.colorClass : 'text-zinc-700'}">
 							<Icon name={cfg.icon} size={22} />
 						</div>
-						<span class="text-xs {isCurrent ? 'text-white font-semibold' : isPast ? 'text-zinc-400' : 'text-zinc-600'}">{cfg.label}</span>
+						<span class="text-xs {isCurrent ? 'text-white font-semibold' : isPast ? 'text-zinc-300' : 'text-zinc-600'}">{cfg.label}</span>
 						{#if isCurrent}
 							<div class="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
 						{/if}
@@ -631,7 +631,7 @@
 				<Icon name="alert-triangle" size={14} class="shrink-0" />
 				Recurring road issue
 			</div>
-			<p class="text-xs text-zinc-400 leading-relaxed">
+			<p class="text-xs text-zinc-300 leading-relaxed">
 				A nearby pothole
 				{#if mostRecent.address}
 					at <span class="text-zinc-300">{mostRecent.address}</span>
@@ -651,7 +651,7 @@
 				<Icon name="flag" size={14} class="text-sky-400 shrink-0" />
 				Report it officially too
 			</div>
-			<p class="text-zinc-400 text-sm">
+			<p class="text-zinc-300 text-sm">
 				This page creates public visibility. Reporting it to the road owner through official channels can help start their repair or claims process.
 			</p>
 			<div class="grid gap-2 sm:grid-cols-2">
@@ -676,7 +676,7 @@
 					Submit a claim — {REGION_REPORT_LINK.label}
 				</a>
 			</div>
-			<div class="rounded-lg bg-zinc-800/80 p-3 text-xs text-zinc-400 leading-relaxed space-y-1.5">
+			<div class="rounded-lg bg-zinc-800/80 p-3 text-xs text-zinc-300 leading-relaxed space-y-1.5">
 				<p>
 					Local residential streets usually belong to the city. Major roads like King, Weber, Victoria, and Erb are often Regional roads.
 				</p>
@@ -803,11 +803,11 @@
 					<Icon name="check-circle" size={15} class="shrink-0" />
 					It's been filled!
 				</h3>
-				<p class="text-zinc-400 text-sm">Confirm the city has patched this one up.</p>
+				<p class="text-zinc-300 text-sm">Confirm the city has patched this one up.</p>
 				<div class="flex gap-2">
 					<button
 						onclick={() => (showFilledForm = false)}
-						class="flex-1 py-2 border border-zinc-700 text-zinc-400 rounded-lg text-sm hover:border-zinc-500 transition-colors"
+						class="flex-1 py-2 border border-zinc-700 text-zinc-300 rounded-lg text-sm hover:border-zinc-500 transition-colors"
 					>Cancel</button>
 					<button
 						onclick={markFilled}
@@ -833,7 +833,7 @@
 				<Icon name="check-circle" size={36} class="text-green-400" />
 			</div>
 			<p class="text-green-300 font-semibold">This pothole has been filled!</p>
-			<p class="text-zinc-400 text-sm mt-1">The city responded. Accountability worked.</p>
+			<p class="text-zinc-300 text-sm mt-1">The city responded. Accountability worked.</p>
 		</div>
 	{/if}
 
@@ -867,14 +867,14 @@
 				<Icon name="flag" size={14} class="text-sky-400 shrink-0" />
 				City repair {cityRepairRequests.length === 1 ? 'request' : 'requests'} on file
 			</div>
-			<p class="text-zinc-400 text-sm">
+			<p class="text-zinc-300 text-sm">
 				Kitchener's 311 system has
 				<span class="text-white font-semibold">{cityRepairRequests.length} official pothole repair {cityRepairRequests.length === 1 ? 'request' : 'requests'}</span>
 				logged within 200 m of this location.
 			</p>
 			<ul class="space-y-1.5">
 				{#each cityRepairRequests as req (req.date + req.intersection)}
-					<li class="flex items-start gap-2 text-xs text-zinc-400">
+					<li class="flex items-start gap-2 text-xs text-zinc-300">
 						<Icon name="clock" size={12} class="text-zinc-600 shrink-0 mt-0.5" />
 						<span>
 							<span class="text-zinc-300">{req.intersection}</span>
@@ -893,7 +893,7 @@
 				<Icon name="mail" size={14} class="text-sky-400 shrink-0" />
 				Contact your councillor
 			</div>
-			<p class="text-zinc-400 text-sm">
+			<p class="text-zinc-300 text-sm">
 				{councillor.city.charAt(0).toUpperCase() + councillor.city.slice(1)}, Ward {councillor.ward} — <span class="text-white">{councillor.name}</span>
 			</p>
 			<div class="flex flex-wrap gap-2">
