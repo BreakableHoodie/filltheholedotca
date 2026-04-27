@@ -742,6 +742,10 @@
 			{/if}
 		</div>
 
+		<p class="text-xs text-zinc-300 text-center">
+			By submitting you consent to collection of your rounded GPS location (±11 m), a hashed IP address for deduplication, and any photos you attach (reviewed before publishing). No account required. <a href="/about#privacy" class="underline hover:text-white">Privacy policy →</a>
+		</p>
+
 		<button
 			type="submit"
 			disabled={submitting || !hasLocation}
@@ -758,9 +762,6 @@
 
 		<p class="text-xs text-zinc-300 text-center">
 			{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location are needed before a pothole appears on the public map.
-		</p>
-		<p class="text-xs text-zinc-300 text-center">
-			By submitting you consent to collection of your rounded GPS location (±11 m), a hashed IP address for deduplication, and any photos you attach (reviewed before publishing). No account required. <a href="/about#privacy" class="underline hover:text-white">Privacy policy →</a>
 		</p>
 		<p class="text-xs text-zinc-300 text-center">
 			On a major road? It may be maintained by the Region of Waterloo, not the city. <a href="/about" class="underline hover:text-white">Learn more →</a>

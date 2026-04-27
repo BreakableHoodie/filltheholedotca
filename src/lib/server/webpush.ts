@@ -1,9 +1,8 @@
 import webpush from 'web-push';
 import { env } from '$env/dynamic/private';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { createClient } from '@supabase/supabase-js';
 import { logError } from '$lib/server/observability';
 import { isSafePushEndpoint } from '$lib/server/ssrf';
+import { getAdminClient } from '$lib/server/supabase';
 
 let initialized = false;
 
@@ -31,8 +30,7 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 	init();
 	if (!initialized) return; // VAPID keys not configured — skip silently
 
-	const db = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-	const { data: subscriptions, error: queryError } = await db
+	const { data: subscriptions, error: queryError } = await getAdminClient()
 		.from('push_subscriptions')
 		.select('endpoint, p256dh, auth');
 
@@ -70,7 +68,7 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 	);
 
 	if (expired.length > 0) {
-		const { error: deleteError } = await db.from('push_subscriptions').delete().in('endpoint', expired);
+		const { error: deleteError } = await getAdminClient().from('push_subscriptions').delete().in('endpoint', expired);
 		if (deleteError) logError('webpush', 'failed to remove expired push subscriptions', deleteError);
 	}
 }
@@ -84,8 +82,7 @@ export async function notifyFillSubscribers(potholeId: string, address: string |
 	init();
 	if (!initialized) return;
 
-	const db = createClient(PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-	const { data: subscriptions, error: queryError } = await db
+	const { data: subscriptions, error: queryError } = await getAdminClient()
 		.from('pothole_fill_subscriptions')
 		.select('endpoint, p256dh, auth')
 		.eq('pothole_id', potholeId);
@@ -122,7 +119,7 @@ export async function notifyFillSubscribers(potholeId: string, address: string |
 	);
 
 	// Delete all subscriptions for this pothole — one-shot regardless of send outcome.
-	const { error: deleteError } = await db
+	const { error: deleteError } = await getAdminClient()
 		.from('pothole_fill_subscriptions')
 		.delete()
 		.eq('pothole_id', potholeId);
