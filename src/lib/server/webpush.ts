@@ -30,7 +30,8 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 	init();
 	if (!initialized) return; // VAPID keys not configured — skip silently
 
-	const { data: subscriptions, error: queryError } = await getAdminClient()
+	const db = getAdminClient();
+	const { data: subscriptions, error: queryError } = await db
 		.from('push_subscriptions')
 		.select('endpoint, p256dh, auth');
 
@@ -68,7 +69,7 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 	);
 
 	if (expired.length > 0) {
-		const { error: deleteError } = await getAdminClient().from('push_subscriptions').delete().in('endpoint', expired);
+		const { error: deleteError } = await db.from('push_subscriptions').delete().in('endpoint', expired);
 		if (deleteError) logError('webpush', 'failed to remove expired push subscriptions', deleteError);
 	}
 }
@@ -82,7 +83,8 @@ export async function notifyFillSubscribers(potholeId: string, address: string |
 	init();
 	if (!initialized) return;
 
-	const { data: subscriptions, error: queryError } = await getAdminClient()
+	const db = getAdminClient();
+	const { data: subscriptions, error: queryError } = await db
 		.from('pothole_fill_subscriptions')
 		.select('endpoint, p256dh, auth')
 		.eq('pothole_id', potholeId);
@@ -119,7 +121,7 @@ export async function notifyFillSubscribers(potholeId: string, address: string |
 	);
 
 	// Delete all subscriptions for this pothole — one-shot regardless of send outcome.
-	const { error: deleteError } = await getAdminClient()
+	const { error: deleteError } = await db
 		.from('pothole_fill_subscriptions')
 		.delete()
 		.eq('pothole_id', potholeId);

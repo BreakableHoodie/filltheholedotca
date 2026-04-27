@@ -516,8 +516,8 @@
 						Could not get your location — signal may be weak. Try moving outside, or use address or map mode instead.
 					</p>
 					<p class="text-xs text-zinc-300">
-						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-zinc-300 transition-colors">Enter an address</button>
-						or <button type="button" onclick={() => (locationMode = 'map')} class="underline hover:text-zinc-300 transition-colors">pin on the map</button>.
+						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-white transition-colors">Enter an address</button>
+						or <button type="button" onclick={() => (locationMode = 'map')} class="underline hover:text-white transition-colors">pin on the map</button>.
 					</p>
 				{/if}
 
@@ -525,7 +525,7 @@
 					<p class="flex items-center gap-1.5 text-xs text-zinc-300">
 						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
 						{address}
-						<span>· via <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-zinc-300">OpenStreetMap</a></span>
+						<span>· via <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-white">OpenStreetMap</a></span>
 					</p>
 				{:else if gpsStatus === 'got'}
 					<p class="text-xs text-zinc-300">Looking up address via OpenStreetMap…</p>
@@ -667,6 +667,14 @@
 				Photo <span class="text-zinc-300 font-normal">(optional)</span>
 			</label>
 
+			<input
+				bind:this={photoInput}
+				id="photo-input"
+				type="file"
+				accept="image/jpeg,image/png,image/webp"
+				class="sr-only"
+				onchange={handlePhotoSelect}
+			/>
 			{#if photoPreview}
 				<div class="relative">
 					<img src={photoPreview} alt="Selected" class="w-full rounded-lg object-cover aspect-video" />
@@ -688,15 +696,6 @@
 					<Icon name="camera" size={15} class="shrink-0" />
 					Add a photo
 				</button>
-				<input
-					bind:this={photoInput}
-					id="photo-input"
-					type="file"
-					accept="image/jpeg,image/png,image/webp"
-					class="sr-only"
-					aria-label="Upload a pothole photo"
-					onchange={handlePhotoSelect}
-				/>
 			{/if}
 
 			<p class="text-xs text-zinc-300">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
