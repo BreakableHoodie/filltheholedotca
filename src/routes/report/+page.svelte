@@ -662,10 +662,10 @@
 
 		<!-- Photo (optional) -->
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+			<label for="photo-input" class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
 				<Icon name="camera" size={14} class="text-sky-400" />
 				Photo <span class="text-zinc-300 font-normal">(optional)</span>
-			</div>
+			</label>
 
 			{#if photoPreview}
 				<div class="relative">
