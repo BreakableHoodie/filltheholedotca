@@ -409,7 +409,7 @@
 					<Icon name="check-circle" size={18} class="text-sky-400" />
 				</div>
 				<div class="space-y-1.5">
-					<h2 id="submitted-card-heading" class="text-base font-semibold text-white">Report received</h2>
+					<p id="submitted-card-heading" class="text-base font-semibold text-white">Report received</p>
 					{#if pothole.status === 'pending'}
 						<p class="text-sm text-zinc-300">
 							Your report is saved and waiting for independent confirmation before it appears on the public map.
