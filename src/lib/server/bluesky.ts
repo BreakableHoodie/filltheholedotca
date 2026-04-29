@@ -6,6 +6,9 @@ const BSKY_PDS = 'https://bsky.social';
 // Bluesky's grapheme limit per post.
 const MAX_POST_LENGTH = 300;
 
+// Log the "not configured" warning at most once per process lifetime.
+let _warnedNotConfigured = false;
+
 interface Session {
 	accessJwt: string;
 	did: string;
@@ -16,7 +19,13 @@ async function createSession(): Promise<Session | null> {
 	const password = env.BLUESKY_APP_PASSWORD;
 
 	// Not configured — silently no-op so the app works without Bluesky.
-	if (!handle || !password) return null;
+	if (!handle || !password) {
+		if (!_warnedNotConfigured) {
+			_warnedNotConfigured = true;
+			console.info('[bluesky] BLUESKY_HANDLE or BLUESKY_APP_PASSWORD not set — posting disabled');
+		}
+		return null;
+	}
 
 	const res = await fetch(`${BSKY_PDS}/xrpc/com.atproto.server.createSession`, {
 		method: 'POST',
@@ -27,7 +36,11 @@ async function createSession(): Promise<Session | null> {
 
 	if (!res.ok) {
 		const body = await res.text().catch(() => '');
-		logError('bluesky/session', `Auth failed with HTTP ${res.status}`, new Error(body || String(res.status)));
+		logError(
+			'bluesky/session',
+			`Auth failed — check BLUESKY_HANDLE and BLUESKY_APP_PASSWORD environment variables (HTTP ${res.status})`,
+			new Error(body || String(res.status))
+		);
 		return null;
 	}
 
