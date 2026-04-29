@@ -78,6 +78,7 @@
 		mobileToolsOpen = false;
 
 		if (!navigator.geolocation) {
+			toastError('Location is not available in this browser. Tap the map to drop a pin instead.');
 			enterReportMode();
 			return;
 		}
@@ -88,9 +89,17 @@
 				reportLocating = false;
 				goto(`/report?lat=${coords.latitude}&lng=${coords.longitude}`);
 			},
-			() => {
+			(error) => {
 				reportLocating = false;
-				toastError('Location access denied. Tap the map to drop a pin instead.');
+				let message = 'Unable to get your location. Tap the map to drop a pin instead.';
+				if (error.code === error.PERMISSION_DENIED) {
+					message = 'Location access denied. Tap the map to drop a pin instead.';
+				} else if (error.code === error.POSITION_UNAVAILABLE) {
+					message = 'Your location is unavailable right now. Tap the map to drop a pin instead.';
+				} else if (error.code === error.TIMEOUT) {
+					message = 'Getting your location took too long. Tap the map to drop a pin instead.';
+				}
+				toastError(message);
 				enterReportMode();
 			},
 			{ enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }

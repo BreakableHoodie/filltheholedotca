@@ -6,6 +6,9 @@ const BSKY_PDS = 'https://bsky.social';
 // Bluesky's grapheme limit per post.
 const MAX_POST_LENGTH = 300;
 
+// Log the "not configured" warning at most once per process lifetime.
+let _warnedNotConfigured = false;
+
 interface Session {
 	accessJwt: string;
 	did: string;
@@ -17,7 +20,10 @@ async function createSession(): Promise<Session | null> {
 
 	// Not configured — silently no-op so the app works without Bluesky.
 	if (!handle || !password) {
-		console.info('[bluesky] BLUESKY_HANDLE or BLUESKY_APP_PASSWORD not set — posting disabled');
+		if (!_warnedNotConfigured) {
+			_warnedNotConfigured = true;
+			console.info('[bluesky] BLUESKY_HANDLE or BLUESKY_APP_PASSWORD not set — posting disabled');
+		}
 		return null;
 	}
 
@@ -32,7 +38,7 @@ async function createSession(): Promise<Session | null> {
 		const body = await res.text().catch(() => '');
 		logError(
 			'bluesky/session',
-			`Auth failed — check BLUESKY_HANDLE and BLUESKY_APP_PASSWORD in Netlify env vars (HTTP ${res.status})`,
+			`Auth failed — check BLUESKY_HANDLE and BLUESKY_APP_PASSWORD environment variables (HTTP ${res.status})`,
 			new Error(body || String(res.status))
 		);
 		return null;
