@@ -642,7 +642,7 @@
 				<div class="flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-zinc-800/80">
 					<div class="min-w-0">
 						<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-300">Map tools</p>
-						<p class="text-sm text-white font-semibold" aria-live="polite" aria-atomic="true">{liveReportedCount} live pothole{liveReportedCount === 1 ? '' : 's'} on the public map</p>
+						<p class="text-sm text-white font-semibold">{liveReportedCount} live pothole{liveReportedCount === 1 ? '' : 's'} on the public map</p>
 						<p class="text-[11px] text-zinc-400">Tap a marker for details or drop a pin to report a new one.</p>
 					</div>
 					<button
