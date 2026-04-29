@@ -43,7 +43,7 @@ export async function hashClientAddressForLog(
 	try {
 		return await hashIp(getClientAddress());
 	} catch (e) {
-		console.error(`[${scope}] Failed to hash client IP for logging:`, e);
+		console.error('[%s] Failed to hash client IP for logging:', scope, e);
 		return 'unavailable';
 	}
 }

@@ -34,7 +34,7 @@ function sanitizeContext(ctx: LogContext): LogContext {
  * indexes for filtering.
  */
 export function logError(area: string, message: string, err: unknown, context?: LogContext): void {
-	console.error(`[${area}] ${message}:`, err);
+	console.error('[%s] %s:', area, message, err);
 	Sentry.captureException(err, {
 		tags: { area },
 		extra: { message, ...(context ? sanitizeContext(context) : {}) }
