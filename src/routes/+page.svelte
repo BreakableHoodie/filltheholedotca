@@ -28,6 +28,7 @@
 	let watchlistCount = $state(0);
 	let watchlistSection: HTMLElement | null = null;
 	let mobileToolsOpen = $state(false);
+	let reportLocating = $state(false);
 	let liveReportedCount = $derived(
 		potholes.filter((pothole) => pothole.status === 'reported').length
 	);
@@ -69,6 +70,31 @@
 		if (mapRef) mapRef.getContainer().style.cursor = 'crosshair';
 		await tick();
 		cancelReportModeButton?.focus();
+	}
+
+	// Mobile-only: try GPS first, navigate directly to /report if available.
+	// Falls back to pin-drop mode if location is denied or unavailable.
+	function reportHereFromGps() {
+		mobileToolsOpen = false;
+
+		if (!navigator.geolocation) {
+			enterReportMode();
+			return;
+		}
+
+		reportLocating = true;
+		navigator.geolocation.getCurrentPosition(
+			({ coords }) => {
+				reportLocating = false;
+				goto(`/report?lat=${coords.latitude}&lng=${coords.longitude}`);
+			},
+			() => {
+				reportLocating = false;
+				toastError('Location access denied. Tap the map to drop a pin instead.');
+				enterReportMode();
+			},
+			{ enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+		);
 	}
 
 	function exitReportMode() {
@@ -638,8 +664,8 @@
 
 	{#if mapReady}
 		<div class="absolute safe-bottom-mobile-tray inset-x-3 z-[1000] sm:hidden">
-			<div class="rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden">
-				<div class="flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-zinc-800/80">
+			<div class="rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden flex flex-col">
+				<div class="shrink-0 flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-zinc-800/80">
 					<div class="min-w-0">
 						<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-300">Map tools</p>
 						<p class="text-sm text-white font-semibold" aria-live="polite" aria-atomic="true">{liveReportedCount} live pothole{liveReportedCount === 1 ? '' : 's'} on the public map</p>
@@ -657,16 +683,21 @@
 					</button>
 				</div>
 
-				<div class="grid grid-cols-2 gap-2 px-4 py-3">
+				<div class="shrink-0 grid grid-cols-2 gap-2 px-4 py-3">
 					<button
 						type="button"
-						onclick={enterReportMode}
+						onclick={reportHereFromGps}
 						aria-pressed={reportMode}
-						disabled={reportMode}
+						disabled={reportMode || reportLocating}
 						class="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-700 px-3 py-3 text-sm font-bold text-white transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
 					>
-						<Icon name="map-pin" size={14} class="shrink-0" />
-						Report here
+						{#if reportLocating}
+							<Icon name="loader" size={14} class="animate-spin shrink-0" />
+							Locating…
+						{:else}
+							<Icon name="map-pin" size={14} class="shrink-0" />
+							Report here
+						{/if}
 					</button>
 					<button
 						type="button"
@@ -685,7 +716,8 @@
 				</div>
 
 				{#if mobileToolsOpen}
-					<div id="mobile-map-tools" class="border-t border-zinc-800 px-4 py-3 space-y-4">
+					<div id="mobile-map-tools" class="border-t border-zinc-800 overflow-y-auto max-h-[50dvh]">
+						<div class="px-4 py-3 space-y-4">
 						<div class="space-y-2">
 							<h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">Recent live reports</h2>
 							{#if recentReportedPotholes.length > 0}
@@ -761,6 +793,7 @@
 								{/each}
 							</div>
 						</div>
+					</div>
 					</div>
 				{/if}
 			</div>
