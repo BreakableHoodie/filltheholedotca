@@ -698,7 +698,7 @@
 				</button>
 			{/if}
 
-			<p class="text-xs text-zinc-300">Photos are reviewed before appearing publicly. Only take one if you're safely off the road.</p>
+			<p class="text-xs text-zinc-300">Photos are reviewed before appearing publicly — usually within a few hours. Only take one if you're safely off the road.</p>
 		</div>
 
 		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3" role="status" aria-live="polite" aria-atomic="true">

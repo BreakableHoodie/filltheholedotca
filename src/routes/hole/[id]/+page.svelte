@@ -402,6 +402,41 @@
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6" inert={lightboxIndex !== null}>
+	<!-- Header -->
+	<div>
+		<div class="flex items-center justify-between mb-3">
+			<a href={pothole.status === 'reported' ? `/?focus=${pothole.id}&lat=${pothole.lat}&lng=${pothole.lng}` : '/'} class="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+				<Icon name="arrow-left" size={14} />
+				Back to map
+			</a>
+			{#if watchMounted}
+				<button
+					onclick={handleWatch}
+					aria-pressed={watching}
+					aria-label={watching ? 'Remove from watchlist' : 'Add to watchlist'}
+					class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors
+						{watching
+							? 'bg-sky-900/40 border-sky-700 text-sky-400 hover:bg-sky-900/60'
+							: 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'}"
+				>
+					<Icon name={watching ? 'bookmark-filled' : 'bookmark'} size={13} class="shrink-0" />
+					{watching ? 'Watching' : 'Watch'}
+				</button>
+			{/if}
+		</div>
+		<h1 class="page-title text-2xl sm:text-3xl text-white">
+			{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
+		</h1>
+		<div class="flex items-center gap-2 mt-1.5">
+			{#if info}
+				<Icon name={info.icon} size={16} class={info.colorClass} />
+				<span class="font-semibold {info.colorClass}">{info.label}</span>
+			{/if}
+			<span class="text-zinc-700">·</span>
+			<span class="text-zinc-500 text-sm">Reported {fmt(pothole.created_at)}</span>
+		</div>
+	</div>
+
 	{#if submitted}
 		<div class="bg-sky-950/40 border border-sky-800 rounded-xl p-5 space-y-3">
 			<div class="flex items-start gap-3">
@@ -454,41 +489,6 @@
 			</div>
 		</div>
 	{/if}
-
-	<!-- Header -->
-	<div>
-		<div class="flex items-center justify-between mb-3">
-			<a href={pothole.status === 'reported' ? `/?focus=${pothole.id}&lat=${pothole.lat}&lng=${pothole.lng}` : '/'} class="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
-				<Icon name="arrow-left" size={14} />
-				Back to map
-			</a>
-			{#if watchMounted}
-				<button
-					onclick={handleWatch}
-					aria-pressed={watching}
-					aria-label={watching ? 'Remove from watchlist' : 'Add to watchlist'}
-					class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors
-						{watching
-							? 'bg-sky-900/40 border-sky-700 text-sky-400 hover:bg-sky-900/60'
-							: 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'}"
-				>
-					<Icon name={watching ? 'bookmark-filled' : 'bookmark'} size={13} class="shrink-0" />
-					{watching ? 'Watching' : 'Watch'}
-				</button>
-			{/if}
-		</div>
-		<h1 class="page-title text-2xl sm:text-3xl text-white">
-			{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
-		</h1>
-		<div class="flex items-center gap-2 mt-1.5">
-			{#if info}
-				<Icon name={info.icon} size={16} class={info.colorClass} />
-				<span class="font-semibold {info.colorClass}">{info.label}</span>
-			{/if}
-			<span class="text-zinc-700">·</span>
-			<span class="text-zinc-500 text-sm">Reported {fmt(pothole.created_at)}</span>
-		</div>
-	</div>
 
 	<!-- Pending notice -->
 	{#if pothole.status === 'pending'}
