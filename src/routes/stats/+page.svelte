@@ -374,13 +374,13 @@
 					</thead>
 					<tbody>
 					{#each cityRows as c (c.city)}
-							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
+							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors">
 								<td class="px-4 py-3 font-medium text-stone-900 dark:text-white">{c.city}</td>
 								<td class="px-4 py-3 text-right text-stone-600 dark:text-stone-300">{c.total}</td>
 								<td class="px-4 py-3 text-right font-semibold {c.open > 0 ? 'text-orange-400' : 'text-stone-500 dark:text-stone-400'}">{c.open}</td>
 								<td class="px-4 py-3 text-right text-green-400">{c.filled}</td>
 								<td class="px-4 py-3 text-right text-amber-500">{c.fillRate === null ? '—' : `${fmt(c.fillRate, 0)}%`}</td>
-								<td class="px-4 py-3 text-right text-zinc-400 hidden sm:table-cell">{fmt(c.avgDays, 1)}</td>
+								<td class="px-4 py-3 text-right text-stone-500 dark:text-stone-400 hidden sm:table-cell">{fmt(c.avgDays, 1)}</td>
 							</tr>
 						{/each}
 					</tbody>
@@ -454,7 +454,7 @@
 							<td class="px-4 py-3 text-stone-600 dark:text-stone-300 capitalize">
 									<a href="/stats/ward/{row.city}/{row.ward}" class="hover:text-amber-500 transition-colors">{row.city}</a>
 								</td>
-								<td class="px-4 py-3 text-zinc-300">
+								<td class="px-4 py-3 text-stone-600 dark:text-stone-300">
 									<a href="/stats/ward/{row.city}/{row.ward}" aria-label="{row.city} Ward {row.ward}" class="hover:text-amber-500 transition-colors">Ward {row.ward}</a>
 								</td>
 								<td class="px-4 py-3 hidden md:table-cell">
@@ -511,11 +511,11 @@
 					</thead>
 					<tbody>
 						{#each streetHotspots as row, i (row.street)}
-							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
-								<td class="px-4 py-3 text-zinc-600 tabular-nums">{i + 1}</td>
-								<td class="px-4 py-3 font-medium text-white">{row.street}</td>
-								<td class="px-4 py-3 text-right font-semibold tabular-nums text-zinc-300">{row.total}</td>
-								<td class="px-4 py-3 text-right tabular-nums {row.open > 0 ? 'text-orange-400 font-semibold' : 'text-zinc-500'}">{row.open}</td>
+							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors">
+								<td class="px-4 py-3 text-stone-500 dark:text-stone-400 tabular-nums">{i + 1}</td>
+								<td class="px-4 py-3 font-medium text-stone-900 dark:text-white">{row.street}</td>
+								<td class="px-4 py-3 text-right font-semibold tabular-nums text-stone-700 dark:text-stone-300">{row.total}</td>
+								<td class="px-4 py-3 text-right tabular-nums {row.open > 0 ? 'text-orange-400 font-semibold' : 'text-stone-500 dark:text-stone-400'}">{row.open}</td>
 								<td class="px-4 py-3 text-right tabular-nums text-green-400">{row.filled}</td>
 							</tr>
 						{/each}
@@ -551,7 +551,7 @@
 					</thead>
 					<tbody>
 				{#each offenders as p (p.id)}
-							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
+							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors">
 								<td class="px-4 py-3">
 									<a
 										href="/hole/{p.id}"
@@ -560,7 +560,7 @@
 										{p.address ?? `${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`}
 									</a>
 								</td>
-								<td class="px-4 py-3 text-right text-zinc-400 hidden sm:table-cell">
+								<td class="px-4 py-3 text-right text-stone-500 dark:text-stone-400 hidden sm:table-cell">
 									{format(new Date(p.created_at), 'MMM d, yyyy')}
 								</td>
 								<td class="px-4 py-3 text-right text-stone-600 dark:text-stone-300 tabular-nums">
