@@ -78,7 +78,7 @@
 {#if notifState === 'unsubscribed'}
 	<button
 		onclick={subscribe}
-		class="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+		class="inline-flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-200 transition-colors"
 		title="Get notified when potholes are fixed"
 	>
 		<Icon name="bell" size={13} />
@@ -87,19 +87,19 @@
 {:else if notifState === 'subscribed'}
 	<button
 		onclick={unsubscribe}
-		class="inline-flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 transition-colors"
+		class="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
 		title="You're receiving fill notifications — click to turn off"
 	>
 		<Icon name="bell" size={13} />
 		Notified
 	</button>
 {:else if notifState === 'denied'}
-	<span class="inline-flex items-center gap-1.5 text-xs text-zinc-600 cursor-not-allowed" title="Notifications blocked — change in browser settings">
+	<span class="inline-flex items-center gap-1.5 text-xs text-stone-600 cursor-not-allowed" title="Notifications blocked — change in browser settings">
 		<Icon name="bell-off" size={13} />
 		Blocked
 	</span>
 {:else if notifState === 'pending'}
-	<span class="inline-flex items-center gap-1.5 text-xs text-zinc-400 animate-pulse">
+	<span class="inline-flex items-center gap-1.5 text-xs text-stone-400 animate-pulse">
 		<Icon name="bell" size={13} />
 		…
 	</span>

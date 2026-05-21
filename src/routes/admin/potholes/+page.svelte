@@ -138,7 +138,7 @@
 			case 'reported': return 'text-sky-400 bg-sky-500/10';
 			case 'filled':   return 'text-emerald-400 bg-emerald-500/10';
 			case 'expired':  return 'text-amber-400 bg-amber-500/10';
-			default:         return 'text-zinc-400 bg-zinc-700/50';
+			default:         return 'text-stone-400 bg-stone-700/50';
 		}
 	}
 
@@ -175,8 +175,8 @@
 	<!-- Header -->
 	<div class="flex items-start justify-between gap-4 flex-wrap">
 		<div>
-			<h1 class="text-xl font-semibold text-zinc-100">Potholes</h1>
-			<p class="text-zinc-500 text-sm mt-0.5">
+			<h1 class="text-xl font-semibold text-stone-100">Potholes</h1>
+			<p class="text-stone-500 text-sm mt-0.5">
 				{data.total} pothole{data.total !== 1 ? 's' : ''}
 				{data.filterStatus ? `with status "${data.filterStatus}"` : data.search ? `matching "${data.search}"` : 'total'}
 			</p>
@@ -184,7 +184,7 @@
 		<div class="flex items-center gap-2">
 			<a
 				href={exportUrl('csv')}
-				class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors"
+				class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded border border-stone-700 text-stone-400 hover:text-stone-200 hover:border-stone-600 transition-colors"
 				title={someSelected ? `Export ${selected.size} selected` : 'Export current filters'}
 			>
 				<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,7 +194,7 @@
 			</a>
 			<a
 				href={exportUrl('json')}
-				class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors"
+				class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded border border-stone-700 text-stone-400 hover:text-stone-200 hover:border-stone-600 transition-colors"
 				title={someSelected ? `Export ${selected.size} selected` : 'Export current filters'}
 			>
 				<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,23 +208,23 @@
 	<!-- Filter bar -->
 	<form method="get" class="flex flex-wrap gap-2 items-end">
 		<div class="flex-1 min-w-[180px]">
-			<label for="search" class="block text-xs text-zinc-500 mb-1">Search address</label>
+			<label for="search" class="block text-xs text-stone-500 mb-1">Search address</label>
 			<input
 				id="search"
 				name="search"
 				type="text"
 				bind:value={filterSearch}
 				placeholder="e.g. King St"
-				class="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-1.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-sky-500"
+				class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-amber-500"
 			/>
 		</div>
 		<div>
-			<label for="filter-status" class="block text-xs text-zinc-500 mb-1">Status</label>
+			<label for="filter-status" class="block text-xs text-stone-500 mb-1">Status</label>
 			<select
 				id="filter-status"
 				name="status"
 				bind:value={filterStatus}
-				class="bg-zinc-800 border border-zinc-700 rounded px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-sky-500"
+				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-amber-500"
 			>
 				<option value="">All statuses</option>
 				{#each ['pending', 'reported', 'filled', 'expired'] as s (s)}
@@ -233,12 +233,12 @@
 			</select>
 		</div>
 		<div>
-			<label for="filter-photos" class="block text-xs text-zinc-500 mb-1">Photos</label>
+			<label for="filter-photos" class="block text-xs text-stone-500 mb-1">Photos</label>
 			<select
 				id="filter-photos"
 				name="photosPublished"
 				bind:value={filterPhotos}
-				class="bg-zinc-800 border border-zinc-700 rounded px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-sky-500"
+				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-amber-500"
 			>
 				<option value="">Any</option>
 				<option value="true">Published</option>
@@ -246,23 +246,23 @@
 			</select>
 		</div>
 		<div>
-			<label for="date-from" class="block text-xs text-zinc-500 mb-1">From</label>
+			<label for="date-from" class="block text-xs text-stone-500 mb-1">From</label>
 			<input
 				id="date-from"
 				name="dateFrom"
 				type="date"
 				bind:value={filterDateFrom}
-				class="bg-zinc-800 border border-zinc-700 rounded px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-sky-500"
+				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-amber-500"
 			/>
 		</div>
 		<div>
-			<label for="date-to" class="block text-xs text-zinc-500 mb-1">To</label>
+			<label for="date-to" class="block text-xs text-stone-500 mb-1">To</label>
 			<input
 				id="date-to"
 				name="dateTo"
 				type="date"
 				bind:value={filterDateTo}
-				class="bg-zinc-800 border border-zinc-700 rounded px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-sky-500"
+				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-amber-500"
 			/>
 		</div>
 		<!-- Preserve sort/dir/pageSize across filter changes -->
@@ -272,13 +272,13 @@
 		<div class="flex gap-2">
 			<button
 				type="submit"
-				class="px-3 py-1.5 text-sm font-medium bg-sky-600 hover:bg-sky-500 text-white rounded transition-colors"
+				class="px-3 py-1.5 text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white rounded transition-colors"
 			>
 				Filter
 			</button>
 			<a
 				href="/admin/potholes"
-				class="px-3 py-1.5 text-sm font-medium border border-zinc-700 text-zinc-400 hover:text-zinc-200 rounded transition-colors"
+				class="px-3 py-1.5 text-sm font-medium border border-stone-700 text-stone-400 hover:text-stone-200 rounded transition-colors"
 			>
 				Reset
 			</a>
@@ -287,16 +287,16 @@
 
 	<!-- Bulk toolbar (sticky, appears when items selected) -->
 	{#if someSelected}
-		<div class="sticky top-0 z-10 flex flex-wrap items-center gap-3 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg shadow-lg">
-			<span class="text-sm text-zinc-300 font-medium tabular-nums">{selected.size} selected</span>
-			<div class="w-px h-4 bg-zinc-700"></div>
+		<div class="sticky top-0 z-10 flex flex-wrap items-center gap-3 px-4 py-3 bg-stone-900 border border-stone-700 rounded-lg shadow-lg">
+			<span class="text-sm text-stone-300 font-medium tabular-nums">{selected.size} selected</span>
+			<div class="w-px h-4 bg-stone-700"></div>
 
 			<!-- Change status -->
 			<div class="flex items-center gap-2">
 				<select
 					bind:value={bulkStatus}
 					aria-label="Bulk status"
-					class="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200 focus:outline-none focus:border-sky-500"
+					class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
 				>
 					{#each ['pending', 'reported', 'filled', 'expired'] as s (s)}
 						<option value={s}>{s}</option>
@@ -306,13 +306,13 @@
 					type="submit"
 					form="bulk-main"
 					formaction="?/bulkChangeStatus"
-					class="px-3 py-1 text-xs font-medium bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded transition-colors"
+					class="px-3 py-1 text-xs font-medium bg-stone-700 hover:bg-stone-600 text-stone-200 rounded transition-colors"
 				>
 					Set status
 				</button>
 			</div>
 
-			<div class="w-px h-4 bg-zinc-700"></div>
+			<div class="w-px h-4 bg-stone-700"></div>
 
 			<!-- Photo visibility -->
 			<button
@@ -325,25 +325,25 @@
 			<button
 				type="submit"
 				form="bulk-unpub"
-				class="px-3 py-1 text-xs font-medium border border-zinc-600 text-zinc-400 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
+				class="px-3 py-1 text-xs font-medium border border-stone-600 text-stone-400 bg-stone-800 hover:bg-stone-700 rounded transition-colors"
 			>
 				Hide photos
 			</button>
 
-			<div class="w-px h-4 bg-zinc-700"></div>
+			<div class="w-px h-4 bg-stone-700"></div>
 
 			<!-- Export selection -->
 			<a
 				href={exportUrl('csv')}
-				class="px-3 py-1 text-xs font-medium border border-zinc-700 text-zinc-400 hover:text-zinc-200 rounded transition-colors"
+				class="px-3 py-1 text-xs font-medium border border-stone-700 text-stone-400 hover:text-stone-200 rounded transition-colors"
 			>↓ CSV</a>
 			<a
 				href={exportUrl('json')}
-				class="px-3 py-1 text-xs font-medium border border-zinc-700 text-zinc-400 hover:text-zinc-200 rounded transition-colors"
+				class="px-3 py-1 text-xs font-medium border border-stone-700 text-stone-400 hover:text-stone-200 rounded transition-colors"
 			>↓ JSON</a>
 
 			{#if data.adminRole === 'admin'}
-				<div class="w-px h-4 bg-zinc-700"></div>
+				<div class="w-px h-4 bg-stone-700"></div>
 				<button
 					type="submit"
 					form="bulk-main"
@@ -360,7 +360,7 @@
 			<button
 				type="button"
 				onclick={() => selected.clear()}
-				class="ml-auto text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+				class="ml-auto text-xs text-stone-600 hover:text-stone-400 transition-colors"
 			>
 				Clear selection
 			</button>
@@ -370,55 +370,55 @@
 	{#if data.potholes.length === 0}
 		<div class="text-center py-20">
 			<div class="text-4xl mb-3">🕳️</div>
-			<p class="text-zinc-400 font-medium">No potholes found</p>
-			<p class="text-zinc-600 text-sm mt-1">Try adjusting your filters.</p>
+			<p class="text-stone-400 font-medium">No potholes found</p>
+			<p class="text-stone-600 text-sm mt-1">Try adjusting your filters.</p>
 		</div>
 	{:else}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+		<div class="bg-stone-900 border border-stone-800 rounded-lg overflow-hidden">
 			<div class="overflow-x-auto">
 				<table class="w-full text-sm min-w-[780px]">
 					<thead>
-						<tr class="border-b border-zinc-800 text-left">
+						<tr class="border-b border-stone-800 text-left">
 							<th class="px-4 py-3 w-10">
 								<input
 									type="checkbox"
 									checked={allSelected}
 									indeterminate={someSelected && !allSelected}
 									onchange={toggleAll}
-									class="rounded border-zinc-600 bg-zinc-800 text-sky-500 focus:ring-sky-500/20"
+									class="rounded border-stone-600 bg-stone-800 text-amber-500 focus:ring-amber-500/20"
 									aria-label="Select all"
 								/>
 							</th>
-							<th class="px-4 py-3 text-zinc-500 font-medium">
-								<a href={sortHref('address')} class="inline-flex items-center gap-1 hover:text-zinc-300 transition-colors">
-									Address <span class="text-zinc-600">{sortIcon('address')}</span>
+							<th class="px-4 py-3 text-stone-500 font-medium">
+								<a href={sortHref('address')} class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors">
+									Address <span class="text-stone-600">{sortIcon('address')}</span>
 								</a>
 							</th>
-							<th class="px-4 py-3 text-zinc-500 font-medium">
-								<a href={sortHref('status')} class="inline-flex items-center gap-1 hover:text-zinc-300 transition-colors">
-									Status <span class="text-zinc-600">{sortIcon('status')}</span>
+							<th class="px-4 py-3 text-stone-500 font-medium">
+								<a href={sortHref('status')} class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors">
+									Status <span class="text-stone-600">{sortIcon('status')}</span>
 								</a>
 							</th>
-							<th class="px-4 py-3 text-zinc-500 font-medium">
-								<a href={sortHref('confirmed_count')} class="inline-flex items-center gap-1 hover:text-zinc-300 transition-colors">
-									Conf. <span class="text-zinc-600">{sortIcon('confirmed_count')}</span>
+							<th class="px-4 py-3 text-stone-500 font-medium">
+								<a href={sortHref('confirmed_count')} class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors">
+									Conf. <span class="text-stone-600">{sortIcon('confirmed_count')}</span>
 								</a>
 							</th>
-							<th class="px-4 py-3 text-zinc-500 font-medium">Photos</th>
-							<th class="px-4 py-3 text-zinc-500 font-medium">Visibility</th>
-							<th class="px-4 py-3 text-zinc-500 font-medium">
-								<a href={sortHref('created_at')} class="inline-flex items-center gap-1 hover:text-zinc-300 transition-colors">
-									Reported <span class="text-zinc-600">{sortIcon('created_at')}</span>
+							<th class="px-4 py-3 text-stone-500 font-medium">Photos</th>
+							<th class="px-4 py-3 text-stone-500 font-medium">Visibility</th>
+							<th class="px-4 py-3 text-stone-500 font-medium">
+								<a href={sortHref('created_at')} class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors">
+									Reported <span class="text-stone-600">{sortIcon('created_at')}</span>
 								</a>
 							</th>
-							<th class="px-4 py-3 text-zinc-500 font-medium sr-only">Actions</th>
+							<th class="px-4 py-3 text-stone-500 font-medium sr-only">Actions</th>
 						</tr>
 					</thead>
-					<tbody class="divide-y divide-zinc-800">
+					<tbody class="divide-y divide-stone-800">
 						{#each data.potholes as pothole (pothole.id)}
 							{@const photoCount = pothole.pothole_photos?.length ?? 0}
 							<tr
-								class="hover:bg-zinc-800/40 transition-colors {selected.has(pothole.id) ? 'bg-sky-500/5' : ''}"
+								class="hover:bg-stone-800/40 transition-colors {selected.has(pothole.id) ? 'bg-amber-500/5' : ''}"
 							>
 								<td class="px-4 py-3">
 									<input
@@ -428,15 +428,15 @@
 											if (selected.has(pothole.id)) selected.delete(pothole.id);
 											else selected.add(pothole.id);
 										}}
-										class="rounded border-zinc-600 bg-zinc-800 text-sky-500 focus:ring-sky-500/20"
+										class="rounded border-stone-600 bg-stone-800 text-amber-500 focus:ring-amber-500/20"
 										aria-label="Select {pothole.address ?? pothole.id}"
 									/>
 								</td>
 								<td class="px-4 py-3 max-w-xs">
-									<p class="text-zinc-200 truncate" title={pothole.address ?? ''}>
+									<p class="text-stone-200 truncate" title={pothole.address ?? ''}>
 										{pothole.address ?? 'No address'}
 									</p>
-									<p class="text-zinc-600 text-xs mt-0.5 font-mono">
+									<p class="text-stone-600 text-xs mt-0.5 font-mono">
 										{pothole.id.slice(0, 8)}…
 									</p>
 								</td>
@@ -447,20 +447,20 @@
 										{pothole.status}
 									</span>
 								</td>
-								<td class="px-4 py-3 text-zinc-400 tabular-nums">
+								<td class="px-4 py-3 text-stone-400 tabular-nums">
 									{pothole.confirmed_count}
 								</td>
 								<td class="px-4 py-3">
 									{#if photoCount > 0}
-										<span class="inline-flex items-center gap-1 text-xs text-zinc-300">
-											<svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<span class="inline-flex items-center gap-1 text-xs text-stone-300">
+											<svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
 											</svg>
 											{photoCount}
 										</span>
 									{:else}
-										<span class="text-zinc-700 text-xs">—</span>
+										<span class="text-stone-700 text-xs">—</span>
 									{/if}
 								</td>
 								<td class="px-4 py-3">
@@ -470,21 +470,21 @@
 											class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium border transition-colors
 											       {photosPublished[pothole.id]
 												? 'border-emerald-600/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20'
-												: 'border-zinc-700 text-zinc-500 bg-zinc-800/50 hover:bg-zinc-700 hover:text-zinc-300'}"
+												: 'border-stone-700 text-stone-500 bg-stone-800/50 hover:bg-stone-700 hover:text-stone-300'}"
 										>
 											{photosPublished[pothole.id] ? 'Published' : 'Hidden'}
 										</button>
 									{:else}
-										<span class="text-zinc-700 text-xs">—</span>
+										<span class="text-stone-700 text-xs">—</span>
 									{/if}
 								</td>
-								<td class="px-4 py-3 text-zinc-500 text-xs whitespace-nowrap">
+								<td class="px-4 py-3 text-stone-500 text-xs whitespace-nowrap">
 									{formatDistanceToNow(new Date(pothole.created_at), { addSuffix: true })}
 								</td>
 								<td class="px-4 py-3 text-right">
 									<a
 										href="/admin/potholes/{pothole.id}"
-										class="text-xs text-sky-400 hover:text-sky-300 hover:underline transition-colors"
+										class="text-xs text-amber-400 hover:text-amber-300 hover:underline transition-colors"
 									>
 										Manage →
 									</a>
@@ -498,7 +498,7 @@
 
 		<!-- Pagination -->
 		<div class="flex items-center justify-between gap-4 flex-wrap text-sm">
-			<p class="text-zinc-500 text-xs">
+			<p class="text-stone-500 text-xs">
 				{#if data.total > 0}
 					Showing {rangeFrom}–{rangeTo} of {data.total}
 				{/if}
@@ -507,18 +507,18 @@
 				{#if data.page > 1}
 					<a
 						href={pageHref(data.page - 1)}
-						class="px-3 py-1.5 text-xs font-medium border border-zinc-700 text-zinc-400 hover:text-zinc-200 rounded transition-colors"
+						class="px-3 py-1.5 text-xs font-medium border border-stone-700 text-stone-400 hover:text-stone-200 rounded transition-colors"
 					>
 						← Prev
 					</a>
 				{/if}
-				<span class="text-zinc-500 text-xs tabular-nums">
+				<span class="text-stone-500 text-xs tabular-nums">
 					Page {data.page} of {totalPages}
 				</span>
 				{#if data.page < totalPages}
 					<a
 						href={pageHref(data.page + 1)}
-						class="px-3 py-1.5 text-xs font-medium border border-zinc-700 text-zinc-400 hover:text-zinc-200 rounded transition-colors"
+						class="px-3 py-1.5 text-xs font-medium border border-stone-700 text-stone-400 hover:text-stone-200 rounded transition-colors"
 					>
 						Next →
 					</a>
@@ -533,12 +533,12 @@
 				{#if data.dateTo}<input type="hidden" name="dateTo" value={data.dateTo} />{/if}
 				<input type="hidden" name="sort" value={data.sort} />
 				<input type="hidden" name="dir" value={data.dir} />
-				<label for="page-size" class="text-xs text-zinc-500">Per page</label>
+				<label for="page-size" class="text-xs text-stone-500">Per page</label>
 				<select
 					id="page-size"
 					name="pageSize"
 					onchange={(e) => (e.currentTarget.form as HTMLFormElement).submit()}
-					class="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200 focus:outline-none focus:border-sky-500"
+					class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
 				>
 					{#each [25, 50, 100] as size (size)}
 						<option value={size} selected={data.pageSize === size}>{size}</option>

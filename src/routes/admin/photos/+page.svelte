@@ -29,7 +29,7 @@
 	}
 
 	function scoreColor(score: number | null): string {
-		if (score === null) return 'text-zinc-500 bg-zinc-800';
+		if (score === null) return 'text-stone-500 bg-stone-800';
 		if (score < 0.3) return 'text-emerald-400 bg-emerald-500/10';
 		if (score < 0.7) return 'text-amber-400 bg-amber-500/10';
 		return 'text-red-400 bg-red-500/10';
@@ -51,7 +51,7 @@
 			case 'expired':
 				return 'text-amber-400 bg-amber-500/10';
 			default:
-				return 'text-zinc-400 bg-zinc-700/50';
+				return 'text-stone-400 bg-stone-700/50';
 		}
 	}
 </script>
@@ -64,8 +64,8 @@
 	<!-- Header -->
 	<div class="flex items-center justify-between mb-6">
 		<div>
-			<h1 class="text-xl font-semibold text-zinc-100">Photo Review</h1>
-			<p class="text-zinc-500 text-sm mt-0.5">
+			<h1 class="text-xl font-semibold text-stone-100">Photo Review</h1>
+			<p class="text-stone-500 text-sm mt-0.5">
 				{#if data.photos.length === 0}
 					No photos awaiting review
 				{:else}
@@ -79,22 +79,22 @@
 		<!-- Empty state -->
 		<div class="text-center py-20">
 			<div class="text-4xl mb-3">📷</div>
-			<p class="text-zinc-400 font-medium">All caught up</p>
-			<p class="text-zinc-600 text-sm mt-1">No photos are waiting for moderation.</p>
+			<p class="text-stone-400 font-medium">All caught up</p>
+			<p class="text-stone-600 text-sm mt-1">No photos are waiting for moderation.</p>
 		</div>
 	{:else}
 		<!-- Bulk action toolbar -->
 		<div
-			class="flex items-center gap-3 mb-5 p-3 bg-zinc-900 border border-zinc-800 rounded-lg sticky top-4 z-10"
+			class="flex items-center gap-3 mb-5 p-3 bg-stone-900 border border-stone-800 rounded-lg sticky top-4 z-10"
 		>
 			<label class="flex items-center gap-2 cursor-pointer">
 				<input
 					type="checkbox"
 					checked={allSelected}
 					onchange={toggleAll}
-					class="rounded border-zinc-600 bg-zinc-800 text-sky-500 focus:ring-sky-500 focus:ring-offset-zinc-900 focus:ring-1"
+					class="rounded border-stone-600 bg-stone-800 text-amber-500 focus:ring-amber-500 focus:ring-offset-stone-900 focus:ring-1"
 				/>
-				<span class="text-sm text-zinc-400">
+				<span class="text-sm text-stone-400">
 					{#if someSelected}
 						{selected.size} selected
 					{:else}
@@ -118,7 +118,7 @@
 				class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors
 				       {someSelected
 					? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-600/30'
-					: 'text-zinc-600 cursor-not-allowed border border-zinc-800'}"
+					: 'text-stone-600 cursor-not-allowed border border-stone-800'}"
 			>
 				<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
@@ -134,7 +134,7 @@
 				class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors
 				       {someSelected
 					? 'bg-red-600/20 text-red-400 hover:bg-red-600/30 border border-red-600/30'
-					: 'text-zinc-600 cursor-not-allowed border border-zinc-800'}"
+					: 'text-stone-600 cursor-not-allowed border border-stone-800'}"
 			>
 				<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
@@ -148,8 +148,8 @@
 			{#each data.photos as photo (photo.id)}
 				{@const pothole = photo.potholes}
 				<div
-					class="bg-zinc-900 border rounded-lg overflow-hidden transition-colors
-					       {selected.has(photo.id) ? 'border-sky-500/50' : 'border-zinc-800'}"
+					class="bg-stone-900 border rounded-lg overflow-hidden transition-colors
+					       {selected.has(photo.id) ? 'border-amber-500/50' : 'border-stone-800'}"
 				>
 					<!-- Thumbnail -->
 					<div class="relative">
@@ -163,7 +163,7 @@
 								type="checkbox"
 								checked={selected.has(photo.id)}
 								onchange={() => toggleSelect(photo.id)}
-								class="rounded border-zinc-500 bg-zinc-800/80 text-sky-500 focus:ring-sky-500 focus:ring-1"
+								class="rounded border-stone-500 bg-stone-800/80 text-amber-500 focus:ring-amber-500 focus:ring-1"
 								onclick={(e) => e.stopPropagation()}
 							/>
 						</button>
@@ -174,11 +174,11 @@
 									src={photo.url}
 									alt={pothole?.address ?? 'Pothole photo'}
 									loading="lazy"
-									class="w-full h-48 object-cover bg-zinc-800"
+									class="w-full h-48 object-cover bg-stone-800"
 								/>
 							</a>
 						{:else}
-							<div class="w-full h-48 bg-zinc-800 flex items-center justify-center text-zinc-600 text-sm">
+							<div class="w-full h-48 bg-stone-800 flex items-center justify-center text-stone-600 text-sm">
 								Image unavailable
 							</div>
 						{/if}
@@ -186,7 +186,7 @@
 
 					<!-- Info -->
 					<div class="p-3">
-						<p class="text-sm text-zinc-200 truncate font-medium" title={pothole?.address ?? ''}>
+						<p class="text-sm text-stone-200 truncate font-medium" title={pothole?.address ?? ''}>
 							{pothole?.address ?? 'Unknown address'}
 						</p>
 
@@ -197,8 +197,8 @@
 								>
 									{pothole.status}
 								</span>
-								<span class="text-zinc-600 text-xs">·</span>
-								<span class="text-zinc-500 text-xs">{pothole.confirmed_count} confirmation{pothole.confirmed_count !== 1 ? 's' : ''}</span>
+								<span class="text-stone-600 text-xs">·</span>
+								<span class="text-stone-500 text-xs">{pothole.confirmed_count} confirmation{pothole.confirmed_count !== 1 ? 's' : ''}</span>
 							{/if}
 						</div>
 
@@ -216,7 +216,7 @@
 							>
 								{scoreLabel(photo.moderation_score)}
 							</span>
-							<span class="text-zinc-600 text-xs">
+							<span class="text-stone-600 text-xs">
 								{formatDistanceToNow(new Date(photo.created_at), { addSuffix: true })}
 							</span>
 						</div>

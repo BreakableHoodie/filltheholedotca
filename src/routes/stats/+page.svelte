@@ -224,15 +224,15 @@
 	<!-- Page header + time filter -->
 	<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
 		<div>
-			<h1 class="page-title text-3xl sm:text-4xl text-white flex items-center gap-2.5">
-				<Icon name="bar-chart-2" size={26} class="text-sky-400 shrink-0" />
+			<h1 class="page-title text-3xl sm:text-4xl text-stone-900 dark:text-white flex items-center gap-2.5">
+				<Icon name="bar-chart-2" size={26} class="text-amber-500 shrink-0" />
 				By the numbers
 			</h1>
-			<p class="page-intro text-zinc-400 mt-1">Pothole accountability data for Waterloo Region.</p>
+			<p class="page-intro text-stone-500 dark:text-stone-400 mt-1">Pothole accountability data for Waterloo Region.</p>
 		</div>
 
 		<div
-			class="flex items-center gap-1 bg-zinc-900 border border-zinc-700 rounded-lg p-1"
+			class="flex items-center gap-1 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-1"
 			role="group"
 			aria-label="Filter by time window"
 		>
@@ -240,10 +240,10 @@
 				<button
 					onclick={() => (windowDays = w.value)}
 					aria-pressed={windowDays === w.value}
-					class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1 focus:ring-offset-zinc-900
+					class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-stone-900
 						{windowDays === w.value
-							? 'bg-sky-600 text-white'
-							: 'text-zinc-400 hover:text-white hover:bg-zinc-800'}"
+							? 'bg-amber-500 text-white'
+							: 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'}"
 				>
 					{w.label}
 				</button>
@@ -255,29 +255,29 @@
 	<section aria-labelledby="summary-heading">
 		<h2 id="summary-heading" class="sr-only">Summary statistics</h2>
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
-				<p class="text-xs text-zinc-500 uppercase tracking-wide">Total reported</p>
-				<p class="text-3xl font-bold text-white" role="status" aria-live="polite">{totalConfirmed}</p>
-				<p class="text-xs text-zinc-500">confirmed potholes</p>
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1">
+				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">Total reported</p>
+				<p class="text-3xl font-bold text-stone-900 dark:text-white" role="status" aria-live="polite">{totalConfirmed}</p>
+				<p class="text-xs text-stone-500 dark:text-stone-400">confirmed potholes</p>
 			</div>
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
-				<p class="text-xs text-zinc-500 uppercase tracking-wide">Currently open</p>
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1">
+				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">Currently open</p>
 				<p class="text-3xl font-bold text-orange-400" role="status" aria-live="polite">{totalOpen}</p>
-				<p class="text-xs text-zinc-500">unfilled, on the map</p>
+				<p class="text-xs text-stone-500 dark:text-stone-400">unfilled, on the map</p>
 			</div>
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
-				<p class="text-xs text-zinc-500 uppercase tracking-wide">Fill rate</p>
-				<p class="text-3xl font-bold text-sky-400" role="status" aria-live="polite">
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1">
+				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">Fill rate</p>
+				<p class="text-3xl font-bold text-amber-500" role="status" aria-live="polite">
 					{fillRate === null ? '—' : `${fmt(fillRate, 0)}%`}
 				</p>
-				<p class="text-xs text-zinc-500">{totalFilled} of {totalConfirmed} filled</p>
+				<p class="text-xs text-stone-500 dark:text-stone-400">{totalFilled} of {totalConfirmed} filled</p>
 			</div>
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-1">
-				<p class="text-xs text-zinc-500 uppercase tracking-wide">Avg days to fill</p>
-				<p class="text-3xl font-bold {avgDaysToFill === null ? 'text-zinc-500' : 'text-green-400'}" role="status" aria-live="polite">
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1">
+				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">Avg days to fill</p>
+				<p class="text-3xl font-bold {avgDaysToFill === null ? 'text-stone-500 dark:text-stone-400' : 'text-green-400'}" role="status" aria-live="polite">
 					{avgDaysToFill === null ? '—' : fmt(avgDaysToFill, 1)}
 				</p>
-				<p class="text-xs text-zinc-500">from report to fixed</p>
+				<p class="text-xs text-stone-500 dark:text-stone-400">from report to fixed</p>
 			</div>
 		</div>
 	</section>
@@ -285,11 +285,11 @@
 	<!-- ── Monthly trend chart ─────────────────────────────────────────────────── -->
 	<section aria-labelledby="trend-heading">
 		<div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-			<h2 id="trend-heading" class="section-title text-lg text-white">
+			<h2 id="trend-heading" class="section-title text-lg text-stone-900 dark:text-white">
 				Monthly activity
-				<span class="text-zinc-500 font-normal text-sm">(last 18 months, full dataset)</span>
+				<span class="text-stone-500 dark:text-stone-400 font-normal text-sm">(last 18 months, full dataset)</span>
 			</h2>
-			<div class="flex items-center gap-4 text-xs text-zinc-500" aria-hidden="true">
+			<div class="flex items-center gap-4 text-xs text-stone-500 dark:text-stone-400" aria-hidden="true">
 				<span class="flex items-center gap-1.5">
 					<span class="w-3 h-3 rounded-sm bg-orange-500/70 inline-block"></span> Reported
 				</span>
@@ -299,7 +299,7 @@
 			</div>
 		</div>
 
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-5">
 			<div
 				class="flex items-end gap-px h-28"
 				role="img"
@@ -327,7 +327,7 @@
 			{#each monthlyData as m, i (m.key)}
 					<div class="flex-1 text-center min-w-0 overflow-hidden">
 						{#if i % 3 === 0 || i === monthlyData.length - 1}
-							<span class="text-zinc-600 text-[10px]">{m.label}</span>
+							<span class="text-stone-400 dark:text-stone-600 text-[10px]">{m.label}</span>
 						{/if}
 					</div>
 				{/each}
@@ -359,28 +359,28 @@
 	<!-- ── City breakdown ─────────────────────────────────────────────────────── -->
 	{#if cityRows.length > 0}
 		<section aria-labelledby="city-heading">
-			<h2 id="city-heading" class="section-title text-lg text-white mb-4">By city</h2>
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden overflow-x-auto">
+			<h2 id="city-heading" class="section-title text-lg text-stone-900 dark:text-white mb-4">By city</h2>
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden overflow-x-auto">
 				<table class="w-full text-sm">
 					<thead>
-						<tr class="border-b border-zinc-800">
-							<th scope="col" class="text-left px-4 py-3 text-zinc-400 font-medium">City</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Total</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Open</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Filled</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Fill rate</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium hidden sm:table-cell">Avg days</th>
+						<tr class="border-b border-stone-200 dark:border-stone-700">
+							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">City</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Total</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Open</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Filled</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Fill rate</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium hidden sm:table-cell">Avg days</th>
 						</tr>
 					</thead>
 					<tbody>
 					{#each cityRows as c (c.city)}
-							<tr class="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
-								<td class="px-4 py-3 font-medium text-white">{c.city}</td>
-								<td class="px-4 py-3 text-right text-zinc-300">{c.total}</td>
-								<td class="px-4 py-3 text-right font-semibold {c.open > 0 ? 'text-orange-400' : 'text-zinc-500'}">{c.open}</td>
+							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors">
+								<td class="px-4 py-3 font-medium text-stone-900 dark:text-white">{c.city}</td>
+								<td class="px-4 py-3 text-right text-stone-600 dark:text-stone-300">{c.total}</td>
+								<td class="px-4 py-3 text-right font-semibold {c.open > 0 ? 'text-orange-400' : 'text-stone-500 dark:text-stone-400'}">{c.open}</td>
 								<td class="px-4 py-3 text-right text-green-400">{c.filled}</td>
-								<td class="px-4 py-3 text-right text-sky-400">{c.fillRate === null ? '—' : `${fmt(c.fillRate, 0)}%`}</td>
-								<td class="px-4 py-3 text-right text-zinc-400 hidden sm:table-cell">{fmt(c.avgDays, 1)}</td>
+								<td class="px-4 py-3 text-right text-amber-500">{c.fillRate === null ? '—' : `${fmt(c.fillRate, 0)}%`}</td>
+								<td class="px-4 py-3 text-right text-stone-500 dark:text-stone-400 hidden sm:table-cell">{fmt(c.avgDays, 1)}</td>
 							</tr>
 						{/each}
 					</tbody>
@@ -392,47 +392,47 @@
 	<!-- ── Ward leaderboard ───────────────────────────────────────────────────── -->
 	<section aria-labelledby="ward-heading">
 		<div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-			<h2 id="ward-heading" class="section-title text-lg text-white">By ward</h2>
+			<h2 id="ward-heading" class="section-title text-lg text-stone-900 dark:text-white">By ward</h2>
 		</div>
 
 		{#if wardLookupFailed}
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500 text-sm" role="status">
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-6 text-center text-stone-500 dark:text-stone-400 text-sm" role="status">
 				Ward boundary data is temporarily unavailable. City-level totals above are unaffected.
 			</div>
 		{:else if wardRows.length === 0}
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500 text-sm">
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-6 text-center text-stone-500 dark:text-stone-400 text-sm">
 				No ward data available for the selected window.
 			</div>
 		{:else}
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden overflow-x-auto">
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden overflow-x-auto">
 				<table class="w-full text-sm min-w-[600px]">
 					<thead>
-						<tr class="border-b border-zinc-800">
-							<th scope="col" class="text-left px-4 py-3 text-zinc-400 font-medium">City</th>
-							<th scope="col" class="text-left px-4 py-3 text-zinc-400 font-medium">Ward</th>
-							<th scope="col" class="text-left px-4 py-3 text-zinc-400 font-medium hidden md:table-cell">Councillor</th>
-							<th scope="col" class="text-right px-4 py-3">
+						<tr class="border-b border-stone-200 dark:border-stone-700">
+							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">City</th>
+							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Ward</th>
+							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium hidden md:table-cell">Councillor</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400">
 								<button
 									onclick={() => setSort('open')}
-									class="text-zinc-400 font-medium hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 rounded"
+									class="text-stone-600 dark:text-stone-400 font-medium hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
 									aria-label="Sort by open holes{sortCol === 'open' ? `, currently ${sortAsc ? 'ascending' : 'descending'}` : ''}"
 								>
 									Open <span aria-hidden="true">{sortLabel('open')}</span>
 								</button>
 							</th>
-							<th scope="col" class="text-right px-4 py-3">
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400">
 								<button
 									onclick={() => setSort('fillRate')}
-									class="text-zinc-400 font-medium hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 rounded"
+									class="text-stone-600 dark:text-stone-400 font-medium hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
 									aria-label="Sort by fill rate{sortCol === 'fillRate' ? `, currently ${sortAsc ? 'ascending' : 'descending'}` : ''}"
 								>
 									Fill rate <span aria-hidden="true">{sortLabel('fillRate')}</span>
 								</button>
 							</th>
-							<th scope="col" class="text-right px-4 py-3">
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400">
 								<button
 									onclick={() => setSort('avgDays')}
-									class="text-zinc-400 font-medium hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 rounded"
+									class="text-stone-600 dark:text-stone-400 font-medium hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
 									aria-label="Sort by average days to fill{sortCol === 'avgDays' ? `, currently ${sortAsc ? 'ascending' : 'descending'}` : ''}"
 								>
 									Avg days <span aria-hidden="true">{sortLabel('avgDays')}</span>
@@ -440,7 +440,7 @@
 							</th>
 							<th
 								scope="col"
-								class="text-right px-4 py-3 text-zinc-400 font-medium"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
 								title="Accountability grade: fill rate (70%) + speed (30%). Requires ≥5 potholes."
 							>
 								Grade
@@ -449,13 +449,13 @@
 					</thead>
 					<tbody>
 					{#each wardRows as row (row.key)}
-							{@const g = wardGrade(row.fillRate, row.avgDays, row.total)}
-							<tr class="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
-								<td class="px-4 py-3 text-zinc-300 capitalize">
-									<a href="/stats/ward/{row.city}/{row.ward}" class="hover:text-sky-400 transition-colors">{row.city}</a>
+						{@const g = wardGrade(row.fillRate, row.avgDays, row.total)}
+						<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-50 dark:hover:bg-stone-800/30 transition-colors">
+							<td class="px-4 py-3 text-stone-600 dark:text-stone-300 capitalize">
+									<a href="/stats/ward/{row.city}/{row.ward}" class="hover:text-amber-500 transition-colors">{row.city}</a>
 								</td>
-								<td class="px-4 py-3 text-zinc-300">
-									<a href="/stats/ward/{row.city}/{row.ward}" aria-label="{row.city} Ward {row.ward}" class="hover:text-sky-400 transition-colors">Ward {row.ward}</a>
+								<td class="px-4 py-3 text-stone-600 dark:text-stone-300">
+									<a href="/stats/ward/{row.city}/{row.ward}" aria-label="{row.city} Ward {row.ward}" class="hover:text-amber-500 transition-colors">Ward {row.ward}</a>
 								</td>
 								<td class="px-4 py-3 hidden md:table-cell">
 									{#if row.councillorUrl}
@@ -463,28 +463,28 @@
 											href={row.councillorUrl}
 											target="_blank"
 											rel="noopener noreferrer"
-											class="text-sky-400 hover:text-sky-300 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 rounded"
+											class="text-amber-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
 										>
 											{row.councillorName}
 										</a>
 									{:else}
-										<span class="text-zinc-500">{row.councillorName}</span>
+										<span class="text-stone-500 dark:text-stone-400">{row.councillorName}</span>
 									{/if}
 								</td>
-								<td class="px-4 py-3 text-right font-semibold {row.open > 0 ? 'text-orange-400' : 'text-zinc-500'}">
+								<td class="px-4 py-3 text-right font-semibold {row.open > 0 ? 'text-orange-400' : 'text-stone-500 dark:text-stone-400'}">
 									{row.open}
 								</td>
 								<td class="px-4 py-3 text-right text-sky-400">
 									{row.total === 0 ? '—' : `${fmt(row.fillRate, 0)}%`}
 								</td>
-								<td class="px-4 py-3 text-right text-zinc-400">{fmt(row.avgDays, 1)}</td>
+								<td class="px-4 py-3 text-right text-stone-500 dark:text-stone-400">{fmt(row.avgDays, 1)}</td>
 								<td class="px-4 py-3 text-right font-bold tabular-nums {g.color}" title="Grade: {g.grade}">{g.grade}</td>
 							</tr>
 						{/each}
 					</tbody>
 				</table>
 			</div>
-			<p class="text-xs text-zinc-600 mt-2">
+			<p class="text-xs text-stone-500 dark:text-stone-600 mt-2">
 				Click column headers to sort. Potholes outside mapped ward boundaries may be excluded.
 				Grade = fill rate (70%) + response speed (30%); requires ≥5 potholes.
 			</p>
@@ -494,81 +494,81 @@
 	<!-- ── Street hotspots ───────────────────────────────────────────────────── -->
 	{#if streetHotspots.length > 0}
 		<section aria-labelledby="hotspots-heading">
-			<h2 id="hotspots-heading" class="flex items-center gap-2 text-lg font-semibold text-white mb-4">
+			<h2 id="hotspots-heading" class="flex items-center gap-2 text-lg font-semibold text-stone-900 dark:text-white mb-4">
 				<Icon name="flame" size={18} class="text-orange-400 shrink-0" />
 				Top streets
 			</h2>
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden">
 				<table class="w-full text-sm">
 					<thead>
-						<tr class="border-b border-zinc-800">
-							<th scope="col" class="text-left px-4 py-3 text-zinc-400 font-medium">#</th>
-							<th scope="col" class="text-left px-4 py-3 text-zinc-400 font-medium">Street</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Total</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Open</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Filled</th>
+						<tr class="border-b border-stone-200 dark:border-stone-700">
+							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">#</th>
+							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Street</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Total</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Open</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Filled</th>
 						</tr>
 					</thead>
 					<tbody>
 						{#each streetHotspots as row, i (row.street)}
-							<tr class="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
-								<td class="px-4 py-3 text-zinc-600 tabular-nums">{i + 1}</td>
-								<td class="px-4 py-3 font-medium text-white">{row.street}</td>
-								<td class="px-4 py-3 text-right font-semibold tabular-nums text-zinc-300">{row.total}</td>
-								<td class="px-4 py-3 text-right tabular-nums {row.open > 0 ? 'text-orange-400 font-semibold' : 'text-zinc-500'}">{row.open}</td>
+							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors">
+								<td class="px-4 py-3 text-stone-500 dark:text-stone-400 tabular-nums">{i + 1}</td>
+								<td class="px-4 py-3 font-medium text-stone-900 dark:text-white">{row.street}</td>
+								<td class="px-4 py-3 text-right font-semibold tabular-nums text-stone-700 dark:text-stone-300">{row.total}</td>
+								<td class="px-4 py-3 text-right tabular-nums {row.open > 0 ? 'text-orange-400 font-semibold' : 'text-stone-500 dark:text-stone-400'}">{row.open}</td>
 								<td class="px-4 py-3 text-right tabular-nums text-green-400">{row.filled}</td>
 							</tr>
 						{/each}
 					</tbody>
 				</table>
 			</div>
-			<p class="text-xs text-zinc-600 mt-2">Street names extracted from geocoded addresses. Obeys the active time filter.</p>
+			<p class="text-xs text-stone-500 dark:text-stone-600 mt-2">Street names extracted from geocoded addresses. Obeys the active time filter.</p>
 		</section>
 	{/if}
 
 	<!-- ── Worst offenders ────────────────────────────────────────────────────── -->
 	<section aria-labelledby="offenders-heading">
-		<h2 id="offenders-heading" class="section-title flex items-center gap-2 text-lg text-white mb-4">
+		<h2 id="offenders-heading" class="section-title flex items-center gap-2 text-lg text-stone-900 dark:text-white mb-4">
 			<Icon name="alert-triangle" size={18} class="text-red-400 shrink-0" />
 			Longest-open unfilled holes
 		</h2>
 
 		{#if offenders.length === 0}
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-green-400 text-sm font-semibold flex items-center justify-center gap-2">
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-6 text-center text-green-400 text-sm font-semibold flex items-center justify-center gap-2">
 				<Icon name="check-circle" size={16} class="shrink-0" />
 				No open potholes in this time window!
 			</div>
 		{:else}
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden overflow-x-auto">
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden overflow-x-auto">
 				<table class="w-full text-sm min-w-[520px]">
 					<thead>
-						<tr class="border-b border-zinc-800">
-							<th scope="col" class="text-left px-4 py-3 text-zinc-400 font-medium">Location</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium hidden sm:table-cell">Reported</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Confirmations</th>
-							<th scope="col" class="text-right px-4 py-3 text-zinc-400 font-medium">Days open</th>
+						<tr class="border-b border-stone-200 dark:border-stone-700">
+							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Location</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium hidden sm:table-cell">Reported</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Confirmations</th>
+							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Days open</th>
 						</tr>
 					</thead>
 					<tbody>
 				{#each offenders as p (p.id)}
-							<tr class="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
+							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors">
 								<td class="px-4 py-3">
 									<a
 										href="/hole/{p.id}"
-										class="text-sky-400 hover:text-sky-300 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 rounded"
+										class="text-amber-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
 									>
 										{p.address ?? `${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`}
 									</a>
 								</td>
-								<td class="px-4 py-3 text-right text-zinc-400 hidden sm:table-cell">
+								<td class="px-4 py-3 text-right text-stone-500 dark:text-stone-400 hidden sm:table-cell">
 									{format(new Date(p.created_at), 'MMM d, yyyy')}
 								</td>
-								<td class="px-4 py-3 text-right text-zinc-300 tabular-nums">
+								<td class="px-4 py-3 text-right text-stone-600 dark:text-stone-300 tabular-nums">
 									{p.confirmed_count ?? 1}
 								</td>
 								<td
 									class="px-4 py-3 text-right font-bold tabular-nums
-										{p.days > 90 ? 'text-red-400' : p.days > 30 ? 'text-orange-400' : 'text-zinc-300'}"
+										{p.days > 90 ? 'text-red-400' : p.days > 30 ? 'text-orange-400' : 'text-stone-600 dark:text-stone-300'}"
 									aria-label="{p.days} days open"
 								>
 									{p.days}
@@ -581,7 +581,7 @@
 		{/if}
 	</section>
 
-	<p class="text-center text-xs text-zinc-700 pb-4">
+	<p class="text-center text-xs text-stone-600 dark:text-stone-700 pb-4">
 		Data refreshes on each page load. Ward assignment computes client-side and may miss potholes near boundaries.
 	</p>
 </div>

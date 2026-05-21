@@ -405,7 +405,7 @@
 	<!-- Header -->
 	<div>
 		<div class="flex items-center justify-between mb-3">
-			<a href={pothole.status === 'reported' ? `/?focus=${pothole.id}&lat=${pothole.lat}&lng=${pothole.lng}` : '/'} class="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+			<a href={pothole.status === 'reported' ? `/?focus=${pothole.id}&lat=${pothole.lat}&lng=${pothole.lng}` : '/'} class="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 text-sm transition-colors">
 				<Icon name="arrow-left" size={14} />
 				Back to map
 			</a>
@@ -414,17 +414,17 @@
 					onclick={handleWatch}
 					aria-pressed={watching}
 					aria-label={watching ? 'Remove from watchlist' : 'Add to watchlist'}
-					class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors
+					class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors
 						{watching
-							? 'bg-sky-900/40 border-sky-700 text-sky-400 hover:bg-sky-900/60'
-							: 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'}"
+							? 'bg-amber-50 dark:bg-amber-900/30 border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50'
+							: 'bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-700 dark:hover:text-stone-200'}"
 				>
 					<Icon name={watching ? 'bookmark-filled' : 'bookmark'} size={13} class="shrink-0" />
 					{watching ? 'Watching' : 'Watch'}
 				</button>
 			{/if}
 		</div>
-		<h1 class="page-title text-2xl sm:text-3xl text-white">
+		<h1 class="page-title text-2xl sm:text-3xl text-stone-900 dark:text-white">
 			{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
 		</h1>
 		<div class="flex items-center gap-2 mt-1.5">
@@ -432,38 +432,38 @@
 				<Icon name={info.icon} size={16} class={info.colorClass} />
 				<span class="font-semibold {info.colorClass}">{info.label}</span>
 			{/if}
-			<span class="text-zinc-700">·</span>
-			<span class="text-zinc-500 text-sm">Reported {fmt(pothole.created_at)}</span>
+			<span class="text-stone-300 dark:text-stone-600">·</span>
+			<span class="text-stone-500 dark:text-stone-400 text-sm">Reported {fmt(pothole.created_at)}</span>
 		</div>
 	</div>
 
 	{#if submitted}
-		<div class="bg-sky-950/40 border border-sky-800 rounded-xl p-5 space-y-3">
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-5 space-y-3">
 			<div class="flex items-start gap-3">
-				<div class="shrink-0 p-2 rounded-lg bg-sky-500/10">
-					<Icon name="check-circle" size={18} class="text-sky-400" />
+				<div class="shrink-0 p-2">
+					<Icon name="check-circle" size={18} class="text-amber-500" />
 				</div>
 				<div class="space-y-1.5">
-					<h2 id="submitted-card-heading" class="text-base font-semibold text-white">Report received</h2>
+					<h2 id="submitted-card-heading" class="text-base font-semibold text-stone-900 dark:text-white">Report received</h2>
 					{#if pothole.status === 'pending'}
-						<p class="text-sm text-zinc-300">
+						<p class="text-sm text-stone-600 dark:text-stone-300">
 							Your report is saved and waiting for independent confirmation before it appears on the public map.
 						</p>
 						<div class="space-y-1">
-							<div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-labelledby="submitted-card-heading">
+							<div class="h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-labelledby="submitted-card-heading">
 								<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{confirmationProgressPct}%"></div>
 							</div>
-							<div class="flex items-center justify-between text-xs text-zinc-500 tabular-nums">
+							<div class="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 tabular-nums">
 								<span>{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</span>
 								<span>{remainingConfirmations} more needed</span>
 							</div>
 						</div>
 					{:else if pothole.status === 'reported'}
-						<p class="text-sm text-zinc-300">
+						<p class="text-sm text-stone-600 dark:text-stone-300">
 							This pothole is now live on the public map. Share the link or report it officially to help it get fixed faster.
 						</p>
 					{:else}
-						<p class="text-sm text-zinc-300">
+						<p class="text-sm text-stone-600 dark:text-stone-300">
 							Your report was received. This page will track what happens next.
 						</p>
 					{/if}
@@ -474,14 +474,14 @@
 					href={officialCityLink?.href ?? '/about'}
 					target={officialCityLink ? '_blank' : undefined}
 					rel={officialCityLink ? 'noopener noreferrer' : undefined}
-					class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+					class="inline-flex items-center justify-center gap-1.5 rounded-md bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm font-semibold text-stone-600 dark:text-stone-300 transition-colors hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-900 dark:hover:text-white"
 				>
 					<Icon name="external-link" size={13} class="shrink-0" />
 					{officialCityLink ? `File with ${officialCityLink.label}` : 'Official reporting links'}
 				</a>
 				<button
 					onclick={() => share(pothole.address, pothole.lat, pothole.lng)}
-					class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+					class="inline-flex items-center justify-center gap-1.5 rounded-md bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm font-semibold text-stone-600 dark:text-stone-300 transition-colors hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-900 dark:hover:text-white"
 				>
 					<Icon name="clipboard" size={13} class="shrink-0" />
 					Copy link
@@ -492,21 +492,21 @@
 
 	<!-- Pending notice -->
 	{#if pothole.status === 'pending'}
-		<div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 space-y-3">
-			<p id="pending-notice-heading" class="flex items-center gap-2 text-zinc-300 font-semibold">
-				<Icon name="clock" size={16} class="text-zinc-400 shrink-0" />
+		<div class="bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
+			<p id="pending-notice-heading" class="flex items-center gap-2 text-stone-600 dark:text-stone-300 font-semibold">
+				<Icon name="clock" size={16} class="text-stone-500 dark:text-stone-400 shrink-0" />
 				Awaiting confirmation
 			</p>
-			<p class="text-zinc-500 text-sm">
+			<p class="text-stone-500 dark:text-stone-400 text-sm">
 				This pothole needs independent reports from others physically at this location before
 				it appears on the public map.
 			</p>
 			<div class="space-y-1.5">
-				<div class="flex items-center justify-between text-xs text-zinc-500 tabular-nums">
+				<div class="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 tabular-nums">
 					<span>{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</span>
 					<span>{remainingConfirmations} more needed</span>
 				</div>
-				<div class="h-2 bg-zinc-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-labelledby="pending-notice-heading">
+				<div class="h-2 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-labelledby="pending-notice-heading">
 					<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{confirmationProgressPct}%"></div>
 				</div>
 			</div>
@@ -515,23 +515,23 @@
 
 	<!-- Status pipeline -->
 	{#if pothole.status !== 'pending' && pothole.status !== 'expired'}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4">
 			<div class="flex items-center justify-between text-sm">
 				{#each (['reported', 'filled'] as const) as s (s)}
 					{@const cfg = STATUS_CONFIG[s]}
 					{@const isCurrent = pothole.status === s}
 					{@const isPast = s === 'reported' || pothole.status === 'filled'}
 					<div class="flex flex-col items-center gap-1.5 flex-1">
-						<div class="transition-colors {isPast ? cfg.colorClass : 'text-zinc-700'}">
+						<div class="transition-colors {isPast ? cfg.colorClass : 'text-stone-300 dark:text-stone-600'}">
 							<Icon name={cfg.icon} size={22} />
 						</div>
-						<span class="text-xs {isCurrent ? 'text-white font-semibold' : isPast ? 'text-zinc-300' : 'text-zinc-600'}">{cfg.label}</span>
+						<span class="text-xs {isCurrent ? 'text-stone-900 dark:text-white font-semibold' : isPast ? 'text-stone-600 dark:text-stone-300' : 'text-stone-400 dark:text-stone-600'}">{cfg.label}</span>
 						{#if isCurrent}
 							<div class="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
 						{/if}
 					</div>
 					{#if s !== 'filled'}
-						<div class="flex-1 h-px bg-zinc-700 self-center mb-6 max-w-12"></div>
+						<div class="flex-1 h-px bg-stone-200 dark:bg-stone-700 self-center mb-6 max-w-12"></div>
 					{/if}
 				{/each}
 			</div>
@@ -540,14 +540,14 @@
 
 	<!-- "I hit this" signal -->
 	{#if pothole.status === 'reported'}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4">
 			<div class="flex items-center justify-between gap-3">
 				<div class="space-y-0.5">
-					<p class="text-sm font-semibold text-zinc-300 flex items-center gap-1.5">
+					<p class="text-sm font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-1.5">
 						<Icon name="zap" size={14} class="text-orange-400 shrink-0" />
 						Hit this pothole?
 					</p>
-					<p class="text-xs text-zinc-500">
+					<p class="text-xs text-stone-500 dark:text-stone-400">
 						{hitCount === 0 ? 'No hits recorded yet.' : `${hitCount} driver${hitCount === 1 ? '' : 's'} hit this.`}
 					</p>
 				</div>
@@ -555,10 +555,10 @@
 					onclick={recordHit}
 					disabled={hitSubmitted || hittingIt}
 					aria-label={hitSubmitted ? 'Hit already recorded' : 'Record that you hit this pothole'}
-					class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors
+					class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors
 						{hitSubmitted
 							? 'bg-orange-900/30 border border-orange-800/60 text-orange-400 cursor-default'
-							: 'bg-zinc-800 border border-zinc-700 text-zinc-300 hover:border-orange-600 hover:text-orange-400'}"
+							: 'bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:border-orange-600 hover:text-orange-400'}"
 				>
 					{#if hittingIt}
 						<Icon name="loader" size={13} class="animate-spin shrink-0" />
@@ -573,14 +573,14 @@
 
 	<!-- Fill notification -->
 	{#if pothole.status === 'reported' && fillNotifState !== 'unsupported'}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4">
 			<div class="flex items-center justify-between gap-3">
 				<div class="space-y-0.5">
-					<p class="text-sm font-semibold text-zinc-300 flex items-center gap-1.5">
-						<Icon name="bell" size={14} class="text-sky-400 shrink-0" />
+					<p class="text-sm font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-1.5">
+						<Icon name="bell" size={14} class="text-amber-500 shrink-0" />
 						Get notified when filled
 					</p>
-					<p class="text-xs text-zinc-500">
+					<p class="text-xs text-stone-500 dark:text-stone-400">
 						{#if fillNotifState === 'subscribed'}
 							You'll get a push notification when this pothole is marked as fixed.
 						{:else if fillNotifState === 'denied'}
@@ -594,7 +594,7 @@
 					<button
 						onclick={subscribeFillNotification}
 						aria-label="Notify me when this pothole is filled"
-						class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors bg-zinc-800 border border-zinc-700 text-zinc-300 hover:border-sky-600 hover:text-sky-400"
+						class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:border-amber-500 hover:text-amber-500"
 					>
 						<Icon name="bell" size={13} class="shrink-0" />
 						Notify me
@@ -603,18 +603,18 @@
 					<button
 						onclick={unsubscribeFillNotification}
 						aria-label="Subscribed — tap to cancel fill notification"
-						class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors bg-sky-900/30 border border-sky-800/60 text-sky-400 hover:border-zinc-600 hover:text-zinc-300"
+						class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors bg-amber-50 dark:bg-amber-900/30 border border-amber-500 text-amber-600 dark:text-amber-400 hover:border-stone-400 dark:hover:border-stone-600 hover:text-stone-500 dark:hover:text-stone-300"
 					>
 						<Icon name="bell" size={13} class="shrink-0" />
 						Subscribed
 					</button>
 				{:else if fillNotifState === 'pending'}
-					<span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-sm text-zinc-500">
+					<span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-sm text-stone-500 dark:text-stone-400">
 						<Icon name="loader" size={13} class="animate-spin shrink-0" />
 						…
 					</span>
 				{:else if fillNotifState === 'denied'}
-					<span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-sm text-zinc-600 cursor-not-allowed">
+					<span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-sm text-stone-400 dark:text-stone-600 cursor-not-allowed">
 						<Icon name="bell-off" size={13} class="shrink-0" />
 						Blocked
 					</span>
@@ -626,32 +626,32 @@
 	<!-- Repeat pothole notice -->
 	{#if nearbyFilled.length > 0}
 		{@const mostRecent = nearbyFilled[0]}
-		<div class="bg-amber-950/30 border border-amber-800/50 rounded-xl p-4 space-y-1.5">
-			<div class="flex items-center gap-2 text-sm font-semibold text-amber-400">
+		<div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-md p-4 space-y-1.5">
+			<div class="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
 				<Icon name="alert-triangle" size={14} class="shrink-0" />
 				Recurring road issue
 			</div>
-			<p class="text-xs text-zinc-300 leading-relaxed">
+			<p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
 				A nearby pothole
 				{#if mostRecent.address}
-					at <span class="text-zinc-300">{mostRecent.address}</span>
+					at <span class="text-stone-600 dark:text-stone-300">{mostRecent.address}</span>
 				{/if}
-				was previously filled on <span class="text-zinc-300">{format(new Date(mostRecent.filled_at), 'MMM d, yyyy')}</span>
+				was previously filled on <span class="text-stone-600 dark:text-stone-300">{format(new Date(mostRecent.filled_at), 'MMM d, yyyy')}</span>
 				— this location may need a permanent repair.
 			</p>
-			<p class="text-xs text-zinc-600">
+			<p class="text-xs text-stone-400 dark:text-stone-600">
 				{nearbyFilled.length === 1 ? '1 prior fill' : `${nearbyFilled.length} prior fills`} recorded within 110 m of this spot.
 			</p>
 		</div>
 	{/if}
 
 	{#if pothole.status !== 'filled'}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
-				<Icon name="flag" size={14} class="text-sky-400 shrink-0" />
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+				<Icon name="flag" size={14} class="text-amber-500 shrink-0" />
 				Report it officially too
 			</div>
-			<p class="text-zinc-300 text-sm">
+			<p class="text-stone-600 dark:text-stone-300 text-sm">
 				This page creates public visibility. Reporting it to the road owner through official channels can help start their repair or claims process.
 			</p>
 			<div class="grid gap-2 sm:grid-cols-2">
@@ -660,7 +660,7 @@
 						href={officialCityLink.href}
 						target="_blank"
 						rel="noopener noreferrer"
-						class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-sky-700 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-600"
+						class="inline-flex items-center justify-center gap-1.5 rounded-md bg-amber-500 hover:bg-amber-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors"
 					>
 						<Icon name="external-link" size={13} class="shrink-0" />
 						File with {officialCityLink.label}
@@ -670,13 +670,13 @@
 					href={REGION_REPORT_LINK.href}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-2.5 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+					class="inline-flex items-center justify-center gap-1.5 rounded-md bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 px-3 py-2.5 text-sm font-semibold text-stone-600 dark:text-stone-300 transition-colors hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-900 dark:hover:text-white"
 				>
 					<Icon name="external-link" size={13} class="shrink-0" />
 					Submit a claim — {REGION_REPORT_LINK.label}
 				</a>
 			</div>
-			<div class="rounded-lg bg-zinc-800/80 p-3 text-xs text-zinc-300 leading-relaxed space-y-1.5">
+			<div class="rounded-md bg-stone-100 dark:bg-stone-800 p-3 text-xs text-stone-600 dark:text-stone-300 leading-relaxed space-y-1.5">
 				<p>
 					Local residential streets usually belong to the city. Major roads like King, Weber, Victoria, and Erb are often Regional roads.
 				</p>
@@ -686,7 +686,7 @@
 						href={MTO_REPORT_LINK.href}
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-sky-400 underline underline-offset-2 hover:text-sky-300"
+						class="text-amber-500 underline underline-offset-2 hover:text-amber-600"
 					>
 						Report those to the Ontario Ministry of Transportation
 					</a>.
@@ -697,16 +697,16 @@
 
 	<!-- Photos -->
 	{#if photos.length > 0}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
-				<Icon name="camera" size={14} class="text-sky-400 shrink-0" />
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+				<Icon name="camera" size={14} class="text-amber-500 shrink-0" />
 				{photos.length === 1 ? 'Photo' : 'Photos'}
 			</div>
 			<div class="grid grid-cols-2 gap-2">
 				{#each photos as photo, i (photo.id)}
 					<button
 						onclick={() => openLightbox(i)}
-						class="block rounded-lg overflow-hidden ring-1 ring-zinc-700 hover:ring-sky-500 transition-shadow cursor-zoom-in"
+						class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
 						aria-label="View photo {i + 1} of {photos.length}"
 					>
 						<img
@@ -721,19 +721,19 @@
 			</div>
 		</div>
 	{:else if canUploadPhoto}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
-				<Icon name="camera" size={14} class="text-sky-400 shrink-0" />
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+				<Icon name="camera" size={14} class="text-amber-500 shrink-0" />
 				Photo
 			</div>
 			{#if photoPreview}
 				<div class="relative">
-					<img src={photoPreview} alt="Selected pothole preview" class="w-full rounded-lg object-cover aspect-video" />
+					<img src={photoPreview} alt="Selected pothole preview" class="w-full rounded-md object-cover aspect-video" />
 					<button
 						type="button"
 						onclick={clearPhoto}
 						aria-label="Remove photo"
-						class="absolute top-2 right-2 bg-zinc-900/80 hover:bg-zinc-900 rounded-full p-1.5 text-zinc-400 hover:text-white transition-colors"
+						class="absolute top-2 right-2 bg-stone-900/80 hover:bg-stone-900 rounded-full p-1.5 text-stone-300 hover:text-white transition-colors"
 					>
 						<Icon name="x" size={14} />
 					</button>
@@ -741,7 +741,7 @@
 				<button
 					onclick={uploadPhoto}
 					disabled={uploadingPhoto}
-					class="w-full py-2.5 bg-sky-700 hover:bg-sky-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-1.5"
+					class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 disabled:bg-stone-200 dark:disabled:bg-stone-700 disabled:text-stone-400 dark:disabled:text-stone-500 text-white font-semibold rounded-md text-sm transition-colors flex items-center justify-center gap-1.5"
 				>
 					{#if uploadingPhoto}
 						<Icon name="loader" size={13} class="animate-spin shrink-0" />
@@ -755,7 +755,7 @@
 				<button
 					type="button"
 					onclick={() => photoInput?.click()}
-					class="w-full py-3 rounded-lg border-2 border-dashed border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+					class="w-full py-3 rounded-md border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/5 text-stone-400 hover:text-amber-500 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
 				>
 					<Icon name="camera" size={15} class="shrink-0" />
 					Add a photo
@@ -771,18 +771,18 @@
 				aria-label="Upload a pothole photo"
 				onchange={handlePhotoSelect}
 			/>
-			<p class="text-xs text-zinc-500">Photos are reviewed before appearing publicly. Only snap one if you're safely off the road.</p>
+			<p class="text-xs text-stone-500 dark:text-stone-400">Photos are reviewed before appearing publicly. Only snap one if you're safely off the road.</p>
 		</div>
 	{/if}
 
 	<!-- Info -->
 	{#if pothole.description || pothole.filled_at}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-2 text-sm">
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-2 text-sm">
 			{#if pothole.description}
-				<p class="text-zinc-300 italic">"{pothole.description}"</p>
+				<p class="text-stone-600 dark:text-stone-300 italic">"{pothole.description}"</p>
 			{/if}
 			{#if pothole.filled_at}
-				<p class="text-zinc-500">Filled on <span class="text-zinc-300">{fmt(pothole.filled_at)}</span></p>
+				<p class="text-stone-500 dark:text-stone-400">Filled on <span class="text-stone-700 dark:text-stone-200">{fmt(pothole.filled_at)}</span></p>
 			{/if}
 		</div>
 	{/if}
@@ -792,27 +792,27 @@
 		{#if !showFilledForm}
 			<button
 				onclick={() => (showFilledForm = true)}
-				class="w-full py-3 bg-green-700 hover:bg-green-600 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+				class="w-full py-3 bg-green-700 hover:bg-green-600 text-white font-bold rounded-md transition-colors flex items-center justify-center gap-2"
 			>
 				<Icon name="check-circle" size={16} class="shrink-0" />
 				Mark as filled
 			</button>
 		{:else}
-			<div class="bg-zinc-900 border border-green-800 rounded-xl p-4 space-y-3">
-				<h3 class="flex items-center gap-2 font-semibold text-green-400">
+			<div class="bg-white dark:bg-stone-900 border border-green-600 dark:border-green-800 rounded-md p-4 space-y-3">
+				<h3 class="flex items-center gap-2 font-semibold text-green-600 dark:text-green-400">
 					<Icon name="check-circle" size={15} class="shrink-0" />
 					It's been filled!
 				</h3>
-				<p class="text-zinc-300 text-sm">Confirm the city has patched this one up.</p>
+				<p class="text-stone-600 dark:text-stone-300 text-sm">Confirm the city has patched this one up.</p>
 				<div class="flex gap-2">
 					<button
 						onclick={() => (showFilledForm = false)}
-						class="flex-1 py-2 border border-zinc-700 text-zinc-300 rounded-lg text-sm hover:border-zinc-500 transition-colors"
+						class="flex-1 py-2 border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-300 rounded-md text-sm hover:border-stone-400 dark:hover:border-stone-500 transition-colors"
 					>Cancel</button>
 					<button
 						onclick={markFilled}
 						disabled={submitting}
-						class="flex-1 py-2 bg-green-700 hover:bg-green-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-1.5"
+						class="flex-1 py-2 bg-green-700 hover:bg-green-600 disabled:bg-stone-200 dark:disabled:bg-stone-700 disabled:text-stone-400 dark:disabled:text-stone-500 text-white font-semibold rounded-md text-sm transition-colors flex items-center justify-center gap-1.5"
 					>
 						{#if submitting}
 							<Icon name="loader" size={13} class="animate-spin shrink-0" />
@@ -828,23 +828,23 @@
 	{/if}
 
 	{#if pothole.status === 'filled'}
-		<div class="bg-green-900/20 border border-green-800/60 rounded-xl p-5 text-center">
+		<div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/60 rounded-md p-5 text-center">
 			<div class="flex justify-center mb-3">
-				<Icon name="check-circle" size={36} class="text-green-400" />
+				<Icon name="check-circle" size={36} class="text-green-500 dark:text-green-400" />
 			</div>
-			<p class="text-green-300 font-semibold">This pothole has been filled!</p>
-			<p class="text-zinc-300 text-sm mt-1">The city responded. Accountability worked.</p>
+			<p class="text-green-700 dark:text-green-300 font-semibold">This pothole has been filled!</p>
+			<p class="text-stone-600 dark:text-stone-300 text-sm mt-1">The city responded. Accountability worked.</p>
 		</div>
 	{/if}
 
 	<!-- Expired state -->
 	{#if pothole.status === 'expired'}
-		<div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 text-center space-y-1">
+		<div class="bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md p-4 text-center space-y-1">
 			<div class="flex justify-center mb-2">
-				<Icon name="clock" size={36} class="text-zinc-500" />
+				<Icon name="clock" size={36} class="text-stone-400 dark:text-stone-500" />
 			</div>
-			<p class="text-zinc-300 font-semibold">This report has expired</p>
-			<p class="text-zinc-500 text-sm mt-1">
+			<p class="text-stone-600 dark:text-stone-300 font-semibold">This report has expired</p>
+			<p class="text-stone-500 dark:text-stone-400 text-sm mt-1">
 				No activity for 3+ months. The pothole may have been filled — or may still be there.
 			</p>
 		</div>
@@ -854,31 +854,31 @@
 	{#if pothole.status === 'reported'}
 		{@const days = daysSince(pothole.created_at)}
 		{#if days !== null && days > 0}
-			<p class="text-center text-zinc-500 text-sm">
-				Reported <span class="text-orange-400 font-semibold tabular-nums">{days} day{days === 1 ? '' : 's'} ago</span> — still unfilled.
+			<p class="text-center text-stone-500 dark:text-stone-400 text-sm">
+				Reported <span class="text-orange-500 dark:text-orange-400 font-semibold tabular-nums">{days} day{days === 1 ? '' : 's'} ago</span> — still unfilled.
 			</p>
 		{/if}
 	{/if}
 
 	<!-- City repair requests (Kitchener CCC data) -->
 	{#if cityRepairRequests.length > 0}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
-				<Icon name="flag" size={14} class="text-sky-400 shrink-0" />
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+				<Icon name="flag" size={14} class="text-amber-500 shrink-0" />
 				City repair {cityRepairRequests.length === 1 ? 'request' : 'requests'} on file
 			</div>
-			<p class="text-zinc-300 text-sm">
+			<p class="text-stone-600 dark:text-stone-300 text-sm">
 				Kitchener's 311 system has
-				<span class="text-white font-semibold">{cityRepairRequests.length} official pothole repair {cityRepairRequests.length === 1 ? 'request' : 'requests'}</span>
+				<span class="text-stone-900 dark:text-white font-semibold">{cityRepairRequests.length} official pothole repair {cityRepairRequests.length === 1 ? 'request' : 'requests'}</span>
 				logged within 200 m of this location.
 			</p>
 			<ul class="space-y-1.5">
 				{#each cityRepairRequests as req (req.date + req.intersection)}
-					<li class="flex items-start gap-2 text-xs text-zinc-300">
-						<Icon name="clock" size={12} class="text-zinc-600 shrink-0 mt-0.5" />
+					<li class="flex items-start gap-2 text-xs text-stone-600 dark:text-stone-300">
+						<Icon name="clock" size={12} class="text-stone-400 dark:text-stone-600 shrink-0 mt-0.5" />
 						<span>
-							<span class="text-zinc-300">{req.intersection}</span>
-							<span class="text-zinc-600 ml-1.5 tabular-nums">{fmt(req.date)}</span>
+							<span class="text-stone-600 dark:text-stone-300">{req.intersection}</span>
+							<span class="text-stone-400 dark:text-stone-600 ml-1.5 tabular-nums">{fmt(req.date)}</span>
 						</span>
 					</li>
 				{/each}
@@ -888,18 +888,18 @@
 
 	<!-- Councillor contact -->
 	{#if councillor && pothole.status !== 'filled'}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
-				<Icon name="mail" size={14} class="text-sky-400 shrink-0" />
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+				<Icon name="mail" size={14} class="text-amber-500 shrink-0" />
 				Contact your councillor
 			</div>
-			<p class="text-zinc-300 text-sm">
-				{councillor.city.charAt(0).toUpperCase() + councillor.city.slice(1)}, Ward {councillor.ward} — <span class="text-white">{councillor.name}</span>
+			<p class="text-stone-600 dark:text-stone-300 text-sm">
+				{councillor.city.charAt(0).toUpperCase() + councillor.city.slice(1)}, Ward {councillor.ward} — <span class="text-stone-900 dark:text-white">{councillor.name}</span>
 			</p>
 			<div class="flex flex-wrap gap-2">
 				<a
 					href={getPotholeEmailUrl(councillor, pothole)}
-					class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg transition-colors"
+					class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white text-sm rounded-md transition-colors"
 				>
 					<Icon name="mail" size={13} class="shrink-0" />
 					Email {councillor.name.split(' ')[0]}
@@ -908,7 +908,7 @@
 					href={councillor.url}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg transition-colors"
+					class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white text-sm rounded-md transition-colors"
 				>
 					<Icon name="external-link" size={13} class="shrink-0" />
 					Councillor page
@@ -918,9 +918,9 @@
 	{/if}
 
 	<!-- Links -->
-	<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-		<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
-			<Icon name="share-2" size={14} class="text-zinc-400 shrink-0" />
+	<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
+		<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+			<Icon name="share-2" size={14} class="text-stone-500 dark:text-stone-400 shrink-0" />
 			Share & links
 		</div>
 		<div class="flex flex-wrap gap-2">
@@ -928,14 +928,14 @@
 				href={streetViewUrl(pothole.lat, pothole.lng)}
 				target="_blank"
 				rel="noopener noreferrer"
-				class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg transition-colors"
+				class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white text-sm rounded-md transition-colors"
 			>
 				<Icon name="map" size={13} class="shrink-0" />
 				Street View
 			</a>
 			<button
 				onclick={() => share(pothole.address, pothole.lat, pothole.lng)}
-				class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg transition-colors"
+				class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white text-sm rounded-md transition-colors"
 			>
 				<Icon name="clipboard" size={13} class="shrink-0" />
 				Copy link
@@ -961,7 +961,7 @@
 			bind:this={lightboxCloseBtn}
 			onclick={(e) => { e.stopPropagation(); closeLightbox(); }}
 			aria-label="Close photo viewer"
-			class="absolute top-4 right-4 p-2 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
+			class="absolute top-4 right-4 p-2 rounded-md bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
 		>
 			<Icon name="x" size={20} />
 		</button>
@@ -971,7 +971,7 @@
 			<button
 				onclick={(e) => { e.stopPropagation(); prevPhoto(); }}
 				aria-label="Previous photo"
-				class="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
+				class="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-md bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
 			>
 				<Icon name="arrow-left" size={20} />
 			</button>
@@ -984,7 +984,7 @@
 					<img
 						src={photo.url}
 						alt="Pothole at {pothole.address || 'this location'} — photo {i + 1} of {photos.length}"
-						class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+						class="max-w-full max-h-[90vh] object-contain rounded-md shadow-2xl"
 						class:hidden={i !== lightboxIndex}
 						aria-hidden={i !== lightboxIndex}
 					/>
@@ -997,7 +997,7 @@
 			<button
 				onclick={(e) => { e.stopPropagation(); nextPhoto(); }}
 				aria-label="Next photo"
-				class="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
+				class="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-md bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
 			>
 				<Icon name="arrow-right" size={20} />
 			</button>

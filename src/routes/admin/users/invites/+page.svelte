@@ -31,9 +31,9 @@
 			case 'admin':
 				return 'text-red-400 bg-red-500/10';
 			case 'editor':
-				return 'text-sky-400 bg-sky-500/10';
+				return 'text-amber-400 bg-amber-500/10';
 			default:
-				return 'text-zinc-400 bg-zinc-700/50';
+				return 'text-stone-400 bg-stone-700/50';
 		}
 	}
 </script>
@@ -44,16 +44,16 @@
 
 <div class="p-6 max-w-4xl">
 	<!-- Breadcrumb -->
-	<nav class="flex items-center gap-2 text-sm text-zinc-500 mb-5">
-		<a href="/admin/users" class="hover:text-zinc-300 transition-colors">Users</a>
+	<nav class="flex items-center gap-2 text-sm text-stone-500 mb-5">
+		<a href="/admin/users" class="hover:text-stone-300 transition-colors">Users</a>
 		<span>/</span>
-		<span class="text-zinc-300">Invite Codes</span>
+		<span class="text-stone-300">Invite Codes</span>
 	</nav>
 
 	<div class="flex items-center justify-between mb-6">
 		<div>
-			<h1 class="text-xl font-semibold text-zinc-100">Invite Codes</h1>
-			<p class="text-zinc-500 text-sm mt-0.5">
+			<h1 class="text-xl font-semibold text-stone-100">Invite Codes</h1>
+			<p class="text-stone-500 text-sm mt-0.5">
 				{activeInvites.length} active · {inactiveInvites.length} expired/used
 			</p>
 		</div>
@@ -75,15 +75,15 @@
 	{/if}
 
 	<!-- Create invite form -->
-	<div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 mb-6">
-		<h2 class="text-sm font-medium text-zinc-300 mb-3">Create Invite</h2>
+	<div class="bg-stone-900 border border-stone-800 rounded-lg p-4 mb-6">
+		<h2 class="text-sm font-medium text-stone-300 mb-3">Create Invite</h2>
 		<form method="post" action="?/createInvite" use:enhance class="flex items-end gap-3 flex-wrap">
 			<div>
-				<label for="role" class="block text-xs text-zinc-500 mb-1.5">Role</label>
+				<label for="role" class="block text-xs text-stone-500 mb-1.5">Role</label>
 				<select
 					id="role"
 					name="role"
-					class="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sky-500"
+					class="bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 focus:outline-none focus:border-amber-500"
 				>
 					<option value="editor" selected>editor</option>
 					<option value="viewer">viewer</option>
@@ -91,34 +91,34 @@
 				</select>
 			</div>
 			<div class="flex-1 min-w-48">
-				<label for="email" class="block text-xs text-zinc-500 mb-1.5">
-					Restrict to email <span class="text-zinc-700">(optional)</span>
+				<label for="email" class="block text-xs text-stone-500 mb-1.5">
+					Restrict to email <span class="text-stone-700">(optional)</span>
 				</label>
 				<input
 					id="email"
 					name="email"
 					type="email"
 					placeholder="someone@example.com"
-					class="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-sky-500"
+					class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-amber-500"
 				/>
 			</div>
 			<button
 				type="submit"
-				class="px-4 py-2 text-sm font-medium bg-sky-600 hover:bg-sky-500 text-white rounded transition-colors"
+				class="px-4 py-2 text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white rounded transition-colors"
 			>
 				Generate
 			</button>
 		</form>
-		<p class="text-zinc-600 text-xs mt-2">Codes expire in 7 days and are single-use.</p>
+		<p class="text-stone-600 text-xs mt-2">Codes expire in 7 days and are single-use.</p>
 	</div>
 
 	<!-- Active invites -->
 	{#if activeInvites.length > 0}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden mb-5">
-			<div class="px-4 py-3 border-b border-zinc-800">
-				<h2 class="text-sm font-medium text-zinc-300">Active</h2>
+		<div class="bg-stone-900 border border-stone-800 rounded-lg overflow-hidden mb-5">
+			<div class="px-4 py-3 border-b border-stone-800">
+				<h2 class="text-sm font-medium text-stone-300">Active</h2>
 			</div>
-			<div class="divide-y divide-zinc-800">
+			<div class="divide-y divide-stone-800">
 				{#each activeInvites as invite (invite.id)}
 					<div class="px-4 py-3 flex items-center gap-4 flex-wrap">
 						<div class="flex-1 min-w-0">
@@ -129,19 +129,19 @@
 									{invite.role}
 								</span>
 								{#if invite.email}
-									<span class="text-zinc-400 text-xs">→ {invite.email}</span>
+									<span class="text-stone-400 text-xs">→ {invite.email}</span>
 								{/if}
-								<span class="text-zinc-600 text-xs font-mono"
+								<span class="text-stone-600 text-xs font-mono"
 									>{invite.code.slice(0, 8)}…</span
 								>
 							</div>
 							<div class="flex items-center gap-3 mt-1">
-								<span class="text-zinc-600 text-xs">
+								<span class="text-stone-600 text-xs">
 									Expires {formatDistanceToNow(new Date(invite.expires_at), { addSuffix: true })}
 								</span>
 								{#if invite.creator}
-									<span class="text-zinc-700 text-xs">·</span>
-									<span class="text-zinc-600 text-xs">
+									<span class="text-stone-700 text-xs">·</span>
+									<span class="text-stone-600 text-xs">
 										by {invite.creator.first_name}
 										{invite.creator.last_name}
 									</span>
@@ -153,7 +153,7 @@
 							<button
 								type="button"
 								onclick={() => copyInviteUrl(invite.code)}
-								class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-sky-400 border border-sky-600/30 rounded hover:bg-sky-600/10 transition-colors"
+								class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-400 border border-amber-600/30 rounded hover:bg-amber-600/10 transition-colors"
 							>
 								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
@@ -169,7 +169,7 @@
 								<input type="hidden" name="id" value={invite.id} />
 								<button
 									type="submit"
-									class="px-3 py-1.5 text-xs text-zinc-500 hover:text-red-400 border border-zinc-800 hover:border-red-900/40 rounded transition-colors"
+									class="px-3 py-1.5 text-xs text-stone-500 hover:text-red-400 border border-stone-800 hover:border-red-900/40 rounded transition-colors"
 								>
 									Revoke
 								</button>
@@ -183,11 +183,11 @@
 
 	<!-- Expired / used invites -->
 	{#if inactiveInvites.length > 0}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-			<div class="px-4 py-3 border-b border-zinc-800">
-				<h2 class="text-sm font-medium text-zinc-500">Expired / Used</h2>
+		<div class="bg-stone-900 border border-stone-800 rounded-lg overflow-hidden">
+			<div class="px-4 py-3 border-b border-stone-800">
+				<h2 class="text-sm font-medium text-stone-500">Expired / Used</h2>
 			</div>
-			<div class="divide-y divide-zinc-800">
+			<div class="divide-y divide-stone-800">
 				{#each inactiveInvites as invite (invite.id)}
 					<div class="px-4 py-3 flex items-center gap-4 opacity-60">
 						<div class="flex-1 min-w-0">
@@ -198,22 +198,22 @@
 									{invite.role}
 								</span>
 								{#if invite.email}
-									<span class="text-zinc-400 text-xs">→ {invite.email}</span>
+									<span class="text-stone-400 text-xs">→ {invite.email}</span>
 								{/if}
 							</div>
 							<div class="flex items-center gap-3 mt-1">
 								{#if invite.used_at && invite.used_by_user}
-									<span class="text-zinc-600 text-xs">
+									<span class="text-stone-600 text-xs">
 										Used by {invite.used_by_user.first_name}
 										{invite.used_by_user.last_name}
 										{formatDistanceToNow(new Date(invite.used_at), { addSuffix: true })}
 									</span>
 								{:else if invite.used_at}
-									<span class="text-zinc-600 text-xs">
+									<span class="text-stone-600 text-xs">
 										Used {formatDistanceToNow(new Date(invite.used_at), { addSuffix: true })}
 									</span>
 								{:else}
-									<span class="text-zinc-600 text-xs">
+									<span class="text-stone-600 text-xs">
 										Expired {format(new Date(invite.expires_at), 'PPP')}
 									</span>
 								{/if}

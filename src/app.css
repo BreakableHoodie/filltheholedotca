@@ -12,7 +12,7 @@
  * Use focus:outline-none on elements that define their own focus treatment.
  */
 :focus-visible {
-  outline: 2px solid #0ea5e9; /* sky-500 */
+  outline: 2px solid #f59e0b; /* amber-500 */
   outline-offset: 2px;
 }
 
@@ -24,8 +24,7 @@
 @theme {
   --font-sans: "Public Sans", system-ui, sans-serif;
   --font-brand: "Barlow Condensed", system-ui, sans-serif;
-  --color-asphalt: #0f0f0f;
-  --color-asphalt-light: #1a1a1a;
+  --color-asphalt: #191714;
 }
 
 body {
@@ -40,17 +39,17 @@ body {
 }
 
 .page-title {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-family: var(--font-brand);
+  font-weight: 800;
+  letter-spacing: -0.01em;
   line-height: 1;
   text-wrap: balance;
 }
 
 .section-title {
-  font-family: var(--font-sans);
+  font-family: var(--font-brand);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   line-height: 1.1;
   text-wrap: balance;
 }
@@ -84,16 +83,4 @@ body {
   .safe-bottom-watchlist {
     bottom: 1rem;
   }
-}
-
-/* iOS safe area support — accounts for notch/Dynamic Island and home indicator */
-.safe-header {
-  padding-top: env(safe-area-inset-top);
-}
-.safe-header-inner {
-  padding-left: max(1rem, env(safe-area-inset-left));
-  padding-right: max(1rem, env(safe-area-inset-right));
-}
-.safe-bottom {
-  bottom: calc(1.5rem + env(safe-area-inset-bottom));
 }
