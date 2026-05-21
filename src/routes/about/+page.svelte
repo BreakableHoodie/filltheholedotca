@@ -83,10 +83,10 @@
 			<a href="/how-to" class="text-amber-700 dark:text-amber-400 underline hover:text-amber-600 dark:hover:text-amber-300 transition-colors">Full how-to guide →</a>
 		</p>
 
-		<div class="flex gap-3 bg-amber-950/40 border border-amber-700/40 rounded-md p-4 text-sm text-amber-200/90">
-			<Icon name="alert-triangle" size={18} class="text-amber-400 shrink-0 mt-0.5" />
+		<div class="flex gap-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-700/40 rounded-md p-4 text-sm text-amber-900 dark:text-amber-200/90">
+			<Icon name="alert-triangle" size={18} class="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
 			<p>
-				<strong class="text-amber-300">Stay safe when reporting.</strong>
+				<strong class="text-amber-800 dark:text-amber-300">Stay safe when reporting.</strong>
 				Never stop in traffic or step onto a road to report a pothole. Report from the sidewalk,
 				parking lot, or after you've safely parked. If you're driving, let a passenger report
 				or wait until you've stopped somewhere safe. No pothole is worth an injury.

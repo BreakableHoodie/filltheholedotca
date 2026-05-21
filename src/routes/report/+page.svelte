@@ -491,9 +491,9 @@
 					disabled={gpsStatus === 'loading'}
 					class="w-full py-3 rounded-md border-2 border-dashed font-semibold text-sm transition-colors flex items-center justify-center gap-2
 						{gpsStatus === 'got'
-							? 'border-green-500 bg-green-500/10 text-green-400'
+							? 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400'
 							: gpsStatus === 'error'
-							? 'border-red-500 bg-red-500/10 text-red-400'
+							? 'border-red-500 bg-red-500/10 text-red-700 dark:text-red-400'
 							: 'border-stone-300 dark:border-stone-600 hover:border-amber-500 hover:bg-amber-500/5 text-stone-600 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-400'}"
 				>
 					{#if gpsStatus === 'loading'}
@@ -512,7 +512,7 @@
 				</button>
 
 				{#if gpsStatus === 'error'}
-					<p class="text-xs text-red-400" role="alert">
+					<p class="text-xs text-red-700 dark:text-red-400" role="alert">
 						Could not get your location — signal may be weak. Try moving outside, or use address or map mode instead.
 					</p>
 					<p class="text-xs text-stone-600 dark:text-stone-400">
@@ -703,14 +703,14 @@
 
 		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3" role="status" aria-live="polite" aria-atomic="true">
 			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400">
-				<Icon name="check-circle" size={14} class={hasLocation ? 'text-green-400' : 'text-stone-500 dark:text-stone-400'} />
+				<Icon name="check-circle" size={14} class={hasLocation ? 'text-green-700 dark:text-green-400' : 'text-stone-500 dark:text-stone-400'} />
 				Ready to submit
 			</div>
 
 			{#if hasLocation}
 				<div class="space-y-2">
 					<div class="rounded-md bg-stone-100/80 dark:bg-stone-800/80 p-3 space-y-1.5">
-						<p class="flex items-center gap-1.5 text-xs font-semibold text-green-400">
+						<p class="flex items-center gap-1.5 text-xs font-semibold text-green-700 dark:text-green-400">
 							<Icon name="map-pin" size={12} class="shrink-0" />
 							Location locked in
 						</p>
