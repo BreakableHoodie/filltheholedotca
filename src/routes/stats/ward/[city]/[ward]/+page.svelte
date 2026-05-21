@@ -102,7 +102,7 @@
         {councillor.name.charAt(0)}
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-xs text-stone-500 uppercase tracking-wide">{cityLabel} · Ward {ward}</p>
+        <p class="text-xs font-semibold text-stone-500">{cityLabel} · Ward {ward}</p>
         <h1 class="text-xl font-bold text-white mt-0.5">{councillor.name}</h1>
       </div>
       <div class="shrink-0">

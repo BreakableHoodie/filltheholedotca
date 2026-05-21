@@ -6,7 +6,7 @@
 	import WatchlistPanel from '$lib/components/WatchlistPanel.svelte';
 	import { STATUS_CONFIG } from '$lib/constants';
 	import { escapeHtml } from '$lib/escape';
-	import { inWardFeature } from '$lib/geo';
+	import { inWardFeature, roundPublicCoord } from '$lib/geo';
 	import { ICONS } from '$lib/icons';
 	import { toastError } from '$lib/toast';
 	import type { Pothole } from '$lib/types';
@@ -87,7 +87,7 @@
 		navigator.geolocation.getCurrentPosition(
 			({ coords }) => {
 				reportLocating = false;
-				goto(`/report?lat=${coords.latitude}&lng=${coords.longitude}`);
+				goto(`/report?lat=${roundPublicCoord(coords.latitude)}&lng=${roundPublicCoord(coords.longitude)}`);
 			},
 			(error) => {
 				reportLocating = false;
@@ -120,7 +120,7 @@
 	function confirmReportLocation() {
 		if (!reportLatLng) return;
 		mobileToolsOpen = false;
-		goto(`/report?lat=${reportLatLng.lat}&lng=${reportLatLng.lng}`);
+		goto(`/report?lat=${roundPublicCoord(reportLatLng.lat)}&lng=${roundPublicCoord(reportLatLng.lng)}`);
 	}
 	let wardLayerRef: Leaflet.GeoJSON | null = null;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -557,7 +557,7 @@
 	{#if !mapReady}
 		<div class="absolute inset-0 flex items-center justify-center bg-white dark:bg-stone-900">
 			<div class="text-center">
-				<div class="mx-auto w-9 h-9 rounded-full border-2 border-stone-200 dark:border-stone-700 border-t-sky-500 animate-spin mb-4"></div>
+				<div class="mx-auto w-9 h-9 rounded-full border-2 border-stone-200 dark:border-stone-700 border-t-amber-500 animate-spin mb-4"></div>
 				<div class="text-sm text-stone-600 dark:text-stone-300">Loading the map…</div>
 			</div>
 		</div>
@@ -623,7 +623,7 @@
 
 			<!-- Layers panel -->
 			<div class="bg-stone-50 dark:bg-asphalt border border-stone-200 dark:border-stone-700 rounded-md p-3 space-y-2 text-xs">
-				<div class="text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider text-[10px] mb-1">Layers</div>
+				<div class="text-stone-500 dark:text-stone-400 font-semibold text-[10px] mb-1">Layers</div>
 
 				{#each ([
 					['reported', 'Reported'],
@@ -660,7 +660,7 @@
 	<!-- Legend -->
 	{#if mapReady}
 		<div class="absolute safe-bottom right-4 hidden sm:block bg-stone-50 dark:bg-asphalt border border-stone-200 dark:border-stone-700 rounded-md p-3 text-xs space-y-1.5 z-[1000]">
-			<div class="text-stone-500 dark:text-stone-400 font-semibold mb-2 uppercase tracking-wider text-[10px]">Status</div>
+			<div class="text-stone-500 dark:text-stone-400 font-semibold mb-2 text-[10px]">Status</div>
 			{#each ['reported', 'expired', 'filled'] as status (status)}
 				{@const info = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]}
 				<div class="flex items-center gap-2 text-stone-600 dark:text-stone-300">
@@ -676,7 +676,7 @@
 			<div class="rounded-md border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-2xl overflow-hidden flex flex-col">
 				<div class="shrink-0 flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-stone-200/80 dark:border-stone-800/80">
 					<div class="min-w-0">
-						<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-500">Map tools</p>
+						<p class="text-[11px] font-semibold text-amber-500">Map tools</p>
 						<p class="text-sm text-stone-900 dark:text-white font-semibold" aria-live="polite" aria-atomic="true">{liveReportedCount} live pothole{liveReportedCount === 1 ? '' : 's'} on the public map</p>
 						<p class="text-[11px] text-stone-500 dark:text-stone-400">Tap a marker for details or drop a pin to report a new one.</p>
 					</div>
@@ -728,7 +728,7 @@
 					<div id="mobile-map-tools" class="border-t border-stone-200 dark:border-stone-800 overflow-y-auto max-h-[50dvh]">
 						<div class="px-4 py-3 space-y-4">
 						<div class="space-y-2">
-							<h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-stone-400">Recent live reports</h2>
+							<h2 class="text-[11px] font-semibold text-stone-500 dark:text-stone-400">Recent live reports</h2>
 							{#if recentReportedPotholes.length > 0}
 								<div class="space-y-2">
 									{#each recentReportedPotholes as pothole (pothole.id)}
@@ -753,7 +753,7 @@
 														</span>
 													{/if}
 												</div>
-												<span class="shrink-0 rounded-full bg-stone-100 dark:bg-stone-800 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-500">
+												<span class="shrink-0 rounded bg-stone-100 dark:bg-stone-800 px-2 py-1 text-[10px] font-semibold text-amber-500">
 													Open
 												</span>
 											</div>
@@ -768,7 +768,7 @@
 						</div>
 
 						<div class="space-y-2">
-							<h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-stone-400">Layers</h2>
+							<h2 class="text-[11px] font-semibold text-stone-500 dark:text-stone-400">Layers</h2>
 							<div class="grid grid-cols-2 gap-2">
 								{#each ([
 									['reported', 'Reported'],
@@ -784,14 +784,14 @@
 										class="inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2.5 text-xs font-semibold transition-colors disabled:opacity-60 {layers[key] ? 'border-amber-500 bg-amber-500/10 text-stone-900 dark:text-white' : 'border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 text-stone-600 dark:text-stone-300 hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-900 dark:hover:text-white'}"
 									>
 										<span>{key === 'wards' && wardLoading ? 'Loading…' : label}</span>
-										<span class="text-[10px] uppercase tracking-wide text-stone-500 dark:text-stone-400">{layers[key] ? 'On' : 'Off'}</span>
+										<span class="text-[10px] font-semibold text-stone-500 dark:text-stone-400">{layers[key] ? 'On' : 'Off'}</span>
 									</button>
 								{/each}
 							</div>
 						</div>
 
 						<div class="space-y-2">
-							<h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-stone-400">Status guide</h2>
+							<h2 class="text-[11px] font-semibold text-stone-500 dark:text-stone-400">Status guide</h2>
 							<div class="grid grid-cols-1 gap-2">
 								{#each ['reported', 'expired', 'filled'] as status (status)}
 									{@const info = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]}

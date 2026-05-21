@@ -22,7 +22,7 @@
 				An error occurred
 			{/if}
 		</h1>
-		<p class="text-stone-400 text-sm">
+		<p class="text-stone-600 dark:text-stone-400 text-sm">
 			{#if page.status === 404}
 				This pothole might have been filled — or the link is broken.
 			{:else}
