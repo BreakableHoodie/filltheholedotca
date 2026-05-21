@@ -82,7 +82,7 @@
 		<div class="max-w-6xl mx-auto px-4 py-8">
 			<div class="flex items-center gap-2 mb-5">
 				<Icon name="bookmark-filled" size={15} class="text-amber-400 shrink-0" />
-				<h2 id="watchlist-heading" class="text-sm font-semibold text-stone-300 uppercase tracking-wider">
+				<h2 id="watchlist-heading" class="text-sm font-semibold text-stone-300">
 					My Watchlist
 				</h2>
 				<span class="text-stone-600 text-xs tabular-nums ml-1">({ids.length})</span>

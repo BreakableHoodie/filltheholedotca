@@ -92,7 +92,7 @@
 					value={threshold}
 					min="1"
 					max="20"
-					class="w-24 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 tabular-nums"
+					class="w-24 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 tabular-nums"
 				/>
 			</div>
 			<button

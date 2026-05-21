@@ -114,7 +114,7 @@
 									<input type="hidden" name="userId" value={user.id} />
 									<select
 										name="role"
-										class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-200 focus:outline-none focus:border-sky-500"
+										class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
 									>
 										{#each ['admin', 'editor', 'viewer'] as r (r)}
 											<option value={r} selected={user.role === r}>{r}</option>

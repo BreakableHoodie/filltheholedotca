@@ -90,7 +90,7 @@
 				id="filter-user"
 				name="user"
 				onchange={(e) => (e.currentTarget as HTMLSelectElement).form?.submit()}
-				class="bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm text-stone-100 focus:outline-none focus:border-sky-500 cursor-pointer"
+				class="bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm text-stone-100 focus:outline-none focus:border-amber-500 cursor-pointer"
 			>
 				<option value="">All users</option>
 				{#each data.users as u (u.id)}
@@ -107,7 +107,7 @@
 				id="filter-resource"
 				name="resource_type"
 				onchange={(e) => (e.currentTarget as HTMLSelectElement).form?.submit()}
-				class="bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm text-stone-100 focus:outline-none focus:border-sky-500 cursor-pointer"
+				class="bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm text-stone-100 focus:outline-none focus:border-amber-500 cursor-pointer"
 			>
 				{#each RESOURCE_TYPES as rt (rt.value)}
 					<option value={rt.value} selected={data.filterResourceType === rt.value}>
@@ -126,7 +126,7 @@
 					type="text"
 					value={data.filterAction ?? ''}
 					placeholder="e.g. photo.approve"
-					class="bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm text-stone-100 focus:outline-none focus:border-sky-500 w-48"
+					class="bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm text-stone-100 focus:outline-none focus:border-amber-500 w-48"
 				/>
 				<!-- Preserve other filter values when submitting the text input -->
 				{#if data.filterUser}<input type="hidden" name="user" value={data.filterUser} />{/if}

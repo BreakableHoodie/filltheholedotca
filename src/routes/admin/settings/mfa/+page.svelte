@@ -124,7 +124,7 @@
 						autocomplete="one-time-code"
 						maxlength="6"
 						placeholder="000000"
-						class="w-32 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 font-mono text-center focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+						class="w-32 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 font-mono text-center focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 					/>
 				</div>
 				<div class="flex items-center gap-3">
@@ -200,7 +200,7 @@
 								autocomplete="one-time-code"
 								maxlength="8"
 								placeholder="000000"
-								class="w-32 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 font-mono text-center focus:outline-none focus:border-sky-500"
+								class="w-32 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 font-mono text-center focus:outline-none focus:border-amber-500"
 							/>
 							<button
 								type="submit"
@@ -243,7 +243,7 @@
 								autocomplete="one-time-code"
 								maxlength="6"
 								placeholder="000000"
-								class="w-32 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 font-mono text-center focus:outline-none focus:border-sky-500"
+								class="w-32 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 font-mono text-center focus:outline-none focus:border-amber-500"
 							/>
 							<button
 								type="submit"

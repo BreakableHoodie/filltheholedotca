@@ -215,7 +215,7 @@
 				type="text"
 				bind:value={filterSearch}
 				placeholder="e.g. King St"
-				class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-sky-500"
+				class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-amber-500"
 			/>
 		</div>
 		<div>
@@ -224,7 +224,7 @@
 				id="filter-status"
 				name="status"
 				bind:value={filterStatus}
-				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-sky-500"
+				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-amber-500"
 			>
 				<option value="">All statuses</option>
 				{#each ['pending', 'reported', 'filled', 'expired'] as s (s)}
@@ -238,7 +238,7 @@
 				id="filter-photos"
 				name="photosPublished"
 				bind:value={filterPhotos}
-				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-sky-500"
+				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-amber-500"
 			>
 				<option value="">Any</option>
 				<option value="true">Published</option>
@@ -252,7 +252,7 @@
 				name="dateFrom"
 				type="date"
 				bind:value={filterDateFrom}
-				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-sky-500"
+				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-amber-500"
 			/>
 		</div>
 		<div>
@@ -262,7 +262,7 @@
 				name="dateTo"
 				type="date"
 				bind:value={filterDateTo}
-				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-sky-500"
+				class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm text-stone-200 focus:outline-none focus:border-amber-500"
 			/>
 		</div>
 		<!-- Preserve sort/dir/pageSize across filter changes -->
@@ -296,7 +296,7 @@
 				<select
 					bind:value={bulkStatus}
 					aria-label="Bulk status"
-					class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-200 focus:outline-none focus:border-sky-500"
+					class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
 				>
 					{#each ['pending', 'reported', 'filled', 'expired'] as s (s)}
 						<option value={s}>{s}</option>
@@ -385,7 +385,7 @@
 									checked={allSelected}
 									indeterminate={someSelected && !allSelected}
 									onchange={toggleAll}
-									class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-sky-500/20"
+									class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-amber-500/20"
 									aria-label="Select all"
 								/>
 							</th>
@@ -428,7 +428,7 @@
 											if (selected.has(pothole.id)) selected.delete(pothole.id);
 											else selected.add(pothole.id);
 										}}
-										class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-sky-500/20"
+										class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-amber-500/20"
 										aria-label="Select {pothole.address ?? pothole.id}"
 									/>
 								</td>
@@ -538,7 +538,7 @@
 					id="page-size"
 					name="pageSize"
 					onchange={(e) => (e.currentTarget.form as HTMLFormElement).submit()}
-					class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-200 focus:outline-none focus:border-sky-500"
+					class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
 				>
 					{#each [25, 50, 100] as size (size)}
 						<option value={size} selected={data.pageSize === size}>{size}</option>

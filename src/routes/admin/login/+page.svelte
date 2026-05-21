@@ -53,7 +53,7 @@
 							value={form?.email ?? ''}
 							required
 							autocomplete="email"
-							class="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-colors"
+							class="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-colors"
 							placeholder="you@example.com"
 						/>
 					</div>
@@ -68,7 +68,7 @@
 							name="password"
 							required
 							autocomplete="current-password"
-							class="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-colors"
+							class="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-colors"
 							placeholder="••••••••"
 						/>
 					</div>

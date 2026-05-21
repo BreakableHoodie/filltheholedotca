@@ -154,7 +154,7 @@
 						<select
 							id="status"
 							name="status"
-							class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+							class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 						>
 							{#each ['pending', 'reported', 'filled', 'expired'] as s (s)}
 								<option value={s} selected={pothole.status === s}>{s}</option>
@@ -184,7 +184,7 @@
 							name="address"
 							type="text"
 							bind:value={addressValue}
-							class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+							class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 							placeholder="e.g. 123 King St W, Kitchener"
 							maxlength="500"
 						/>

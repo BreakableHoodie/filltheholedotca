@@ -57,7 +57,7 @@
 					type="password"
 					autocomplete="current-password"
 					required
-					class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+					class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 				/>
 			</div>
 
@@ -70,7 +70,7 @@
 					autocomplete="new-password"
 					minlength="12"
 					required
-					class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+					class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 				/>
 				<p class="text-stone-600 text-xs mt-1">At least 12 characters.</p>
 			</div>
@@ -84,7 +84,7 @@
 					autocomplete="new-password"
 					minlength="12"
 					required
-					class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+					class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 				/>
 			</div>
 

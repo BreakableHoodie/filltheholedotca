@@ -27,7 +27,7 @@
 			fillthehole.ca makes the problem visible. Every reported pothole goes on a public map.
 			Every day it stays unfilled is tracked. Your councillor's contact is one tap away.
 		</p>
-		<p class="text-amber-600 dark:text-amber-400 font-medium">
+		<p class="text-amber-700 dark:text-amber-400 font-medium">
 			Sunlight is the best disinfectant. A public map is hard to ignore.
 		</p>
 	</section>
@@ -47,7 +47,7 @@
 					href={link.href}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="flex items-center gap-2 text-white text-sm font-semibold px-4 py-2 rounded-md transition-colors {link.id === 'kitchener' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-stone-300 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 text-stone-900 dark:text-white'}"
+					class="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-md transition-colors {link.id === 'kitchener' ? 'bg-amber-600 hover:bg-amber-500 text-stone-900' : 'bg-stone-300 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 text-stone-900 dark:text-white'}"
 				>
 					<Icon name="external-link" size={14} class="shrink-0" />
 					{link.label}
@@ -61,7 +61,7 @@
 				</a>
 			{/each}
 		</div>
-		<div class="bg-stone-100 dark:bg-stone-800 rounded-md p-3 text-xs text-stone-600 dark:text-stone-400 leading-relaxed space-y-2">
+		<div class="bg-stone-50 dark:bg-stone-800 rounded-md p-3 text-xs text-stone-600 dark:text-stone-400 leading-relaxed space-y-2">
 			<p>
 				<strong class="text-stone-900 dark:text-stone-300">Not sure who maintains the road?</strong> Major roads like
 				King St, Victoria St, Weber St, and Erb St are <em>Regional roads</em> maintained by the
@@ -71,7 +71,7 @@
 			<p>
 				<strong class="text-stone-900 dark:text-stone-300">Provincial highways (401, 7/8, 85) are MTO's responsibility</strong>,
 				not the city or Region. Report those to the
-				<a href="https://www.ontario.ca/page/report-problem-provincial-highway" target="_blank" rel="noopener noreferrer" class="text-amber-600 dark:text-amber-400 underline">Ministry of Transportation Ontario</a>.
+				<a href="https://www.ontario.ca/page/report-problem-provincial-highway" target="_blank" rel="noopener noreferrer" class="text-amber-700 dark:text-amber-400 underline">Ministry of Transportation Ontario</a>.
 			</p>
 		</div>
 	</section>
@@ -80,7 +80,7 @@
 		<h2 class="section-title text-xl text-stone-900 dark:text-white">How it works</h2>
 		<p class="text-sm text-stone-600 dark:text-stone-400">
 			The basics are below.
-			<a href="/how-to" class="text-amber-600 dark:text-amber-400 underline hover:text-amber-500 dark:hover:text-amber-300 transition-colors">Full how-to guide →</a>
+			<a href="/how-to" class="text-amber-700 dark:text-amber-400 underline hover:text-amber-600 dark:hover:text-amber-300 transition-colors">Full how-to guide →</a>
 		</p>
 
 		<div class="flex gap-3 bg-amber-950/40 border border-amber-700/40 rounded-md p-4 text-sm text-amber-200/90">
@@ -182,17 +182,17 @@
 					Third-party services
 				</div>
 				<p class="text-sm text-stone-600 dark:text-stone-400">
-					Map tiles are loaded from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="text-amber-600 dark:text-amber-400 underline">OpenStreetMap</a>.
+					Map tiles are loaded from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="text-amber-700 dark:text-amber-400 underline">OpenStreetMap</a>.
 					When you report a pothole, your coordinates are sent to
-					<a href="https://nominatim.org" target="_blank" rel="noopener noreferrer" class="text-amber-600 dark:text-amber-400 underline">Nominatim</a> (OpenStreetMap's geocoder)
+					<a href="https://nominatim.org" target="_blank" rel="noopener noreferrer" class="text-amber-700 dark:text-amber-400 underline">Nominatim</a> (OpenStreetMap's geocoder)
 					to look up the street address. Report data is stored in
-					<a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" class="text-amber-600 dark:text-amber-400 underline">Supabase</a>.
+					<a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" class="text-amber-700 dark:text-amber-400 underline">Supabase</a>.
 					Each of these services has its own privacy policy.
 				</p>
 				<p class="text-sm text-stone-600 dark:text-stone-400">
 					On individual pothole pages, the pothole's coordinates (rounded to ~11 m precision)
 					are sent to
-					<a href="https://www.esri.com/en-us/privacy/main" target="_blank" rel="noopener noreferrer" class="text-amber-600 dark:text-amber-400 underline">Esri ArcGIS</a>
+					<a href="https://www.esri.com/en-us/privacy/main" target="_blank" rel="noopener noreferrer" class="text-amber-700 dark:text-amber-400 underline">Esri ArcGIS</a>
 					to check whether Kitchener's 311 system has a matching repair request on file.
 					No personal information is included in this query — only the location.
 				</p>
@@ -255,7 +255,7 @@
 			>
 				<Icon name="download" size={18} class="text-amber-500 shrink-0 mt-0.5" />
 				<div>
-					<div class="font-semibold text-stone-900 dark:text-white text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">CSV export</div>
+					<div class="font-semibold text-stone-900 dark:text-white text-sm group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">CSV export</div>
 					<p class="text-xs text-stone-600 dark:text-stone-400 mt-0.5">All reported, filled &amp; expired potholes — id, lat/lng, address, status, dates.</p>
 				</div>
 			</a>
@@ -265,7 +265,7 @@
 			>
 				<Icon name="rss" size={18} class="text-amber-500 shrink-0 mt-0.5" />
 				<div>
-					<div class="font-semibold text-stone-900 dark:text-white text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">RSS feed</div>
+					<div class="font-semibold text-stone-900 dark:text-white text-sm group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">RSS feed</div>
 					<p class="text-xs text-stone-600 dark:text-stone-400 mt-0.5">Recently reported and filled potholes, ordered by event time. Subscribe in any RSS reader.</p>
 				</div>
 			</a>

@@ -68,19 +68,19 @@
 			<p>Tap <strong class="text-stone-700 dark:text-stone-200">Report a pothole</strong> in the top-right corner.</p>
 			<ol class="space-y-3 list-none">
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">1</span>
+					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5">1</span>
 					<span><strong class="text-stone-700 dark:text-stone-200">Lock your location.</strong> Tap the crosshair icon to use your device's GPS, or search by address and drop a pin manually.</span>
 				</li>
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">2</span>
+					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5">2</span>
 					<span><strong class="text-stone-700 dark:text-stone-200">Pick severity</strong> (optional). Minor, Moderate, Severe, or Hazardous. This helps prioritise which holes need attention first.</span>
 				</li>
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">3</span>
+					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5">3</span>
 					<span><strong class="text-stone-700 dark:text-stone-200">Attach a photo</strong> (optional). Photos are compressed automatically. They go through moderation before appearing publicly.</span>
 				</li>
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">4</span>
+					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5">4</span>
 					<span><strong class="text-stone-700 dark:text-stone-200">Submit.</strong> Your report is logged immediately. It needs one more independent confirmation from a different location before it shows up on the public map.</span>
 				</li>
 			</ol>

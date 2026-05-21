@@ -470,7 +470,7 @@
 						class="flex-1 min-h-[44px] py-1.5 px-2 rounded-md text-xs font-semibold transition-colors
 							{locationMode === tab.mode
 								? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-sm'
-								: 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200'}"
+								: 'text-stone-600 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200'}"
 					>
 						{tab.label}
 					</button>
@@ -494,7 +494,7 @@
 							? 'border-green-500 bg-green-500/10 text-green-400'
 							: gpsStatus === 'error'
 							? 'border-red-500 bg-red-500/10 text-red-400'
-							: 'border-stone-300 dark:border-stone-600 hover:border-amber-500 hover:bg-amber-500/5 text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400'}"
+							: 'border-stone-300 dark:border-stone-600 hover:border-amber-500 hover:bg-amber-500/5 text-stone-600 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-400'}"
 				>
 					{#if gpsStatus === 'loading'}
 						<Icon name="loader" size={15} class="animate-spin shrink-0" />
@@ -691,7 +691,7 @@
 				<button
 					type="button"
 					onclick={() => photoInput?.click()}
-					class="w-full py-3 rounded-md border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-amber-500 hover:bg-amber-500/5 text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+					class="w-full py-3 rounded-md border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-amber-500 hover:bg-amber-500/5 text-stone-600 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
 				>
 					<Icon name="camera" size={15} class="shrink-0" />
 					Add a photo
@@ -748,7 +748,7 @@
 		<button
 			type="submit"
 			disabled={submitting || !hasLocation}
-			class="w-full py-4 font-bold text-lg rounded-md transition-colors flex items-center justify-center gap-2 disabled:bg-stone-200 dark:disabled:bg-stone-800 disabled:text-stone-400 dark:disabled:text-stone-500 disabled:cursor-not-allowed bg-amber-500 hover:bg-amber-600 text-white"
+			class="w-full py-4 font-bold text-lg rounded-md transition-colors flex items-center justify-center gap-2 disabled:bg-stone-200 dark:disabled:bg-stone-800 disabled:text-stone-400 dark:disabled:text-stone-500 disabled:cursor-not-allowed bg-amber-500 hover:bg-amber-600 text-stone-900"
 		>
 			{#if submitting}
 				<Icon name="loader" size={16} class="animate-spin shrink-0" />

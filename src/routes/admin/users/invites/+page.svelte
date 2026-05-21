@@ -83,7 +83,7 @@
 				<select
 					id="role"
 					name="role"
-					class="bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 focus:outline-none focus:border-sky-500"
+					class="bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 focus:outline-none focus:border-amber-500"
 				>
 					<option value="editor" selected>editor</option>
 					<option value="viewer">viewer</option>
@@ -99,7 +99,7 @@
 					name="email"
 					type="email"
 					placeholder="someone@example.com"
-					class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-sky-500"
+					class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-amber-500"
 				/>
 			</div>
 			<button

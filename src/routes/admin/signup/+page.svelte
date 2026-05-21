@@ -88,7 +88,7 @@
 									autocomplete="given-name"
 									value={form?.firstName ?? ''}
 									required
-									class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+									class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 								/>
 							</div>
 							<div>
@@ -100,7 +100,7 @@
 									autocomplete="family-name"
 									value={form?.lastName ?? ''}
 									required
-									class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+									class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 								/>
 							</div>
 						</div>
@@ -114,7 +114,7 @@
 								autocomplete="email"
 								value={form?.email ?? ''}
 								required
-								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 							/>
 						</div>
 
@@ -127,7 +127,7 @@
 								autocomplete="new-password"
 								required
 								minlength="12"
-								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 							/>
 							<p class="text-stone-600 text-xs mt-1">
 								At least 12 chars with uppercase, lowercase, number, and symbol.
@@ -144,7 +144,7 @@
 								type="password"
 								autocomplete="new-password"
 								required
-								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 							/>
 						</div>
 
@@ -158,7 +158,7 @@
 								type="password"
 								autocomplete="off"
 								required
-								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 							/>
 						</div>
 
@@ -213,7 +213,7 @@
 								autocomplete="given-name"
 								value={form?.firstName ?? ''}
 								required
-								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 							/>
 						</div>
 						<div>
@@ -225,7 +225,7 @@
 								autocomplete="family-name"
 								value={form?.lastName ?? ''}
 								required
-								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+								class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 							/>
 						</div>
 					</div>
@@ -240,7 +240,7 @@
 							value={form?.email ?? data.invite.email ?? ''}
 							readonly={!!data.invite.email}
 							required
-							class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20
+							class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20
 							       {data.invite.email ? 'opacity-60 cursor-not-allowed' : ''}"
 						/>
 						{#if data.invite.email}
@@ -257,7 +257,7 @@
 							autocomplete="new-password"
 							required
 							minlength="12"
-							class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+							class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 						/>
 						<p class="text-stone-600 text-xs mt-1">
 							At least 12 chars with uppercase, lowercase, number, and symbol.
@@ -274,7 +274,7 @@
 							type="password"
 							autocomplete="new-password"
 							required
-							class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+							class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
 						/>
 					</div>
 

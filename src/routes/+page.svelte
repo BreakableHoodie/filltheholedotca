@@ -539,7 +539,7 @@
 					     so sighted keyboard users see where focus is. -->
 					<a
 						href="/hole/{pothole.id}"
-						class="focus:fixed focus:top-4 focus:left-4 focus:z-[2000] focus:bg-stone-50 dark:focus:bg-asphalt focus:text-amber-500 focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-stone-200 dark:focus:border-stone-700 focus:shadow-xl focus:text-sm focus:font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+						class="focus:fixed focus:top-4 focus:left-4 focus:z-[2000] focus:bg-stone-900 dark:focus:bg-white focus:text-white dark:focus:text-stone-900 focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-stone-700 dark:focus:border-stone-200 focus:shadow-xl focus:text-sm focus:font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
 					>
 						{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
 						— confirmed by {pothole.confirmed_count} report{pothole.confirmed_count === 1 ? '' : 's'}

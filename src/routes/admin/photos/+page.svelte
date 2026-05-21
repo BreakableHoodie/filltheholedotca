@@ -92,7 +92,7 @@
 					type="checkbox"
 					checked={allSelected}
 					onchange={toggleAll}
-					class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-sky-500 focus:ring-offset-stone-900 focus:ring-1"
+					class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-amber-500 focus:ring-offset-stone-900 focus:ring-1"
 				/>
 				<span class="text-sm text-stone-400">
 					{#if someSelected}
@@ -163,7 +163,7 @@
 								type="checkbox"
 								checked={selected.has(photo.id)}
 								onchange={() => toggleSelect(photo.id)}
-								class="rounded border-stone-500 bg-stone-800/80 text-sky-500 focus:ring-sky-500 focus:ring-1"
+								class="rounded border-stone-500 bg-stone-800/80 text-sky-500 focus:ring-amber-500 focus:ring-1"
 								onclick={(e) => e.stopPropagation()}
 							/>
 						</button>

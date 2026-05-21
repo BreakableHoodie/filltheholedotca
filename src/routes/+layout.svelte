@@ -34,7 +34,7 @@
 	<!-- Skip link: must be the first focusable element for keyboard/screen reader users -->
 	<a
 		href="#maincontent"
-		class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-amber-500 focus:text-white focus:px-4 focus:py-2 focus:rounded-md focus:font-semibold focus:outline-none"
+		class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-stone-900 dark:focus:bg-white focus:text-white dark:focus:text-stone-900 focus:px-4 focus:py-2 focus:rounded-md focus:font-semibold focus:outline-none"
 	>
 		Skip to main content
 	</a>
@@ -45,8 +45,8 @@
 				<!-- Logo mark + wordmark -->
 				<a href="/" class="flex items-center gap-2.5 group">
 					<img src="/icon-192.png" alt="" aria-hidden="true" width="26" height="26" class="shrink-0 rounded-sm" />
-					<span class="font-brand font-bold text-xl leading-none text-stone-900 dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors">
-						FillTheHole<span class="text-amber-500">.ca</span>
+					<span class="font-brand font-bold text-xl leading-none text-stone-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+						FillTheHole<span class="text-amber-600 dark:text-amber-400">.ca</span>
 					</span>
 				</a>
 
@@ -87,7 +87,7 @@
 					</a>
 					<a
 						href="/report"
-						class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-3.5 py-2 rounded-md transition-colors whitespace-nowrap text-sm"
+						class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-stone-900 font-semibold px-3.5 py-2 rounded-md transition-colors whitespace-nowrap text-sm"
 					>
 						<Icon name="plus" size={14} strokeWidth={2.5} />
 						Report a pothole

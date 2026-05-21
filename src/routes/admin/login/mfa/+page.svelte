@@ -75,7 +75,7 @@
 							autocomplete="one-time-code"
 							spellcheck="false"
 							maxlength="8"
-							class="w-full px-3 py-2.5 bg-stone-800 border border-stone-700 rounded text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 font-mono tracking-widest uppercase transition-colors"
+							class="w-full px-3 py-2.5 bg-stone-800 border border-stone-700 rounded text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 font-mono tracking-widest uppercase transition-colors"
 							placeholder="XXXXXXXX"
 						/>
 					{:else}
@@ -91,7 +91,7 @@
 							inputmode="numeric"
 							autocomplete="one-time-code"
 							maxlength="6"
-							class="w-full px-4 py-3 bg-stone-800 border border-stone-700 rounded text-2xl text-center text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 font-mono tracking-[0.5em] transition-colors"
+							class="w-full px-4 py-3 bg-stone-800 border border-stone-700 rounded text-2xl text-center text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 font-mono tracking-[0.5em] transition-colors"
 							placeholder="000000"
 						/>
 					{/if}
@@ -101,7 +101,7 @@
 					<input
 						type="checkbox"
 						name="rememberDevice"
-						class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-sky-500 focus:ring-offset-stone-900 focus:ring-1"
+						class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-amber-500 focus:ring-offset-stone-900 focus:ring-1"
 					/>
 					<span class="text-sm text-stone-400">Remember this device for 30 days</span>
 				</label>
