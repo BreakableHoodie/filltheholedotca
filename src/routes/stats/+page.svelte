@@ -498,7 +498,7 @@
 				<Icon name="flame" size={18} class="text-orange-400 shrink-0" />
 				Top streets
 			</h2>
-			<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden">
 				<table class="w-full text-sm">
 					<thead>
 						<tr class="border-b border-stone-200 dark:border-stone-700">
