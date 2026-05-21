@@ -385,7 +385,7 @@
 									checked={allSelected}
 									indeterminate={someSelected && !allSelected}
 									onchange={toggleAll}
-									class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-amber-500/20"
+									class="rounded border-stone-600 bg-stone-800 text-amber-500 focus:ring-amber-500/20"
 									aria-label="Select all"
 								/>
 							</th>
@@ -418,7 +418,7 @@
 						{#each data.potholes as pothole (pothole.id)}
 							{@const photoCount = pothole.pothole_photos?.length ?? 0}
 							<tr
-								class="hover:bg-stone-800/40 transition-colors {selected.has(pothole.id) ? 'bg-sky-500/5' : ''}"
+								class="hover:bg-stone-800/40 transition-colors {selected.has(pothole.id) ? 'bg-amber-500/5' : ''}"
 							>
 								<td class="px-4 py-3">
 									<input
@@ -428,7 +428,7 @@
 											if (selected.has(pothole.id)) selected.delete(pothole.id);
 											else selected.add(pothole.id);
 										}}
-										class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-amber-500/20"
+										class="rounded border-stone-600 bg-stone-800 text-amber-500 focus:ring-amber-500/20"
 										aria-label="Select {pothole.address ?? pothole.id}"
 									/>
 								</td>

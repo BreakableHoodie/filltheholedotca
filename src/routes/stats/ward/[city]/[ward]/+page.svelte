@@ -90,7 +90,7 @@
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
 
   <!-- Back link -->
-  <a href="/stats#ward-heading" class="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-300 text-sm transition-colors">
+  <a href="/stats#ward-heading" class="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 text-sm transition-colors">
     <Icon name="arrow-left" size={14} />
     All wards
   </a>

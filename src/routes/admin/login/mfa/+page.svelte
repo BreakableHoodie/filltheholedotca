@@ -101,7 +101,7 @@
 					<input
 						type="checkbox"
 						name="rememberDevice"
-						class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-amber-500 focus:ring-offset-stone-900 focus:ring-1"
+						class="rounded border-stone-600 bg-stone-800 text-amber-500 focus:ring-amber-500 focus:ring-offset-stone-900 focus:ring-1"
 					/>
 					<span class="text-sm text-stone-400">Remember this device for 30 days</span>
 				</label>
