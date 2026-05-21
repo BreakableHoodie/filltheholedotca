@@ -55,7 +55,7 @@
 			Reporting a pothole
 		</h2>
 
-		<div class="flex gap-3 bg-amber-950/40 border border-amber-700/40 rounded-xl p-4 text-sm text-amber-200/90">
+		<div class="flex gap-3 bg-amber-950/40 border border-amber-700/40 rounded-md p-4 text-sm text-amber-200/90">
 			<Icon name="alert-triangle" size={18} class="text-amber-400 shrink-0 mt-0.5" />
 			<p>
 				<strong class="text-amber-300">Stay safe.</strong>
@@ -68,19 +68,19 @@
 			<p>Tap <strong class="text-stone-700 dark:text-stone-200">Report a pothole</strong> in the top-right corner.</p>
 			<ol class="space-y-3 list-none">
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-sky-700 text-white text-xs font-bold flex items-center justify-center mt-0.5">1</span>
+					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">1</span>
 					<span><strong class="text-stone-700 dark:text-stone-200">Lock your location.</strong> Tap the crosshair icon to use your device's GPS, or search by address and drop a pin manually.</span>
 				</li>
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-sky-700 text-white text-xs font-bold flex items-center justify-center mt-0.5">2</span>
+					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">2</span>
 					<span><strong class="text-stone-700 dark:text-stone-200">Pick severity</strong> (optional). Minor, Moderate, Severe, or Hazardous. This helps prioritise which holes need attention first.</span>
 				</li>
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-sky-700 text-white text-xs font-bold flex items-center justify-center mt-0.5">3</span>
+					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">3</span>
 					<span><strong class="text-stone-700 dark:text-stone-200">Attach a photo</strong> (optional). Photos are compressed automatically. They go through moderation before appearing publicly.</span>
 				</li>
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-sky-700 text-white text-xs font-bold flex items-center justify-center mt-0.5">4</span>
+					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">4</span>
 					<span><strong class="text-stone-700 dark:text-stone-200">Submit.</strong> Your report is logged immediately. It needs one more independent confirmation from a different location before it shows up on the public map.</span>
 				</li>
 			</ol>
@@ -132,7 +132,7 @@
 			<p>Tap any pin on the map, or the pothole list, to open its detail page. From there you can:</p>
 			<ul class="space-y-2 list-none">
 				<li class="flex gap-2.5">
-					<Icon name="zap" size={15} class="text-sky-400 shrink-0 mt-0.5" />
+					<Icon name="zap" size={15} class="text-amber-500 shrink-0 mt-0.5" />
 					<span><strong class="text-stone-700 dark:text-stone-200">I hit this</strong> — signal that you physically drove over the pothole. Hit counts are shown publicly and help surface the most dangerous holes.</span>
 				</li>
 				<li class="flex gap-2.5">
@@ -140,11 +140,11 @@
 					<span><strong class="text-stone-700 dark:text-stone-200">Mark as filled</strong> — if you can see the city has patched it, let the community know.</span>
 				</li>
 				<li class="flex gap-2.5">
-					<Icon name="mail" size={15} class="text-sky-400 shrink-0 mt-0.5" />
+					<Icon name="mail" size={15} class="text-amber-500 shrink-0 mt-0.5" />
 					<span><strong class="text-stone-700 dark:text-stone-200">Contact your councillor</strong> — each pothole shows the ward councillor's name and a direct email link pre-filled with the pothole address.</span>
 				</li>
 				<li class="flex gap-2.5">
-					<Icon name="share-2" size={15} class="text-sky-400 shrink-0 mt-0.5" />
+					<Icon name="share-2" size={15} class="text-amber-500 shrink-0 mt-0.5" />
 					<span><strong class="text-stone-700 dark:text-stone-200">Share</strong> — every pothole has a permanent URL. Share it to Reddit, Bluesky, Facebook, or copy the link to send directly.</span>
 				</li>
 			</ul>
@@ -217,14 +217,14 @@
 			Stats page
 		</h2>
 		<p class="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-			The <a href="/stats" class="text-sky-400 underline hover:text-sky-300 transition-colors">Stats page</a>
+			The <a href="/stats" class="text-amber-500 underline hover:text-amber-400 transition-colors">Stats page</a>
 			shows accountability data across the whole region:
 		</p>
 		<ul class="space-y-1.5 text-sm text-stone-600 dark:text-stone-400 list-none">
-			<li class="flex gap-2"><Icon name="check" size={14} class="text-sky-500 shrink-0 mt-0.5" /> Ward leaderboards and letter grades (A–F) based on fill rate and response time</li>
-			<li class="flex gap-2"><Icon name="check" size={14} class="text-sky-500 shrink-0 mt-0.5" /> Average time from report to fill, across the whole dataset</li>
-			<li class="flex gap-2"><Icon name="check" size={14} class="text-sky-500 shrink-0 mt-0.5" /> Hotspot streets with the most active potholes</li>
-			<li class="flex gap-2"><Icon name="check" size={14} class="text-sky-500 shrink-0 mt-0.5" /> Monthly fill rate trends over time</li>
+			<li class="flex gap-2"><Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Ward leaderboards and letter grades (A–F) based on fill rate and response time</li>
+			<li class="flex gap-2"><Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Average time from report to fill, across the whole dataset</li>
+			<li class="flex gap-2"><Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Hotspot streets with the most active potholes</li>
+			<li class="flex gap-2"><Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Monthly fill rate trends over time</li>
 		</ul>
 	</section>
 

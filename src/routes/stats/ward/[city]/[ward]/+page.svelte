@@ -90,49 +90,49 @@
 <div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
 
   <!-- Back link -->
-  <a href="/stats#ward-heading" class="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+  <a href="/stats#ward-heading" class="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-300 text-sm transition-colors">
     <Icon name="arrow-left" size={14} />
     All wards
   </a>
 
   <!-- Header: councillor + grade -->
-  <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+  <div class="bg-stone-900 border border-stone-800 rounded-md p-5">
     <div class="flex items-start gap-4">
-      <div class="shrink-0 w-12 h-12 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold text-xl select-none">
+      <div class="shrink-0 w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold text-xl select-none">
         {councillor.name.charAt(0)}
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-xs text-zinc-500 uppercase tracking-wide">{cityLabel} · Ward {ward}</p>
+        <p class="text-xs text-stone-500 uppercase tracking-wide">{cityLabel} · Ward {ward}</p>
         <h1 class="text-xl font-bold text-white mt-0.5">{councillor.name}</h1>
       </div>
       <div class="shrink-0">
         <span class="text-3xl font-extrabold {grade.color}">{grade.grade}</span>
-        <p class="text-xs text-zinc-600 text-right mt-0.5">grade</p>
+        <p class="text-xs text-stone-600 text-right mt-0.5">grade</p>
       </div>
     </div>
   </div>
 
   <!-- Stat pills -->
   <div class="grid grid-cols-3 gap-3">
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+    <div class="bg-stone-900 border border-stone-800 rounded-md p-4 text-center">
       <p class="text-2xl font-bold text-white">{total}</p>
-      <p class="text-xs text-zinc-500 mt-0.5">reported</p>
+      <p class="text-xs text-stone-500 mt-0.5">reported</p>
     </div>
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+    <div class="bg-stone-900 border border-stone-800 rounded-md p-4 text-center">
       <p class="text-2xl font-bold text-green-400">{filled}</p>
-      <p class="text-xs text-zinc-500 mt-0.5">filled</p>
+      <p class="text-xs text-stone-500 mt-0.5">filled</p>
     </div>
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
-      <p class="text-2xl font-bold {open > 0 ? 'text-orange-400' : 'text-zinc-500'}">{open}</p>
-      <p class="text-xs text-zinc-500 mt-0.5">open</p>
+    <div class="bg-stone-900 border border-stone-800 rounded-md p-4 text-center">
+      <p class="text-2xl font-bold {open > 0 ? 'text-orange-400' : 'text-stone-500'}">{open}</p>
+      <p class="text-xs text-stone-500 mt-0.5">open</p>
     </div>
   </div>
 
   <!-- Mini bar chart -->
-  <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+  <div class="bg-stone-900 border border-stone-800 rounded-md p-5">
     <div class="flex items-center justify-between mb-3">
-      <h2 class="text-sm font-semibold text-zinc-300">Monthly activity</h2>
-      <div class="flex items-center gap-3 text-xs text-zinc-500">
+      <h2 class="text-sm font-semibold text-stone-300">Monthly activity</h2>
+      <div class="flex items-center gap-3 text-xs text-stone-500">
         <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-orange-500/70 inline-block"></span>Reported</span>
         <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-green-500/70 inline-block"></span>Filled</span>
       </div>
@@ -151,7 +151,7 @@
       {#each monthlyData as m, i (m.key)}
         <div class="flex-1 text-center min-w-0 overflow-hidden">
           {#if i % 3 === 0 || i === monthlyData.length - 1}
-            <span class="text-zinc-600 text-[9px]">{m.label}</span>
+            <span class="text-stone-600 text-[9px]">{m.label}</span>
           {/if}
         </div>
       {/each}
@@ -159,10 +159,10 @@
   </div>
 
   <!-- Open potholes list -->
-  <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-3">
-    <h2 class="text-sm font-semibold text-zinc-300">Open potholes in this ward</h2>
+  <div class="bg-stone-900 border border-stone-800 rounded-md p-5 space-y-3">
+    <h2 class="text-sm font-semibold text-stone-300">Open potholes in this ward</h2>
     {#if openPotholes.length === 0}
-      <p class="text-zinc-500 text-sm">No open potholes in this ward right now.</p>
+      <p class="text-stone-500 text-sm">No open potholes in this ward right now.</p>
     {:else}
       <ul class="space-y-2">
         {#each openPotholes as p (p.id)}
@@ -171,10 +171,10 @@
               href="/hole/{p.id}"
               class="flex items-center justify-between gap-3 text-sm hover:text-white transition-colors group"
             >
-              <span class="text-zinc-300 group-hover:text-white truncate">
+              <span class="text-stone-300 group-hover:text-white truncate">
                 {p.address || `${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`}
               </span>
-              <span class="shrink-0 text-zinc-600 tabular-nums text-xs">{p.days}d</span>
+              <span class="shrink-0 text-stone-600 tabular-nums text-xs">{p.days}d</span>
             </a>
           </li>
         {/each}
@@ -183,12 +183,12 @@
   </div>
 
   <!-- Actions -->
-  <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-3">
-    <h2 class="text-sm font-semibold text-zinc-300">Take action</h2>
+  <div class="bg-stone-900 border border-stone-800 rounded-md p-5 space-y-3">
+    <h2 class="text-sm font-semibold text-stone-300">Take action</h2>
     <div class="flex flex-wrap gap-2">
       <a
         href={emailUrl}
-        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg transition-colors"
+        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-stone-800 hover:bg-stone-700 text-stone-300 text-sm rounded-md transition-colors"
       >
         <Icon name="mail" size={13} class="shrink-0" />
         Email {councillor.name.split(' ')[0]}
@@ -197,7 +197,7 @@
         href={councillor.url}
         target="_blank"
         rel="noopener noreferrer"
-        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg transition-colors"
+        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-stone-800 hover:bg-stone-700 text-stone-300 text-sm rounded-md transition-colors"
       >
         <Icon name="external-link" size={13} class="shrink-0" />
         Councillor page
