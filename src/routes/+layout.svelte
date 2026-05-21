@@ -30,64 +30,64 @@
 	<link rel="preload" href={publicSans700} as="font" type="font/woff2" crossorigin="anonymous" />
 </svelte:head>
 
-<div class="flex flex-col min-h-screen bg-zinc-950">
+<div class="flex flex-col min-h-screen bg-stone-50 dark:bg-asphalt">
 	<!-- Skip link: must be the first focusable element for keyboard/screen reader users -->
 	<a
 		href="#maincontent"
-		class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-sky-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:font-semibold focus:outline-none"
+		class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-amber-500 focus:text-white focus:px-4 focus:py-2 focus:rounded-md focus:font-semibold focus:outline-none"
 	>
 		Skip to main content
 	</a>
 
-	<header class="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50 safe-header">
+	<header class="bg-white border-b border-stone-200 dark:bg-stone-900 dark:border-stone-700 sticky top-0 z-50 safe-header">
 		<div class="max-w-6xl mx-auto py-3 safe-header-inner">
 			<div class="flex items-center justify-between gap-3 flex-wrap">
 				<!-- Logo mark + wordmark -->
 				<a href="/" class="flex items-center gap-2.5 group">
 					<img src="/icon-192.png" alt="" aria-hidden="true" width="26" height="26" class="shrink-0 rounded-sm" />
-					<span class="font-brand font-bold text-xl leading-none text-white group-hover:text-sky-400 transition-colors">
-						FillTheHole<span class="text-sky-500">.ca</span>
+					<span class="font-brand font-bold text-xl leading-none text-stone-900 dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors">
+						FillTheHole<span class="text-amber-500">.ca</span>
 					</span>
 				</a>
 
 				<!-- Live stat dots -->
 				<div class="hidden sm:flex items-center gap-3 text-sm" aria-label="Pothole statistics">
-					<span class="flex items-center gap-1.5 text-zinc-300">
+					<span class="flex items-center gap-1.5 text-stone-600 dark:text-stone-300">
 						<span class="w-2 h-2 rounded-full bg-orange-500 shrink-0"></span>
-						<span class="text-white font-semibold tabular-nums">{counts.reported}</span>
+						<span class="text-stone-900 dark:text-white font-semibold tabular-nums">{counts.reported}</span>
 						reported
 					</span>
-					<span class="text-zinc-700" aria-hidden="true">·</span>
-					<span class="flex items-center gap-1.5 text-zinc-300">
+					<span class="text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
+					<span class="flex items-center gap-1.5 text-stone-600 dark:text-stone-300">
 						<span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
-						<span class="text-white font-semibold tabular-nums">{counts.filled}</span>
+						<span class="text-stone-900 dark:text-white font-semibold tabular-nums">{counts.filled}</span>
 						filled
 					</span>
 				</div>
 
 				<nav class="flex items-center gap-3 text-sm">
 					<PushNotifications />
-					<a href="/stats" class="text-zinc-300 hover:text-white transition-colors">
+					<a href="/stats" class="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors">
 						Stats
 					</a>
-					<a href="/how-to" class="hidden sm:inline text-zinc-300 hover:text-white transition-colors">
+					<a href="/how-to" class="hidden sm:inline text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors">
 						How to
 					</a>
-					<a href="/about" class="text-zinc-300 hover:text-white transition-colors">
+					<a href="/about" class="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors">
 						About
 					</a>
 					<a
 						href="https://github.com/BreakableHoodie/filltheholedotca"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="hidden sm:inline-flex text-zinc-300 hover:text-white transition-colors"
+						class="hidden sm:inline-flex text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors"
 						aria-label="View source on GitHub"
 					>
 						<Icon name="github" size={18} />
 					</a>
 					<a
 						href="/report"
-						class="inline-flex items-center gap-1.5 bg-sky-700 hover:bg-sky-600 text-white font-semibold px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap text-sm"
+						class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-3.5 py-2 rounded-md transition-colors whitespace-nowrap text-sm"
 					>
 						<Icon name="plus" size={14} strokeWidth={2.5} />
 						Report a pothole
@@ -101,19 +101,19 @@
 		{@render children()}
 	</main>
 
-	<footer class="bg-zinc-900 border-t border-zinc-800 py-5 text-center text-zinc-300 text-xs px-4 space-y-1.5">
+	<footer class="bg-white border-t border-stone-200 dark:bg-stone-900 dark:border-stone-700 py-5 text-center text-stone-500 dark:text-stone-400 text-xs px-4 space-y-1.5">
 		<p>Track potholes. Contact your councillor. Hold the city accountable.</p>
 		<p>
 			Community-sourced data — not official. Use at your own risk.
-			<a href="/how-to" class="underline hover:text-white transition-colors">How to use</a>
-			<span class="mx-1 text-zinc-600" aria-hidden="true">·</span>
-			<a href="/about#privacy" class="underline hover:text-white transition-colors">Privacy</a>
-			<span class="mx-1 text-zinc-600" aria-hidden="true">·</span>
-			<a href="/about#disclaimer" class="underline hover:text-white transition-colors">Disclaimer</a>
-			<span class="mx-1 text-zinc-600" aria-hidden="true">·</span>
-			<a href="https://github.com/BreakableHoodie/filltheholedotca" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors">GitHub</a>
-			<span class="mx-1 text-zinc-600" aria-hidden="true">·</span>
-			<a href="https://github.com/BreakableHoodie/filltheholedotca/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors">AGPL-3.0</a>
+			<a href="/how-to" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">How to use</a>
+			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
+			<a href="/about#privacy" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Privacy</a>
+			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
+			<a href="/about#disclaimer" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Disclaimer</a>
+			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
+			<a href="https://github.com/BreakableHoodie/filltheholedotca" target="_blank" rel="noopener noreferrer" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">GitHub</a>
+			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
+			<a href="https://github.com/BreakableHoodie/filltheholedotca/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">AGPL-3.0</a>
 		</p>
 		<p><SocialShare compact /></p>
 	</footer>
