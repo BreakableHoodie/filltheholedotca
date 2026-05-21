@@ -15,9 +15,9 @@
 			case 'admin':
 				return 'text-red-400 bg-red-500/10';
 			case 'editor':
-				return 'text-sky-400 bg-sky-500/10';
+				return 'text-amber-400 bg-amber-500/10';
 			default:
-				return 'text-zinc-400 bg-zinc-700/50';
+				return 'text-stone-400 bg-stone-700/50';
 		}
 	}
 </script>
@@ -30,14 +30,14 @@
 	<!-- Header -->
 	<div class="flex items-center justify-between mb-6">
 		<div>
-			<h1 class="text-xl font-semibold text-zinc-100">Users</h1>
-			<p class="text-zinc-500 text-sm mt-0.5">
+			<h1 class="text-xl font-semibold text-stone-100">Users</h1>
+			<p class="text-stone-500 text-sm mt-0.5">
 				{data.users.length} admin account{data.users.length !== 1 ? 's' : ''}
 			</p>
 		</div>
 		<a
 			href="/admin/users/invites"
-			class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-sky-400 border border-sky-600/30 rounded hover:bg-sky-600/10 transition-colors"
+			class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-amber-400 border border-amber-600/30 rounded hover:bg-amber-600/10 transition-colors"
 		>
 			<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path
@@ -66,34 +66,34 @@
 		</div>
 	{/if}
 
-	<div class="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+	<div class="bg-stone-900 border border-stone-800 rounded-lg overflow-hidden">
 		<div class="overflow-x-auto">
 		<table class="w-full text-sm min-w-[560px]">
 			<thead>
-				<tr class="border-b border-zinc-800 text-left">
-					<th class="px-4 py-3 text-zinc-500 font-medium">User</th>
-					<th class="px-4 py-3 text-zinc-500 font-medium">Role</th>
-					<th class="px-4 py-3 text-zinc-500 font-medium">Status</th>
-					<th class="px-4 py-3 text-zinc-500 font-medium">MFA</th>
-					<th class="px-4 py-3 text-zinc-500 font-medium">Sessions</th>
-					<th class="px-4 py-3 text-zinc-500 font-medium">Last login</th>
-					<th class="px-4 py-3 text-zinc-500 font-medium">Actions</th>
+				<tr class="border-b border-stone-800 text-left">
+					<th class="px-4 py-3 text-stone-500 font-medium">User</th>
+					<th class="px-4 py-3 text-stone-500 font-medium">Role</th>
+					<th class="px-4 py-3 text-stone-500 font-medium">Status</th>
+					<th class="px-4 py-3 text-stone-500 font-medium">MFA</th>
+					<th class="px-4 py-3 text-stone-500 font-medium">Sessions</th>
+					<th class="px-4 py-3 text-stone-500 font-medium">Last login</th>
+					<th class="px-4 py-3 text-stone-500 font-medium">Actions</th>
 				</tr>
 			</thead>
-			<tbody class="divide-y divide-zinc-800">
+			<tbody class="divide-y divide-stone-800">
 				{#each data.users as user (user.id)}
 					{@const isSelf = user.id === data.currentUserId}
-					<tr class="hover:bg-zinc-800/30 transition-colors">
+					<tr class="hover:bg-stone-800/30 transition-colors">
 						<!-- Name + email -->
 						<td class="px-4 py-3">
-							<p class="text-zinc-200 font-medium">
+							<p class="text-stone-200 font-medium">
 								{user.first_name}
 								{user.last_name}
 								{#if isSelf}
-									<span class="text-xs text-zinc-500 font-normal">(you)</span>
+									<span class="text-xs text-stone-500 font-normal">(you)</span>
 								{/if}
 							</p>
-							<p class="text-zinc-500 text-xs mt-0.5">{user.email}</p>
+							<p class="text-stone-500 text-xs mt-0.5">{user.email}</p>
 						</td>
 
 						<!-- Role (with change form) -->
@@ -114,7 +114,7 @@
 									<input type="hidden" name="userId" value={user.id} />
 									<select
 										name="role"
-										class="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200 focus:outline-none focus:border-sky-500"
+										class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-200 focus:outline-none focus:border-sky-500"
 									>
 										{#each ['admin', 'editor', 'viewer'] as r (r)}
 											<option value={r} selected={user.role === r}>{r}</option>
@@ -122,7 +122,7 @@
 									</select>
 									<button
 										type="submit"
-										class="text-xs text-zinc-400 hover:text-zinc-100 transition-colors px-1 py-0.5"
+										class="text-xs text-stone-400 hover:text-stone-100 transition-colors px-1 py-0.5"
 										title="Save role"
 									>
 										Save
@@ -145,7 +145,7 @@
 								>
 							{:else}
 								<span
-									class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-zinc-400 bg-zinc-700/50"
+									class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-stone-400 bg-stone-700/50"
 									>Pending</span
 								>
 							{/if}
@@ -156,17 +156,17 @@
 							{#if user.totp_enabled}
 								<span class="text-emerald-400 text-xs">Enabled</span>
 							{:else}
-								<span class="text-zinc-600 text-xs">—</span>
+								<span class="text-stone-600 text-xs">—</span>
 							{/if}
 						</td>
 
 						<!-- Active sessions -->
-						<td class="px-4 py-3 text-zinc-400 tabular-nums text-xs">
+						<td class="px-4 py-3 text-stone-400 tabular-nums text-xs">
 							{user.activeSessions}
 						</td>
 
 						<!-- Last login -->
-						<td class="px-4 py-3 text-zinc-500 text-xs">
+						<td class="px-4 py-3 text-stone-500 text-xs">
 							{#if user.last_login_at}
 								{formatDistanceToNow(new Date(user.last_login_at), { addSuffix: true })}
 							{:else}
@@ -207,12 +207,12 @@
 
 									<!-- Revoke sessions -->
 									{#if user.activeSessions > 0}
-										<span class="text-zinc-700">·</span>
+										<span class="text-stone-700">·</span>
 										<form method="post" action="?/revokeAll" use:enhance>
 											<input type="hidden" name="userId" value={user.id} />
 											<button
 												type="submit"
-												class="text-xs text-zinc-500 hover:text-red-400 transition-colors"
+												class="text-xs text-stone-500 hover:text-red-400 transition-colors"
 												onclick={(e) => {
 													if (!confirm('Revoke all sessions for this user?')) e.preventDefault();
 												}}
@@ -223,7 +223,7 @@
 									{/if}
 								</div>
 							{:else}
-								<span class="text-zinc-700 text-xs">—</span>
+								<span class="text-stone-700 text-xs">—</span>
 							{/if}
 						</td>
 					</tr>

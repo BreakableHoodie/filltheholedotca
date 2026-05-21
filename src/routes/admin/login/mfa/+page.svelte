@@ -25,18 +25,18 @@
 	<title>Two-factor authentication — fillthehole.ca Admin</title>
 </svelte:head>
 
-<div class="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+<div class="min-h-screen bg-stone-950 flex items-center justify-center px-4">
 	<div class="w-full max-w-sm">
 		<div class="text-center mb-8">
-			<p class="text-sky-400 font-bold text-xl">fillthehole.ca</p>
-			<p class="text-zinc-500 text-sm mt-1">Admin Panel</p>
+			<p class="text-amber-400 font-bold text-xl">fillthehole.ca</p>
+			<p class="text-stone-500 text-sm mt-1">Admin Panel</p>
 		</div>
 
-		<div class="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-			<h1 class="text-lg font-semibold text-zinc-100 mb-1">
+		<div class="bg-stone-900 border border-stone-800 rounded-lg p-6">
+			<h1 class="text-lg font-semibold text-stone-100 mb-1">
 				{useBackupCode ? 'Enter backup code' : 'Two-factor authentication'}
 			</h1>
-			<p class="text-zinc-500 text-sm mb-5">
+			<p class="text-stone-500 text-sm mb-5">
 				{useBackupCode
 					? 'Enter one of your 8-character backup codes.'
 					: 'Enter the 6-digit code from your authenticator app.'}
@@ -63,7 +63,7 @@
 
 				<div class="mb-4">
 					{#if useBackupCode}
-						<label for="code" class="block text-xs font-medium text-zinc-400 mb-1.5"
+						<label for="code" class="block text-xs font-medium text-stone-400 mb-1.5"
 							>Backup code</label
 						>
 						<input
@@ -75,11 +75,11 @@
 							autocomplete="one-time-code"
 							spellcheck="false"
 							maxlength="8"
-							class="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 font-mono tracking-widest uppercase transition-colors"
+							class="w-full px-3 py-2.5 bg-stone-800 border border-stone-700 rounded text-sm text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 font-mono tracking-widest uppercase transition-colors"
 							placeholder="XXXXXXXX"
 						/>
 					{:else}
-						<label for="code" class="block text-xs font-medium text-zinc-400 mb-1.5"
+						<label for="code" class="block text-xs font-medium text-stone-400 mb-1.5"
 							>Authenticator code</label
 						>
 						<input
@@ -91,7 +91,7 @@
 							inputmode="numeric"
 							autocomplete="one-time-code"
 							maxlength="6"
-							class="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded text-2xl text-center text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 font-mono tracking-[0.5em] transition-colors"
+							class="w-full px-4 py-3 bg-stone-800 border border-stone-700 rounded text-2xl text-center text-stone-100 placeholder-stone-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 font-mono tracking-[0.5em] transition-colors"
 							placeholder="000000"
 						/>
 					{/if}
@@ -101,15 +101,15 @@
 					<input
 						type="checkbox"
 						name="rememberDevice"
-						class="rounded border-zinc-600 bg-zinc-800 text-sky-500 focus:ring-sky-500 focus:ring-offset-zinc-900 focus:ring-1"
+						class="rounded border-stone-600 bg-stone-800 text-sky-500 focus:ring-sky-500 focus:ring-offset-stone-900 focus:ring-1"
 					/>
-					<span class="text-sm text-zinc-400">Remember this device for 30 days</span>
+					<span class="text-sm text-stone-400">Remember this device for 30 days</span>
 				</label>
 
 				<button
 					type="submit"
 					disabled={submitting}
-					class="w-full py-2.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded transition-colors"
+					class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded transition-colors"
 				>
 					{submitting ? 'Verifying…' : 'Verify'}
 				</button>
@@ -121,15 +121,15 @@
 					useBackupCode = !useBackupCode;
 					code = '';
 				}}
-				class="mt-3 w-full text-center text-xs text-zinc-500 hover:text-zinc-300 transition-colors py-1"
+				class="mt-3 w-full text-center text-xs text-stone-500 hover:text-stone-300 transition-colors py-1"
 			>
 				{useBackupCode ? 'Use authenticator code instead' : 'Use a backup code instead'}
 			</button>
 
-			<div class="mt-3 pt-3 border-t border-zinc-800">
+			<div class="mt-3 pt-3 border-t border-stone-800">
 				<a
 					href="/admin/login"
-					class="block text-center text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+					class="block text-center text-xs text-stone-500 hover:text-stone-300 transition-colors"
 				>
 					← Back to sign in
 				</a>

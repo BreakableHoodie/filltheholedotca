@@ -24,13 +24,13 @@
 </svelte:head>
 
 <div class="p-6 max-w-2xl">
-	<nav class="flex items-center gap-2 text-sm text-zinc-500 mb-5">
-		<span class="text-zinc-300">Settings</span>
+	<nav class="flex items-center gap-2 text-sm text-stone-500 mb-5">
+		<span class="text-stone-300">Settings</span>
 		<span>/</span>
-		<span class="text-zinc-300">Two-Factor Auth</span>
+		<span class="text-stone-300">Two-Factor Auth</span>
 	</nav>
 
-	<h1 class="text-xl font-semibold text-zinc-100 mb-6">Two-Factor Authentication</h1>
+	<h1 class="text-xl font-semibold text-stone-100 mb-6">Two-Factor Authentication</h1>
 
 	{#if form?.error && !form?.pendingSetup}
 		<div class="mb-4 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
@@ -42,28 +42,28 @@
 	{#if form?.confirmed && form.backupCodes}
 		<div class="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-5 mb-5">
 			<h2 class="text-emerald-400 font-semibold mb-1">MFA enabled!</h2>
-			<p class="text-zinc-300 text-sm mb-4">
+			<p class="text-stone-300 text-sm mb-4">
 				Save these backup codes somewhere safe. Each can only be used once if you lose access to
 				your authenticator.
 			</p>
 			<div class="grid grid-cols-2 gap-2">
 				{#each form.backupCodes as code (code)}
-					<code class="bg-zinc-900 border border-zinc-700 rounded px-3 py-1.5 text-sm font-mono text-zinc-200 text-center">
+					<code class="bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-sm font-mono text-stone-200 text-center">
 						{formatCode(code)}
 					</code>
 				{/each}
 			</div>
-			<p class="text-zinc-500 text-xs mt-3">These codes are shown once and cannot be retrieved later.</p>
+			<p class="text-stone-500 text-xs mt-3">These codes are shown once and cannot be retrieved later.</p>
 		</div>
 
 	<!-- ─── Just regenerated backup codes ─── -->
 	{:else if form?.newBackupCodes}
 		<div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-5 mb-5">
 			<h2 class="text-amber-400 font-semibold mb-1">New backup codes</h2>
-			<p class="text-zinc-300 text-sm mb-4">Your old codes are now invalid. Save these new ones.</p>
+			<p class="text-stone-300 text-sm mb-4">Your old codes are now invalid. Save these new ones.</p>
 			<div class="grid grid-cols-2 gap-2">
 				{#each form.newBackupCodes as code (code)}
-					<code class="bg-zinc-900 border border-zinc-700 rounded px-3 py-1.5 text-sm font-mono text-zinc-200 text-center">
+					<code class="bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-sm font-mono text-stone-200 text-center">
 						{formatCode(code)}
 					</code>
 				{/each}
@@ -72,34 +72,34 @@
 
 	<!-- ─── MFA disabled this session ─── -->
 	{:else if form?.disabled}
-		<div class="mb-5 px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 text-sm">
+		<div class="mb-5 px-4 py-3 bg-stone-800 border border-stone-700 rounded-lg text-stone-300 text-sm">
 			MFA has been disabled on your account.
 		</div>
 	{/if}
 
 	<!-- ─── Pending setup: show secret + confirm form ─── -->
 	{#if form?.pendingSetup}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-lg p-5 space-y-4">
+		<div class="bg-stone-900 border border-stone-800 rounded-lg p-5 space-y-4">
 			<div>
-				<h2 class="text-sm font-medium text-zinc-300 mb-1">Scan or enter your secret</h2>
-				<p class="text-zinc-500 text-xs mb-3">
+				<h2 class="text-sm font-medium text-stone-300 mb-1">Scan or enter your secret</h2>
+				<p class="text-stone-500 text-xs mb-3">
 					Open your authenticator app and add a new TOTP account using the secret below,
 					or use the URI to import it directly.
 				</p>
 
 				<div class="space-y-2">
 					<div>
-						<p class="text-zinc-500 text-xs mb-1">Secret key</p>
-						<code class="block bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm font-mono text-zinc-200 break-all select-all">
+						<p class="text-stone-500 text-xs mb-1">Secret key</p>
+						<code class="block bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm font-mono text-stone-200 break-all select-all">
 							{form.displaySecret ?? ''}
 						</code>
 					</div>
 					{#if form.totpUri}
 						<details class="group">
-							<summary class="text-xs text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors">
+							<summary class="text-xs text-stone-500 cursor-pointer hover:text-stone-300 transition-colors">
 								Show TOTP URI
 							</summary>
-							<code class="block mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs font-mono text-zinc-400 break-all select-all">
+							<code class="block mt-1 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-xs font-mono text-stone-400 break-all select-all">
 								{form.totpUri}
 							</code>
 						</details>
@@ -110,7 +110,7 @@
 			<form method="post" action="?/confirmMfa" use:enhance class="space-y-3">
 				<input type="hidden" name="encryptedSecret" value={form.encryptedSecret ?? ''} />
 				<div>
-					<label for="code" class="block text-xs text-zinc-500 mb-1.5">
+					<label for="code" class="block text-xs text-stone-500 mb-1.5">
 						Verify — enter the 6-digit code from your app
 					</label>
 					{#if pendingSetupError}
@@ -124,17 +124,17 @@
 						autocomplete="one-time-code"
 						maxlength="6"
 						placeholder="000000"
-						class="w-32 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 font-mono text-center focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+						class="w-32 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 font-mono text-center focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
 					/>
 				</div>
 				<div class="flex items-center gap-3">
 					<button
 						type="submit"
-						class="px-4 py-2 text-sm font-medium bg-sky-600 hover:bg-sky-500 text-white rounded transition-colors"
+						class="px-4 py-2 text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white rounded transition-colors"
 					>
 						Verify & Enable
 					</button>
-					<a href="/admin/settings/mfa" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+					<a href="/admin/settings/mfa" class="text-sm text-stone-500 hover:text-stone-300 transition-colors">
 						Cancel
 					</a>
 				</div>
@@ -143,7 +143,7 @@
 
 	<!-- ─── MFA not enabled, no pending setup ─── -->
 	{:else if !data.totpEnabled && !form?.confirmed}
-		<div class="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+		<div class="bg-stone-900 border border-stone-800 rounded-lg p-5">
 			<div class="flex items-start gap-3 mb-4">
 				<div class="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
 					<svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,14 +151,14 @@
 					</svg>
 				</div>
 				<div>
-					<p class="text-zinc-200 font-medium">MFA is not enabled</p>
-					<p class="text-zinc-500 text-sm mt-0.5">Add a second factor to protect your account.</p>
+					<p class="text-stone-200 font-medium">MFA is not enabled</p>
+					<p class="text-stone-500 text-sm mt-0.5">Add a second factor to protect your account.</p>
 				</div>
 			</div>
 			<form method="post" action="?/initMfa" use:enhance>
 				<button
 					type="submit"
-					class="px-4 py-2 text-sm font-medium bg-sky-600 hover:bg-sky-500 text-white rounded transition-colors"
+					class="px-4 py-2 text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white rounded transition-colors"
 				>
 					Set up authenticator app
 				</button>
@@ -169,7 +169,7 @@
 	{:else if data.totpEnabled || form?.confirmed}
 		<div class="space-y-4">
 			<!-- Status card -->
-			<div class="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+			<div class="bg-stone-900 border border-stone-800 rounded-lg p-5">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
 						<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,18 +177,18 @@
 						</svg>
 					</div>
 					<div>
-						<p class="text-zinc-200 font-medium">MFA is enabled</p>
-						<p class="text-zinc-500 text-sm mt-0.5">Your account is protected with TOTP.</p>
+						<p class="text-stone-200 font-medium">MFA is enabled</p>
+						<p class="text-stone-500 text-sm mt-0.5">Your account is protected with TOTP.</p>
 					</div>
 				</div>
 
 				<!-- Disable form -->
 				<details class="group">
-					<summary class="text-xs text-zinc-500 cursor-pointer hover:text-red-400 transition-colors">
+					<summary class="text-xs text-stone-500 cursor-pointer hover:text-red-400 transition-colors">
 						Disable MFA…
 					</summary>
 					<form method="post" action="?/disableMfa" use:enhance class="mt-3 space-y-2">
-						<label for="disable-code" class="block text-xs text-zinc-500">
+						<label for="disable-code" class="block text-xs text-stone-500">
 							Enter your TOTP or backup code to confirm
 						</label>
 						<div class="flex items-center gap-2">
@@ -200,7 +200,7 @@
 								autocomplete="one-time-code"
 								maxlength="8"
 								placeholder="000000"
-								class="w-32 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 font-mono text-center focus:outline-none focus:border-sky-500"
+								class="w-32 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 font-mono text-center focus:outline-none focus:border-sky-500"
 							/>
 							<button
 								type="submit"
@@ -215,9 +215,9 @@
 			</div>
 
 			<!-- Backup codes card -->
-			<div class="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-				<h2 class="text-sm font-medium text-zinc-300 mb-1">Backup codes</h2>
-				<p class="text-zinc-500 text-sm mb-3">
+			<div class="bg-stone-900 border border-stone-800 rounded-lg p-5">
+				<h2 class="text-sm font-medium text-stone-300 mb-1">Backup codes</h2>
+				<p class="text-stone-500 text-sm mb-3">
 					Generate a fresh set of single-use backup codes. Your old codes will be invalidated.
 				</p>
 
@@ -225,13 +225,13 @@
 					<button
 						type="button"
 						onclick={() => showRegenForm = true}
-						class="px-3 py-1.5 text-xs font-medium text-zinc-400 border border-zinc-700 rounded hover:text-zinc-200 hover:border-zinc-600 transition-colors"
+						class="px-3 py-1.5 text-xs font-medium text-stone-400 border border-stone-700 rounded hover:text-stone-200 hover:border-stone-600 transition-colors"
 					>
 						Regenerate backup codes…
 					</button>
 				{:else}
 					<form method="post" action="?/regenBackupCodes" use:enhance class="space-y-2">
-						<label for="regen-code" class="block text-xs text-zinc-500">
+						<label for="regen-code" class="block text-xs text-stone-500">
 							Confirm with your current TOTP code
 						</label>
 						<div class="flex items-center gap-2">
@@ -243,7 +243,7 @@
 								autocomplete="one-time-code"
 								maxlength="6"
 								placeholder="000000"
-								class="w-32 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 font-mono text-center focus:outline-none focus:border-sky-500"
+								class="w-32 bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 font-mono text-center focus:outline-none focus:border-sky-500"
 							/>
 							<button
 								type="submit"
@@ -254,7 +254,7 @@
 							<button
 								type="button"
 								onclick={() => showRegenForm = false}
-								class="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+								class="text-xs text-stone-600 hover:text-stone-400 transition-colors"
 							>
 								Cancel
 							</button>

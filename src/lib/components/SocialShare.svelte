@@ -24,12 +24,12 @@
 		{
 			name: 'Bluesky',
 			href: `https://bsky.app/intent/compose?text=${SHARE_TEXT}`,
-			hoverClass: 'hover:border-sky-500/40 hover:text-sky-400'
+			hoverClass: 'hover:border-amber-500/40 hover:text-amber-400'
 		},
 		{
 			name: 'Threads',
 			href: `https://www.threads.net/intent/post?text=${SHARE_TEXT}`,
-			hoverClass: 'hover:border-zinc-400/40 hover:text-zinc-200'
+			hoverClass: 'hover:border-stone-400/40 hover:text-stone-200'
 		},
 		{
 			name: 'LinkedIn',
@@ -90,7 +90,7 @@
 				{p.name}
 			</a>
 			{#if i < platforms.length - 1}
-				<span class="mx-1 text-zinc-600" aria-hidden="true">·</span>
+				<span class="mx-1 text-stone-600" aria-hidden="true">·</span>
 			{/if}
 		{/each}
 	</span>
@@ -102,7 +102,7 @@
 				href={p.href}
 				target="_blank"
 				rel="noopener noreferrer"
-				class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-zinc-800 border border-zinc-700 text-zinc-300 transition-colors {p.hoverClass}"
+				class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-stone-800 border border-stone-700 text-stone-300 transition-colors {p.hoverClass}"
 			>
 				{p.name}
 				<Icon name="external-link" size={13} class="shrink-0 opacity-60" />
@@ -113,7 +113,7 @@
 		<button
 			type="button"
 			onclick={copyLink}
-			class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-zinc-800 border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors"
+			class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-stone-800 border border-stone-700 text-stone-300 hover:border-stone-500 hover:text-white transition-colors"
 		>
 			{#if copied}
 				<Icon name="check" size={13} class="shrink-0 text-green-400" />
@@ -127,7 +127,7 @@
 			<button
 				type="button"
 				onclick={nativeShare}
-				class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-sky-700 hover:bg-sky-600 border border-sky-600 text-white transition-colors"
+				class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-amber-600 hover:bg-amber-500 border border-amber-500 text-white transition-colors"
 			>
 				<Icon name="share-2" size={13} class="shrink-0" />
 				Share
