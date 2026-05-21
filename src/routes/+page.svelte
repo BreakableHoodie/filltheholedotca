@@ -539,7 +539,7 @@
 					     so sighted keyboard users see where focus is. -->
 					<a
 						href="/hole/{pothole.id}"
-						class="focus:fixed focus:top-4 focus:left-4 focus:z-[2000] focus:bg-zinc-950 focus:text-sky-400 focus:px-4 focus:py-2 focus:rounded-lg focus:border focus:border-zinc-700 focus:shadow-xl focus:text-sm focus:font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+						class="focus:fixed focus:top-4 focus:left-4 focus:z-[2000] focus:bg-stone-50 dark:focus:bg-asphalt focus:text-amber-500 focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-stone-200 dark:focus:border-stone-700 focus:shadow-xl focus:text-sm focus:font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
 					>
 						{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
 						— confirmed by {pothole.confirmed_count} report{pothole.confirmed_count === 1 ? '' : 's'}
@@ -551,14 +551,14 @@
 </aside>
 
 <div class="relative w-full isolate" style="height: calc(100dvh - 57px - env(safe-area-inset-top))">
-	<div bind:this={mapEl} class="w-full h-full bg-zinc-900"></div>
+	<div bind:this={mapEl} class="w-full h-full bg-white dark:bg-stone-900"></div>
 	<HomeIntroCard />
 
 	{#if !mapReady}
-		<div class="absolute inset-0 flex items-center justify-center bg-zinc-900">
+		<div class="absolute inset-0 flex items-center justify-center bg-white dark:bg-stone-900">
 			<div class="text-center">
-				<div class="mx-auto w-9 h-9 rounded-full border-2 border-zinc-700 border-t-sky-500 animate-spin mb-4"></div>
-				<div class="text-sm text-zinc-300">Loading the map…</div>
+				<div class="mx-auto w-9 h-9 rounded-full border-2 border-stone-200 dark:border-stone-700 border-t-sky-500 animate-spin mb-4"></div>
+				<div class="text-sm text-stone-600 dark:text-stone-300">Loading the map…</div>
 			</div>
 		</div>
 	{/if}
@@ -566,16 +566,16 @@
 		<!-- Report-here banner -->
 		{#if reportMode}
 			<div
-				class="absolute top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1001] flex flex-wrap items-center gap-2 sm:gap-3 bg-zinc-950 border border-sky-600 rounded-xl px-4 py-3 shadow-xl"
+				class="absolute top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1001] flex flex-wrap items-center gap-2 sm:gap-3 bg-stone-50 dark:bg-asphalt border border-amber-500 rounded-md px-4 py-3 shadow-xl"
 			>
-				<span class="text-sm text-white grow" role="status" aria-live="polite" aria-atomic="true">
+				<span class="text-sm text-stone-900 dark:text-white grow" role="status" aria-live="polite" aria-atomic="true">
 					Tap the map where the pothole is
 				</span>
 				{#if reportLatLng}
 				<button
 					type="button"
 					onclick={confirmReportLocation}
-					class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+					class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-md transition-colors"
 				>
 					Confirm location →
 				</button>
@@ -584,7 +584,7 @@
 				bind:this={cancelReportModeButton}
 				type="button"
 				onclick={exitReportMode}
-				class="text-zinc-400 hover:text-white text-xs px-2 py-1 rounded transition-colors"
+				class="text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white text-xs px-2 py-1 rounded transition-colors"
 				aria-label="Cancel"
 			>
 				✕ Cancel
@@ -598,7 +598,7 @@
 			<button
 				onclick={locateMe}
 				disabled={locating}
-				class="bg-zinc-950 border border-zinc-700 hover:border-zinc-500 rounded-xl px-3 py-2 text-xs text-zinc-300 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+				class="bg-stone-50 dark:bg-asphalt border border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 rounded-md px-3 py-2 text-xs text-stone-600 dark:text-stone-300 transition-colors flex items-center gap-1.5 disabled:opacity-50"
 			>
 				{#if locating}
 					<Icon name="loader" size={12} class="animate-spin shrink-0" />
@@ -615,22 +615,22 @@
 				onclick={enterReportMode}
 				aria-pressed={reportMode}
 				disabled={reportMode}
-				class="bg-sky-700 border border-sky-600 hover:border-sky-400 rounded-xl px-3 py-2 text-xs text-white font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+				class="bg-amber-500 border border-amber-500 hover:border-amber-400 rounded-md px-3 py-2 text-xs text-white font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
 			>
 				<Icon name="map-pin" size={12} class="shrink-0" />
 				Report here
 			</button>
 
 			<!-- Layers panel -->
-			<div class="bg-zinc-950 border border-zinc-700 rounded-xl p-3 space-y-2 text-xs">
-				<div class="text-zinc-400 font-semibold uppercase tracking-wider text-[10px] mb-1">Layers</div>
+			<div class="bg-stone-50 dark:bg-asphalt border border-stone-200 dark:border-stone-700 rounded-md p-3 space-y-2 text-xs">
+				<div class="text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider text-[10px] mb-1">Layers</div>
 
 				{#each ([
 					['reported', 'Reported'],
 					['expired',  'Expired'],
 					['filled',   'Filled'],
 				] as const) as [key, label] (key)}
-					<label class="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
+					<label class="flex items-center gap-2 cursor-pointer text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white">
 						<input
 							type="checkbox"
 							checked={layers[key]}
@@ -641,8 +641,8 @@
 					</label>
 				{/each}
 
-				<div class="border-t border-zinc-700 pt-2">
-					<label class="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
+				<div class="border-t border-stone-200 dark:border-stone-700 pt-2">
+					<label class="flex items-center gap-2 cursor-pointer text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white">
 						<input
 							type="checkbox"
 							checked={layers.wards}
@@ -659,11 +659,11 @@
 
 	<!-- Legend -->
 	{#if mapReady}
-		<div class="absolute safe-bottom right-4 hidden sm:block bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-xs space-y-1.5 z-[1000]">
-			<div class="text-zinc-400 font-semibold mb-2 uppercase tracking-wider text-[10px]">Status</div>
+		<div class="absolute safe-bottom right-4 hidden sm:block bg-stone-50 dark:bg-asphalt border border-stone-200 dark:border-stone-700 rounded-md p-3 text-xs space-y-1.5 z-[1000]">
+			<div class="text-stone-500 dark:text-stone-400 font-semibold mb-2 uppercase tracking-wider text-[10px]">Status</div>
 			{#each ['reported', 'expired', 'filled'] as status (status)}
 				{@const info = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]}
-				<div class="flex items-center gap-2 text-zinc-300">
+				<div class="flex items-center gap-2 text-stone-600 dark:text-stone-300">
 					<Icon name={info.icon} size={12} class={info.colorClass} />
 					<span>{info.label}</span>
 				</div>
@@ -673,19 +673,19 @@
 
 	{#if mapReady}
 		<div class="absolute safe-bottom-mobile-tray inset-x-3 z-[1000] sm:hidden">
-			<div class="rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden flex flex-col">
-				<div class="shrink-0 flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-zinc-800/80">
+			<div class="rounded-md border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-2xl overflow-hidden flex flex-col">
+				<div class="shrink-0 flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-stone-200/80 dark:border-stone-800/80">
 					<div class="min-w-0">
-						<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-300">Map tools</p>
-						<p class="text-sm text-white font-semibold" aria-live="polite" aria-atomic="true">{liveReportedCount} live pothole{liveReportedCount === 1 ? '' : 's'} on the public map</p>
-						<p class="text-[11px] text-zinc-400">Tap a marker for details or drop a pin to report a new one.</p>
+						<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-500">Map tools</p>
+						<p class="text-sm text-stone-900 dark:text-white font-semibold" aria-live="polite" aria-atomic="true">{liveReportedCount} live pothole{liveReportedCount === 1 ? '' : 's'} on the public map</p>
+						<p class="text-[11px] text-stone-500 dark:text-stone-400">Tap a marker for details or drop a pin to report a new one.</p>
 					</div>
 					<button
 						type="button"
 						onclick={() => (mobileToolsOpen = !mobileToolsOpen)}
 						aria-expanded={mobileToolsOpen}
 						aria-controls="mobile-map-tools"
-						class="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-500 hover:text-white"
+						class="shrink-0 inline-flex items-center gap-1.5 rounded-md border border-stone-200 dark:border-stone-700 px-3 py-2 text-xs font-semibold text-stone-600 dark:text-stone-300 transition-colors hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-900 dark:hover:text-white"
 					>
 						<Icon name="layers" size={12} class="shrink-0" />
 						{mobileToolsOpen ? 'Hide' : 'Tools'}
@@ -698,7 +698,7 @@
 						onclick={reportHereFromGps}
 						aria-pressed={reportMode}
 						disabled={reportMode || reportLocating}
-						class="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-700 px-3 py-3 text-sm font-bold text-white transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
+						class="inline-flex items-center justify-center gap-2 rounded-md bg-amber-500 px-3 py-3 text-sm font-bold text-white transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
 					>
 						{#if reportLocating}
 							<Icon name="loader" size={14} class="animate-spin shrink-0" />
@@ -712,7 +712,7 @@
 						type="button"
 						onclick={locateMe}
 						disabled={locating}
-						class="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:text-white disabled:opacity-60"
+						class="inline-flex items-center justify-center gap-2 rounded-md border border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 px-3 py-3 text-sm font-semibold text-stone-700 dark:text-stone-200 transition-colors hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-900 dark:hover:text-white disabled:opacity-60"
 					>
 						{#if locating}
 							<Icon name="loader" size={14} class="animate-spin shrink-0" />
@@ -725,35 +725,35 @@
 				</div>
 
 				{#if mobileToolsOpen}
-					<div id="mobile-map-tools" class="border-t border-zinc-800 overflow-y-auto max-h-[50dvh]">
+					<div id="mobile-map-tools" class="border-t border-stone-200 dark:border-stone-800 overflow-y-auto max-h-[50dvh]">
 						<div class="px-4 py-3 space-y-4">
 						<div class="space-y-2">
-							<h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">Recent live reports</h2>
+							<h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-stone-400">Recent live reports</h2>
 							{#if recentReportedPotholes.length > 0}
 								<div class="space-y-2">
 									{#each recentReportedPotholes as pothole (pothole.id)}
 										<button
 											type="button"
 											onclick={() => focusPothole(pothole.id)}
-											class="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-3 text-left transition-colors hover:border-zinc-600 hover:bg-zinc-800"
+											class="w-full rounded-md border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 px-3 py-3 text-left transition-colors hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-100 dark:hover:bg-stone-800"
 											aria-label={`Open report for ${pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}`}
 										>
 											<div class="flex items-start justify-between gap-3">
 												<div class="min-w-0">
-													<p class="truncate text-sm font-semibold text-white">
+													<p class="truncate text-sm font-semibold text-stone-900 dark:text-white">
 														{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
 													</p>
-													<p class="mt-1 text-[11px] leading-relaxed text-zinc-400 line-clamp-2">
+													<p class="mt-1 text-[11px] leading-relaxed text-stone-500 dark:text-stone-400 line-clamp-2">
 														{pothole.description || 'Jump to this marker to review details, share it, or mark it fixed.'}
 													</p>
 													{#if pothole.photos_published}
-														<span class="mt-1.5 inline-flex items-center gap-1 text-[11px] text-zinc-400">
+														<span class="mt-1.5 inline-flex items-center gap-1 text-[11px] text-stone-500 dark:text-stone-400">
 															<Icon name="camera" size={11} />
 															Photo
 														</span>
 													{/if}
 												</div>
-												<span class="shrink-0 rounded-full bg-zinc-800 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-300">
+												<span class="shrink-0 rounded-full bg-stone-100 dark:bg-stone-800 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-500">
 													Open
 												</span>
 											</div>
@@ -761,14 +761,14 @@
 									{/each}
 								</div>
 							{:else}
-								<p class="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-3 text-xs leading-relaxed text-zinc-400">
+								<p class="rounded-md border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 px-3 py-3 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
 									Live reports will appear here once the community has confirmed them.
 								</p>
 							{/if}
 						</div>
 
 						<div class="space-y-2">
-							<h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">Layers</h2>
+							<h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-stone-400">Layers</h2>
 							<div class="grid grid-cols-2 gap-2">
 								{#each ([
 									['reported', 'Reported'],
@@ -781,21 +781,21 @@
 										onclick={() => toggleLayer(key)}
 										aria-pressed={layers[key]}
 										disabled={key === 'wards' && wardLoading}
-										class="inline-flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-colors disabled:opacity-60 {layers[key] ? 'border-sky-600 bg-sky-500/10 text-white' : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500 hover:text-white'}"
+										class="inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2.5 text-xs font-semibold transition-colors disabled:opacity-60 {layers[key] ? 'border-amber-500 bg-amber-500/10 text-stone-900 dark:text-white' : 'border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 text-stone-600 dark:text-stone-300 hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-900 dark:hover:text-white'}"
 									>
 										<span>{key === 'wards' && wardLoading ? 'Loading…' : label}</span>
-										<span class="text-[10px] uppercase tracking-wide text-zinc-400">{layers[key] ? 'On' : 'Off'}</span>
+										<span class="text-[10px] uppercase tracking-wide text-stone-500 dark:text-stone-400">{layers[key] ? 'On' : 'Off'}</span>
 									</button>
 								{/each}
 							</div>
 						</div>
 
 						<div class="space-y-2">
-							<h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">Status guide</h2>
+							<h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-stone-400">Status guide</h2>
 							<div class="grid grid-cols-1 gap-2">
 								{#each ['reported', 'expired', 'filled'] as status (status)}
 									{@const info = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]}
-									<div class="flex items-center gap-2 rounded-xl bg-zinc-900 px-3 py-2 text-xs text-zinc-300 border border-zinc-800">
+									<div class="flex items-center gap-2 rounded-md bg-stone-50 dark:bg-stone-900 px-3 py-2 text-xs text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-800">
 										<Icon name={info.icon} size={12} class={info.colorClass} />
 										<span>{info.label}</span>
 									</div>
@@ -811,15 +811,15 @@
 
 	{#if potholes.length === 0 && mapReady}
 		<div class="absolute inset-0 flex items-center justify-center z-[1000] pointer-events-none">
-			<div class="pointer-events-auto bg-zinc-950/95 border border-zinc-700 rounded-2xl px-8 py-6 max-w-xs w-full mx-4 text-center shadow-2xl">
-				<div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-3">
-					<Icon name="map-pin" size={18} class="text-sky-400" />
+			<div class="pointer-events-auto bg-white/95 dark:bg-stone-900/95 border border-stone-200 dark:border-stone-700 rounded-md px-8 py-6 max-w-xs w-full mx-4 text-center shadow-2xl">
+				<div class="w-10 h-10 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center mx-auto mb-3">
+					<Icon name="map-pin" size={18} class="text-amber-500" />
 				</div>
-				<h2 class="text-sm font-semibold text-white mb-1">No potholes reported yet</h2>
-				<p class="text-xs text-zinc-400 mb-4">Be the first to put Waterloo Region's roads on the map.</p>
+				<h2 class="text-sm font-semibold text-stone-900 dark:text-white mb-1">No potholes reported yet</h2>
+				<p class="text-xs text-stone-500 dark:text-stone-400 mb-4">Be the first to put Waterloo Region's roads on the map.</p>
 				<a
 					href="/report"
-					class="inline-flex items-center gap-1.5 bg-sky-700 hover:bg-sky-600 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+					class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded-md transition-colors"
 				>
 					<Icon name="plus" size={13} strokeWidth={2.5} />
 					Report a pothole
@@ -833,7 +833,7 @@
 		<div class="absolute safe-bottom-watchlist left-1/2 -translate-x-1/2 z-[1000]">
 			<button
 				onclick={() => watchlistSection?.scrollIntoView({ behavior: 'smooth' })}
-				class="inline-flex items-center gap-1.5 bg-zinc-950 border border-sky-800 text-sky-400 text-xs font-semibold px-3 py-1.5 rounded-full hover:border-sky-600 hover:text-sky-300 transition-colors shadow-lg"
+				class="inline-flex items-center gap-1.5 bg-white dark:bg-stone-900 border border-amber-500 text-amber-500 text-xs font-semibold px-3 py-1.5 rounded-full hover:border-amber-400 hover:text-amber-400 transition-colors shadow-lg"
 				aria-label="Scroll to watchlist"
 			>
 				<Icon name="bookmark-filled" size={12} class="shrink-0" />
