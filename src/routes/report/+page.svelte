@@ -437,10 +437,10 @@
 
 <div class="max-w-lg mx-auto px-4 py-8">
 	<div class="mb-6">
-		<h1 class="page-title text-3xl sm:text-4xl text-white mb-1">Report a pothole</h1>
-		<p class="page-intro text-zinc-300 text-sm">Report the location in about 30 seconds. No account required.</p>
-		<p class="text-xs text-zinc-300 mt-2">Independent community tracker for Waterloo Region. For official repair action, report to the city too.</p>
-		<p class="flex items-start gap-1.5 text-xs text-zinc-300 mt-2">
+		<h1 class="page-title text-3xl sm:text-4xl text-stone-900 dark:text-white mb-1">Report a pothole</h1>
+		<p class="page-intro text-stone-600 dark:text-stone-400 text-sm">Report the location in about 30 seconds. No account required.</p>
+		<p class="text-xs text-stone-600 dark:text-stone-400 mt-2">Independent community tracker for Waterloo Region. For official repair action, report to the city too.</p>
+		<p class="flex items-start gap-1.5 text-xs text-stone-600 dark:text-stone-400 mt-2">
 			<Icon name="alert-triangle" size={13} class="text-amber-500 shrink-0 mt-0.5" />
 			Stay safe — report from the sidewalk or after pulling over. Never stop in a live traffic lane.
 		</p>
@@ -448,15 +448,15 @@
 
 	<form onsubmit={handleSubmit} class="space-y-5">
 		<!-- Location -->
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
-				<Icon name="crosshair" size={14} class="text-sky-400" />
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400">
+				<Icon name="crosshair" size={14} class="text-amber-500 dark:text-amber-400" />
 				Location
 			</div>
-			<p class="text-xs text-zinc-300">Use your current location for the fastest report, or switch to address search or map pin if needed.</p>
+			<p class="text-xs text-stone-600 dark:text-stone-400">Use your current location for the fastest report, or switch to address search or map pin if needed.</p>
 
 			<!-- Tab bar -->
-			<div role="tablist" aria-label="Choose a location source" class="flex gap-1 bg-zinc-800 rounded-lg p-1">
+			<div role="tablist" aria-label="Choose a location source" class="flex gap-1 bg-stone-100 dark:bg-stone-800 rounded-md p-1">
 				{#each LOCATION_TABS as tab (tab.mode)}
 					<button
 						id={`location-tab-${tab.mode}`}
@@ -469,8 +469,8 @@
 						onkeydown={(event) => handleLocationTabKeydown(event, tab.mode)}
 						class="flex-1 min-h-[44px] py-1.5 px-2 rounded-md text-xs font-semibold transition-colors
 							{locationMode === tab.mode
-								? 'bg-zinc-700 text-white'
-								: 'text-zinc-400 hover:text-zinc-200'}"
+								? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-sm'
+								: 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200'}"
 					>
 						{tab.label}
 					</button>
@@ -489,12 +489,12 @@
 					type="button"
 					onclick={getLocation}
 					disabled={gpsStatus === 'loading'}
-					class="w-full py-3 rounded-lg border-2 border-dashed font-semibold text-sm transition-colors flex items-center justify-center gap-2
+					class="w-full py-3 rounded-md border-2 border-dashed font-semibold text-sm transition-colors flex items-center justify-center gap-2
 						{gpsStatus === 'got'
 							? 'border-green-500 bg-green-500/10 text-green-400'
 							: gpsStatus === 'error'
 							? 'border-red-500 bg-red-500/10 text-red-400'
-							: 'border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400'}"
+							: 'border-stone-300 dark:border-stone-600 hover:border-amber-500 hover:bg-amber-500/5 text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400'}"
 				>
 					{#if gpsStatus === 'loading'}
 						<Icon name="loader" size={15} class="animate-spin shrink-0" />
@@ -515,20 +515,20 @@
 					<p class="text-xs text-red-400" role="alert">
 						Could not get your location — signal may be weak. Try moving outside, or use address or map mode instead.
 					</p>
-					<p class="text-xs text-zinc-300">
-						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-white transition-colors">Enter an address</button>
-						or <button type="button" onclick={() => (locationMode = 'map')} class="underline hover:text-white transition-colors">pin on the map</button>.
+					<p class="text-xs text-stone-600 dark:text-stone-400">
+						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Enter an address</button>
+						or <button type="button" onclick={() => (locationMode = 'map')} class="underline hover:text-stone-900 dark:hover:text-white transition-colors">pin on the map</button>.
 					</p>
 				{/if}
 
 				{#if address}
-					<p class="flex items-center gap-1.5 text-xs text-zinc-300">
-						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
+					<p class="flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-400">
+						<Icon name="map-pin" size={11} class="shrink-0 text-stone-500 dark:text-stone-400" />
 						{address}
-						<span>· via <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-white">OpenStreetMap</a></span>
+						<span>· via <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-stone-900 dark:hover:text-white">OpenStreetMap</a></span>
 					</p>
 				{:else if gpsStatus === 'got'}
-					<p class="text-xs text-zinc-300">Looking up address via OpenStreetMap…</p>
+					<p class="text-xs text-stone-600 dark:text-stone-400">Looking up address via OpenStreetMap…</p>
 				{/if}
 			</div>
 
@@ -540,7 +540,7 @@
 				hidden={locationMode !== 'address'}
 				class="space-y-2"
 			>
-				<label for="address-search-input" class="block text-xs font-medium text-zinc-300">Address or intersection</label>
+				<label for="address-search-input" class="block text-xs font-medium text-stone-600 dark:text-stone-400">Address or intersection</label>
 				<div class="relative">
 					<input
 						id="address-search-input"
@@ -562,13 +562,13 @@
 								addressSuggestions = [];
 							}
 						}}
-						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500"
+						class="w-full bg-stone-100 dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-md px-3 py-2.5 text-sm text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-amber-500"
 						autocomplete="off"
 					/>
 					{#if addressSearching}
-						<p class="text-xs text-zinc-300 mt-1">Searching…</p>
+						<p class="text-xs text-stone-600 dark:text-stone-400 mt-1">Searching…</p>
 					{:else if addressQuery.length > 2 && addressSuggestions.length === 0 && lat === null}
-						<p class="text-xs text-zinc-300 mt-1" role="status" aria-live="polite">No results found — try a different address or street name.</p>
+						<p class="text-xs text-stone-600 dark:text-stone-400 mt-1" role="status" aria-live="polite">No results found — try a different address or street name.</p>
 					{/if}
 					{#if addressSuggestions.length > 0}
 						<ul
@@ -576,14 +576,14 @@
 							role="listbox"
 							aria-label="Address suggestions"
 							data-testid="address-suggestions"
-							class="absolute z-10 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl overflow-hidden"
+							class="absolute z-10 w-full mt-1 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md shadow-xl overflow-hidden"
 						>
 							{#each addressSuggestions as s, i (s.display_name)}
 								<li id="address-suggestion-{i}" role="option" aria-selected={i === addressActiveIndex}>
 									<button
 										type="button"
 										tabindex="-1"
-										class="w-full text-left px-3 py-2.5 min-h-[44px] text-sm text-zinc-200 hover:bg-zinc-700 {i === addressActiveIndex ? 'bg-zinc-700' : ''}"
+										class="w-full text-left px-3 py-2.5 min-h-[44px] text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-700 {i === addressActiveIndex ? 'bg-stone-200 dark:bg-stone-700' : ''}"
 										onclick={() => selectSuggestion(s)}
 									>
 										{s.display_name}
@@ -594,8 +594,8 @@
 					{/if}
 				</div>
 				{#if lat !== null && addressQuery && addressSuggestions.length === 0}
-					<p class="flex items-center gap-1.5 text-xs text-zinc-300">
-						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
+					<p class="flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-400">
+						<Icon name="map-pin" size={11} class="shrink-0 text-stone-500 dark:text-stone-400" />
 						{address}
 					</p>
 				{/if}
@@ -609,32 +609,32 @@
 				hidden={locationMode !== 'map'}
 				class="space-y-2"
 			>
-				<div bind:this={miniMapEl} class="w-full rounded-lg overflow-hidden" style="height: 260px;"></div>
+				<div bind:this={miniMapEl} class="w-full rounded-md overflow-hidden" style="height: 260px;"></div>
 				{#if lat !== null}
-					<p class="flex items-center gap-1.5 text-xs text-zinc-300">
-						<Icon name="map-pin" size={11} class="shrink-0 text-zinc-400" />
+					<p class="flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-400">
+						<Icon name="map-pin" size={11} class="shrink-0 text-stone-500 dark:text-stone-400" />
 						{address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
 					</p>
 				{:else}
-					<p class="text-xs text-zinc-300">Tap the map to place a pin</p>
+					<p class="text-xs text-stone-600 dark:text-stone-400">Tap the map to place a pin</p>
 				{/if}
 			</div>
 		</div>
 
 		<!-- Severity -->
-		<fieldset class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<legend class="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-2">
-				<Icon name="alert-triangle" size={14} class="text-zinc-400" />
-				How severe is the damage? <span class="text-zinc-300 font-normal">(optional)</span>
+		<fieldset class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
+			<legend class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400 mb-2">
+				<Icon name="alert-triangle" size={14} class="text-stone-500 dark:text-stone-400" />
+				How severe is the damage? <span class="text-stone-600 dark:text-stone-400 font-normal">(optional)</span>
 			</legend>
-			<p class="text-xs text-zinc-300">This helps other residents understand urgency at a glance.</p>
+			<p class="text-xs text-stone-600 dark:text-stone-400">This helps other residents understand urgency at a glance.</p>
 			<div class="grid grid-cols-2 gap-2">
 				{#each SEVERITY_OPTIONS as opt (opt.value)}
 					<label
-						class="flex flex-col items-start gap-1.5 p-3 rounded-lg border text-left cursor-pointer transition-colors
+						class="flex flex-col items-start gap-1.5 p-3 rounded-md border text-left cursor-pointer transition-colors
 							{severity === opt.value
-								? 'border-sky-500 bg-sky-500/10'
-								: 'border-zinc-700 hover:border-zinc-500'}"
+								? 'border-amber-500 bg-amber-500/10'
+								: 'border-stone-300 dark:border-stone-600 hover:border-stone-400 dark:hover:border-stone-500'}"
 					>
 						<input
 							type="radio"
@@ -648,23 +648,23 @@
 						<div class="flex items-end gap-0.5 h-4" aria-hidden="true">
 							{#each [1, 2, 3, 4] as i (i)}
 								<div
-									class="w-1.5 rounded-t-sm transition-colors {i <= opt.level ? opt.barColor : 'bg-zinc-700'}"
+									class="w-1.5 rounded-t-sm transition-colors {i <= opt.level ? opt.barColor : 'bg-stone-300 dark:bg-stone-600'}"
 									style="height: {i * 25}%"
 								></div>
 							{/each}
 						</div>
-						<span class="text-sm font-semibold text-white leading-tight">{opt.label}</span>
-						<span class="text-xs text-zinc-300 leading-tight">{opt.sub}</span>
+						<span class="text-sm font-semibold text-stone-900 dark:text-white leading-tight">{opt.label}</span>
+						<span class="text-xs text-stone-600 dark:text-stone-400 leading-tight">{opt.sub}</span>
 					</label>
 				{/each}
 			</div>
 		</fieldset>
 
 		<!-- Photo (optional) -->
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-			<label for="photo-input" class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
-				<Icon name="camera" size={14} class="text-sky-400" />
-				Photo <span class="text-zinc-300 font-normal">(optional)</span>
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
+			<label for="photo-input" class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400">
+				<Icon name="camera" size={14} class="text-amber-500 dark:text-amber-400" />
+				Photo <span class="text-stone-600 dark:text-stone-400 font-normal">(optional)</span>
 			</label>
 
 			<input
@@ -677,12 +677,12 @@
 			/>
 			{#if photoPreview}
 				<div class="relative">
-					<img src={photoPreview} alt="Selected" class="w-full rounded-lg object-cover aspect-video" />
+					<img src={photoPreview} alt="Selected" class="w-full rounded-md object-cover aspect-video" />
 					<button
 						type="button"
 						onclick={clearPhoto}
 						aria-label="Remove photo"
-						class="absolute top-2 right-2 bg-zinc-900/80 hover:bg-zinc-900 rounded-full p-1.5 text-zinc-400 hover:text-white transition-colors"
+						class="absolute top-2 right-2 bg-stone-900/80 hover:bg-stone-900 rounded-full p-1.5 text-stone-400 hover:text-white transition-colors"
 					>
 						<Icon name="x" size={14} />
 					</button>
@@ -691,64 +691,64 @@
 				<button
 					type="button"
 					onclick={() => photoInput?.click()}
-					class="w-full py-3 rounded-lg border-2 border-dashed border-zinc-700 hover:border-sky-500 hover:bg-sky-500/5 text-zinc-400 hover:text-sky-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+					class="w-full py-3 rounded-md border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-amber-500 hover:bg-amber-500/5 text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
 				>
 					<Icon name="camera" size={15} class="shrink-0" />
 					Add a photo
 				</button>
 			{/if}
 
-			<p class="text-xs text-zinc-300">Photos are reviewed before appearing publicly — usually within a few hours. Only take one if you're safely off the road.</p>
+			<p class="text-xs text-stone-600 dark:text-stone-400">Photos are reviewed before appearing publicly — usually within a few hours. Only take one if you're safely off the road.</p>
 		</div>
 
-		<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3" role="status" aria-live="polite" aria-atomic="true">
-			<div class="flex items-center gap-2 text-sm font-semibold text-zinc-300">
-				<Icon name="check-circle" size={14} class={hasLocation ? 'text-green-400' : 'text-zinc-400'} />
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3" role="status" aria-live="polite" aria-atomic="true">
+			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400">
+				<Icon name="check-circle" size={14} class={hasLocation ? 'text-green-400' : 'text-stone-500 dark:text-stone-400'} />
 				Ready to submit
 			</div>
 
 			{#if hasLocation}
 				<div class="space-y-2">
-					<div class="rounded-lg bg-zinc-800/80 p-3 space-y-1.5">
+					<div class="rounded-md bg-stone-100/80 dark:bg-stone-800/80 p-3 space-y-1.5">
 						<p class="flex items-center gap-1.5 text-xs font-semibold text-green-400">
 							<Icon name="map-pin" size={12} class="shrink-0" />
 							Location locked in
 						</p>
-						<p class="text-sm text-zinc-200 break-words overflow-wrap-anywhere">{locationSummary}</p>
+						<p class="text-sm text-stone-700 dark:text-stone-200 break-words overflow-wrap-anywhere">{locationSummary}</p>
 					</div>
 					<div class="grid gap-2 sm:grid-cols-2">
-						<div class="rounded-lg bg-zinc-800/60 p-3">
-							<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-300">Severity</p>
-							<p class="mt-1 text-sm text-zinc-300">{severity ?? 'Optional — not added yet'}</p>
+						<div class="rounded-md bg-stone-100/60 dark:bg-stone-800/60 p-3">
+							<p class="text-[11px] font-semibold text-stone-600 dark:text-stone-400">Severity</p>
+							<p class="mt-1 text-sm text-stone-600 dark:text-stone-400">{severity ?? 'Optional — not added yet'}</p>
 						</div>
-						<div class="rounded-lg bg-zinc-800/60 p-3">
-							<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-300">Photo</p>
-							<p class="mt-1 text-sm text-zinc-300">{photoFile ? 'Attached and ready to upload' : 'Optional — not added yet'}</p>
+						<div class="rounded-md bg-stone-100/60 dark:bg-stone-800/60 p-3">
+							<p class="text-[11px] font-semibold text-stone-600 dark:text-stone-400">Photo</p>
+							<p class="mt-1 text-sm text-stone-600 dark:text-stone-400">{photoFile ? 'Attached and ready to upload' : 'Optional — not added yet'}</p>
 						</div>
 					</div>
 				</div>
-				<p class="text-xs text-zinc-300 leading-relaxed">
+				<p class="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
 					After you submit, a pothole page is created right away. It appears on the public map after
 					{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location.
 				</p>
 			{:else}
-				<p class="text-sm text-zinc-300">
+				<p class="text-sm text-stone-600 dark:text-stone-400">
 					Choose a location above to unlock the report button.
 				</p>
-				<p class="text-xs text-zinc-300">
+				<p class="text-xs text-stone-600 dark:text-stone-400">
 					Use GPS for the fastest report, or switch to address search or map pin if location access fails.
 				</p>
 			{/if}
 		</div>
 
-		<p class="text-xs text-zinc-300 text-center">
-			By submitting you consent to collection of your rounded GPS location (±11 m), a hashed IP address for deduplication, and any photos you attach (reviewed before publishing). No account required. <a href="/about#privacy" class="underline hover:text-white">Privacy policy →</a>
+		<p class="text-xs text-stone-600 dark:text-stone-400 text-center">
+			By submitting you consent to collection of your rounded GPS location (±11 m), a hashed IP address for deduplication, and any photos you attach (reviewed before publishing). No account required. <a href="/about#privacy" class="underline hover:text-stone-900 dark:hover:text-white">Privacy policy →</a>
 		</p>
 
 		<button
 			type="submit"
 			disabled={submitting || !hasLocation}
-			class="w-full py-4 font-bold text-lg rounded-xl transition-colors flex items-center justify-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed bg-sky-700 hover:bg-sky-600 text-white"
+			class="w-full py-4 font-bold text-lg rounded-md transition-colors flex items-center justify-center gap-2 disabled:bg-stone-200 dark:disabled:bg-stone-800 disabled:text-stone-400 dark:disabled:text-stone-500 disabled:cursor-not-allowed bg-amber-500 hover:bg-amber-600 text-white"
 		>
 			{#if submitting}
 				<Icon name="loader" size={16} class="animate-spin shrink-0" />
@@ -759,11 +759,11 @@
 			{/if}
 		</button>
 
-		<p class="text-xs text-zinc-300 text-center">
+		<p class="text-xs text-stone-600 dark:text-stone-400 text-center">
 			{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location are needed before a pothole appears on the public map.
 		</p>
-		<p class="text-xs text-zinc-300 text-center">
-			On a major road? It may be maintained by the Region of Waterloo, not the city. <a href="/about" class="underline hover:text-white">Learn more →</a>
+		<p class="text-xs text-stone-600 dark:text-stone-400 text-center">
+			On a major road? It may be maintained by the Region of Waterloo, not the city. <a href="/about" class="underline hover:text-stone-900 dark:hover:text-white">Learn more →</a>
 		</p>
 	</form>
 </div>
