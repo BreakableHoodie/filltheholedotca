@@ -4,6 +4,10 @@
 
 Live at **[fillthehole.ca](https://fillthehole.ca)**
 
+[![CI](https://github.com/BreakableHoodie/filltheholedotca/actions/workflows/ci.yml/badge.svg)](https://github.com/BreakableHoodie/filltheholedotca/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/BreakableHoodie/filltheholedotca/actions/workflows/codeql.yml/badge.svg)](https://github.com/BreakableHoodie/filltheholedotca/actions/workflows/codeql.yml)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
+
 ---
 
 ## What it does
