@@ -1,11 +1,14 @@
 import { error } from '@sveltejs/kit';
 import { supabase } from '$lib/supabase';
+import { COUNCILLORS } from '$lib/wards';
+import { logError } from '$lib/server/observability';
 import type { RequestHandler } from './$types';
 
 const ORIGIN = 'https://fillthehole.ca';
 
 const STATIC_PAGES = [
 	{ path: '/', changefreq: 'daily', priority: '1.0' },
+	{ path: '/report', changefreq: 'monthly', priority: '0.9' },
 	{ path: '/stats', changefreq: 'daily', priority: '0.8' },
 	{ path: '/how-to', changefreq: 'monthly', priority: '0.6' },
 	{ path: '/about', changefreq: 'monthly', priority: '0.5' }
@@ -25,7 +28,7 @@ export const GET: RequestHandler = async () => {
 		.order('created_at', { ascending: false });
 
 	if (dbError) {
-		console.error('sitemap: supabase error', dbError.message);
+		logError('sitemap', 'supabase error building sitemap', dbError);
 		error(503, 'Sitemap temporarily unavailable');
 	}
 
@@ -35,6 +38,16 @@ export const GET: RequestHandler = async () => {
     <loc>${ORIGIN}${path}</loc>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
+  </url>`
+	).join('');
+
+	// One accountability page per councillor ward (/stats/ward/<city>/<ward>).
+	const wardEntries = COUNCILLORS.map(
+		({ city, ward }) => `
+  <url>
+    <loc>${ORIGIN}/stats/ward/${city}/${ward}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>`
 	).join('');
 
@@ -54,7 +67,7 @@ export const GET: RequestHandler = async () => {
 		.join('');
 
 	const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${staticEntries}${potholeEntries}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${staticEntries}${wardEntries}${potholeEntries}
 </urlset>`;
 
 	return new Response(xml, {

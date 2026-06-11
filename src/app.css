@@ -29,6 +29,11 @@
 
 body {
   font-family: var(--font-sans);
+  /* Opt into system dark mode so native controls, scrollbars, and the
+     pre-hydration canvas (visible in mobile overscroll/address-bar gaps)
+     follow the user's preference. Mirrors the layout's bg-stone-50/asphalt. */
+  color-scheme: light dark;
+  background-color: light-dark(#fafaf9, #191714);
 }
 
 @media (prefers-reduced-motion: reduce) {

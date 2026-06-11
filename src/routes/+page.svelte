@@ -523,6 +523,10 @@
 	<meta property="og:description" content="Track potholes in Kitchener, Waterloo, and Cambridge. Report, confirm, and hold the city accountable." />
 	<meta property="og:url" content="https://fillthehole.ca/" />
 	<meta property="og:type" content="website" />
+	<meta property="og:image" content="https://fillthehole.ca/api/og/default" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta name="twitter:image" content="https://fillthehole.ca/api/og/default" />
 </svelte:head>
 
 <h1 class="sr-only">Waterloo Region Pothole Map</h1>

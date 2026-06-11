@@ -395,6 +395,7 @@
 	<meta property="og:image" content="{origin}/api/og/{pothole.id}" />
 	<meta property="og:image:width" content="1200" />
 	<meta property="og:image:height" content="630" />
+	<meta name="twitter:image" content="{origin}/api/og/{pothole.id}" />
 	<meta property="og:url" content="{origin}/hole/{pothole.id}" />
 	<meta property="og:type" content="website" />
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->

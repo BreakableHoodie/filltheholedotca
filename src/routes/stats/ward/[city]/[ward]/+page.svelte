@@ -78,11 +78,13 @@
 
 <svelte:head>
   <title>{councillor.name} · Ward {ward} — FillTheHole.ca</title>
+  <meta name="description" content="Ward {ward} {cityLabel} pothole accountability: grade {grade.grade}, {fillRate !== null ? fillRate.toFixed(0) + '% fill rate' : 'no data yet'}. {open} open potholes." />
   <meta property="og:title" content="{councillor.name} · Ward {ward} Accountability — FillTheHole.ca" />
   <meta property="og:description" content="Ward {ward} {cityLabel} pothole accountability: grade {grade.grade}, {fillRate !== null ? fillRate.toFixed(0) + '% fill rate' : 'no data yet'}. {open} open potholes." />
   <meta property="og:image" content="{origin}/api/og/ward/{city}/{ward}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta name="twitter:image" content="{origin}/api/og/ward/{city}/{ward}" />
   <meta property="og:url" content="{origin}/stats/ward/{city}/{ward}" />
   <meta property="og:type" content="website" />
 </svelte:head>

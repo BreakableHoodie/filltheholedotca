@@ -1,5 +1,13 @@
-# allow crawling everything by default
+# Crawl public pages freely. The blanket /api/ block used to hide the
+# Open Graph images and open-data endpoints from crawlers and social
+# unfurlers — allow those explicitly, keep the rest of /api/ and all of
+# /admin/ out of the index.
 User-agent: *
+Allow: /api/og/
+Allow: /api/export.csv
+Allow: /api/feed.xml
+Allow: /api/feed.json
 Disallow: /api/
+Disallow: /admin/
 
 Sitemap: https://fillthehole.ca/sitemap.xml

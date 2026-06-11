@@ -114,6 +114,7 @@ src/
       export.csv/+server.ts   # GET — CSV export of all reported/filled potholes (open data)
       feed.xml/+server.ts     # GET — RSS 2.0 feed of recent confirmations/fills (open data)
       ccc/[id]/+server.ts           # GET — ArcGIS CCC repair data proxy (off SSR path)
+      og/default/+server.ts         # GET — satori-rendered default OG/Twitter card (homepage + pages without a per-record image)
       notify/[id]/+server.ts        # POST/DELETE — per-pothole fill notification subscription
       geocode/search/+server.ts     # GET — Nominatim search proxy (sets User-Agent server-side)
       geocode/reverse/+server.ts    # GET — Nominatim reverse geocode proxy
