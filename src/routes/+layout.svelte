@@ -22,6 +22,15 @@
 <svelte:head>
 	<title>Waterloo Region Pothole Tracker — FillTheHole.ca</title>
 	<link rel="canonical" href="https://fillthehole.ca{page.url.pathname}" />
+	<!-- Render og:image as a large card on Twitter/X; per-page og:image still applies -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<!-- RSS autodiscovery for the open-data activity feed -->
+	<link
+		rel="alternate"
+		type="application/rss+xml"
+		title="FillTheHole.ca — recent pothole activity"
+		href="https://fillthehole.ca/api/feed.xml"
+	/>
 	<!-- Preload critical fonts — eliminates the CSS @import waterfall for first paint -->
 	<link rel="preload" href={barlowBold} as="font" type="font/woff2" crossorigin="anonymous" />
 	<link rel="preload" href={publicSans400} as="font" type="font/woff2" crossorigin="anonymous" />
