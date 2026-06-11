@@ -114,7 +114,14 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
 
   setHeaders({ "Cache-Control": "public, max-age=300, stale-while-revalidate=600" });
 
-  const { data, error: dbError } = await supabase
+  // Read the pothole via the service-role client. The anon "Public read" RLS
+  // policy excludes `pending` rows (schema_pending_rls.sql) so the public anon
+  // key cannot enumerate unconfirmed reports through PostgREST. Reading a single
+  // row server-side by its unguessable UUID preserves the post-report
+  // self-tracking view (/hole/<id>?submitted=1) without re-opening that vector.
+  const db = getAdminClient();
+
+  const { data, error: dbError } = await db
     .from("potholes")
     .select(
       "id, created_at, lat, lng, address, description, status, confirmed_count, filled_at, expired_at, photos_published",
@@ -133,7 +140,6 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
   } as Pothole;
   // Bounding box for proximity queries — ~110m radius
   const delta = 0.001;
-  const db = getAdminClient();
 
   const [councillor, photosResult, confirmationThreshold, hitCountResult, nearbyFilledResult] =
     await Promise.all([

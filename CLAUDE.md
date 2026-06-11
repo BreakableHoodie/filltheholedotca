@@ -185,6 +185,7 @@ Run migrations in this order:
 20. `schema_pothole_confirmations_ttl.sql` — pg_cron purge job for `pothole_confirmations` on resolved potholes older than 90 days (PIPEDA data minimization)
 21. `schema_fill_notifications.sql` — `pothole_fill_subscriptions` table; pg_cron cleanup for subscriptions on potholes expired > 7 days
 22. `schema_fill_notify_ratelimit.sql` — extends `api_rate_limit_events_scope_check` to include `fill_notify_subscribe` and `push_unsubscribe`
+23. `schema_pending_rls.sql` — replaces the `potholes` "Public read" policy (`using (true)`) with "Public read non-pending" (`using (status <> 'pending')`) so the anon key can no longer enumerate unconfirmed `pending` reports through PostgREST; the `/hole/[id]` SSR loader switches to the service-role client so the post-report self-tracking view still resolves pending rows by UUID
 
 Ten `pg_cron` jobs run nightly:
 
@@ -213,6 +214,7 @@ pending → reported → filled
 - **Geofence**: Waterloo Region only — lat 43.32–43.53, lng -80.59 to -80.22
 - **Merge radius**: 25m — nearby pending reports are merged, not duplicated
 - **2 confirmations** from distinct IPs required to go live on the public map
+- **Pending rows are not publicly enumerable**: the `potholes` RLS read policy is `using (status <> 'pending')` (see `schema_pending_rls.sql`), so the anon key cannot list `pending` reports via PostgREST. Server-side paths that legitimately need a pending row (the `/api/watchlist` self-tracking API and the `/hole/[id]` SSR loader) read it by exact UUID through the service-role client, which bypasses RLS.
 - **photos_published**: admin-only toggle per pothole; a live pothole does NOT mean its photos are shown — admin must explicitly publish them
 - **IP hashing**: HMAC-SHA-256 with `IP_HASH_SECRET`, never store raw IPs
 - **Coord privacy**: reporter lat/lng is rounded to 4 decimal places (≈11m at Waterloo latitude) at write-time via `roundPublicCoord()` in `$lib/geo` — the precision is a hard-coded constant, not an env var. Geofence + merge-radius logic runs on the raw input so decisions aren't shifted by rounding. Serialization paths (feed.json, feed.xml, export.csv, embed, OG) re-apply `roundPublicCoord` as defense-in-depth for any historical rows stored at full precision.
