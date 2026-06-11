@@ -23,17 +23,19 @@ type NormalizedFeature = {
 const SOURCES = [
 	{
 		city: 'kitchener',
-		url: 'https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Wards/FeatureServer/0/query?where=1%3D1&outFields=WARDID&outSR=4326&f=geojson',
+		// geometryPrecision=5 (~1m) roughly halves the boundary payload with no
+		// visible difference at map zoom levels (verified: 153 kB -> 87 kB).
+		url: 'https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Wards/FeatureServer/0/query?where=1%3D1&outFields=WARDID&outSR=4326&geometryPrecision=5&f=geojson',
 		wardField: 'WARDID'
 	},
 	{
 		city: 'waterloo',
-		url: 'https://services.arcgis.com/ZpeBVw5o1kjit7LT/arcgis/rest/services/Wards2022/FeatureServer/0/query?where=1%3D1&outFields=WARD_NO&outSR=4326&f=geojson',
+		url: 'https://services.arcgis.com/ZpeBVw5o1kjit7LT/arcgis/rest/services/Wards2022/FeatureServer/0/query?where=1%3D1&outFields=WARD_NO&outSR=4326&geometryPrecision=5&f=geojson',
 		wardField: 'WARD_NO'
 	},
 	{
 		city: 'cambridge',
-		url: 'https://maps.cambridge.ca/arcgispub03/rest/services/Voting/FeatureServer/2/query?where=1%3D1&outFields=WARD_ID&outSR=4326&f=geojson',
+		url: 'https://maps.cambridge.ca/arcgispub03/rest/services/Voting/FeatureServer/2/query?where=1%3D1&outFields=WARD_ID&outSR=4326&geometryPrecision=5&f=geojson',
 		wardField: 'WARD_ID'
 	}
 ] satisfies SourceConfig[];
