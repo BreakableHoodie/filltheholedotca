@@ -297,13 +297,21 @@
 	}
 
 	onMount(async () => {
-		await import('leaflet/dist/leaflet.css');
+		// The three stylesheets have no load-order constraint, so fetch them in
+		// parallel rather than in series. Only the JS is ordered: markercluster
+		// augments the global `L`, so leaflet must register window.L before it
+		// imports. This turns a 6-request waterfall into CSS-in-parallel alongside
+		// leaflet -> markercluster.
+		const cssLoaded = Promise.all([
+			import('leaflet/dist/leaflet.css'),
+			import('leaflet.markercluster/dist/MarkerCluster.css'),
+			import('leaflet.markercluster/dist/MarkerCluster.Default.css')
+		]);
 		const leafletModule = await import('leaflet');
 		const L = leafletModule.default ?? leafletModule;
 		(window as unknown as Record<string, unknown>).L = L;
 		await import('leaflet.markercluster');
-		await import('leaflet.markercluster/dist/MarkerCluster.css');
-		await import('leaflet.markercluster/dist/MarkerCluster.Default.css');
+		await cssLoaded;
 
 		LRef = L;
 
@@ -355,6 +363,15 @@
 		clientPotholes = seededPotholes?.length ? seededPotholes : null;
 		markersById = {};
 
+		// Collect markers per layer, then bulk-insert with addLayers() after the
+		// loop. markercluster reclusters on every addLayer(); one addLayers() per
+		// group clusters once instead of once per marker — a real win at scale.
+		const pendingByLayer: Record<string, import('leaflet').Marker[]> = {
+			reported: [],
+			expired: [],
+			filled: []
+		};
+
 		for (const pothole of potholesToRender) {
 			// Any unknown legacy status falls back to the reported layer.
 			const layerKey = pothole.status in clusterGroups ? pothole.status : 'reported';
@@ -397,7 +414,12 @@
 				{ maxWidth: 240 }
 			);
 
-			clusterGroups[layerKey].addLayer(marker);
+			pendingByLayer[layerKey].push(marker);
+		}
+
+		// One bulk insert per cluster group instead of one recluster per marker.
+		for (const [key, group] of Object.entries(clusterGroups)) {
+			if (pendingByLayer[key].length) group.addLayers(pendingByLayer[key]);
 		}
 
 		// Delegated listener for popup Fixed button
