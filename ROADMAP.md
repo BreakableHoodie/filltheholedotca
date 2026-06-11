@@ -70,7 +70,7 @@ _Objective: Grow the community of reporters and make fixes more likely._
 
 _Objective: Make the data usable for everyone, regardless of ability or input device._
 
-- [ ] **More accessible map experience:** Leaflet has known limitations for keyboard and screen-reader users — pan/zoom and spatial markers aren't meaningfully exposed to assistive technology. Evaluate migrating the map to **MapLibre GL JS** (vector tiles, modern styling, actively maintained) as the leading candidate.
-  - Trade-off to design around: WebGL/canvas maps are opaque to screen readers, so a library swap alone does **not** deliver accessibility. Pair any migration with a first-class non-map view — a sortable, filterable list/table of potholes as a true peer to the map, promoting today's `sr-only` "Pothole list" fallback into a real, styled interface.
-  - Target full keyboard operability for pan/zoom and marker focus, and adopt a documented WCAG 2.1 AA conformance goal for the map surface.
+- [ ] **Accessible non-map data view:** Maps are inherently hard for screen-reader and keyboard users, and the fix is a first-class *alternative* to the map — not a different map library. (A WebGL/canvas map such as MapLibre would render markers to an opaque `<canvas>`, making it *less* legible to assistive tech than Leaflet's DOM markers — so Leaflet stays.) Promote today's `sr-only` "Pothole list" into a real, visible, sortable/filterable list or table view that toggles with the map.
+  - Ensure every map-only action (share, "it's fixed", open details) has a keyboard-reachable equivalent in the list view.
+  - Keyboard-audit the map controls and popups; adopt a documented WCAG 2.1 AA conformance goal for the homepage.
 - [ ] **Contrast & focus pass:** Carry the redesign's light/dark theming through every surface (status colours, watchlist, stats) and guarantee a visible keyboard focus indicator on all custom controls. _(Started in the 2026-06 accessibility audit PR.)_
