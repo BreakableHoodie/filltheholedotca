@@ -65,3 +65,12 @@ _Objective: Grow the community of reporters and make fixes more likely._
 - [x] **Repeat Pothole Detection:** Detail page warns when a nearby pothole was previously filled — flags recurring road issues for escalation.
 - [x] **Embed Widget:** `/api/embed/[id]` returns a self-contained embeddable card (iframe-friendly) showing pothole status and a CTA link back to the site.
 - [x] **PWA + Push Notifications:** Web App Manifest, service worker, and browser push notification infrastructure. Users can subscribe to fill alerts; requires `VAPID_PUBLIC_KEY` + `PUBLIC_VAPID_PUBLIC_KEY` env vars.
+
+## Phase 7: Accessibility & Inclusion (Planned)
+
+_Objective: Make the data usable for everyone, regardless of ability or input device._
+
+- [ ] **More accessible map experience:** Leaflet has known limitations for keyboard and screen-reader users — pan/zoom and spatial markers aren't meaningfully exposed to assistive technology. Evaluate migrating the map to **MapLibre GL JS** (vector tiles, modern styling, actively maintained) as the leading candidate.
+  - Trade-off to design around: WebGL/canvas maps are opaque to screen readers, so a library swap alone does **not** deliver accessibility. Pair any migration with a first-class non-map view — a sortable, filterable list/table of potholes as a true peer to the map, promoting today's `sr-only` "Pothole list" fallback into a real, styled interface.
+  - Target full keyboard operability for pan/zoom and marker focus, and adopt a documented WCAG 2.1 AA conformance goal for the map surface.
+- [ ] **Contrast & focus pass:** Carry the redesign's light/dark theming through every surface (status colours, watchlist, stats) and guarantee a visible keyboard focus indicator on all custom controls. _(Started in the 2026-06 accessibility audit PR.)_

@@ -78,32 +78,32 @@
 </script>
 
 {#if ids.length > 0}
-	<section aria-labelledby="watchlist-heading" class="bg-stone-950 border-t border-stone-800">
+	<section aria-labelledby="watchlist-heading" class="bg-stone-100 dark:bg-stone-950 border-t border-stone-200 dark:border-stone-800">
 		<div class="max-w-6xl mx-auto px-4 py-8">
 			<div class="flex items-center gap-2 mb-5">
-				<Icon name="bookmark-filled" size={15} class="text-amber-400 shrink-0" />
-				<h2 id="watchlist-heading" class="text-sm font-semibold text-stone-300">
+				<Icon name="bookmark-filled" size={15} class="text-amber-600 dark:text-amber-400 shrink-0" />
+				<h2 id="watchlist-heading" class="text-sm font-semibold text-stone-700 dark:text-stone-300">
 					My Watchlist
 				</h2>
-				<span class="text-stone-600 text-xs tabular-nums ml-1">({ids.length})</span>
+				<span class="text-stone-500 dark:text-stone-400 text-xs tabular-nums ml-1">({ids.length})</span>
 			</div>
 
 			{#if loading}
 				<!-- Skeleton cards — match expected layout to prevent CLS -->
 				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 					{#each [...Array(Math.min(ids.length, PAGE_SIZE)).keys()] as i (i)}
-						<div class="relative bg-stone-900 rounded-md overflow-hidden border border-stone-800 h-[100px] animate-pulse">
-							<div class="absolute inset-y-0 left-0 w-[3px] bg-stone-700"></div>
+						<div class="relative bg-white dark:bg-stone-900 rounded-md overflow-hidden border border-stone-200 dark:border-stone-800 h-[100px] animate-pulse">
+							<div class="absolute inset-y-0 left-0 w-[3px] bg-stone-300 dark:bg-stone-700"></div>
 							<div class="pl-5 pr-3 pt-3.5 pb-3.5 flex flex-col gap-2.5">
-								<div class="h-4 bg-stone-700 rounded w-3/4"></div>
-								<div class="h-3 bg-stone-800 rounded w-1/2"></div>
-								<div class="h-3 bg-stone-800 rounded w-1/3"></div>
+								<div class="h-4 bg-stone-200 dark:bg-stone-700 rounded w-3/4"></div>
+								<div class="h-3 bg-stone-200 dark:bg-stone-800 rounded w-1/2"></div>
+								<div class="h-3 bg-stone-200 dark:bg-stone-800 rounded w-1/3"></div>
 							</div>
 						</div>
 					{/each}
 				</div>
 			{:else if fetchError}
-				<p class="text-stone-400 text-sm">Couldn't load watchlist status. Try refreshing.</p>
+				<p class="text-stone-600 dark:text-stone-400 text-sm">Couldn't load watchlist status. Try refreshing.</p>
 			{:else if potholes.length > 0}
 				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 					{#each visiblePotholes as pothole (pothole.id)}
@@ -115,10 +115,10 @@
 							pothole.status === 'filled'   ? 'bg-green-500' :
 							pothole.status === 'expired'  ? 'bg-stone-600' : 'bg-stone-700'}
 						{@const pillColor =
-							pothole.status === 'reported' ? 'bg-orange-500/10 text-orange-400' :
-							pothole.status === 'filled'   ? 'bg-green-500/10 text-green-400' :
-							'bg-stone-700/60 text-stone-400'}
-						<div class="relative bg-stone-900 rounded-md overflow-hidden border border-stone-800 hover:border-stone-700 transition-colors">
+							pothole.status === 'reported' ? 'bg-orange-500/10 text-orange-700 dark:text-orange-400' :
+							pothole.status === 'filled'   ? 'bg-green-500/10 text-green-700 dark:text-green-400' :
+							'bg-stone-200 dark:bg-stone-700/60 text-stone-600 dark:text-stone-400'}
+						<div class="relative bg-white dark:bg-stone-900 rounded-md overflow-hidden border border-stone-200 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-700 transition-colors">
 							<!-- Status accent strip -->
 							<div class="absolute inset-y-0 left-0 w-[3px] {accentColor}"></div>
 
@@ -127,13 +127,13 @@
 								<div class="flex items-start justify-between gap-2">
 									<a
 										href="/hole/{pothole.id}"
-										class="flex-1 text-sm font-semibold text-white hover:text-amber-400 transition-colors leading-snug line-clamp-2"
+										class="flex-1 text-sm font-semibold text-stone-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 transition-colors leading-snug line-clamp-2"
 									>
 										{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
 									</a>
 									<button
 										onclick={() => unwatch(pothole.id)}
-										class="shrink-0 text-stone-600 hover:text-stone-300 transition-colors p-1 -mr-1 rounded-md hover:bg-stone-800"
+										class="shrink-0 text-stone-400 dark:text-stone-600 hover:text-stone-700 dark:hover:text-stone-300 transition-colors p-1 -mr-1 rounded-md hover:bg-stone-100 dark:hover:bg-stone-800"
 										aria-label="Remove {pothole.address || 'this pothole'} from watchlist"
 										title="Remove from watchlist"
 									>
@@ -147,20 +147,20 @@
 										<Icon name={info.icon} size={11} />
 										{info.label}
 									</span>
-									<span class="text-xs text-stone-600 tabular-nums shrink-0">{daysLabel(pothole)}</span>
+									<span class="text-xs text-stone-500 dark:text-stone-400 tabular-nums shrink-0">{daysLabel(pothole)}</span>
 								</div>
 
 								<!-- Footer: view link + photo badge -->
 								<div class="flex items-center justify-between gap-2 pt-0.5">
 									<a
 										href="/hole/{pothole.id}"
-										class="text-xs font-medium text-stone-400 hover:text-amber-400 transition-colors"
+										class="text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
 										aria-label="View details for {pothole.address || 'this pothole'}"
 									>
 										View details →
 									</a>
 									{#if pothole.photos_published}
-										<span class="inline-flex items-center gap-1 text-[11px] text-stone-600">
+										<span class="inline-flex items-center gap-1 text-[11px] text-stone-500 dark:text-stone-400">
 											<Icon name="camera" size={11} />
 											Photo
 										</span>
@@ -175,7 +175,7 @@
 						<button
 							type="button"
 							onclick={() => (showAll = !showAll)}
-							class="text-xs font-medium text-stone-400 hover:text-amber-400 transition-colors"
+							class="text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
 						>
 							{showAll ? 'Show fewer' : `Show ${potholes.length - PAGE_SIZE} more`}
 						</button>

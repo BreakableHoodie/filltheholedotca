@@ -373,14 +373,26 @@
 		return `https://www.google.com/maps?q=&layer=c&cbll=${lat},${lng}`;
 	}
 
-	function share(address: string | null, lat: number, lng: number) {
+	async function share(address: string | null, lat: number, lng: number) {
 		const loc = address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 		const text = `There's an unfilled pothole at ${loc} in the Waterloo Region — help get it on the map!`;
-		if (navigator.share) {
-			navigator.share({ title: 'fillthehole.ca', text, url: window.location.href });
-		} else {
-			navigator.clipboard.writeText(window.location.href);
-			toast.success('Link copied!');
+		const url = window.location.href;
+		try {
+			if (navigator.share) {
+				await navigator.share({ title: 'fillthehole.ca', text, url });
+			} else {
+				await navigator.clipboard.writeText(url);
+				toast.success('Link copied!');
+			}
+		} catch (err) {
+			// Dismissing the native share sheet rejects with AbortError — not a failure.
+			if (err instanceof Error && err.name === 'AbortError') return;
+			try {
+				await navigator.clipboard.writeText(url);
+				toast.success('Link copied!');
+			} catch {
+				toastError('Could not share this link.');
+			}
 		}
 	}
 

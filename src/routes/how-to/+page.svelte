@@ -51,14 +51,14 @@
 	<!-- Reporting -->
 	<section class="space-y-4">
 		<h2 class="section-title text-xl text-stone-900 dark:text-white flex items-center gap-2">
-			<Icon name="map-pin" size={18} class="text-orange-400 shrink-0" />
+			<Icon name="map-pin" size={18} class="text-orange-600 dark:text-orange-400 shrink-0" />
 			Reporting a pothole
 		</h2>
 
-		<div class="flex gap-3 bg-amber-950/40 border border-amber-700/40 rounded-md p-4 text-sm text-amber-200/90">
-			<Icon name="alert-triangle" size={18} class="text-amber-400 shrink-0 mt-0.5" />
+		<div class="flex gap-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/40 rounded-md p-4 text-sm text-amber-900 dark:text-amber-200/90">
+			<Icon name="alert-triangle" size={18} class="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
 			<p>
-				<strong class="text-amber-300">Stay safe.</strong>
+				<strong class="text-amber-900 dark:text-amber-300">Stay safe.</strong>
 				Never stop in traffic or step onto a road to report. Report from the sidewalk or parking lot,
 				or let a passenger report while you drive. No pothole is worth an injury.
 			</p>
@@ -69,7 +69,7 @@
 			<ol class="space-y-3 list-none">
 				<li class="flex gap-3">
 					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5">1</span>
-					<span><strong class="text-stone-700 dark:text-stone-200">Lock your location.</strong> Tap the crosshair icon to use your device's GPS, or search by address and drop a pin manually.</span>
+					<span><strong class="text-stone-700 dark:text-stone-200">Set the location.</strong> Use GPS for the fastest report, or switch to the address or map tab to search or drop a pin.</span>
 				</li>
 				<li class="flex gap-3">
 					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5">2</span>
@@ -81,7 +81,7 @@
 				</li>
 				<li class="flex gap-3">
 					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5">4</span>
-					<span><strong class="text-stone-700 dark:text-stone-200">Submit.</strong> Your report is logged immediately. It needs one more independent confirmation from a different location before it shows up on the public map.</span>
+					<span><strong class="text-stone-700 dark:text-stone-200">Submit.</strong> Your report is logged immediately. It needs one more independent confirmation — a second person reporting the same spot from their own device — before it shows up on the public map.</span>
 				</li>
 			</ol>
 		</div>
@@ -112,7 +112,7 @@
 			Watchlist
 		</h2>
 		<p class="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-			On any pothole detail page, tap <strong class="text-stone-700 dark:text-stone-200">Watch this hole</strong> to save
+			On any pothole detail page, tap <strong class="text-stone-700 dark:text-stone-200">Watch</strong> to save
 			it to your watchlist. Watched holes appear in a section on the homepage so you can quickly
 			see whether they've been filled.
 		</p>

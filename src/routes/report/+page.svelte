@@ -632,6 +632,7 @@
 				{#each SEVERITY_OPTIONS as opt (opt.value)}
 					<label
 						class="flex flex-col items-start gap-1.5 p-3 rounded-md border text-left cursor-pointer transition-colors
+							has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-amber-500 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-white dark:has-[:focus-visible]:ring-offset-stone-900
 							{severity === opt.value
 								? 'border-amber-500 bg-amber-500/10'
 								: 'border-stone-300 dark:border-stone-600 hover:border-stone-400 dark:hover:border-stone-500'}"
