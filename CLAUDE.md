@@ -99,6 +99,7 @@ src/
     +page.server.ts           # Loads potholes for map
     about/+page.svelte        # About page
     how-to/+page.svelte       # User-facing how-to / help guide
+    updates/+page.svelte      # "What's new" public changelog (data in $lib/updates.ts)
     stats/
       +page.server.ts         # SSR load — potholes for metrics
       +page.svelte            # Metrics dashboard (resolution time, ward leaderboards, trends, fill rate)
