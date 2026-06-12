@@ -116,6 +116,8 @@
 			Community-sourced data — not official. Use at your own risk.
 			<a href="/how-to" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">How to use</a>
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
+			<a href="/updates" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">What's new</a>
+			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
 			<a href="/about#privacy" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Privacy</a>
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
 			<a href="/about#disclaimer" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Disclaimer</a>
