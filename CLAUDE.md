@@ -59,6 +59,7 @@ When in doubt about whether something belongs in the repo, leave it out.
 - **@fontsource/barlow-condensed** — local OG image font asset (no runtime CDN dependency)
 - **svelte-sonner** for toasts, **date-fns** for formatting, **zod** for API validation
 - **@sentry/sveltekit** — error tracking (server + client); disabled when `PUBLIC_SENTRY_DSN` is absent
+- **Open-Meteo** — historical weather (freeze-thaw-day trend on `/stats`); keyless, server-side cached in `$lib/server/weather`, degrades to no-line on failure
 - Deployed to **Netlify** (`@sveltejs/adapter-netlify`)
 - **License**: GNU Affero General Public License v3.0 (AGPL-3.0)
 
@@ -125,10 +126,12 @@ src/
     geo.ts                    # Shared geo utilities (pipRing, inWardFeature, roundPublicCoord)
     wards.ts                  # COUNCILLORS array (ward/name/email/url)
     supabase.ts               # Supabase client (public anon)
+    freeze-thaw.ts            # Pure freeze-thaw-day computation (dep-free, unit-tested)
     server/
       observability.ts        # logError() — console + Sentry with area tags
       exif-strip.ts           # stripJpegMetadata() — lossless APP-segment stripper
       og-helpers.ts           # Shared satori el() helper for OG image routes
+      weather.ts              # Open-Meteo freeze-thaw fetch (cached, keyless, graceful)
     components/
       HomeIntroCard.svelte    # Homepage-only intro card shown on first visit
 ```
