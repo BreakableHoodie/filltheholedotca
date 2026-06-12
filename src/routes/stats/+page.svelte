@@ -68,12 +68,21 @@
 				if (fk in months) months[fk].filled++;
 			}
 		}
-		return monthKeys.map(k => ({ key: k, ...months[k] }));
+		return monthKeys.map(k => ({
+			key: k,
+			...months[k],
+			freezeThaw: data.freezeThawByMonth?.[k] ?? 0
+		}));
 	});
 
 	let monthlyMax = $derived(
 		Math.max(...monthlyData.map(m => Math.max(m.reported, m.filled)), 1)
 	);
+
+	// Freeze–thaw days ride their own axis (a different unit from report counts),
+	// so the overlay line is scaled independently of the bars.
+	let freezeThawMax = $derived(Math.max(...monthlyData.map(m => m.freezeThaw), 1));
+	let hasFreezeThaw = $derived(monthlyData.some(m => m.freezeThaw > 0));
 
 	// ── Ward leaderboard ───────────────────────────────────────────────────────
 
@@ -296,31 +305,61 @@
 				<span class="flex items-center gap-1.5">
 					<span class="w-3 h-3 rounded-sm bg-green-500/70 inline-block"></span> Filled
 				</span>
+				{#if hasFreezeThaw}
+					<span class="flex items-center gap-1.5">
+						<span class="w-3.5 h-0.5 rounded-full bg-sky-600 dark:bg-sky-400 inline-block"></span> Freeze–thaw days
+					</span>
+				{/if}
 			</div>
 		</div>
 
 		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-5">
-			<div
-				class="flex items-end gap-px h-28"
-				role="img"
-				aria-label="Bar chart of monthly pothole reports and fills over the last 18 months"
-			>
-			{#each monthlyData as m (m.key)}
-					<div class="flex-1 flex flex-col items-stretch gap-px">
-						<div class="flex items-end gap-px flex-1">
-							<div
-								class="flex-1 bg-orange-500/70 rounded-t-sm transition-[height]"
-								style="height:{Math.round((m.reported / monthlyMax) * 96)}px"
-								title="{m.reported} reported in {m.label}"
-							></div>
-							<div
-								class="flex-1 bg-green-500/70 rounded-t-sm transition-[height]"
-								style="height:{Math.round((m.filled / monthlyMax) * 96)}px"
-								title="{m.filled} filled in {m.label}"
-							></div>
+			<div class="relative">
+				<div
+					class="flex items-end gap-px h-28"
+					role="img"
+					aria-label="Monthly pothole reports and fills (bars) with freeze–thaw day counts (line) over the last 18 months"
+				>
+				{#each monthlyData as m (m.key)}
+						<div class="flex-1 flex flex-col items-stretch gap-px">
+							<div class="flex items-end gap-px flex-1">
+								<div
+									class="flex-1 bg-orange-500/70 rounded-t-sm transition-[height]"
+									style="height:{Math.round((m.reported / monthlyMax) * 96)}px"
+									title="{m.reported} reported in {m.label}"
+								></div>
+								<div
+									class="flex-1 bg-green-500/70 rounded-t-sm transition-[height]"
+									style="height:{Math.round((m.filled / monthlyMax) * 96)}px"
+									title="{m.filled} filled in {m.label}"
+								></div>
+							</div>
 						</div>
-					</div>
-				{/each}
+					{/each}
+				</div>
+				{#if hasFreezeThaw}
+					<!-- Freeze–thaw trend line overlaid on the bars. viewBox stretches to
+					     the bar area; non-scaling-stroke keeps the line crisp despite the
+					     non-uniform scale. Decorative — the SR table carries the values. -->
+					<svg
+						class="absolute inset-0 w-full h-full overflow-visible pointer-events-none text-sky-600 dark:text-sky-400"
+						viewBox="0 0 {monthlyData.length} 100"
+						preserveAspectRatio="none"
+						aria-hidden="true"
+					>
+						<polyline
+							points={monthlyData
+								.map((m, i) => `${i + 0.5},${100 - (m.freezeThaw / freezeThawMax) * 100}`)
+								.join(' ')}
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							vector-effect="non-scaling-stroke"
+							stroke-linejoin="round"
+							stroke-linecap="round"
+						/>
+					</svg>
+				{/if}
 			</div>
 			<!-- Month labels: every 3rd to avoid crowding on small screens -->
 			<div class="flex gap-px mt-2" aria-hidden="true">
@@ -336,12 +375,16 @@
 
 		<!-- Screen-reader equivalent of the bar chart (WCAG 1.1.1) -->
 		<table class="sr-only">
-			<caption>Monthly pothole reports and fills over the last 18 months</caption>
+			<caption>
+				Monthly pothole reports, fills, and freeze–thaw days over the last 18 months. The
+				current month's freeze–thaw count omits the most recent few days of weather data.
+			</caption>
 			<thead>
 				<tr>
 					<th scope="col">Month</th>
 					<th scope="col">Reported</th>
 					<th scope="col">Filled</th>
+					<th scope="col">Freeze–thaw days</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -350,6 +393,7 @@
 						<td>{m.label}</td>
 						<td>{m.reported}</td>
 						<td>{m.filled}</td>
+						<td>{m.freezeThaw}</td>
 					</tr>
 				{/each}
 			</tbody>

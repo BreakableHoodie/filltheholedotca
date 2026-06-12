@@ -4,6 +4,7 @@ import type { PageServerLoad } from './$types';
 import type { Pothole } from '$lib/types';
 import { lookupWard, fetchWards, COUNCILLORS } from '$lib/wards';
 import { logError } from '$lib/server/observability';
+import { getFreezeThawByMonth } from '$lib/server/weather';
 
 // Stable ward definitions derived from the councillors list — no network call needed.
 export type WardDef = {
@@ -38,7 +39,7 @@ const E2E_STATS_FIXTURE: Array<Pothole & { ward_key: string | null }> = [
 export const load: PageServerLoad = async ({ url, setHeaders }) => {
 	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
 		const fixture = url.searchParams.get('__fixture') === '1' ? E2E_STATS_FIXTURE : [];
-		return { potholes: fixture, wards: ALL_WARDS };
+		return { potholes: fixture, wards: ALL_WARDS, freezeThawByMonth: {} as Record<string, number> };
 	}
 
 	setHeaders({ 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' });
@@ -46,12 +47,15 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
 	// Fetch potholes and pre-warm the ward boundary cache in parallel.
 	// fetchWards() now never rejects (errors are caught and cached as []) so
 	// Promise.all is safe here, but ward failures must not break the pothole query.
-	const [{ data, error }] = await Promise.all([
+	// getFreezeThawByMonth never rejects (it returns an all-zero map on failure),
+	// so it's safe inside Promise.all — a weather hiccup can't break the stats page.
+	const [{ data, error }, freezeThawByMonth] = await Promise.all([
 		supabase
 			.from('potholes')
 			.select('id, created_at, lat, lng, status, filled_at, expired_at, address, confirmed_count')
 			.neq('status', 'pending')
 			.order('created_at', { ascending: false }),
+		getFreezeThawByMonth(18),
 		fetchWards('kitchener').catch(() => []),
 		fetchWards('waterloo').catch(() => []),
 		fetchWards('cambridge').catch(() => [])
@@ -59,7 +63,11 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
 
 	if (error) {
 		logError('stats/load', 'Failed to load stats potholes', error);
-		return { potholes: [] as Array<Pothole & { ward_key: string | null }>, wards: ALL_WARDS };
+		return {
+			potholes: [] as Array<Pothole & { ward_key: string | null }>,
+			wards: ALL_WARDS,
+			freezeThawByMonth
+		};
 	}
 
 	const potholes = (data ?? []).map((p) => ({
@@ -75,5 +83,5 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
 		ward_key: councillors[i] ? `${councillors[i]!.city}-${councillors[i]!.ward}` : null
 	}));
 
-	return { potholes: potholesWithWards, wards: ALL_WARDS };
+	return { potholes: potholesWithWards, wards: ALL_WARDS, freezeThawByMonth };
 };
