@@ -50,9 +50,10 @@ test.describe('Stats page', () => {
 	});
 
 	test('monthly activity chart is present', async ({ page }) => {
-		// The chart has role="img" with an aria-label
+		// The chart has role="img" with an aria-label. Match the stable phrase in
+		// the label so adding the freeze–thaw line to the description doesn't break it.
 		await expect(
-			page.getByRole('img', { name: /Bar chart of monthly pothole reports/i })
+			page.getByRole('img', { name: /monthly pothole reports and fills/i })
 		).toBeVisible();
 	});
 
