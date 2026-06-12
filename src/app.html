@@ -3,9 +3,9 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-		<!-- No global meta description: each route supplies its own via <svelte:head>.
-		     A site-wide tag here renders before %sveltekit.head% and would override the
-		     per-page descriptions search engines should actually use. -->
+		<!-- No global meta description here on purpose: every route sets its own in
+		     its page head. A site-wide tag in this file would render first and take
+		     precedence over the per-page descriptions search engines should use. -->
 		<meta property="og:site_name" content="FillTheHole.ca" />
 		<meta property="og:locale" content="en_CA" />
 		<link rel="icon" href="/favicon.png" type="image/png" />
