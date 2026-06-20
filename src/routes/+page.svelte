@@ -828,7 +828,7 @@
 				<div class="rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-4 shadow-sm">
 					<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
 						<div>
-							<p class="text-xs font-semibold uppercase tracking-wide text-amber-500">Accessible list view</p>
+							<p class="text-xs font-semibold uppercase tracking-wide text-amber-500">List view</p>
 							<h2 id="pothole-list-heading" class="mt-1 font-brand text-3xl font-bold leading-none text-stone-900 dark:text-white">
 								Potholes without the map
 							</h2>
