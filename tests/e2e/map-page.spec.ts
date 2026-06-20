@@ -305,6 +305,40 @@ test.describe("Map page smoke test", () => {
     ).toBeVisible();
   });
 
+  test("list view exposes keyboard-equivalent pothole actions", async ({
+    page,
+  }) => {
+    await seedPopupFixture(page, [
+      seededReportedPothole,
+      seededSecondReportedPothole,
+    ]);
+    await page.route("**/api/filled", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true, message: "Marked as fixed!" }),
+      });
+    });
+    await page.goto("/");
+
+    await page.getByRole("button", { name: "List" }).click();
+    await expect(
+      page.getByRole("heading", { name: /Potholes without the map/i }),
+    ).toBeVisible();
+
+    await expect(
+      page.getByRole("link", { name: /123 Test Street/i }),
+    ).toHaveAttribute("href", `/hole/${seededReportedPothole.id}`);
+    await expect(page.getByRole("button", { name: "Share" }).first()).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /It's fixed/i }).first(),
+    ).toBeVisible();
+
+    await page.getByRole("button", { name: /It's fixed/i }).first().click();
+    await expect(page.getByText("Marked as fixed!")).toBeVisible();
+    await expect(page.getByText("Showing 1 pothole.")).toBeVisible();
+  });
+
   test("reopening a popup does not duplicate the share handler", async ({
     page,
   }) => {

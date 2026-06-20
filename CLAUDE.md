@@ -32,6 +32,12 @@ Documentation that's wrong is worse than no documentation. Update it in the same
 
 If a PR touches infrastructure, routes, or the DB schema without updating the relevant docs, treat it as incomplete.
 
+### Roadmap & Planning Docs
+- **`ROADMAP.md`** — canonical project roadmap. Check this first when asked what remains, what's planned, or whether a phase is complete.
+- **`docs/superpowers/specs/`** — feature/design specs. Some older specs may already be implemented; verify against the code before treating them as open work.
+- **`docs/superpowers/plans/`** — implementation plans/checklists. These can be stale after a PR lands; use them for context, not as the source of truth unless the current code and `ROADMAP.md` agree.
+- Current known remaining roadmap work is Phase 7 in `ROADMAP.md`: homepage map WCAG 2.1 AA keyboard audit and contrast/focus pass. The visible homepage Map/List toggle and keyboard-equivalent list actions have shipped.
+
 ## Repo Hygiene — Non-Negotiable
 
 The repo is public. Treat every commit as permanent.
@@ -76,11 +82,7 @@ npm run dev          # http://localhost:5173
 | `npm run build` | Production build |
 | `npm run check` | Type checking (svelte-check) |
 | `npm run lint` | ESLint (TS + Svelte files) |
-| `npm run format` | Prettier format all source files |
-| `npm run format:check` | Prettier check-only (no writes) |
 | `npm run test` | Playwright E2E tests |
-| `npm run test:unit` | Vitest unit tests |
-| `npm run test:all` | Vitest + Playwright |
 | `npm run test:a11y` | axe-core a11y tests (Playwright) |
 
 ### Pre-commit hooks (Husky + lint-staged)
@@ -96,11 +98,10 @@ npm run dev          # http://localhost:5173
 - `prettier-plugin-svelte` handles Svelte files
 - **eslint-config-prettier** disables ESLint rules that conflict with Prettier
 
-### Unit tests (Vitest)
-- Fast Node.js tests for pure functions (no DOM/SSR needed)
-- Config: `vitest.config.ts` — includes `$lib` alias
-- E2E tests remain in Playwright; unit tests should be Vitest for speed
-- Existing Playwright-based unit tests (`exif-strip`, `ssrf`) migrated to Vitest
+### Unit tests
+- Unit-style tests live under `tests/unit/` and currently run through Playwright (`npx playwright test tests/unit/`).
+- There is no Vitest configuration or `npm run test:unit` script in the current project.
+- E2E and API-level tests also use Playwright under `tests/e2e/`; axe checks use `npm run test:a11y`.
 
 ### EditorConfig
 - **`.editorconfig`** enforces consistent indentation across editors

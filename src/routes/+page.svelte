@@ -185,12 +185,34 @@
 			.slice(0, 4),
 	);
 
-	// Pre-sorted list for the sr-only aside — avoids inline sort on every render.
-	let reportedPotholesSorted = $derived(
-		potholes
-			.filter((p) => p.status === 'reported')
-			.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)),
+	type ViewMode = 'map' | 'list';
+	type ListStatusFilter = 'all' | 'reported' | 'filled' | 'expired';
+	type ListSort = 'newest' | 'oldest' | 'status';
+
+	let viewMode = $state<ViewMode>('map');
+	let listStatusFilter = $state<ListStatusFilter>('reported');
+	let listSort = $state<ListSort>('newest');
+
+	let visibleListPotholes = $derived(
+		[...potholes]
+			.filter((pothole) => listStatusFilter === 'all' || pothole.status === listStatusFilter)
+			.sort((left, right) => {
+				if (listSort === 'oldest') return Date.parse(left.created_at) - Date.parse(right.created_at);
+				if (listSort === 'status') {
+					const statusOrder = { reported: 0, expired: 1, filled: 2, pending: 3 };
+					return statusOrder[left.status] - statusOrder[right.status];
+				}
+				return Date.parse(right.created_at) - Date.parse(left.created_at);
+			}),
 	);
+
+	function potholeLabel(pothole: Pothole) {
+		return pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`;
+	}
+
+	function formattedDate(iso: string) {
+		return iso.slice(0, 10);
+	}
 
 	// Report-here pin-drop mode
 	let reportMode = $state(false);
@@ -291,26 +313,89 @@
 		const marker = markersById[id];
 		if (!map || !marker) return;
 
-		if (!layers.reported) {
-			layers.reported = true;
-			map.addLayer(clusterGroups.reported);
+		const status = potholes.find((pothole) => pothole.id === id)?.status;
+		const layerKey = status === 'filled' || status === 'expired' ? status : 'reported';
+
+		if (!layers[layerKey]) {
+			layers[layerKey] = true;
+			map.addLayer(clusterGroups[layerKey]);
 		}
 
 		mobileToolsOpen = false;
+		viewMode = 'map';
 		const latLng = marker.getLatLng();
 		const targetZoom = Math.max(map.getZoom(), 15);
 
 		// MarkerCluster requires zooming through the cluster before the popup can open.
-		if (!clusterGroups.reported?.zoomToShowLayer) {
+		if (!clusterGroups[layerKey]?.zoomToShowLayer) {
 			map.flyTo(latLng, targetZoom, { duration: 0.6 });
 			marker.openPopup();
 			return;
 		}
 
-		clusterGroups.reported.zoomToShowLayer(marker, () => {
+		clusterGroups[layerKey].zoomToShowLayer(marker, () => {
 			map.flyTo(latLng, targetZoom, { duration: 0.6 });
 			marker.openPopup();
 		});
+	}
+
+	async function showPotholeOnMap(id: string) {
+		viewMode = 'map';
+		await tick();
+		focusPothole(id);
+	}
+
+	async function sharePothole(pothole: Pothole) {
+		const url = `${window.location.origin}/hole/${pothole.id}`;
+		const text = `Pothole at ${potholeLabel(pothole)} in Waterloo Region`;
+
+		try {
+			if (navigator.share) {
+				await navigator.share({ title: 'FillTheHole.ca pothole report', text, url });
+			} else {
+				await navigator.clipboard.writeText(url);
+				toast.success('Link copied.');
+			}
+		} catch (err) {
+			if (err instanceof Error && err.name === 'AbortError') return;
+			try {
+				await navigator.clipboard.writeText(url);
+				toast.success('Link copied.');
+			} catch {
+				toastError('Could not share this link.');
+			}
+		}
+	}
+
+	async function markPotholeFilled(id: string) {
+		try {
+			const res = await fetch('/api/filled', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id }),
+			});
+			const result = await res.json();
+			if (!res.ok && res.status !== 409) throw new Error(result.message || 'Failed');
+
+			toast.success(result.ok ? 'Marked as fixed!' : result.message);
+			if (!result.ok) return;
+
+			if (!clientPotholes) clientPotholes = [...(potholes as Pothole[])];
+			clientPotholes = clientPotholes.map((pothole) =>
+				pothole.id === id
+					? { ...pothole, status: 'filled', filled_at: new Date().toISOString() }
+					: pothole,
+			);
+
+			const marker = markersById[id];
+			if (marker) {
+				clusterGroups.reported?.removeLayer(marker);
+				clusterGroups.filled?.addLayer(marker);
+			}
+			liveAnnouncement = 'Pothole marked fixed and moved to the filled list.';
+		} catch (err: unknown) {
+			toastError(err instanceof Error ? err.message : 'Something went wrong');
+		}
 	}
 
 	function locateMe() {
@@ -706,37 +791,156 @@
 	<meta property="og:type" content="website" />
 </svelte:head>
 
-<h1 class="sr-only">Waterloo Region Pothole Map</h1>
-
-<aside class="sr-only" aria-label="Pothole list">
-	<h2 aria-live="polite" aria-atomic="true">Active potholes ({liveReportedCount})</h2>
-	{#if liveReportedCount === 0}
-		<p>No active potholes reported.</p>
-	{:else}
-		<ul>
-			{#each reportedPotholesSorted as pothole (pothole.id)}
-				<li>
-					<!-- Skip-link pattern: the link becomes a fixed overlay on keyboard focus
-					     so sighted keyboard users see where focus is. -->
-					<a
-						href="/hole/{pothole.id}"
-						class="focus:fixed focus:top-4 focus:left-4 focus:z-[2000] focus:bg-stone-900 dark:focus:bg-white focus:text-white dark:focus:text-stone-900 focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-stone-700 dark:focus:border-stone-200 focus:shadow-xl focus:text-sm focus:font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
-					>
-						{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
-						— confirmed by {pothole.confirmed_count} report{pothole.confirmed_count ===
-						1
-							? ''
-							: 's'}
-					</a>
-				</li>
-			{/each}
-		</ul>
-	{/if}
-</aside>
+<h1 class="sr-only">Waterloo Region Pothole Map and List</h1>
 
 <div class="relative w-full isolate" style="height: calc(100dvh - 57px - env(safe-area-inset-top))">
-	<div bind:this={mapEl} class="w-full h-full bg-white dark:bg-stone-900"></div>
-	<HomeIntroCard />
+	<div
+		bind:this={mapEl}
+		aria-hidden={viewMode === 'list'}
+		inert={viewMode === 'list'}
+		class="w-full h-full bg-white dark:bg-stone-900 {viewMode === 'list' ? 'pointer-events-none' : ''}"
+	></div>
+
+	<div class="absolute top-4 right-4 z-[1002] rounded-md border border-stone-200 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 p-1 shadow-lg">
+		<div class="flex" role="group" aria-label="Choose map or list view">
+			{#each [['map', 'Map'], ['list', 'List']] as const as [mode, label] (mode)}
+				<button
+					type="button"
+					aria-pressed={viewMode === mode}
+					onclick={() => (viewMode = mode)}
+					class="rounded px-3 py-2 text-sm font-semibold transition-colors {viewMode === mode
+						? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900'
+						: 'text-stone-600 hover:text-stone-900 dark:text-stone-300 dark:hover:text-white'}"
+				>
+					{label}
+				</button>
+			{/each}
+		</div>
+	</div>
+
+	{#if viewMode === 'list'}
+		<section
+			id="pothole-list-view"
+			class="absolute inset-0 z-[1000] overflow-y-auto bg-stone-50 dark:bg-asphalt px-4 pb-8 pt-20 sm:px-6 lg:px-8"
+			aria-labelledby="pothole-list-heading"
+		>
+			<div class="mx-auto max-w-5xl space-y-4">
+				<div class="rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-4 shadow-sm">
+					<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+						<div>
+							<p class="text-xs font-semibold uppercase tracking-wide text-amber-500">Accessible list view</p>
+							<h2 id="pothole-list-heading" class="mt-1 font-brand text-3xl font-bold leading-none text-stone-900 dark:text-white">
+								Potholes without the map
+							</h2>
+							<p class="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-stone-300">
+								Use filters and keyboard-reachable actions to open details, share a report,
+								or mark a live pothole fixed without interacting with map markers.
+							</p>
+						</div>
+
+						<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:min-w-[320px]">
+							<label class="text-xs font-semibold text-stone-600 dark:text-stone-300">
+								Status
+								<select
+									bind:value={listStatusFilter}
+									class="mt-1 w-full rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-950 px-3 py-2 text-sm text-stone-900 dark:text-white"
+								>
+									<option value="reported">Reported</option>
+									<option value="filled">Filled</option>
+									<option value="expired">Expired</option>
+									<option value="all">All statuses</option>
+								</select>
+							</label>
+
+							<label class="text-xs font-semibold text-stone-600 dark:text-stone-300">
+								Sort
+								<select
+									bind:value={listSort}
+									class="mt-1 w-full rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-950 px-3 py-2 text-sm text-stone-900 dark:text-white"
+								>
+									<option value="newest">Newest first</option>
+									<option value="oldest">Oldest first</option>
+									<option value="status">Status</option>
+								</select>
+							</label>
+						</div>
+					</div>
+				</div>
+
+				<div class="text-sm text-stone-600 dark:text-stone-300" role="status" aria-live="polite">
+					Showing {visibleListPotholes.length} pothole{visibleListPotholes.length === 1 ? '' : 's'}.
+				</div>
+
+				{#if visibleListPotholes.length === 0}
+					<div class="rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-6 text-center text-sm text-stone-600 dark:text-stone-300">
+						No potholes match this filter.
+					</div>
+				{:else}
+					<ul class="space-y-3" aria-label="Pothole reports">
+						{#each visibleListPotholes as pothole (pothole.id)}
+							{@const info = STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported}
+							<li class="rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-4 shadow-sm">
+								<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+									<div class="min-w-0 space-y-2">
+										<div class="flex flex-wrap items-center gap-2">
+											<span class="inline-flex items-center gap-1.5 rounded border border-stone-200 dark:border-stone-700 px-2 py-1 text-xs font-semibold text-stone-600 dark:text-stone-300">
+												<Icon name={info.icon} size={12} class={info.colorClass} />
+												{info.label}
+											</span>
+											<span class="text-xs text-stone-500 dark:text-stone-400">Reported {formattedDate(pothole.created_at)}</span>
+											{#if pothole.photos_published}
+												<span class="inline-flex items-center gap-1 text-xs text-stone-500 dark:text-stone-400">
+													<Icon name="camera" size={12} />
+													Photo
+												</span>
+											{/if}
+										</div>
+
+										<h3 class="text-lg font-semibold text-stone-900 dark:text-white">
+											<a href="/hole/{pothole.id}" class="underline-offset-4 hover:underline">
+												{potholeLabel(pothole)}
+											</a>
+										</h3>
+
+										<p class="text-sm leading-relaxed text-stone-600 dark:text-stone-300">
+											{pothole.description || 'No description provided.'}
+										</p>
+
+										<p class="text-xs text-stone-500 dark:text-stone-400">
+											Confirmed by {pothole.confirmed_count} report{pothole.confirmed_count === 1 ? '' : 's'} · {pothole.lat.toFixed(4)}, {pothole.lng.toFixed(4)}
+										</p>
+									</div>
+
+									<div class="flex shrink-0 flex-wrap gap-2 md:max-w-[280px] md:justify-end">
+										<a href="/hole/{pothole.id}" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-stone-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200">
+											Open details
+										</a>
+										<button type="button" onclick={() => sharePothole(pothole)} class="inline-flex items-center justify-center gap-1.5 rounded-md border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm font-semibold text-stone-600 transition-colors hover:border-stone-400 hover:text-stone-900 dark:text-stone-300 dark:hover:border-stone-500 dark:hover:text-white">
+											<Icon name="share-2" size={14} />
+											Share
+										</button>
+										{#if pothole.status === 'reported'}
+											<button type="button" onclick={() => markPotholeFilled(pothole.id)} class="inline-flex items-center justify-center gap-1.5 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm font-semibold text-green-800 transition-colors hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900">
+												<Icon name="check-circle" size={14} />
+												It's fixed
+											</button>
+										{/if}
+										<button type="button" onclick={() => showPotholeOnMap(pothole.id)} class="inline-flex items-center justify-center gap-1.5 rounded-md border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm font-semibold text-stone-600 transition-colors hover:border-stone-400 hover:text-stone-900 dark:text-stone-300 dark:hover:border-stone-500 dark:hover:text-white">
+											<Icon name="map" size={14} />
+											Show on map
+										</button>
+									</div>
+								</div>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
+		</section>
+	{/if}
+	{#if viewMode === 'map'}
+		<HomeIntroCard />
+	{/if}
 
 	{#if !mapReady}
 		<div class="absolute inset-0 flex items-center justify-center bg-white dark:bg-stone-900">
