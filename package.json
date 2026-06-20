@@ -17,7 +17,7 @@
     "test:a11y": "playwright test tests/a11y"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.1",
+    "@axe-core/playwright": "^4.11.3",
     "@playwright/test": "^1.58.2",
     "@sveltejs/adapter-auto": "^7.0.0",
     "@sveltejs/adapter-netlify": "^6.0.4",
