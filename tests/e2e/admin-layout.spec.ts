@@ -34,6 +34,11 @@ test.describe('Admin layout — unauthenticated redirect', () => {
 		await page.goto('/admin/audit');
 		await expect(page).toHaveURL(/\/admin\/login/);
 	});
+
+	test('visiting /admin/map without auth redirects to login', async ({ page }) => {
+		await page.goto('/admin/map');
+		await expect(page).toHaveURL(/\/admin\/login/);
+	});
 });
 
 test.describe('Admin login page — mobile viewport', () => {

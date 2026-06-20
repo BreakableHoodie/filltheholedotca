@@ -5,6 +5,33 @@ import { expect, test } from "@playwright/test";
 // The "valid UUID" tests confirm schema acceptance; downstream DB behaviour
 // (409 wrong status, 500 no connection) is intentionally outside scope here.
 
+test.describe("Polling API (/api/potholes/recent)", () => {
+  test("returns empty array when since param is missing", async ({ request }) => {
+    const response = await request.get("/api/potholes/recent");
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(Array.isArray(body.potholes)).toBe(true);
+    expect(body.potholes).toHaveLength(0);
+  });
+
+  test("returns empty array when since param is not a valid date", async ({ request }) => {
+    const response = await request.get("/api/potholes/recent?since=not-a-date");
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(Array.isArray(body.potholes)).toBe(true);
+    expect(body.potholes).toHaveLength(0);
+  });
+
+  test("returns 200 with potholes array for a valid ISO date", async ({ request }) => {
+    const response = await request.get(
+      "/api/potholes/recent?since=2020-01-01T00:00:00.000Z",
+    );
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(Array.isArray(body.potholes)).toBe(true);
+  });
+});
+
 test.describe("Watchlist API (/api/watchlist)", () => {
   test("rejects request with no ids param", async ({ request }) => {
     const response = await request.get("/api/watchlist");
