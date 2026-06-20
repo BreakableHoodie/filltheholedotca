@@ -59,6 +59,7 @@
 		{ prefix: '/admin/settings/mfa', title: 'Two-Factor Auth' },
 		{ prefix: '/admin/settings/sessions', title: 'Sessions' },
 		{ prefix: '/admin/settings/site', title: 'Site Settings' },
+		{ prefix: '/admin/map', title: 'Map' },
 		{ prefix: '/admin/photos', title: 'Photos' },
 		{ prefix: '/admin/potholes', title: 'Potholes' },
 		{ prefix: '/admin/users', title: 'Users' },
