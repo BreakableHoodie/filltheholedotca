@@ -59,7 +59,6 @@ When in doubt about whether something belongs in the repo, leave it out.
 - **@fontsource/barlow-condensed** — local OG image font asset (no runtime CDN dependency)
 - **svelte-sonner** for toasts, **date-fns** for formatting, **zod** for API validation
 - **@sentry/sveltekit** — error tracking (server + client); disabled when `PUBLIC_SENTRY_DSN` is absent
-- **Open-Meteo** — historical weather (freeze-thaw-day trend on `/stats`); keyless, server-side cached in `$lib/server/weather`, degrades to no-line on failure
 - Deployed to **Netlify** (`@sveltejs/adapter-netlify`)
 - **License**: GNU Affero General Public License v3.0 (AGPL-3.0)
 
@@ -68,6 +67,56 @@ When in doubt about whether something belongs in the repo, leave it out.
 ```bash
 npm run dev          # http://localhost:5173
 ```
+
+## Tooling
+
+| Script | Purpose |
+|---|---|
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run check` | Type checking (svelte-check) |
+| `npm run lint` | ESLint (TS + Svelte files) |
+| `npm run format` | Prettier format all source files |
+| `npm run format:check` | Prettier check-only (no writes) |
+| `npm run test` | Playwright E2E tests |
+| `npm run test:unit` | Vitest unit tests |
+| `npm run test:all` | Vitest + Playwright |
+| `npm run test:a11y` | axe-core a11y tests (Playwright) |
+
+### Pre-commit hooks (Husky + lint-staged)
+- **`.husky/pre-commit`** runs `lint-staged` on every commit
+- Staged `.ts`/`.svelte` files: ESLint fix + Prettier write
+- Staged `.css`/`.json`/`.md` files: Prettier write only
+- CI will catch what hooks miss — this is a safety net, not a gatekeeper
+
+### Formatting (Prettier)
+- **`.prettierrc`** at project root — tabs, single quotes, trailing commas, 100-char print width
+- **`.prettierignore`** mirrors `.gitignore` for build/test artifacts
+- Formatted files: `src/**/*.ts`, `src/**/*.svelte`, `src/**/*.css`, plus root config files
+- `prettier-plugin-svelte` handles Svelte files
+- **eslint-config-prettier** disables ESLint rules that conflict with Prettier
+
+### Unit tests (Vitest)
+- Fast Node.js tests for pure functions (no DOM/SSR needed)
+- Config: `vitest.config.ts` — includes `$lib` alias
+- E2E tests remain in Playwright; unit tests should be Vitest for speed
+- Existing Playwright-based unit tests (`exif-strip`, `ssrf`) migrated to Vitest
+
+### EditorConfig
+- **`.editorconfig`** enforces consistent indentation across editors
+- Tabs for Svelte/TS/JS, 2-space for SQL/YAML/JSON
+
+### Opencode plugins
+- **`.opencode/opencode.json`** — project-level opencode configuration
+- **`.opencode/plugins/env-protection.js`** — prevents LLM from reading/writing `.env` files (defense-in-depth)
+- **`.opencode/plugins/command-inject.js`** — exposes `npm run` scripts as `/` slash commands
+- Plugins listed in `opencode.json` are auto-installed from npm at startup
+
+### MCP servers
+- **GitHub** (`@modelcontextprotocol/server-github`) — issues, PRs, code review, search. Needs `GITHUB_TOKEN` env var.
+- **Sentry** (`https://mcp.sentry.dev/mcp`) — error tracking, issue analysis. Uses OAuth (run `opencode mcp auth sentry` to authenticate).
+- **Supabase** (`.mcp.json`) — database inspection, schema management.
+- **Playwright** (`.mcp.json`) — browser automation for E2E testing.
 
 ## Environment
 
@@ -93,21 +142,28 @@ Copy `.env.example` → `.env` with real values:
 ```text
 src/
   routes/
-    +page.svelte              # Map (Leaflet, clustering, ward heatmap, mobile tool tray, homepage intro card)
-    +layout.svelte            # Nav with live counts and Toaster
+    +page.svelte              # Map (Leaflet, clustering, ward heatmap, mobile tool tray, homepage intro card, real-time polling)
+    +layout.svelte            # Nav with live counts, Toaster, Map nav link
     +layout.server.ts         # Server layout loader
     +page.server.ts           # Loads potholes for map
     about/+page.svelte        # About page
     how-to/+page.svelte       # User-facing how-to / help guide
-    updates/+page.svelte      # "What's new" public changelog (data in $lib/updates.ts)
     stats/
       +page.server.ts         # SSR load — potholes for metrics
       +page.svelte            # Metrics dashboard (resolution time, ward leaderboards, trends, fill rate)
     report/+page.svelte       # GPS report form with severity selector
+    admin/
+      map/
+        +page.svelte          # Admin map view (Leaflet, markercluster, status filter toggles, click-to-manage)
+        +page.server.ts       # Loads all potholes for admin map (admin-auth required)
+      potholes/[id]/
+        +page.svelte          # Admin pothole detail (description editing, before/after photo split)
+        +page.server.ts       # Loads single pothole + photos; form actions for updateDescription
     hole/[id]/
-      +page.svelte            # Pothole detail (status, councillor contact, share)
+      +page.svelte            # Pothole detail (status, councillor contact, share, before/after photo galleries)
       +page.server.ts         # Loads single pothole + councillor
     api/
+      potholes/recent/+server.ts  # GET — polling endpoint: non-pending potholes created/filled/expired after ?since=
       report/+server.ts       # POST — submit report (geofence, IP dedup, 2-confirm merge)
       filled/+server.ts       # POST — mark filled (reported → filled)
       photos/+server.ts       # POST — upload photo (magic-byte validation, moderation, rate limit)
@@ -115,8 +171,9 @@ src/
       feed.json/+server.ts    # GET — JSON feed of recent potholes
       export.csv/+server.ts   # GET — CSV export of all reported/filled potholes (open data)
       feed.xml/+server.ts     # GET — RSS 2.0 feed of recent confirmations/fills (open data)
+      hit/+server.ts           # POST — "I hit this" signal (community prioritization)
+      vote/+server.ts          # POST/DELETE — upvote/downvote (community prioritization)
       ccc/[id]/+server.ts           # GET — ArcGIS CCC repair data proxy (off SSR path)
-      og/default/+server.ts         # GET — satori-rendered default OG/Twitter card (homepage + pages without a per-record image)
       notify/[id]/+server.ts        # POST/DELETE — per-pothole fill notification subscription
       geocode/search/+server.ts     # GET — Nominatim search proxy (sets User-Agent server-side)
       geocode/reverse/+server.ts    # GET — Nominatim reverse geocode proxy
@@ -127,12 +184,10 @@ src/
     geo.ts                    # Shared geo utilities (pipRing, inWardFeature, roundPublicCoord)
     wards.ts                  # COUNCILLORS array (ward/name/email/url)
     supabase.ts               # Supabase client (public anon)
-    freeze-thaw.ts            # Pure freeze-thaw-day computation (dep-free, unit-tested)
     server/
       observability.ts        # logError() — console + Sentry with area tags
       exif-strip.ts           # stripJpegMetadata() — lossless APP-segment stripper
       og-helpers.ts           # Shared satori el() helper for OG image routes
-      weather.ts              # Open-Meteo freeze-thaw fetch (cached, keyless, graceful)
     components/
       HomeIntroCard.svelte    # Homepage-only intro card shown on first visit
 ```
@@ -164,6 +219,13 @@ pothole_photos (
 api_rate_limit_events (
   id uuid PK, ip_hash text, scope text, created_at
 )
+
+pothole_votes (
+  id uuid PK, pothole_id uuid FK, ip_hash text,
+  vote_direction smallint,  -- 1 = upvote, -1 = downvote
+  created_at timestamptz
+  UNIQUE(pothole_id, ip_hash)
+)
 ```
 
 Run migrations in this order:
@@ -190,9 +252,12 @@ Run migrations in this order:
 20. `schema_pothole_confirmations_ttl.sql` — pg_cron purge job for `pothole_confirmations` on resolved potholes older than 90 days (PIPEDA data minimization)
 21. `schema_fill_notifications.sql` — `pothole_fill_subscriptions` table; pg_cron cleanup for subscriptions on potholes expired > 7 days
 22. `schema_fill_notify_ratelimit.sql` — extends `api_rate_limit_events_scope_check` to include `fill_notify_subscribe` and `push_unsubscribe`
-23. `schema_pending_rls.sql` — replaces the `potholes` "Public read" policy (`using (true)`) with "Public read non-pending" (`using (status <> 'pending')`) so the anon key can no longer enumerate unconfirmed `pending` reports through PostgREST; the `/hole/[id]` SSR loader switches to the service-role client so the post-report self-tracking view still resolves pending rows by UUID
+23. `schema_grants.sql` — explicit `GRANT` statements for `anon` (SSR reads) and `service_role` (all server-side writes) on every public-schema table; required for Supabase's new default-deny Data API behaviour enforced on existing projects from October 30, 2026
+24. `schema_votes.sql` — `pothole_votes` table for upvote/downvote (community prioritization)
+25. `schema_vote_ratelimit.sql` — extends `api_rate_limit_events_scope_check` to include `vote_submit`
+26. `schema_votes_ttl.sql` — pg_cron purge job for `pothole_votes` older than 90 days (PIPEDA data minimization)
 
-Ten `pg_cron` jobs run nightly:
+Eleven `pg_cron` jobs run nightly:
 
 - `expire-old-potholes` (03:00 UTC): sets `status = 'expired'` on `reported` potholes older than 90 days.
 - `expire-stale-pending` (03:30 UTC): sets `status = 'expired'` on `pending` potholes older than 14 days (anti-suppression).
@@ -203,6 +268,7 @@ Ten `pg_cron` jobs run nightly:
 - `purge-stale-push-subscriptions` (05:00 UTC): deletes `push_subscriptions` rows where `last_used_at` is older than 180 days (PIPEDA data minimization).
 - `purge-fill-subscriptions` (05:15 UTC): deletes `pothole_fill_subscriptions` for potholes that have been `expired` for > 7 days (safety net; subscriptions are normally deleted on send).
 - `purge-admin-auth-attempts` (05:30 UTC): deletes `admin_auth_attempts` rows older than 90 days (PIPEDA data minimization).
+- `purge-pothole-votes` (05:45 UTC): deletes `pothole_votes` rows older than 90 days (PIPEDA data minimization).
 - `purge-admin-audit-log` (06:00 UTC): deletes `admin_audit_log` rows older than 24 months (PIPEDA breach investigation minimum).
 
 ## Status Flow
@@ -219,12 +285,15 @@ pending → reported → filled
 - **Geofence**: Waterloo Region only — lat 43.32–43.53, lng -80.59 to -80.22
 - **Merge radius**: 25m — nearby pending reports are merged, not duplicated
 - **2 confirmations** from distinct IPs required to go live on the public map
-- **Pending rows are not publicly enumerable**: the `potholes` RLS read policy is `using (status <> 'pending')` (see `schema_pending_rls.sql`), so the anon key cannot list `pending` reports via PostgREST. Server-side paths that legitimately need a pending row (the `/api/watchlist` self-tracking API and the `/hole/[id]` SSR loader) read it by exact UUID through the service-role client, which bypasses RLS.
 - **photos_published**: admin-only toggle per pothole; a live pothole does NOT mean its photos are shown — admin must explicitly publish them
 - **IP hashing**: HMAC-SHA-256 with `IP_HASH_SECRET`, never store raw IPs
 - **Coord privacy**: reporter lat/lng is rounded to 4 decimal places (≈11m at Waterloo latitude) at write-time via `roundPublicCoord()` in `$lib/geo` — the precision is a hard-coded constant, not an env var. Geofence + merge-radius logic runs on the raw input so decisions aren't shifted by rounding. Serialization paths (feed.json, feed.xml, export.csv, embed, OG) re-apply `roundPublicCoord` as defense-in-depth for any historical rows stored at full precision.
 - **Photo EXIF**: server-side strip in `$lib/server/exif-strip` runs before SightEngine moderation and storage upload. `stripJpegMetadata` drops APP1–APP15 and COM segments from JPEGs. `stripPngMetadata` drops the `eXIf` chunk from PNGs. `stripWebpMetadata` drops EXIF/XMP chunks from VP8X-extended WebPs (simple VP8/VP8L files carry no metadata by spec). All three return the input unchanged on malformed input.
 - **Auto-expiry**: `reported` potholes expire after 90 days; `pending` potholes expire after 14 days (both via pg_cron)
+- **Real-time polling**: homepage polls `/api/potholes/recent?since=` every 60s for new/changed potholes without requiring page reload. Polling starts after map loads, pauses on disconnect.
+- **Admin map**: Leaflet + markercluster at `/admin/map` with status-filtered layers and click-to-manage popups. Loads all 5000 potholes. Admin-auth required.
+- **Before/after photos**: when pothole status is `filled`, photos are split into before (taken before `filled_at`) and after (taken after `filled_at`) galleries on the detail page.
+- **Admin description editing**: admins can edit pothole description via form action on `/admin/potholes/[id]`.
 
 ## Svelte 5 Patterns (important — don't use Svelte 4 syntax)
 

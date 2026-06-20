@@ -15,6 +15,7 @@
 	const isAdmin = $derived(data.adminUser?.role === 'admin');
 
 	let addressValue = $state(untrack(() => data.pothole.address ?? ''));
+	let descriptionValue = $state(untrack(() => data.pothole.description ?? ''));
 
 	function statusColor(status: string): string {
 		switch (status) {
@@ -60,21 +61,23 @@
 
 	<!-- Error / success flash -->
 	{#if form?.error}
-		<div class="mb-4 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+		<div
+			class="mb-4 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"
+		>
 			{form.error}
 		</div>
 	{/if}
 	{#if form?.success}
-		<div class="mb-4 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm">
+		<div
+			class="mb-4 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm"
+		>
 			Saved successfully.
 		</div>
 	{/if}
 
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
 		<!-- ─── Left: info + edit forms ─── -->
 		<div class="lg:col-span-2 space-y-5">
-
 			<!-- Info card -->
 			<div class="bg-stone-900 border border-stone-800 rounded-lg p-4">
 				<div class="flex items-start justify-between gap-3 mb-4">
@@ -84,7 +87,11 @@
 						</h1>
 						<p class="text-stone-500 text-xs font-mono mt-1">{pothole.id}</p>
 					</div>
-					<span class="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium capitalize flex-shrink-0 {statusColor(pothole.status)}">
+					<span
+						class="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium capitalize flex-shrink-0 {statusColor(
+							pothole.status,
+						)}"
+					>
 						{pothole.status}
 					</span>
 				</div>
@@ -138,8 +145,18 @@
 					class="inline-flex items-center gap-1.5 mt-4 text-xs text-amber-400 hover:text-amber-300 transition-colors"
 				>
 					<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+						/>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+						/>
 					</svg>
 					View on OpenStreetMap
 				</a>
@@ -148,9 +165,16 @@
 			<!-- Status override -->
 			<div class="bg-stone-900 border border-stone-800 rounded-lg p-4">
 				<h2 class="text-sm font-medium text-stone-300 mb-3">Override Status</h2>
-				<form method="post" action="?/updateStatus" use:enhance class="flex items-end gap-3">
+				<form
+					method="post"
+					action="?/updateStatus"
+					use:enhance
+					class="flex items-end gap-3"
+				>
 					<div class="flex-1">
-						<label for="status" class="block text-xs text-stone-500 mb-1.5">Status</label>
+						<label for="status" class="block text-xs text-stone-500 mb-1.5"
+							>Status</label
+						>
 						<select
 							id="status"
 							name="status"
@@ -169,16 +193,24 @@
 					</button>
 				</form>
 				<p class="text-stone-600 text-xs mt-2">
-					Setting to "filled" or "expired" updates the corresponding timestamp. Other transitions clear it.
+					Setting to "filled" or "expired" updates the corresponding timestamp. Other
+					transitions clear it.
 				</p>
 			</div>
 
 			<!-- Address edit -->
 			<div class="bg-stone-900 border border-stone-800 rounded-lg p-4">
 				<h2 class="text-sm font-medium text-stone-300 mb-3">Edit Address</h2>
-				<form method="post" action="?/updateAddress" use:enhance class="flex items-end gap-3">
+				<form
+					method="post"
+					action="?/updateAddress"
+					use:enhance
+					class="flex items-end gap-3"
+				>
 					<div class="flex-1">
-						<label for="address" class="block text-xs text-stone-500 mb-1.5">Address</label>
+						<label for="address" class="block text-xs text-stone-500 mb-1.5"
+							>Address</label
+						>
 						<input
 							id="address"
 							name="address"
@@ -198,12 +230,42 @@
 				</form>
 			</div>
 
+			<!-- Description edit -->
+			<div class="bg-stone-900 border border-stone-800 rounded-lg p-4">
+				<h2 class="text-sm font-medium text-stone-300 mb-3">Edit Description</h2>
+				<form method="post" action="?/updateDescription" use:enhance class="space-y-3">
+					<div>
+						<label for="description" class="block text-xs text-stone-500 mb-1.5"
+							>Description</label
+						>
+						<textarea
+							id="description"
+							name="description"
+							bind:value={descriptionValue}
+							class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 resize-y min-h-[60px]"
+							placeholder="e.g. Wide crater in the curb lane near the intersection."
+							maxlength="1000"
+							rows="3"></textarea>
+					</div>
+					<div class="flex justify-end">
+						<button
+							type="submit"
+							class="px-4 py-2 text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white rounded transition-colors"
+						>
+							Save
+						</button>
+					</div>
+				</form>
+			</div>
+
 			<!-- Confirmations -->
 			<div class="bg-stone-900 border border-stone-800 rounded-lg overflow-hidden">
 				<div class="px-4 py-3 border-b border-stone-800">
 					<h2 class="text-sm font-medium text-stone-300">
 						Confirmations
-						<span class="ml-1.5 text-stone-500 font-normal">({data.confirmations.length})</span>
+						<span class="ml-1.5 text-stone-500 font-normal"
+							>({data.confirmations.length})</span
+						>
 					</h2>
 				</div>
 
@@ -211,26 +273,35 @@
 					<p class="text-stone-600 text-sm px-4 py-4">No confirmations yet.</p>
 				{:else}
 					<div class="overflow-x-auto">
-					<table class="w-full text-sm min-w-[400px]">
-						<thead>
-							<tr class="border-b border-stone-800 text-left">
-								<th class="px-4 py-2.5 text-stone-500 font-medium text-xs">#</th>
-								<th class="px-4 py-2.5 text-stone-500 font-medium text-xs">IP Hash</th>
-								<th class="px-4 py-2.5 text-stone-500 font-medium text-xs">When</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-stone-800/60">
-							{#each data.confirmations as c, i (c.id)}
-								<tr>
-									<td class="px-4 py-2.5 text-stone-500 text-xs">{i + 1}</td>
-									<td class="px-4 py-2.5 text-stone-400 font-mono text-xs">{maskHash(c.ip_hash)}</td>
-									<td class="px-4 py-2.5 text-stone-500 text-xs">
-										{formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
-									</td>
+						<table class="w-full text-sm min-w-[400px]">
+							<thead>
+								<tr class="border-b border-stone-800 text-left">
+									<th class="px-4 py-2.5 text-stone-500 font-medium text-xs">#</th
+									>
+									<th class="px-4 py-2.5 text-stone-500 font-medium text-xs"
+										>IP Hash</th
+									>
+									<th class="px-4 py-2.5 text-stone-500 font-medium text-xs"
+										>When</th
+									>
 								</tr>
-							{/each}
-						</tbody>
-					</table>
+							</thead>
+							<tbody class="divide-y divide-stone-800/60">
+								{#each data.confirmations as c, i (c.id)}
+									<tr>
+										<td class="px-4 py-2.5 text-stone-500 text-xs">{i + 1}</td>
+										<td class="px-4 py-2.5 text-stone-400 font-mono text-xs"
+											>{maskHash(c.ip_hash)}</td
+										>
+										<td class="px-4 py-2.5 text-stone-500 text-xs">
+											{formatDistanceToNow(new Date(c.created_at), {
+												addSuffix: true,
+											})}
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
 					</div>
 				{/if}
 			</div>
@@ -238,18 +309,24 @@
 
 		<!-- ─── Right: photos + danger ─── -->
 		<div class="space-y-5">
-
 			<!-- Photos -->
 			<div class="bg-stone-900 border border-stone-800 rounded-lg overflow-hidden">
-				<div class="px-4 py-3 border-b border-stone-800 flex items-center justify-between gap-3 flex-wrap">
+				<div
+					class="px-4 py-3 border-b border-stone-800 flex items-center justify-between gap-3 flex-wrap"
+				>
 					<h2 class="text-sm font-medium text-stone-300">
 						Photos
-						<span class="ml-1.5 text-stone-500 font-normal">({data.photos.length})</span>
+						<span class="ml-1.5 text-stone-500 font-normal">({data.photos.length})</span
+						>
 					</h2>
 					<div class="flex items-center gap-2 ml-auto">
 						{#if data.photos.length > 0}
 							<form method="post" action="?/togglePhotosPublished" use:enhance>
-								<input type="hidden" name="photos_published" value={String(!pothole.photos_published)} />
+								<input
+									type="hidden"
+									name="photos_published"
+									value={String(!pothole.photos_published)}
+								/>
 								<button
 									type="submit"
 									class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded border transition-colors
@@ -257,11 +334,28 @@
 										? 'border-emerald-600/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20'
 										: 'border-stone-600 text-stone-400 bg-stone-800 hover:bg-stone-700'}"
 								>
-									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+									<svg
+										class="w-3 h-3"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+										/>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+										/>
 									</svg>
-									{pothole.photos_published ? 'Photos published' : 'Photos hidden'}
+									{pothole.photos_published
+										? 'Photos published'
+										: 'Photos hidden'}
 								</button>
 							</form>
 							<a
@@ -281,7 +375,12 @@
 						{#each data.photos as photo (photo.id)}
 							<div class="flex gap-3 items-start">
 								{#if photo.url}
-									<a href={photo.url} target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
+									<a
+										href={photo.url}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="flex-shrink-0"
+									>
 										<img
 											src={photo.url}
 											alt="Pothole"
@@ -290,18 +389,36 @@
 										/>
 									</a>
 								{:else}
-									<div class="w-16 h-16 rounded bg-stone-800 flex items-center justify-center text-stone-600 flex-shrink-0">
-										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+									<div
+										class="w-16 h-16 rounded bg-stone-800 flex items-center justify-center text-stone-600 flex-shrink-0"
+									>
+										<svg
+											class="w-5 h-5"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+											/>
 										</svg>
 									</div>
 								{/if}
 								<div class="flex-1 min-w-0">
-									<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium capitalize {photoStatusColor(photo.moderation_status)}">
+									<span
+										class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium capitalize {photoStatusColor(
+											photo.moderation_status,
+										)}"
+									>
 										{photo.moderation_status}
 									</span>
 									<p class="text-stone-600 text-xs mt-1">
-										{formatDistanceToNow(new Date(photo.created_at), { addSuffix: true })}
+										{formatDistanceToNow(new Date(photo.created_at), {
+											addSuffix: true,
+										})}
 									</p>
 									{#if photo.moderation_score !== null}
 										<p class="text-stone-600 text-xs">
@@ -320,13 +437,16 @@
 				<div class="bg-stone-900 border border-red-900/40 rounded-lg p-4">
 					<h2 class="text-sm font-medium text-red-400 mb-1">Danger Zone</h2>
 					<p class="text-stone-500 text-xs mb-3">
-						Permanently deletes this pothole, all confirmations, and photos. This cannot be undone.
+						Permanently deletes this pothole, all confirmations, and photos. This cannot
+						be undone.
 					</p>
 					<form
 						method="post"
 						action="?/deletePothole"
 						onsubmit={(e) => {
-							if (!confirm('Delete this pothole permanently? This cannot be undone.')) {
+							if (
+								!confirm('Delete this pothole permanently? This cannot be undone.')
+							) {
 								e.preventDefault();
 							}
 						}}

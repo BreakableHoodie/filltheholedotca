@@ -26,11 +26,153 @@
 	let mapEl: HTMLDivElement;
 	let mapReady = $state(false);
 	let watchlistCount = $state(0);
+
+	// ── Polling for real-time updates ────────────────────────────────────────
+	let pollTimer: ReturnType<typeof setInterval> | null = null;
+	let lastPoll = $state(Date.now());
+	let liveAnnouncement = $state('');
+
+	$effect(() => {
+		if (!mapReady) return;
+		pollTimer = setInterval(async () => {
+			const since = new Date(lastPoll - 5000).toISOString();
+			try {
+				const res = await fetch(`/api/potholes/recent?since=${encodeURIComponent(since)}`);
+				if (!res.ok) return;
+				const { potholes: updated } = await res.json();
+				if (!updated?.length) return;
+				lastPoll = Date.now();
+				const L = LRef;
+				if (!L || !mapRef) return;
+				// Announce changes for screen readers
+				const newCount = updated.filter((u: { id: string }) => !markersById[u.id]).length;
+				if (newCount > 0 || updated.length > 0) {
+					const updates = updated.length - newCount;
+					const parts: string[] = [];
+					if (newCount > 0)
+						parts.push(`${newCount} new pothole${newCount !== 1 ? 's' : ''}`);
+					if (updates > 0)
+						parts.push(`${updates} status update${updates !== 1 ? 's' : ''}`);
+					liveAnnouncement = parts.join(', ') + ' on the map.';
+				}
+				// Build or reuse clientPotholes for reactivity
+				if (!clientPotholes) clientPotholes = [...(potholes as Pothole[])];
+				for (const p of updated) {
+					const existing = markersById[p.id];
+					if (existing) {
+						const oldContent = existing.getPopup()?.getContent()?.toString() ?? '';
+						const oldStatus = oldContent.includes('popup-status--filled')
+							? 'filled'
+							: oldContent.includes('popup-status--expired')
+								? 'expired'
+								: 'reported';
+						if (oldStatus !== p.status) {
+							const layerKey = p.status in clusterGroups ? p.status : 'reported';
+							const oldLayerKey = oldStatus in clusterGroups ? oldStatus : 'reported';
+							const cg = clusterGroups as Record<
+								string,
+								{
+									removeLayer: (m: typeof existing) => void;
+									addLayer: (m: typeof existing) => void;
+								}
+							>;
+							if (oldLayerKey !== layerKey && cg[oldLayerKey] && cg[layerKey]) {
+								cg[oldLayerKey].removeLayer(existing);
+								cg[layerKey].addLayer(existing);
+							}
+						}
+						const info =
+							STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG] ??
+							STATUS_CONFIG.reported;
+						const address = escapeHtml(
+							p.address || `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`,
+						);
+						const desc = p.description ? escapeHtml(p.description) : null;
+						const detailHref = `/hole/${p.id}`;
+						const statusNote =
+							p.status === 'reported'
+								? 'Seen this too? Open details to watch it, share it, or report it officially.'
+								: p.status === 'filled'
+									? 'Marked filled by the community. Open details to review the timeline.'
+									: 'Archived after no action. Open details if you need the full history.';
+						const fixedBtn =
+							p.status === 'reported'
+								? `<button class="popup-fix-btn" data-action="mark-filled" data-pothole-id="${p.id}">✓ It's fixed!</button>`
+								: '';
+						existing.setPopupContent(
+							`<div class="popup-content">
+								<div class="popup-header"><strong>${address}</strong><span class="popup-status popup-status--${p.status}">${info.label}</span></div>
+								${desc ? `<em class="popup-desc">${desc}</em>` : ''}
+								<p class="popup-note">${statusNote}</p>
+								<div class="popup-actions">
+									<a href="${detailHref}" class="popup-primary-link">Open details</a>
+									<button class="popup-secondary-btn" data-action="share-link" data-pothole-id="${p.id}">Share or copy link</button>
+									${fixedBtn}
+								</div>
+							</div>`,
+						);
+					} else {
+						// New pothole — create a marker on the fly
+						const layerKey = p.status in clusterGroups ? p.status : 'reported';
+						const group = clusterGroups[layerKey] as
+							| { addLayer: (m: typeof existing) => void }
+							| undefined;
+						if (!group) continue;
+						const info =
+							STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG] ??
+							STATUS_CONFIG.reported;
+						const iconHtml = `<div class="pothole-marker pothole-marker--${p.status}">${makeSvgIcon(info.icon)}</div>`;
+						const icon = L.divIcon({
+							html: iconHtml,
+							className: '',
+							iconSize: [32, 32],
+							iconAnchor: [16, 16],
+						});
+						const marker = L.marker([p.lat, p.lng], { icon });
+						markersById[p.id] = marker;
+						const address = escapeHtml(
+							p.address || `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`,
+						);
+						const desc = p.description ? escapeHtml(p.description) : null;
+						const detailHref = `/hole/${p.id}`;
+						const statusNote =
+							p.status === 'reported'
+								? 'Seen this too? Open details to watch it, share it, or report it officially.'
+								: 'Archived after no action. Open details if you need the full history.';
+						marker.bindPopup(
+							`<div class="popup-content">
+								<div class="popup-header"><strong>${address}</strong><span class="popup-status popup-status--${p.status}">${info.label}</span></div>
+								${desc ? `<em class="popup-desc">${desc}</em>` : ''}
+								<p class="popup-note">${statusNote}</p>
+								<div class="popup-actions">
+									<a href="${detailHref}" class="popup-primary-link">Open details</a>
+									<button class="popup-secondary-btn" data-action="share-link" data-pothole-id="${p.id}">Share or copy link</button>
+								</div>
+							</div>`,
+							{ maxWidth: 240 },
+						);
+						group.addLayer(marker);
+						clientPotholes = [...clientPotholes, p];
+					}
+				}
+				// Update client-side potholes for derived reactivity
+				clientPotholes = clientPotholes.map((cp) => {
+					const match = updated.find((u: { id: string }) => u.id === cp.id);
+					return match ? { ...cp, ...match } : cp;
+				});
+			} catch {
+				// Silent — polling failures should not degrade UX
+			}
+		}, 60000);
+		return () => {
+			if (pollTimer) clearInterval(pollTimer);
+		};
+	});
 	let watchlistSection: HTMLElement | null = null;
 	let mobileToolsOpen = $state(false);
 	let reportLocating = $state(false);
 	let liveReportedCount = $derived(
-		potholes.filter((pothole) => pothole.status === 'reported').length
+		potholes.filter((pothole) => pothole.status === 'reported').length,
 	);
 
 	let mapRef: Leaflet.Map | null = null;
@@ -40,14 +182,14 @@
 		[...potholes]
 			.filter((pothole) => pothole.status === 'reported')
 			.sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at))
-			.slice(0, 4)
+			.slice(0, 4),
 	);
 
 	// Pre-sorted list for the sr-only aside — avoids inline sort on every render.
 	let reportedPotholesSorted = $derived(
 		potholes
 			.filter((p) => p.status === 'reported')
-			.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
+			.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)),
 	);
 
 	// Report-here pin-drop mode
@@ -78,7 +220,9 @@
 		mobileToolsOpen = false;
 
 		if (!navigator.geolocation) {
-			toastError('Location is not available in this browser. Tap the map to drop a pin instead.');
+			toastError(
+				'Location is not available in this browser. Tap the map to drop a pin instead.',
+			);
 			enterReportMode();
 			return;
 		}
@@ -87,7 +231,9 @@
 		navigator.geolocation.getCurrentPosition(
 			({ coords }) => {
 				reportLocating = false;
-				goto(`/report?lat=${roundPublicCoord(coords.latitude)}&lng=${roundPublicCoord(coords.longitude)}`);
+				goto(
+					`/report?lat=${roundPublicCoord(coords.latitude)}&lng=${roundPublicCoord(coords.longitude)}`,
+				);
 			},
 			(error) => {
 				reportLocating = false;
@@ -95,14 +241,16 @@
 				if (error.code === error.PERMISSION_DENIED) {
 					message = 'Location access denied. Tap the map to drop a pin instead.';
 				} else if (error.code === error.POSITION_UNAVAILABLE) {
-					message = 'Your location is unavailable right now. Tap the map to drop a pin instead.';
+					message =
+						'Your location is unavailable right now. Tap the map to drop a pin instead.';
 				} else if (error.code === error.TIMEOUT) {
-					message = 'Getting your location took too long. Tap the map to drop a pin instead.';
+					message =
+						'Getting your location took too long. Tap the map to drop a pin instead.';
 				}
 				toastError(message);
 				enterReportMode();
 			},
-			{ enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+			{ enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
 		);
 	}
 
@@ -120,7 +268,9 @@
 	function confirmReportLocation() {
 		if (!reportLatLng) return;
 		mobileToolsOpen = false;
-		goto(`/report?lat=${roundPublicCoord(reportLatLng.lat)}&lng=${roundPublicCoord(reportLatLng.lng)}`);
+		goto(
+			`/report?lat=${roundPublicCoord(reportLatLng.lat)}&lng=${roundPublicCoord(reportLatLng.lng)}`,
+		);
 	}
 	let wardLayerRef: Leaflet.GeoJSON | null = null;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,7 +280,7 @@
 		reported: true,
 		expired: false,
 		filled: false,
-		wards: false
+		wards: false,
 	});
 	let wardLoading = $state(false);
 	let locating = $state(false);
@@ -185,21 +335,25 @@
 					html: '<div class="location-dot"></div>',
 					className: '',
 					iconSize: [20, 20],
-					iconAnchor: [10, 10]
+					iconAnchor: [10, 10],
 				});
 				locationMarker = L.marker([lat, lng], { icon, zIndexOffset: 500 })
-					.bindPopup(`<div class="popup-content"><strong>You are here</strong><br/><span style="color:#3f3f46;font-size:11px">±${Math.round(accuracy)}m accuracy</span></div>`)
+					.bindPopup(
+						`<div class="popup-content"><strong>You are here</strong><br/><span style="color:#3f3f46;font-size:11px">±${Math.round(accuracy)}m accuracy</span></div>`,
+					)
 					.addTo(map);
 
 				map.flyTo([lat, lng], 16, { duration: 1.2 });
 			},
 			(err) => {
 				locating = false;
-				if (err.code === 1) toastError('Location access denied. Enable it in your browser settings.');
-				else if (err.code === 2) toastError('Could not determine your location. Try again.');
+				if (err.code === 1)
+					toastError('Location access denied. Enable it in your browser settings.');
+				else if (err.code === 2)
+					toastError('Could not determine your location. Try again.');
 				else toastError('Location request timed out. Try again.');
 			},
-			{ enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+			{ enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
 		);
 	}
 
@@ -264,7 +418,13 @@
 					const city = String(f?.properties?.CITY ?? '');
 					const w = Number(f?.properties?.WARDID_NORM ?? 0);
 					const t = (counts[`${city}-${w}`] ?? 0) / maxCount;
-					return { fillColor: '#f97316', fillOpacity: 0.05 + t * 0.45, color: '#f97316', weight: 1, opacity: 0.4 };
+					return {
+						fillColor: '#f97316',
+						fillOpacity: 0.05 + t * 0.45,
+						color: '#f97316',
+						weight: 1,
+						opacity: 0.4,
+					};
 				},
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				onEachFeature: (f: any, layer: any) => {
@@ -272,13 +432,13 @@
 					const w = Number(f?.properties?.WARDID_NORM ?? 0);
 					const n = counts[`${city}-${w}`] ?? 0;
 					const cityLabel = escapeHtml(city.charAt(0).toUpperCase() + city.slice(1));
-					const c = COUNCILLORS.find(x => x.city === city && x.ward === w);
+					const c = COUNCILLORS.find((x) => x.city === city && x.ward === w);
 					const cName = c ? ' — ' + escapeHtml(c.name) : '';
 					layer.bindTooltip(
 						`<strong>${cityLabel} Ward ${w}${cName}</strong><br/>${n} active hole${n !== 1 ? 's' : ''}`,
-						{ sticky: true }
+						{ sticky: true },
 					);
-				}
+				},
 			}).addTo(map);
 
 			if (wardLayerRef) wardLayerRef.bringToBack();
@@ -297,21 +457,13 @@
 	}
 
 	onMount(async () => {
-		// The three stylesheets have no load-order constraint, so fetch them in
-		// parallel rather than in series. Only the JS is ordered: markercluster
-		// augments the global `L`, so leaflet must register window.L before it
-		// imports. This turns a 6-request waterfall into CSS-in-parallel alongside
-		// leaflet -> markercluster.
-		const cssLoaded = Promise.all([
-			import('leaflet/dist/leaflet.css'),
-			import('leaflet.markercluster/dist/MarkerCluster.css'),
-			import('leaflet.markercluster/dist/MarkerCluster.Default.css')
-		]);
+		await import('leaflet/dist/leaflet.css');
 		const leafletModule = await import('leaflet');
 		const L = leafletModule.default ?? leafletModule;
 		(window as unknown as Record<string, unknown>).L = L;
 		await import('leaflet.markercluster');
-		await cssLoaded;
+		await import('leaflet.markercluster/dist/MarkerCluster.css');
+		await import('leaflet.markercluster/dist/MarkerCluster.Default.css');
 
 		LRef = L;
 
@@ -322,7 +474,7 @@
 				html: `<div class="pothole-marker pothole-marker--${status}" title="${info.label}">${makeSvgIcon(info.icon)}</div>`,
 				className: '',
 				iconSize: [32, 32],
-				iconAnchor: [16, 16]
+				iconAnchor: [16, 16],
 			});
 		}
 		// Report-mode pin shares the 'reported' style but anchors at bottom-center.
@@ -330,26 +482,29 @@
 			html: `<div class="pothole-marker pothole-marker--reported">${makeSvgIcon('map-pin')}</div>`,
 			className: '',
 			iconSize: [32, 32],
-			iconAnchor: [16, 32]
+			iconAnchor: [16, 32],
 		});
 
 		const map = L.map(mapEl, {
 			center: [43.425, -80.42],
-			zoom: 11
+			zoom: 11,
 		});
 		mapRef = map;
 
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			attribution:
 				'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-			maxZoom: 19
+			maxZoom: 19,
 		}).addTo(map);
 
 		// One cluster group per status layer
 		const statuses = ['reported', 'expired', 'filled'] as const;
 		for (const status of statuses) {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const group = (L as any).markerClusterGroup({ maxClusterRadius: 40, spiderfyOnMaxZoom: true });
+			const group = (L as any).markerClusterGroup({
+				maxClusterRadius: 40,
+				spiderfyOnMaxZoom: true,
+			});
 			clusterGroups[status] = group;
 			if (layers[status]) map.addLayer(group);
 		}
@@ -363,26 +518,21 @@
 		clientPotholes = seededPotholes?.length ? seededPotholes : null;
 		markersById = {};
 
-		// Collect markers per layer, then bulk-insert with addLayers() after the
-		// loop. markercluster reclusters on every addLayer(); one addLayers() per
-		// group clusters once instead of once per marker — a real win at scale.
-		const pendingByLayer: Record<string, import('leaflet').Marker[]> = {
-			reported: [],
-			expired: [],
-			filled: []
-		};
-
 		for (const pothole of potholesToRender) {
 			// Any unknown legacy status falls back to the reported layer.
 			const layerKey = pothole.status in clusterGroups ? pothole.status : 'reported';
 			if (!(layerKey in clusterGroups)) continue;
 
-			const info = STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported;
+			const info =
+				STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ??
+				STATUS_CONFIG.reported;
 			const icon = markerIcons[pothole.status] ?? markerIcons['reported'];
 			const marker = L.marker([pothole.lat, pothole.lng], { icon });
 			markersById[pothole.id] = marker;
 
-			const address = escapeHtml(pothole.address || `${pothole.lat.toFixed(5)}, ${pothole.lng.toFixed(5)}`);
+			const address = escapeHtml(
+				pothole.address || `${pothole.lat.toFixed(5)}, ${pothole.lng.toFixed(5)}`,
+			);
 			const description = pothole.description ? escapeHtml(pothole.description) : null;
 			const detailHref = `/hole/${pothole.id}`;
 			const statusNote =
@@ -393,9 +543,10 @@
 						: 'Archived after no action. Open details if you need the full history.';
 
 			// "It's fixed!" button only for reported potholes
-			const fixedBtn = pothole.status === 'reported'
-				? `<button class="popup-fix-btn" data-action="mark-filled" data-pothole-id="${pothole.id}">✓ It's fixed!</button>`
-				: '';
+			const fixedBtn =
+				pothole.status === 'reported'
+					? `<button class="popup-fix-btn" data-action="mark-filled" data-pothole-id="${pothole.id}">✓ It's fixed!</button>`
+					: '';
 
 			marker.bindPopup(
 				`<div class="popup-content">
@@ -411,15 +562,10 @@
 						${fixedBtn}
 					</div>
 				</div>`,
-				{ maxWidth: 240 }
+				{ maxWidth: 240 },
 			);
 
-			pendingByLayer[layerKey].push(marker);
-		}
-
-		// One bulk insert per cluster group instead of one recluster per marker.
-		for (const [key, group] of Object.entries(clusterGroups)) {
-			if (pendingByLayer[key].length) group.addLayers(pendingByLayer[key]);
+			clusterGroups[layerKey].addLayer(marker);
 		}
 
 		// Delegated listener for popup Fixed button
@@ -464,7 +610,7 @@
 					const res = await fetch('/api/filled', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ id })
+						body: JSON.stringify({ id }),
 					});
 					const result = await res.json();
 					if (!res.ok && res.status !== 409) throw new Error(result.message || 'Failed');
@@ -479,7 +625,11 @@
 						if (!clientPotholes) clientPotholes = (potholes as Pothole[]).slice();
 						const idx = clientPotholes.findIndex((p) => p.id === id);
 						if (idx !== -1) {
-							clientPotholes[idx] = { ...clientPotholes[idx], status: 'filled', filled_at: new Date().toISOString() };
+							clientPotholes[idx] = {
+								...clientPotholes[idx],
+								status: 'filled',
+								filled_at: new Date().toISOString(),
+							};
 						}
 						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						const marker = (e as any).popup._source;
@@ -500,7 +650,11 @@
 			if (reportPin) {
 				reportPin.setLatLng(e.latlng);
 			} else {
-				reportPin = L.marker(e.latlng, { draggable: true, zIndexOffset: 1000, icon: reportPinIcon }).addTo(map);
+				reportPin = L.marker(e.latlng, {
+					draggable: true,
+					zIndexOffset: 1000,
+					icon: reportPinIcon,
+				}).addTo(map);
 				reportPin.on('dragend', () => {
 					const pos = reportPin!.getLatLng();
 					reportLatLng = { lat: pos.lat, lng: pos.lng };
@@ -529,7 +683,6 @@
 				}
 			}
 		}
-
 	});
 
 	onDestroy(() => {
@@ -540,15 +693,17 @@
 
 <svelte:head>
 	<title>Waterloo Region Pothole Map — FillTheHole.ca</title>
-	<meta name="description" content="Track potholes in Kitchener, Waterloo, and Cambridge. Report, confirm, and hold the city accountable." />
+	<meta
+		name="description"
+		content="Track potholes in Kitchener, Waterloo, and Cambridge. Report, confirm, and hold the city accountable."
+	/>
 	<meta property="og:title" content="Waterloo Region Pothole Tracker — FillTheHole.ca" />
-	<meta property="og:description" content="Track potholes in Kitchener, Waterloo, and Cambridge. Report, confirm, and hold the city accountable." />
+	<meta
+		property="og:description"
+		content="Track potholes in Kitchener, Waterloo, and Cambridge. Report, confirm, and hold the city accountable."
+	/>
 	<meta property="og:url" content="https://fillthehole.ca/" />
 	<meta property="og:type" content="website" />
-	<meta property="og:image" content="https://fillthehole.ca/api/og/default" />
-	<meta property="og:image:width" content="1200" />
-	<meta property="og:image:height" content="630" />
-	<meta name="twitter:image" content="https://fillthehole.ca/api/og/default" />
 </svelte:head>
 
 <h1 class="sr-only">Waterloo Region Pothole Map</h1>
@@ -568,7 +723,10 @@
 						class="focus:fixed focus:top-4 focus:left-4 focus:z-[2000] focus:bg-stone-900 dark:focus:bg-white focus:text-white dark:focus:text-stone-900 focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-stone-700 dark:focus:border-stone-200 focus:shadow-xl focus:text-sm focus:font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
 					>
 						{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
-						— confirmed by {pothole.confirmed_count} report{pothole.confirmed_count === 1 ? '' : 's'}
+						— confirmed by {pothole.confirmed_count} report{pothole.confirmed_count ===
+						1
+							? ''
+							: 's'}
 					</a>
 				</li>
 			{/each}
@@ -583,21 +741,28 @@
 	{#if !mapReady}
 		<div class="absolute inset-0 flex items-center justify-center bg-white dark:bg-stone-900">
 			<div class="text-center">
-				<div class="mx-auto w-9 h-9 rounded-full border-2 border-stone-200 dark:border-stone-700 border-t-amber-500 animate-spin mb-4"></div>
+				<div
+					class="mx-auto w-9 h-9 rounded-full border-2 border-stone-200 dark:border-stone-700 border-t-amber-500 animate-spin mb-4"
+				></div>
 				<div class="text-sm text-stone-600 dark:text-stone-300">Loading the map…</div>
 			</div>
 		</div>
 	{/if}
 
-		<!-- Report-here banner -->
-		{#if reportMode}
-			<div
-				class="absolute top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1001] flex flex-wrap items-center gap-2 sm:gap-3 bg-stone-50 dark:bg-asphalt border border-amber-500 rounded-md px-4 py-3 shadow-xl"
+	<!-- Report-here banner -->
+	{#if reportMode}
+		<div
+			class="absolute top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1001] flex flex-wrap items-center gap-2 sm:gap-3 bg-stone-50 dark:bg-asphalt border border-amber-500 rounded-md px-4 py-3 shadow-xl"
+		>
+			<span
+				class="text-sm text-stone-900 dark:text-white grow"
+				role="status"
+				aria-live="polite"
+				aria-atomic="true"
 			>
-				<span class="text-sm text-stone-900 dark:text-white grow" role="status" aria-live="polite" aria-atomic="true">
-					Tap the map where the pothole is
-				</span>
-				{#if reportLatLng}
+				Tap the map where the pothole is
+			</span>
+			{#if reportLatLng}
 				<button
 					type="button"
 					onclick={confirmReportLocation}
@@ -617,6 +782,10 @@
 			</button>
 		</div>
 	{/if}
+
+	<div role="status" aria-live="polite" aria-atomic="true" class="sr-only">
+		{liveAnnouncement}
+	</div>
 
 	{#if mapReady}
 		<div class="absolute safe-bottom left-4 z-[1000] hidden sm:flex flex-col gap-2">
@@ -648,15 +817,17 @@
 			</button>
 
 			<!-- Layers panel -->
-			<div class="bg-stone-50 dark:bg-asphalt border border-stone-200 dark:border-stone-700 rounded-md p-3 space-y-2 text-xs">
-				<div class="text-stone-500 dark:text-stone-400 font-semibold text-[10px] mb-1">Layers</div>
+			<div
+				class="bg-stone-50 dark:bg-asphalt border border-stone-200 dark:border-stone-700 rounded-md p-3 space-y-2 text-xs"
+			>
+				<div class="text-stone-500 dark:text-stone-400 font-semibold text-[10px] mb-1">
+					Layers
+				</div>
 
-				{#each ([
-					['reported', 'Reported'],
-					['expired',  'Expired'],
-					['filled',   'Filled'],
-				] as const) as [key, label] (key)}
-					<label class="flex items-center gap-2 cursor-pointer text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white">
+				{#each [['reported', 'Reported'], ['expired', 'Expired'], ['filled', 'Filled']] as const as [key, label] (key)}
+					<label
+						class="flex items-center gap-2 cursor-pointer text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white"
+					>
 						<input
 							type="checkbox"
 							checked={layers[key]}
@@ -668,7 +839,9 @@
 				{/each}
 
 				<div class="border-t border-stone-200 dark:border-stone-700 pt-2">
-					<label class="flex items-center gap-2 cursor-pointer text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white">
+					<label
+						class="flex items-center gap-2 cursor-pointer text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white"
+					>
 						<input
 							type="checkbox"
 							checked={layers.wards}
@@ -685,8 +858,12 @@
 
 	<!-- Legend -->
 	{#if mapReady}
-		<div class="absolute safe-bottom right-4 hidden sm:block bg-stone-50 dark:bg-asphalt border border-stone-200 dark:border-stone-700 rounded-md p-3 text-xs space-y-1.5 z-[1000]">
-			<div class="text-stone-500 dark:text-stone-400 font-semibold mb-2 text-[10px]">Status</div>
+		<div
+			class="absolute safe-bottom right-4 hidden sm:block bg-stone-50 dark:bg-asphalt border border-stone-200 dark:border-stone-700 rounded-md p-3 text-xs space-y-1.5 z-[1000]"
+		>
+			<div class="text-stone-500 dark:text-stone-400 font-semibold mb-2 text-[10px]">
+				Status
+			</div>
 			{#each ['reported', 'expired', 'filled'] as status (status)}
 				{@const info = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]}
 				<div class="flex items-center gap-2 text-stone-600 dark:text-stone-300">
@@ -699,12 +876,25 @@
 
 	{#if mapReady}
 		<div class="absolute safe-bottom-mobile-tray inset-x-3 z-[1000] sm:hidden">
-			<div class="rounded-md border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-2xl overflow-hidden flex flex-col">
-				<div class="shrink-0 flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-stone-200/80 dark:border-stone-800/80">
+			<div
+				class="rounded-md border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-2xl overflow-hidden flex flex-col"
+			>
+				<div
+					class="shrink-0 flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-stone-200/80 dark:border-stone-800/80"
+				>
 					<div class="min-w-0">
 						<p class="text-[11px] font-semibold text-amber-500">Map tools</p>
-						<p class="text-sm text-stone-900 dark:text-white font-semibold" aria-live="polite" aria-atomic="true">{liveReportedCount} live pothole{liveReportedCount === 1 ? '' : 's'} on the public map</p>
-						<p class="text-[11px] text-stone-500 dark:text-stone-400">Tap a marker for details or drop a pin to report a new one.</p>
+						<p
+							class="text-sm text-stone-900 dark:text-white font-semibold"
+							aria-live="polite"
+							aria-atomic="true"
+						>
+							{liveReportedCount} live pothole{liveReportedCount === 1 ? '' : 's'} on the
+							public map
+						</p>
+						<p class="text-[11px] text-stone-500 dark:text-stone-400">
+							Tap a marker for details or drop a pin to report a new one.
+						</p>
 					</div>
 					<button
 						type="button"
@@ -751,84 +941,125 @@
 				</div>
 
 				{#if mobileToolsOpen}
-					<div id="mobile-map-tools" class="border-t border-stone-200 dark:border-stone-800 overflow-y-auto max-h-[50dvh]">
+					<div
+						id="mobile-map-tools"
+						class="border-t border-stone-200 dark:border-stone-800 overflow-y-auto max-h-[50dvh]"
+					>
 						<div class="px-4 py-3 space-y-4">
-						<div class="space-y-2">
-							<h2 class="text-[11px] font-semibold text-stone-500 dark:text-stone-400">Recent live reports</h2>
-							{#if recentReportedPotholes.length > 0}
-								<div class="space-y-2">
-									{#each recentReportedPotholes as pothole (pothole.id)}
+							<div class="space-y-2">
+								<h2
+									class="text-[11px] font-semibold text-stone-500 dark:text-stone-400"
+								>
+									Recent live reports
+								</h2>
+								{#if recentReportedPotholes.length > 0}
+									<div class="space-y-2">
+										{#each recentReportedPotholes as pothole (pothole.id)}
+											<button
+												type="button"
+												onclick={() => focusPothole(pothole.id)}
+												class="w-full rounded-md border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 px-3 py-3 text-left transition-colors hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-100 dark:hover:bg-stone-800"
+												aria-label={`Open report for ${pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}`}
+											>
+												<div class="flex items-start justify-between gap-3">
+													<div class="min-w-0">
+														<p
+															class="truncate text-sm font-semibold text-stone-900 dark:text-white"
+														>
+															{pothole.address ||
+																`${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
+														</p>
+														<p
+															class="mt-1 text-[11px] leading-relaxed text-stone-500 dark:text-stone-400 line-clamp-2"
+														>
+															{pothole.description ||
+																'Jump to this marker to review details, share it, or mark it fixed.'}
+														</p>
+														{#if pothole.photos_published}
+															<span
+																class="mt-1.5 inline-flex items-center gap-1 text-[11px] text-stone-500 dark:text-stone-400"
+															>
+																<Icon name="camera" size={11} />
+																Photo
+															</span>
+														{/if}
+													</div>
+													<span
+														class="shrink-0 rounded bg-stone-100 dark:bg-stone-800 px-2 py-1 text-[10px] font-semibold text-amber-500"
+													>
+														Open
+													</span>
+												</div>
+											</button>
+										{/each}
+									</div>
+								{:else}
+									<p
+										class="rounded-md border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 px-3 py-3 text-xs leading-relaxed text-stone-500 dark:text-stone-400"
+									>
+										Live reports will appear here once the community has
+										confirmed them.
+									</p>
+								{/if}
+							</div>
+
+							<div class="space-y-2">
+								<h2
+									class="text-[11px] font-semibold text-stone-500 dark:text-stone-400"
+								>
+									Layers
+								</h2>
+								<div class="grid grid-cols-2 gap-2">
+									{#each [['reported', 'Reported'], ['expired', 'Expired'], ['filled', 'Filled'], ['wards', 'Ward heatmap']] as const as [key, label] (key)}
 										<button
 											type="button"
-											onclick={() => focusPothole(pothole.id)}
-											class="w-full rounded-md border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 px-3 py-3 text-left transition-colors hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-100 dark:hover:bg-stone-800"
-											aria-label={`Open report for ${pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}`}
+											onclick={() => toggleLayer(key)}
+											aria-pressed={layers[key]}
+											disabled={key === 'wards' && wardLoading}
+											class="inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2.5 text-xs font-semibold transition-colors disabled:opacity-60 {layers[
+												key
+											]
+												? 'border-amber-500 bg-amber-500/10 text-stone-900 dark:text-white'
+												: 'border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 text-stone-600 dark:text-stone-300 hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-900 dark:hover:text-white'}"
 										>
-											<div class="flex items-start justify-between gap-3">
-												<div class="min-w-0">
-													<p class="truncate text-sm font-semibold text-stone-900 dark:text-white">
-														{pothole.address || `${pothole.lat.toFixed(4)}, ${pothole.lng.toFixed(4)}`}
-													</p>
-													<p class="mt-1 text-[11px] leading-relaxed text-stone-500 dark:text-stone-400 line-clamp-2">
-														{pothole.description || 'Jump to this marker to review details, share it, or mark it fixed.'}
-													</p>
-													{#if pothole.photos_published}
-														<span class="mt-1.5 inline-flex items-center gap-1 text-[11px] text-stone-500 dark:text-stone-400">
-															<Icon name="camera" size={11} />
-															Photo
-														</span>
-													{/if}
-												</div>
-												<span class="shrink-0 rounded bg-stone-100 dark:bg-stone-800 px-2 py-1 text-[10px] font-semibold text-amber-500">
-													Open
-												</span>
-											</div>
+											<span
+												>{key === 'wards' && wardLoading
+													? 'Loading…'
+													: label}</span
+											>
+											<span
+												class="text-[10px] font-semibold text-stone-500 dark:text-stone-400"
+												>{layers[key] ? 'On' : 'Off'}</span
+											>
 										</button>
 									{/each}
 								</div>
-							{:else}
-								<p class="rounded-md border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 px-3 py-3 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
-									Live reports will appear here once the community has confirmed them.
-								</p>
-							{/if}
-						</div>
+							</div>
 
-						<div class="space-y-2">
-							<h2 class="text-[11px] font-semibold text-stone-500 dark:text-stone-400">Layers</h2>
-							<div class="grid grid-cols-2 gap-2">
-								{#each ([
-									['reported', 'Reported'],
-									['expired', 'Expired'],
-									['filled', 'Filled'],
-									['wards', 'Ward heatmap']
-								] as const) as [key, label] (key)}
-									<button
-										type="button"
-										onclick={() => toggleLayer(key)}
-										aria-pressed={layers[key]}
-										disabled={key === 'wards' && wardLoading}
-										class="inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2.5 text-xs font-semibold transition-colors disabled:opacity-60 {layers[key] ? 'border-amber-500 bg-amber-500/10 text-stone-900 dark:text-white' : 'border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 text-stone-600 dark:text-stone-300 hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-900 dark:hover:text-white'}"
-									>
-										<span>{key === 'wards' && wardLoading ? 'Loading…' : label}</span>
-										<span class="text-[10px] font-semibold text-stone-500 dark:text-stone-400">{layers[key] ? 'On' : 'Off'}</span>
-									</button>
-								{/each}
+							<div class="space-y-2">
+								<h2
+									class="text-[11px] font-semibold text-stone-500 dark:text-stone-400"
+								>
+									Status guide
+								</h2>
+								<div class="grid grid-cols-1 gap-2">
+									{#each ['reported', 'expired', 'filled'] as status (status)}
+										{@const info =
+											STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]}
+										<div
+											class="flex items-center gap-2 rounded-md bg-stone-50 dark:bg-stone-900 px-3 py-2 text-xs text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-800"
+										>
+											<Icon
+												name={info.icon}
+												size={12}
+												class={info.colorClass}
+											/>
+											<span>{info.label}</span>
+										</div>
+									{/each}
+								</div>
 							</div>
 						</div>
-
-						<div class="space-y-2">
-							<h2 class="text-[11px] font-semibold text-stone-500 dark:text-stone-400">Status guide</h2>
-							<div class="grid grid-cols-1 gap-2">
-								{#each ['reported', 'expired', 'filled'] as status (status)}
-									{@const info = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]}
-									<div class="flex items-center gap-2 rounded-md bg-stone-50 dark:bg-stone-900 px-3 py-2 text-xs text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-800">
-										<Icon name={info.icon} size={12} class={info.colorClass} />
-										<span>{info.label}</span>
-									</div>
-								{/each}
-							</div>
-						</div>
-					</div>
 					</div>
 				{/if}
 			</div>
@@ -837,12 +1068,20 @@
 
 	{#if potholes.length === 0 && mapReady}
 		<div class="absolute inset-0 flex items-center justify-center z-[1000] pointer-events-none">
-			<div class="pointer-events-auto bg-white/95 dark:bg-stone-900/95 border border-stone-200 dark:border-stone-700 rounded-md px-8 py-6 max-w-xs w-full mx-4 text-center shadow-2xl">
-				<div class="w-10 h-10 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center mx-auto mb-3">
+			<div
+				class="pointer-events-auto bg-white/95 dark:bg-stone-900/95 border border-stone-200 dark:border-stone-700 rounded-md px-8 py-6 max-w-xs w-full mx-4 text-center shadow-2xl"
+			>
+				<div
+					class="w-10 h-10 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center mx-auto mb-3"
+				>
 					<Icon name="map-pin" size={18} class="text-amber-500" />
 				</div>
-				<h2 class="text-sm font-semibold text-stone-900 dark:text-white mb-1">No potholes reported yet</h2>
-				<p class="text-xs text-stone-500 dark:text-stone-400 mb-4">Be the first to put Waterloo Region's roads on the map.</p>
+				<h2 class="text-sm font-semibold text-stone-900 dark:text-white mb-1">
+					No potholes reported yet
+				</h2>
+				<p class="text-xs text-stone-500 dark:text-stone-400 mb-4">
+					Be the first to put Waterloo Region's roads on the map.
+				</p>
 				<a
 					href="/report"
 					class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-stone-900 text-xs font-semibold px-4 py-2 rounded-md transition-colors"
@@ -941,9 +1180,18 @@
 		margin-top: 2px;
 	}
 
-	:global(.popup-status--reported) { background: #f9731620; color: #f97316; }
-	:global(.popup-status--expired)  { background: #e4e4e7; color: #3f3f46; }
-	:global(.popup-status--filled)   { background: #22c55e20; color: #22c55e; }
+	:global(.popup-status--reported) {
+		background: #f9731620;
+		color: #f97316;
+	}
+	:global(.popup-status--expired) {
+		background: #e4e4e7;
+		color: #3f3f46;
+	}
+	:global(.popup-status--filled) {
+		background: #22c55e20;
+		color: #22c55e;
+	}
 
 	:global(.popup-desc) {
 		display: block;
@@ -995,7 +1243,9 @@
 		font-size: 12px;
 		font-weight: 600;
 		cursor: pointer;
-		transition: background 0.15s, border-color 0.15s;
+		transition:
+			background 0.15s,
+			border-color 0.15s;
 		white-space: nowrap;
 	}
 
@@ -1013,7 +1263,9 @@
 		font-size: 12px;
 		font-weight: 700;
 		cursor: pointer;
-		transition: background 0.15s, border-color 0.15s;
+		transition:
+			background 0.15s,
+			border-color 0.15s;
 		white-space: nowrap;
 	}
 	:global(.popup-fix-btn:hover) {
@@ -1069,8 +1321,14 @@
 	}
 
 	@keyframes -global-location-pulse {
-		0%   { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6); }
-		70%  { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); }
-		100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+		0% {
+			box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6);
+		}
+		70% {
+			box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
+		}
+		100% {
+			box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+		}
 	}
 </style>

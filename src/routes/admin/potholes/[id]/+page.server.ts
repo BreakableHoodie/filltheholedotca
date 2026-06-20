@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.from('pothole_photos')
 			.select('id, storage_path, moderation_status, moderation_score, created_at')
 			.eq('pothole_id', id)
-			.order('created_at', { ascending: true })
+			.order('created_at', { ascending: true }),
 	]);
 
 	if (!potholeRes.data) throw error(404, 'Pothole not found');
@@ -39,8 +39,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const signedUrlMap: Record<string, string> = {};
 
 	if (paths.length > 0) {
-		const { data: signedUrls } = await getAdminClient().storage
-			.from('pothole-photos')
+		const { data: signedUrls } = await getAdminClient()
+			.storage.from('pothole-photos')
 			.createSignedUrls(paths, 3600);
 		for (const item of signedUrls ?? []) {
 			if (item.signedUrl && item.path) signedUrlMap[item.path] = item.signedUrl;
@@ -50,7 +50,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		pothole: potholeRes.data,
 		confirmations: confirmationsRes.data ?? [],
-		photos: photos.map((p) => ({ ...p, url: signedUrlMap[p.storage_path] ?? null }))
+		photos: photos.map((p) => ({ ...p, url: signedUrlMap[p.storage_path] ?? null })),
 	};
 };
 
@@ -76,10 +76,13 @@ export const actions: Actions = {
 		const updates = {
 			status: s,
 			filled_at: s === 'filled' ? new Date().toISOString() : null,
-			expired_at: s === 'expired' ? new Date().toISOString() : null
+			expired_at: s === 'expired' ? new Date().toISOString() : null,
 		};
 
-		const { error: dbErr } = await getAdminClient().from('potholes').update(updates).eq('id', id);
+		const { error: dbErr } = await getAdminClient()
+			.from('potholes')
+			.update(updates)
+			.eq('id', id);
 		if (dbErr) return fail(500, { error: 'Failed to update status' });
 
 		await writeAuditLog(
@@ -88,7 +91,38 @@ export const actions: Actions = {
 			'pothole',
 			id,
 			{ status: s },
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
+		);
+
+		return { success: true };
+	},
+
+	updateDescription: async ({ params, request, locals, getClientAddress }) => {
+		if (!locals.adminUser) throw error(401, 'Unauthorized');
+		requireRole(locals.adminUser.role, 'editor');
+
+		const id = params.id ?? '';
+		if (!uuidSchema.safeParse(id).success) return fail(400, { error: 'Invalid ID' });
+
+		const fd = await request.formData();
+		const description = fd.get('description')?.toString() ?? '';
+		const descParsed = z.string().max(1000).safeParse(description);
+		if (!descParsed.success)
+			return fail(400, { error: 'Description must be at most 1000 characters' });
+
+		const { error: dbErr } = await getAdminClient()
+			.from('potholes')
+			.update({ description: descParsed.data || null })
+			.eq('id', id);
+		if (dbErr) return fail(500, { error: 'Failed to update description' });
+
+		await writeAuditLog(
+			locals.adminUser.id,
+			'pothole.description_edit',
+			'pothole',
+			id,
+			null,
+			await hashIp(getClientAddress()),
 		);
 
 		return { success: true };
@@ -118,7 +152,7 @@ export const actions: Actions = {
 			'pothole',
 			id,
 			null,
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 
 		return { success: true };
@@ -146,7 +180,7 @@ export const actions: Actions = {
 			'pothole',
 			id,
 			{ photos_published: value },
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 
 		return { success: true };
@@ -164,7 +198,13 @@ export const actions: Actions = {
 			.from('pothole_confirmations')
 			.delete()
 			.eq('pothole_id', id);
-		if (confirmDeleteError) logError('admin/potholes', 'Failed to delete pothole confirmations', confirmDeleteError, { potholeId: id });
+		if (confirmDeleteError)
+			logError(
+				'admin/potholes',
+				'Failed to delete pothole confirmations',
+				confirmDeleteError,
+				{ potholeId: id },
+			);
 
 		const { error: dbErr } = await getAdminClient().from('potholes').delete().eq('id', id);
 		if (dbErr) return fail(500, { error: 'Failed to delete pothole' });
@@ -175,9 +215,9 @@ export const actions: Actions = {
 			'pothole',
 			id,
 			null,
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 
 		throw redirect(303, '/admin/potholes');
-	}
+	},
 };
