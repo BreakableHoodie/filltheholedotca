@@ -192,7 +192,8 @@
 					On individual pothole pages, the pothole's coordinates (rounded to ~11 m precision)
 					are sent to
 					<a href="https://www.esri.com/en-us/privacy/main" target="_blank" rel="noopener noreferrer" class="text-amber-700 dark:text-amber-400 underline">Esri ArcGIS</a>
-					to check whether Kitchener's 311 system has a matching repair request on file.
+					to check whether the City of Kitchener's Corporate Contact Centre (its service-request
+					system) has a matching repair request on file.
 					No personal information is included in this query — only the location.
 				</p>
 			</div>
