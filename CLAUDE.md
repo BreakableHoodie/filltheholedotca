@@ -295,7 +295,7 @@ pending → reported → filled
 - **Auto-expiry**: `reported` potholes expire after 90 days; `pending` potholes expire after 14 days (both via pg_cron)
 - **Real-time polling**: homepage polls `/api/potholes/recent?since=` every 60s for new/changed potholes without requiring page reload. Polling starts after map loads, pauses on disconnect.
 - **Admin map**: Leaflet + markercluster at `/admin/map` with status-filtered layers and click-to-manage popups. Loads all 5000 potholes. Admin-auth required.
-- **Before/after photos**: when pothole status is `filled`, photos are split into before (taken before `filled_at`) and after (taken after `filled_at`) galleries on the detail page.
+- **Before/after photos**: when pothole status is `filled`, the detail page splits published photos into before/after galleries via `splitByFill()` in `$lib/photo-split` — a read-time classification (`created_at < filled_at` = before, `>= filled_at` = after); a photo taken exactly at `filled_at` counts as "after". The split renders only when both eras have a photo, else the flat gallery shows. Marking a pothole filled prompts (optionally) for an "after" photo.
 - **Admin description editing**: admins can edit pothole description via form action on `/admin/potholes/[id]`.
 
 ## Svelte 5 Patterns (important — don't use Svelte 4 syntax)
