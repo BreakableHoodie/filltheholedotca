@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 const BOOLEAN_SETTING = z.enum(['true', 'false']);
 
 const SETTING_SCHEMAS: Record<string, z.ZodTypeAny> = {
@@ -23,7 +24,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.select('key, value, updated_at')
 		.order('key');
 
-	if (dbErr) throw error(500, 'Failed to load settings');
+	if (dbErr) {
+		logError('admin/settings/site', 'Failed to load site settings', dbErr);
+		throw error(500, 'Failed to load settings');
+	}
 
 	return {
 		settings: Object.fromEntries((data ?? []).map((s) => [s.key, s]))
@@ -49,7 +53,10 @@ export const actions: Actions = {
 			.from('site_settings')
 			.upsert({ key, value: String(parsed.data), updated_at: new Date().toISOString() });
 
-		if (dbErr) return fail(500, { error: 'Failed to save setting' });
+		if (dbErr) {
+			logError('admin/settings/site', 'Failed to save site setting', dbErr, { settingKey: key });
+			return fail(500, { error: 'Failed to save setting' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,

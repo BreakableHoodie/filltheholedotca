@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getAdminClient } from '$lib/server/supabase';
 import { decodeHtmlEntities } from '$lib/escape';
+import { logError } from '$lib/server/observability';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
@@ -14,7 +15,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.order('created_at', { ascending: false })
 		.limit(5000);
 
-	if (dbError) throw error(500, 'Failed to load potholes');
+	if (dbError) {
+		logError('admin/map', 'Failed to load potholes for admin map', dbError);
+		throw error(500, 'Failed to load potholes');
+	}
 
 	const potholes = (data ?? []).map((p) => ({
 		...p,

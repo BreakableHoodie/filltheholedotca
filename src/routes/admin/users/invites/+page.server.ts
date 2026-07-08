@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 type InviteRow = {
 	id: string;
 	code: string;
@@ -70,7 +71,10 @@ export const actions: Actions = {
 			is_active: true
 		});
 
-		if (dbErr) return fail(500, { error: 'Failed to create invite' });
+		if (dbErr) {
+			logError('admin/users/invites', 'Failed to create invite', dbErr);
+			return fail(500, { error: 'Failed to create invite' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,
@@ -94,7 +98,10 @@ export const actions: Actions = {
 			.from('admin_invite_codes')
 			.update({ is_active: false })
 			.eq('id', id);
-		if (dbErr) return fail(500, { error: 'Failed to deactivate invite' });
+		if (dbErr) {
+			logError('admin/users/invites', 'Failed to deactivate invite', dbErr, { inviteId: id });
+			return fail(500, { error: 'Failed to deactivate invite' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,

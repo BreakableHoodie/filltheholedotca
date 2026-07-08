@@ -53,7 +53,10 @@ export const GET: RequestHandler = async ({ params }) => {
 		.eq('id', parsed.data.id)
 		.single();
 
-	if (dbError && dbError.code !== 'PGRST116') throw error(500, 'Database error');
+	if (dbError && dbError.code !== 'PGRST116') {
+		logError('og/pothole', 'Failed to load pothole for OG image', dbError, { potholeId: parsed.data.id });
+		throw error(500, 'Database error');
+	}
 	if (!pothole) throw error(404, 'Hole not found');
 
 	const font = await loadFont();

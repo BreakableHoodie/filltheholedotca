@@ -5,6 +5,7 @@ import { writeAuditLog } from '$lib/server/admin-auth';
 import { hashPassword, verifyPassword } from '$lib/server/admin-crypto';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
 	return {};
@@ -52,7 +53,10 @@ export const actions: Actions = {
 			.update({ password_hash: newHash })
 			.eq('id', locals.adminUser.id);
 
-		if (dbErr) return fail(500, { error: 'Failed to update password' });
+		if (dbErr) {
+			logError('admin/settings/password', 'Failed to update password', dbErr, { userId: locals.adminUser.id });
+			return fail(500, { error: 'Failed to update password' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,

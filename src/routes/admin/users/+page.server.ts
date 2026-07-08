@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog, invalidateAllSessionsForUser } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 const uuidSchema = z.string().uuid();
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -61,7 +62,10 @@ export const actions: Actions = {
 			.from('admin_users')
 			.update({ role: roleParsed.data })
 			.eq('id', userId);
-		if (dbErr) return fail(500, { error: 'Failed to update role' });
+		if (dbErr) {
+			logError('admin/users', 'Failed to update user role', dbErr, { targetUserId: userId });
+			return fail(500, { error: 'Failed to update role' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,
@@ -86,7 +90,10 @@ export const actions: Actions = {
 			.from('admin_users')
 			.update({ is_active: true, activated_at: new Date().toISOString() })
 			.eq('id', userId);
-		if (dbErr) return fail(500, { error: 'Failed to activate user' });
+		if (dbErr) {
+			logError('admin/users', 'Failed to activate user', dbErr, { targetUserId: userId });
+			return fail(500, { error: 'Failed to activate user' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,
@@ -113,7 +120,10 @@ export const actions: Actions = {
 			.from('admin_users')
 			.update({ is_active: false })
 			.eq('id', userId);
-		if (dbErr) return fail(500, { error: 'Failed to deactivate user' });
+		if (dbErr) {
+			logError('admin/users', 'Failed to deactivate user', dbErr, { targetUserId: userId });
+			return fail(500, { error: 'Failed to deactivate user' });
+		}
 
 		// Immediately revoke all their sessions
 		await invalidateAllSessionsForUser(userId);

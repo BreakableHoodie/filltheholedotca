@@ -83,7 +83,10 @@ export const actions: Actions = {
 			.from('potholes')
 			.update(updates)
 			.eq('id', id);
-		if (dbErr) return fail(500, { error: 'Failed to update status' });
+		if (dbErr) {
+			logError('admin/potholes', 'Failed to update pothole status', dbErr, { potholeId: id });
+			return fail(500, { error: 'Failed to update status' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,
@@ -114,7 +117,10 @@ export const actions: Actions = {
 			.from('potholes')
 			.update({ description: descParsed.data || null })
 			.eq('id', id);
-		if (dbErr) return fail(500, { error: 'Failed to update description' });
+		if (dbErr) {
+			logError('admin/potholes', 'Failed to update pothole description', dbErr, { potholeId: id });
+			return fail(500, { error: 'Failed to update description' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,
@@ -144,7 +150,10 @@ export const actions: Actions = {
 			.from('potholes')
 			.update({ address: addressParsed.data })
 			.eq('id', id);
-		if (dbErr) return fail(500, { error: 'Failed to update address' });
+		if (dbErr) {
+			logError('admin/potholes', 'Failed to update pothole address', dbErr, { potholeId: id });
+			return fail(500, { error: 'Failed to update address' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,
@@ -172,7 +181,10 @@ export const actions: Actions = {
 			.from('potholes')
 			.update({ photos_published: value })
 			.eq('id', id);
-		if (dbErr) return fail(500, { error: 'Failed to update photo visibility' });
+		if (dbErr) {
+			logError('admin/potholes', 'Failed to toggle photo visibility', dbErr, { potholeId: id });
+			return fail(500, { error: 'Failed to update photo visibility' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,
@@ -207,7 +219,10 @@ export const actions: Actions = {
 			);
 
 		const { error: dbErr } = await getAdminClient().from('potholes').delete().eq('id', id);
-		if (dbErr) return fail(500, { error: 'Failed to delete pothole' });
+		if (dbErr) {
+			logError('admin/potholes', 'Failed to delete pothole', dbErr, { potholeId: id });
+			return fail(500, { error: 'Failed to delete pothole' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,

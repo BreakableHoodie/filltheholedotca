@@ -321,3 +321,4 @@ $effect(() => { ... })             // NOT: $: { ... } for side effects
 - No auth system — all actions are public with IP-based deduplication
 - Leaflet imports must be inside `onMount` (SSR will break otherwise)
 - Server-side error logging: use `logError(area, message, err, context?)` from `$lib/server/observability` instead of bare `console.error`. It writes to the console AND forwards to Sentry with an `area` tag so issues surface in production. Bare `console.error` on a server route is a silent failure — nobody sees it.
+- Any `error(500)`/`fail(500)` (or `502`/`503`) that swallows a captured Supabase/DB/RPC/fetch error must be preceded by a `logError` call passing that error. SvelteKit treats errors thrown via `error()`/`fail()` as *expected* HttpErrors, so they never reach Sentry on their own — without the `logError` the underlying failure is invisible to the operator.

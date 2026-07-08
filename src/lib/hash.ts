@@ -44,7 +44,7 @@ export async function hashClientAddressForLog(
 	try {
 		return await hashIp(getClientAddress());
 	} catch (e) {
-		logError('hash', 'Failed to hash client IP for logging', e);
+		logError('hash', 'Failed to hash client IP for logging', e, { scope });
 		return 'unavailable';
 	}
 }

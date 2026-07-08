@@ -2,6 +2,7 @@ import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 /**
  * GET /api/watchlist?ids=uuid1,uuid2,...
  *
@@ -38,7 +39,10 @@ export const GET: RequestHandler = async ({ url }) => {
 		.select('id, address, lat, lng, status, created_at, filled_at, photos_published')
 		.in('id', parsed.data.ids);
 
-	if (dbError) throw error(500, 'Database error');
+	if (dbError) {
+		logError('api/watchlist', 'Failed to load watchlist potholes', dbError);
+		throw error(500, 'Database error');
+	}
 
 	return json(potholes ?? [], {
 		headers: {

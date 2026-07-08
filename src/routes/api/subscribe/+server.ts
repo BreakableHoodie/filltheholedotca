@@ -40,7 +40,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.eq('scope', 'push_subscribe')
 		.gte('created_at', windowStart);
 
-	if (rateLimitError) throw error(500, 'Failed to check rate limit');
+	if (rateLimitError) {
+		logError('api/subscribe', 'Failed to check subscribe rate limit', rateLimitError);
+		throw error(500, 'Failed to check rate limit');
+	}
 	if ((recentSubs ?? 0) >= SUBSCRIBE_RATE_LIMIT) {
 		throw error(429, 'Too many subscription attempts. Please wait before trying again.');
 	}
@@ -55,7 +58,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		{ onConflict: 'endpoint' }
 	);
 
-	if (dbError) throw error(500, 'Failed to save subscription');
+	if (dbError) {
+		logError('api/subscribe', 'Failed to save push subscription', dbError);
+		throw error(500, 'Failed to save subscription');
+	}
 
 	const { error: rateLimitInsertError } = await db
 		.from('api_rate_limit_events')
@@ -84,7 +90,10 @@ export const DELETE: RequestHandler = async ({ request, getClientAddress }) => {
 		.eq('scope', 'push_unsubscribe')
 		.gte('created_at', windowStart);
 
-	if (rateLimitError) throw error(500, 'Failed to check rate limit');
+	if (rateLimitError) {
+		logError('api/subscribe', 'Failed to check unsubscribe rate limit', rateLimitError);
+		throw error(500, 'Failed to check rate limit');
+	}
 	if ((recentUnsubs ?? 0) >= UNSUBSCRIBE_RATE_LIMIT) {
 		throw error(429, 'Too many unsubscribe attempts. Please wait before trying again.');
 	}
@@ -93,7 +102,10 @@ export const DELETE: RequestHandler = async ({ request, getClientAddress }) => {
 		.from('push_subscriptions')
 		.delete()
 		.eq('endpoint', parsed.data.endpoint);
-	if (deleteError) throw error(500, 'Failed to remove subscription');
+	if (deleteError) {
+		logError('api/subscribe', 'Failed to remove push subscription', deleteError);
+		throw error(500, 'Failed to remove subscription');
+	}
 
 	const { error: rateLimitInsertError } = await db
 		.from('api_rate_limit_events')
