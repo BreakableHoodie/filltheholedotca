@@ -5,6 +5,9 @@
   import { getWardEmailUrl } from '$lib/email';
   import type { PageData } from './$types';
   import type { Pothole } from '$lib/types';
+  import { env } from '$env/dynamic/public';
+  import { urlBase64ToUint8Array } from '$lib/push';
+  import { untrack } from 'svelte';
 
   let { data }: { data: PageData } = $props();
   let councillor = $derived(data.councillor);
@@ -29,6 +32,82 @@
   });
 
   let grade = $derived(wardGrade(fillRate ?? 0, avgDays, total));
+
+  // ── Ward alert subscription (new-pothole push) ─────────────────────────────
+  let wardKey = $derived(`${city}-${ward}`);
+  type WardNotifState = 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed' | 'pending';
+  let wardNotifState = $state<WardNotifState>('unsupported');
+  let swRegistration = $state<ServiceWorkerRegistration | null>(null);
+  const vapidKey = env.PUBLIC_VAPID_PUBLIC_KEY ?? '';
+
+  // Re-run on ward change so state resets when navigating between ward pages.
+  // The cancelled flag prevents a stale async completion from overwriting state
+  // after the user has already navigated to a different ward.
+  $effect(() => {
+    const key = wardKey;
+    wardNotifState = 'unsupported';
+    if (!vapidKey || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!untrack(() => swRegistration)) {
+          swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        }
+        if (cancelled) return;
+        wardNotifState =
+          Notification.permission === 'denied' ? 'denied'
+          : localStorage.getItem(`ward-notify:${key}`) === '1' ? 'subscribed'
+          : 'unsubscribed';
+      } catch {
+        // wardNotifState stays 'unsupported'
+      }
+    })();
+    return () => { cancelled = true; };
+  });
+
+  async function subscribeWardNotification() {
+    if (!swRegistration || !vapidKey) return;
+    wardNotifState = 'pending';
+    try {
+      let sub = await swRegistration.pushManager.getSubscription();
+      if (!sub) {
+        sub = await swRegistration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey).buffer as ArrayBuffer
+        });
+      }
+      const { endpoint, keys } = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } };
+      const res = await fetch('/api/notify/ward', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ward_key: wardKey, endpoint, keys })
+      });
+      if (!res.ok) throw new Error('subscribe failed');
+      localStorage.setItem(`ward-notify:${wardKey}`, '1');
+      wardNotifState = 'subscribed';
+    } catch {
+      wardNotifState = Notification.permission === 'denied' ? 'denied' : 'unsubscribed';
+    }
+  }
+
+  async function unsubscribeWardNotification() {
+    if (!swRegistration) return;
+    wardNotifState = 'pending';
+    try {
+      const sub = await swRegistration.pushManager.getSubscription();
+      if (sub) {
+        await fetch('/api/notify/ward', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ward_key: wardKey, endpoint: sub.endpoint })
+        });
+      }
+      localStorage.removeItem(`ward-notify:${wardKey}`);
+      wardNotifState = 'unsubscribed';
+    } catch {
+      wardNotifState = 'subscribed';
+    }
+  }
 
   // ── Monthly bar chart (last 12 months) ────────────────────────────────────
   let monthlyData = $derived.by(() => {
@@ -112,6 +191,27 @@
         <p class="text-xs text-stone-600 text-right mt-0.5">grade</p>
       </div>
     </div>
+
+    {#if wardNotifState !== 'unsupported'}
+      <button
+        type="button"
+        data-testid="ward-alert-toggle"
+        onclick={wardNotifState === 'subscribed' ? unsubscribeWardNotification : subscribeWardNotification}
+        disabled={wardNotifState === 'pending' || wardNotifState === 'denied'}
+        class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-900 disabled:opacity-60 {wardNotifState === 'subscribed' ? 'bg-amber-500 text-stone-900 hover:bg-amber-400' : 'bg-stone-800 text-amber-400 border border-stone-700 hover:bg-stone-700'}"
+      >
+        <Icon name="bell" size={15} class="shrink-0" />
+        {#if wardNotifState === 'subscribed'}
+          Alerts on — you'll hear about new potholes here
+        {:else if wardNotifState === 'denied'}
+          Notifications are blocked in your browser
+        {:else if wardNotifState === 'pending'}
+          Working…
+        {:else}
+          Alert me to new potholes in this ward
+        {/if}
+      </button>
+    {/if}
   </div>
 
   <!-- Stat pills -->

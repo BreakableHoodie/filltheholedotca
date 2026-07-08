@@ -44,6 +44,11 @@ export default defineConfig({
       ADMIN_SECRET: process.env.ADMIN_SECRET ?? "placeholder_admin_secret",
       // Prevent app-level API rate limiting from introducing E2E flakiness.
       DISABLE_API_RATE_LIMIT: "true",
+      // Public VAPID key (placeholder) so push-subscription UIs render in tests.
+      // Only its presence is needed to enable the subscribe controls; no real
+      // subscription is created in E2E.
+      PUBLIC_VAPID_PUBLIC_KEY:
+        process.env.PUBLIC_VAPID_PUBLIC_KEY ?? "test_public_vapid_key_placeholder",
       // Pass flag to tests indicating whether Supabase is properly configured
       SUPABASE_CONFIGURED: process.env.PUBLIC_SUPABASE_URL?.startsWith("http")
         ? "true"
