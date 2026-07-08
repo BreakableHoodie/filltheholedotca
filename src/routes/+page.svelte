@@ -35,13 +35,20 @@
 	$effect(() => {
 		if (!mapReady) return;
 		pollTimer = setInterval(async () => {
-			const since = new Date(lastPoll - 5000).toISOString();
+			// Quantize the transmitted `since` to a 60s boundary (minus a 5s safety
+			// overlap) so every client polling within the same minute requests the
+			// same URL — lets the CDN (see api/potholes/recent) serve one shared
+			// cached response instead of a unique, uncacheable ms-precision URL per client.
+			const since = new Date(Math.floor((lastPoll - 5000) / 60000) * 60000).toISOString();
 			try {
 				const res = await fetch(`/api/potholes/recent?since=${encodeURIComponent(since)}`);
 				if (!res.ok) return;
 				const { potholes: updated } = await res.json();
-				if (!updated?.length) return;
+				// Advance on every successful poll, not just when updates arrive, so a
+				// quiet tab's `since` window doesn't grow unbounded. The 5s overlap
+				// above absorbs the gap between real time and the quantized value sent.
 				lastPoll = Date.now();
+				if (!updated?.length) return;
 				const L = LRef;
 				if (!L || !mapRef) return;
 				// Announce changes for screen readers
