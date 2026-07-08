@@ -8,6 +8,7 @@ create table if not exists potholes (
   address          text,
   description      text,
   status           text default 'reported',  -- 'pending' | 'reported' | 'filled' | 'expired'
+  reported_at      timestamptz,
   filled_at        timestamptz,
   expired_at       timestamptz,
   confirmed_count  int default 1,

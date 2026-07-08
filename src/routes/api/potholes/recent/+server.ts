@@ -16,7 +16,9 @@ export const GET: RequestHandler = async ({ url }) => {
 			'id, created_at, lat, lng, address, description, status, confirmed_count, filled_at, expired_at, photos_published',
 		)
 		.neq('status', 'pending')
-		.or(`created_at.gt.${since},filled_at.gt.${since},expired_at.gt.${since}`)
+		.or(
+			`created_at.gt.${since},reported_at.gt.${since},filled_at.gt.${since},expired_at.gt.${since}`,
+		)
 		.order('created_at', { ascending: false })
 		.limit(100);
 
