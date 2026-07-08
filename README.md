@@ -77,6 +77,7 @@ Run the migration files against your Supabase project in order:
 19. `schema_vote_ratelimit.sql` — adds `vote_submit` scope to `api_rate_limit_events` constraint
 20. `schema_votes_ttl.sql` — pg_cron purge job for `pothole_votes` older than 90 days
 21. `schema_polling_indexes.sql` — partial indexes on `filled_at`/`expired_at` for the `/api/potholes/recent` poll filter (#205)
+22. `schema_revoke_public_writes.sql` — security: drop leftover public write RLS policies + revoke anon/authenticated write grants (writes are service-role only) (#200)
 
 ### Run
 
