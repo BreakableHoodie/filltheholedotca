@@ -178,6 +178,18 @@ test.describe("Pothole detail page", () => {
     ).not.toBeVisible();
   });
 
+  test("'Prioritize' button is hidden for a filled pothole", async ({
+    page,
+  }) => {
+    // Prioritize ("this needs attention") makes no sense on an already-filled
+    // pothole — it is gated to reported status only.
+    await page.goto(fixtureDetailUrl(seededFilledWithPhotosPothole.id));
+
+    await expect(
+      page.getByRole("button", { name: /Prioritize this pothole/i }),
+    ).not.toBeVisible();
+  });
+
   test("shows the recurring road issue notice when nearbyFilled is populated", async ({
     page,
   }) => {

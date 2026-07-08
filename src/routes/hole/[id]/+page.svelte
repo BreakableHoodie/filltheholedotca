@@ -658,6 +658,7 @@
 					{hitSubmitted ? 'Recorded' : 'I hit this'}
 				</button>
 			</div>
+			{#if pothole.status === 'reported'}
 			<div class="flex items-center justify-between gap-3 pt-4 border-t border-stone-100 dark:border-stone-800">
 				<div class="space-y-0.5">
 					<p class="text-sm font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-1.5">
@@ -686,6 +687,7 @@
 					Prioritize · {voteCount}
 				</button>
 			</div>
+			{/if}
 		</div>
 	{/if}
 
