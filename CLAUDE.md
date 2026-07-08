@@ -166,7 +166,7 @@ src/
       +page.svelte            # Pothole detail (status, councillor contact, share, before/after photo galleries)
       +page.server.ts         # Loads single pothole + councillor
     api/
-      potholes/recent/+server.ts  # GET — polling endpoint: non-pending potholes created/filled/expired after ?since=
+      potholes/recent/+server.ts  # GET — polling endpoint: non-pending potholes created/reported/filled/expired after ?since=
       report/+server.ts       # POST — submit report (geofence, IP dedup, 2-confirm merge)
       filled/+server.ts       # POST — mark filled (reported → filled)
       photos/+server.ts       # POST — upload photo (magic-byte validation, moderation, rate limit)
@@ -203,6 +203,7 @@ potholes (
   id uuid PK, created_at, lat float8, lng float8,
   address text, description text,
   status text,          -- 'pending' | 'reported' | 'expired' | 'filled'
+  reported_at timestamptz,  -- stamped by increment_confirmation on pending -> reported
   filled_at timestamptz, expired_at timestamptz,
   confirmed_count int,  -- starts at 1, promoted to 'reported' at 2
   photos_published bool  -- admin toggle; published pothole ≠ published photos
@@ -261,6 +262,7 @@ Run migrations in this order:
 25. `schema_vote_ratelimit.sql` — extends `api_rate_limit_events_scope_check` to include `vote_submit`
 26. `schema_votes_ttl.sql` — pg_cron purge job for `pothole_votes` older than 90 days (PIPEDA data minimization)
 27. `schema_ward_subscriptions.sql` — adds `ward_subscriptions` table (ward-level push alert subscriptions) and extends `api_rate_limit_events_scope_check` to include `ward_notify_subscribe`
+28. `schema_pothole_reported_at.sql` — adds `reported_at` timestamptz column (backfilled for existing non-pending rows) and redefines `increment_confirmation` to stamp it on the `pending → reported` flip, so the polling endpoint can detect that transition
 
 Eleven `pg_cron` jobs run nightly:
 
@@ -295,7 +297,7 @@ pending → reported → filled
 - **Coord privacy**: reporter lat/lng is rounded to 4 decimal places (≈11m at Waterloo latitude) at write-time via `roundPublicCoord()` in `$lib/geo` — the precision is a hard-coded constant, not an env var. Geofence + merge-radius logic runs on the raw input so decisions aren't shifted by rounding. Serialization paths (feed.json, feed.xml, export.csv, embed, OG) re-apply `roundPublicCoord` as defense-in-depth for any historical rows stored at full precision.
 - **Photo EXIF**: server-side strip in `$lib/server/exif-strip` runs before SightEngine moderation and storage upload. `stripJpegMetadata` drops APP1–APP15 and COM segments from JPEGs. `stripPngMetadata` drops the `eXIf` chunk from PNGs. `stripWebpMetadata` drops EXIF/XMP chunks from VP8X-extended WebPs (simple VP8/VP8L files carry no metadata by spec). All three return the input unchanged on malformed input.
 - **Auto-expiry**: `reported` potholes expire after 90 days; `pending` potholes expire after 14 days (both via pg_cron)
-- **Real-time polling**: homepage polls `/api/potholes/recent?since=` every 60s for new/changed potholes without requiring page reload. Polling starts after map loads, pauses on disconnect.
+- **Real-time polling**: homepage polls `/api/potholes/recent?since=` every 60s for new/changed potholes without requiring page reload. The query filters on `created_at`, `reported_at`, `filled_at`, or `expired_at` being after `since`, so a `pending → reported` transition (which stamps `reported_at` via `increment_confirmation`) is surfaced even though it doesn't touch `created_at`. Polling starts after map loads, pauses on disconnect.
 - **Ward alerts**: residents can subscribe (browser push, no account) to a council ward on `/stats/ward/[city]/[ward]` via `/api/notify/ward`; subscriptions live in `ward_subscriptions` (service-role only, keyed `${city}-${ward}`, no user location stored). When a pothole flips `pending → reported`, `api/report` resolves its ward and fans out via `notifyWardSubscribers` (`$lib/server/webpush`) — best-effort, awaited, prunes only 410/404 endpoints (persistent, unlike one-shot fill subs).
 - **Admin map**: Leaflet + markercluster at `/admin/map` with status-filtered layers and click-to-manage popups. Loads all 5000 potholes. Admin-auth required.
 - **Before/after photos**: when pothole status is `filled`, the detail page splits published photos into before/after galleries via `splitByFill()` in `$lib/photo-split` — a read-time classification (`created_at < filled_at` = before, `>= filled_at` = after); a photo taken exactly at `filled_at` counts as "after". The split renders only when both eras have a photo, else the flat gallery shows. Marking a pothole filled prompts (optionally) for an "after" photo.

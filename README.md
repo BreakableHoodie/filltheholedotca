@@ -71,6 +71,7 @@ Run the migration files against your Supabase project in order:
 13. `schema_push.sql` — web push subscription storage
 14. `schema_push_unsubscribe_ratelimit.sql` — push unsubscribe rate limit scope
 15. `schema_review_fixes.sql` — RLS hardening; drops public read on `pothole_confirmations`
+16. `schema_pothole_reported_at.sql` — adds `reported_at` column + redefines `increment_confirmation` to stamp it, so polling can detect `pending → reported` transitions
 
 ### Run
 
