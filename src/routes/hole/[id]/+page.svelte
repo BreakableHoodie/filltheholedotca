@@ -81,6 +81,60 @@
 	});
 	let hittingIt = $state(false);
 
+	// ── "Prioritize" community vote (upvote-only) ──────────────────────────
+	// Backend supports up/down (direction: 1 | -1), but the UI only ever sends
+	// direction: 1 — a second tap removes the vote (DELETE). This avoids
+	// downvotes suppressing legitimate hazards. Distinct from "I hit this"
+	// (a physical encounter) — Prioritize signals "this needs attention."
+	let voteCount = $state(untrack(() => data.voteCount) ?? 0);
+	let voting = $state(false);
+	// Bumped after a successful vote toggle to force $derived to re-read localStorage immediately.
+	let voteVersion = $state(0);
+	let voted = $derived.by(() => {
+		void voteVersion; // read to track as reactive dependency; bumped after localStorage write
+		if (typeof localStorage === 'undefined') return false;
+		return localStorage.getItem(`vote:${pothole.id}`) === '1';
+	});
+
+	async function toggleVote() {
+		if (voting) return;
+		voting = true;
+		try {
+			if (voted) {
+				const res = await fetch('/api/vote', {
+					method: 'DELETE',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id: pothole.id })
+				});
+				if (!res.ok) {
+					toastError('Something went wrong. Try again.');
+					return;
+				}
+				const result = await res.json();
+				localStorage.removeItem(`vote:${pothole.id}`);
+				voteCount = result.upvotes ?? voteCount;
+			} else {
+				const res = await fetch('/api/vote', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id: pothole.id, direction: 1 })
+				});
+				if (!res.ok) {
+					toastError('Something went wrong. Try again.');
+					return;
+				}
+				const result = await res.json();
+				localStorage.setItem(`vote:${pothole.id}`, '1');
+				voteCount = result.upvotes ?? voteCount;
+			}
+			voteVersion++;
+		} catch {
+			toastError('Something went wrong. Try again.');
+		} finally {
+			voting = false;
+		}
+	}
+
 	async function subscribeFillNotification() {
 		if (!swRegistration || !vapidKey) return;
 		fillNotifState = 'pending';
@@ -574,9 +628,9 @@
 		</div>
 	{/if}
 
-	<!-- "I hit this" signal -->
+	<!-- "I hit this" + "Prioritize" community signals -->
 	{#if pothole.status === 'reported'}
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4">
+		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-4">
 			<div class="flex items-center justify-between gap-3">
 				<div class="space-y-0.5">
 					<p class="text-sm font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-1.5">
@@ -604,6 +658,36 @@
 					{hitSubmitted ? 'Recorded' : 'I hit this'}
 				</button>
 			</div>
+			{#if pothole.status === 'reported'}
+			<div class="flex items-center justify-between gap-3 pt-4 border-t border-stone-100 dark:border-stone-800">
+				<div class="space-y-0.5">
+					<p class="text-sm font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-1.5">
+						<Icon name="arrow-up" size={14} class="text-amber-500 shrink-0" />
+						Needs attention?
+					</p>
+					<p class="text-xs text-stone-500 dark:text-stone-400">
+						{voteCount === 0 ? 'No votes yet.' : `${voteCount} ${voteCount === 1 ? 'person wants' : 'people want'} this prioritized.`}
+					</p>
+				</div>
+				<button
+					onclick={toggleVote}
+					disabled={voting}
+					aria-pressed={voted}
+					aria-label={voted ? 'Remove your prioritize vote' : 'Prioritize this pothole'}
+					class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors
+						{voted
+							? 'bg-amber-50 dark:bg-amber-900/30 border border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50'
+							: 'bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:border-amber-500 hover:text-amber-500'}"
+				>
+					{#if voting}
+						<Icon name="loader" size={13} class="animate-spin shrink-0" />
+					{:else}
+						<Icon name="arrow-up" size={13} class="shrink-0" />
+					{/if}
+					Prioritize · {voteCount}
+				</button>
+			</div>
+			{/if}
 		</div>
 	{/if}
 

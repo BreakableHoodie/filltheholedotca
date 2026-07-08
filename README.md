@@ -72,6 +72,10 @@ Run the migration files against your Supabase project in order:
 14. `schema_push_unsubscribe_ratelimit.sql` — push unsubscribe rate limit scope
 15. `schema_review_fixes.sql` — RLS hardening; drops public read on `pothole_confirmations`
 16. `schema_pothole_reported_at.sql` — adds `reported_at` column + redefines `increment_confirmation` to stamp it, so polling can detect `pending → reported` transitions
+17. `schema_grants.sql` — explicit Data API `GRANT` statements for `anon`/`service_role` on every public-schema table
+18. `schema_votes.sql` — `pothole_votes` table for community upvote/downvote signal
+19. `schema_vote_ratelimit.sql` — adds `vote_submit` scope to `api_rate_limit_events` constraint
+20. `schema_votes_ttl.sql` — pg_cron purge job for `pothole_votes` older than 90 days
 
 ### Run
 
@@ -164,6 +168,10 @@ Potholes can be added to a personal watchlist stored in your browser's local sto
 ### "I Hit This"
 
 The pothole detail page has an "I hit this" button for drivers to signal they physically drove over the pothole. Hit counts are shown publicly and help surface high-impact holes.
+
+### Prioritize
+
+Next to "I hit this," a "Prioritize" button lets residents flag that a pothole needs attention. It's upvote-only — a second tap removes your vote rather than casting a downvote — so the signal can't be used to suppress legitimate hazards.
 
 ### Ward accountability
 

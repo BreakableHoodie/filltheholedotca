@@ -153,6 +153,43 @@ test.describe("Pothole detail page", () => {
     ).not.toBeVisible();
   });
 
+  test("shows the 'Prioritize' button with vote count for a reported pothole", async ({
+    page,
+  }) => {
+    await page.goto(fixtureDetailUrl(seededReportedPothole.id));
+
+    // Seeded fixture has voteCount: 5 → "Prioritize · 5"
+    await expect(
+      page.getByRole("button", { name: "Prioritize this pothole" }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /Prioritize/i })).toContainText(
+      "5",
+    );
+  });
+
+  test("'Prioritize' button is hidden for a pending pothole", async ({
+    page,
+  }) => {
+    await page.goto(fixtureDetailUrl(seededPendingPothole.id));
+
+    // Only reported potholes show the prioritize signal block
+    await expect(
+      page.getByRole("button", { name: /Prioritize this pothole/i }),
+    ).not.toBeVisible();
+  });
+
+  test("'Prioritize' button is hidden for a filled pothole", async ({
+    page,
+  }) => {
+    // Prioritize ("this needs attention") makes no sense on an already-filled
+    // pothole — it is gated to reported status only.
+    await page.goto(fixtureDetailUrl(seededFilledWithPhotosPothole.id));
+
+    await expect(
+      page.getByRole("button", { name: /Prioritize this pothole/i }),
+    ).not.toBeVisible();
+  });
+
   test("shows the recurring road issue notice when nearbyFilled is populated", async ({
     page,
   }) => {
