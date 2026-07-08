@@ -35,11 +35,15 @@
 	$effect(() => {
 		if (!mapReady) return;
 		pollTimer = setInterval(async () => {
-			// Quantize the transmitted `since` to a 60s boundary (minus a 5s safety
-			// overlap) so every client polling within the same minute requests the
-			// same URL — lets the CDN (see api/potholes/recent) serve one shared
-			// cached response instead of a unique, uncacheable ms-precision URL per client.
-			const since = new Date(Math.floor((lastPoll - 5000) / 60000) * 60000).toISOString();
+			// Quantize the transmitted `since` to a 60s boundary so every client
+			// polling within the same minute requests the same URL — lets the CDN
+			// (see api/potholes/recent) serve one shared cached response instead of a
+			// unique, uncacheable ms-precision URL per client. Back off a FULL extra
+			// minute (not just a few seconds): the fetch window must always overlap
+			// the previous ~60s poll, or a change landing between the previous poll
+			// time and the current minute boundary would fall in a gap and never be
+			// polled. With the -1 minute, consecutive windows always overlap.
+			const since = new Date((Math.floor(lastPoll / 60000) - 1) * 60000).toISOString();
 			try {
 				const res = await fetch(`/api/potholes/recent?since=${encodeURIComponent(since)}`);
 				if (!res.ok) return;
