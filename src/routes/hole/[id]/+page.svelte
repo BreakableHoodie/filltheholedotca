@@ -21,6 +21,7 @@
 	import type { CityRepairRequest } from './+page.server';
 	import { env } from '$env/dynamic/public';
 	import { urlBase64ToUint8Array } from '$lib/push';
+	import { splitByFill } from '$lib/photo-split';
 
 	let { data }: { data: PageData } = $props();
 	let pothole = $derived(data.pothole as Pothole);
@@ -52,6 +53,11 @@
 		return () => controller.abort();
 	});
 	let photos = $derived(data.photos ?? []);
+	// Before/after only when filled AND both eras have at least one published photo.
+	let photoSplit = $derived(splitByFill(photos, pothole.filled_at));
+	let showBeforeAfter = $derived(
+		pothole.status === 'filled' && photoSplit.before.length > 0 && photoSplit.after.length > 0
+	);
 	let confirmationThreshold = $derived(data.confirmationThreshold);
 	let clampedConfirmationCount = $derived(Math.min(pothole.confirmed_count, confirmationThreshold));
 	let remainingConfirmations = $derived(Math.max(0, confirmationThreshold - pothole.confirmed_count));
@@ -715,23 +721,68 @@
 				<Icon name="camera" size={14} class="text-amber-500 shrink-0" />
 				{photos.length === 1 ? 'Photo' : 'Photos'}
 			</div>
-			<div class="grid grid-cols-2 gap-2">
-				{#each photos as photo, i (photo.id)}
-					<button
-						onclick={() => openLightbox(i)}
-						class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
-						aria-label="View photo {i + 1} of {photos.length}"
-					>
-						<img
-							src={photo.thumbnailUrl}
-							alt="Pothole at {pothole.address || 'this location'}"
-							class="w-full object-cover aspect-video"
-							loading="lazy"
-							onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
-						/>
-					</button>
-				{/each}
-			</div>
+			{#if showBeforeAfter}
+				<div class="grid gap-4 sm:grid-cols-2">
+					<div>
+						<h3 class="section-title text-sm text-stone-500 dark:text-stone-400 mb-2">Before</h3>
+						<div class="grid grid-cols-2 gap-2">
+							{#each photoSplit.before as photo (photo.id)}
+								<button
+									onclick={() => openLightbox(photos.indexOf(photo))}
+									class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
+									aria-label="View photo {photos.indexOf(photo) + 1} of {photos.length}"
+								>
+									<img
+										src={photo.thumbnailUrl}
+										alt="Pothole at {pothole.address || 'this location'}"
+										class="w-full object-cover aspect-video"
+										loading="lazy"
+										onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
+									/>
+								</button>
+							{/each}
+						</div>
+					</div>
+					<div>
+						<h3 class="section-title text-sm text-stone-500 dark:text-stone-400 mb-2">After</h3>
+						<div class="grid grid-cols-2 gap-2">
+							{#each photoSplit.after as photo (photo.id)}
+								<button
+									onclick={() => openLightbox(photos.indexOf(photo))}
+									class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
+									aria-label="View photo {photos.indexOf(photo) + 1} of {photos.length}"
+								>
+									<img
+										src={photo.thumbnailUrl}
+										alt="Pothole at {pothole.address || 'this location'}"
+										class="w-full object-cover aspect-video"
+										loading="lazy"
+										onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
+									/>
+								</button>
+							{/each}
+						</div>
+					</div>
+				</div>
+			{:else}
+				<div class="grid grid-cols-2 gap-2">
+					{#each photos as photo, i (photo.id)}
+						<button
+							onclick={() => openLightbox(i)}
+							class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
+							aria-label="View photo {i + 1} of {photos.length}"
+						>
+							<img
+								src={photo.thumbnailUrl}
+								alt="Pothole at {pothole.address || 'this location'}"
+								class="w-full object-cover aspect-video"
+								loading="lazy"
+								onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
+							/>
+						</button>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	{:else if canUploadPhoto}
 		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">

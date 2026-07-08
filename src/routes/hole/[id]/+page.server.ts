@@ -99,6 +99,50 @@ const E2E_DETAIL_FIXTURES: Record<string, E2eDetailFixture> = {
       },
     ],
   },
+  // Filled pothole with one photo before filled_at and one after — exercises
+  // the before/after split gallery on the detail page.
+  "00000000-0000-0000-0000-0000000000fa": {
+    pothole: {
+      id: "00000000-0000-0000-0000-0000000000fa",
+      created_at: "2026-02-01T09:00:00.000Z",
+      lat: 43.4520,
+      lng: -80.4930,
+      address: "12 Frederick Street",
+      description: "Patched after two seasons of complaints.",
+      status: "filled",
+      confirmed_count: 2,
+      filled_at: "2026-03-01T12:00:00.000Z",
+      expired_at: null,
+      photos_published: true,
+    },
+    councillor: COUNCILLORS.find((c) => c.city === "kitchener" && c.ward === 9) ?? null,
+    cityRepairRequests: [],
+    photos: [
+      {
+        id: "aaaaaaaa-0000-4000-8000-0000000000fa",
+        pothole_id: "00000000-0000-0000-0000-0000000000fa",
+        storage_path: "fixtures/before-fa.jpg",
+        moderation_status: "approved",
+        moderation_score: null,
+        created_at: "2026-02-01T09:05:00.000Z",
+        url: "https://placehold.co/800x450?text=Before",
+        thumbnailUrl: "https://placehold.co/800x450?text=Before",
+      },
+      {
+        id: "bbbbbbbb-0000-4000-8000-0000000000fa",
+        pothole_id: "00000000-0000-0000-0000-0000000000fa",
+        storage_path: "fixtures/after-fa.jpg",
+        moderation_status: "approved",
+        moderation_score: null,
+        created_at: "2026-03-02T09:05:00.000Z",
+        url: "https://placehold.co/800x450?text=After",
+        thumbnailUrl: "https://placehold.co/800x450?text=After",
+      },
+    ],
+    confirmationThreshold: 2,
+    hitCount: 0,
+    nearbyFilled: [],
+  },
 };
 
 export const load: PageServerLoad = async ({ params, url, setHeaders }) => {

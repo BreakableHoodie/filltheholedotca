@@ -16,6 +16,13 @@ const seededNearbyFilledPothole = {
   address: "200 Queen Street North",
 } as const;
 
+// Filled pothole with one photo before filled_at and one after — exercises
+// the before/after split gallery.
+const seededFilledWithPhotosPothole = {
+  id: "00000000-0000-0000-0000-0000000000fa",
+  address: "12 Frederick Street",
+} as const;
+
 function fixtureDetailUrl(id: string) {
   return `/hole/${id}?__fixture=1`;
 }
@@ -190,5 +197,14 @@ test.describe("Pothole detail page", () => {
     await expect(
       page.getByText(/City repair request/i),
     ).not.toBeVisible();
+  });
+
+  test("filled pothole with before and after photos shows a before/after split", async ({
+    page,
+  }) => {
+    await page.goto(fixtureDetailUrl(seededFilledWithPhotosPothole.id));
+
+    await expect(page.getByRole("heading", { name: /before/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /after/i })).toBeVisible();
   });
 });
