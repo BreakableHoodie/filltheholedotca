@@ -259,6 +259,7 @@ Run migrations in this order:
 24. `schema_votes.sql` — `pothole_votes` table for upvote/downvote (community prioritization)
 25. `schema_vote_ratelimit.sql` — extends `api_rate_limit_events_scope_check` to include `vote_submit`
 26. `schema_votes_ttl.sql` — pg_cron purge job for `pothole_votes` older than 90 days (PIPEDA data minimization)
+27. `schema_ward_subscriptions.sql` — adds `ward_subscriptions` table (ward-level push alert subscriptions) and extends `api_rate_limit_events_scope_check` to include `ward_notify_subscribe`
 
 Eleven `pg_cron` jobs run nightly:
 
