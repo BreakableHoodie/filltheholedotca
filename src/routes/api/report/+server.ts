@@ -7,6 +7,8 @@ import { GEOFENCE, MERGE_RADIUS_M } from '$lib/constants';
 import { getConfirmationThreshold } from '$lib/server/settings';
 import { notify } from '$lib/server/pushover';
 import { postConfirmed } from '$lib/server/bluesky';
+import { notifyWardSubscribers } from '$lib/server/webpush';
+import { lookupWard } from '$lib/wards';
 import { logError } from '$lib/server/observability';
 import { getAdminClient } from '$lib/server/supabase';
 import { fixturePotholes } from '$lib/server/fixture-store';
@@ -184,6 +186,18 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				priority: -1
 			});
 			void postConfirmed(match.id, null);
+
+			// Ward alert fan-out: notify subscribers of this pothole's ward that a new
+			// pothole just went live. Best-effort — never fail the report on push error.
+			// Awaited (not fire-and-forget) because serverless cannot reliably run
+			// un-awaited work after the response; the latency tradeoff is documented in
+			// the neighbourhood-loop spec.
+			try {
+				const ward = await lookupWard(match.lat, match.lng);
+				if (ward) await notifyWardSubscribers(`${ward.city}-${ward.ward}`, match.id, match.address);
+			} catch (err) {
+				logError('report/ward-fanout', 'Ward alert fan-out failed', err, { potholeId: match.id });
+			}
 		}
 
 		return json({
