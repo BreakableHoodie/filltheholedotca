@@ -3,6 +3,7 @@ import { supabase } from '$lib/supabase';
 import { decodeHtmlEntities } from '$lib/escape';
 import { COUNCILLORS, fetchWards, type GeoJSONFeature } from '$lib/wards';
 import { inWardFeature } from '$lib/geo';
+import { logError } from '$lib/server/observability';
 import type { PageServerLoad } from './$types';
 import type { Pothole } from '$lib/types';
 import type { City } from '$lib/wards';
@@ -84,7 +85,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
     .order('created_at', { ascending: false });
 
   if (dbError) {
-    console.error('[ward page] supabase error:', dbError.message);
+    logError('stats/ward', 'Failed to load ward potholes', dbError);
     throw error(503, 'Pothole data temporarily unavailable');
   }
 

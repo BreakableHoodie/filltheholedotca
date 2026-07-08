@@ -47,7 +47,10 @@ export const PATCH: RequestHandler = async ({ params, request, locals, getClient
 			.select('status')
 			.eq('id', id)
 			.maybeSingle();
-		if (fetchErr) throw error(500, 'Failed to fetch pothole');
+		if (fetchErr) {
+			logError('admin/pothole', 'Failed to fetch pothole', fetchErr, { potholeId: id });
+			throw error(500, 'Failed to fetch pothole');
+		}
 		if (!current) throw error(404, 'Pothole not found');
 
 		const allowed = ALLOWED_TRANSITIONS[current.status] ?? [];
@@ -62,7 +65,10 @@ export const PATCH: RequestHandler = async ({ params, request, locals, getClient
 	}
 
 	const { error: dbErr } = await getAdminClient().from('potholes').update(updates).eq('id', id);
-	if (dbErr) throw error(500, 'Failed to update');
+	if (dbErr) {
+		logError('admin/pothole', 'Failed to update pothole', dbErr, { potholeId: id });
+		throw error(500, 'Failed to update');
+	}
 
 	await writeAuditLog(
 		locals.adminUser.id,
@@ -97,7 +103,10 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 	}
 
 	const { error: deleteError } = await getAdminClient().from('potholes').delete().eq('id', id);
-	if (deleteError) throw error(500, 'Failed to delete');
+	if (deleteError) {
+		logError('admin/pothole-delete', 'Failed to delete pothole', deleteError, { potholeId: id });
+		throw error(500, 'Failed to delete');
+	}
 
 	await writeAuditLog(locals.adminUser.id, 'pothole.delete', 'pothole', id, null, await hashIp(getClientAddress()));
 

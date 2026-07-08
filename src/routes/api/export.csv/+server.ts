@@ -4,6 +4,7 @@ import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/publi
 import { createClient } from '@supabase/supabase-js';
 import { decodeHtmlEntities } from '$lib/escape';
 import { roundPublicCoord } from '$lib/geo';
+import { logError } from '$lib/server/observability';
 
 const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
@@ -75,7 +76,10 @@ export const GET: RequestHandler = async ({ request }) => {
 		.order('created_at', { ascending: false })
 		.limit(ROW_LIMIT);
 
-	if (dbError) throw error(500, 'Failed to load data');
+	if (dbError) {
+		logError('api/export.csv', 'Failed to load potholes for export', dbError);
+		throw error(500, 'Failed to load data');
+	}
 
 	const rows = data ?? [];
 

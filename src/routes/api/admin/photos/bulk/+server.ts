@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 const bulkSchema = z.object({
 	action: z.enum(['approve', 'reject']),
 	ids: z.array(z.string().uuid()).min(1).max(50)
@@ -25,7 +26,10 @@ export const POST: RequestHandler = async ({ request, locals, getClientAddress }
 		.update({ moderation_status })
 		.in('id', ids);
 
-	if (updateError) throw error(500, 'Failed to bulk update photos');
+	if (updateError) {
+		logError('admin/photos-bulk', 'Failed to bulk update photos', updateError, { action, count: ids.length });
+		throw error(500, 'Failed to bulk update photos');
+	}
 
 	await writeAuditLog(
 		locals.adminUser.id,

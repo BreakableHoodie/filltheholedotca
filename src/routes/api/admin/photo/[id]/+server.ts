@@ -29,7 +29,10 @@ export const PATCH: RequestHandler = async ({ request, params, locals, getClient
 		.update({ moderation_status })
 		.eq('id', id);
 
-	if (updateError) throw error(500, 'Failed to update photo status');
+	if (updateError) {
+		logError('admin/photo', 'Failed to update photo status', updateError, { photoId: id });
+		throw error(500, 'Failed to update photo status');
+	}
 
 	await writeAuditLog(
 		locals.adminUser.id,
@@ -64,7 +67,10 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 		.single();
 
 	const { error: deleteError } = await getAdminClient().from('pothole_photos').delete().eq('id', id);
-	if (deleteError) throw error(500, 'Failed to delete photo record');
+	if (deleteError) {
+		logError('admin/photo', 'Failed to delete photo record', deleteError, { photoId: id });
+		throw error(500, 'Failed to delete photo record');
+	}
 
 	// Best-effort storage cleanup
 	if (photo?.storage_path) {

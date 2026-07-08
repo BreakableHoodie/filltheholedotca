@@ -6,6 +6,7 @@ import { notify } from '$lib/server/pushover';
 import { broadcastPush, notifyFillSubscribers } from '$lib/server/webpush';
 import { postFilled } from '$lib/server/bluesky';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 
 // L6: All pothole_actions queries use the service-role client — the public SELECT
 // policy on pothole_actions was a data-leak vector (ip_hash correlation). After
@@ -35,7 +36,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.eq('action', 'filled')
 		.gte('created_at', windowStart);
 
-	if (countError) throw error(500, 'Rate limit check failed');
+	if (countError) {
+		logError('api/filled', 'Failed to check fill rate limit', countError);
+		throw error(500, 'Rate limit check failed');
+	}
 	if ((recentFills ?? 0) >= FILL_RATE_LIMIT) {
 		throw error(429, 'Too many fill reports. Please slow down.');
 	}
@@ -50,6 +54,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		if (actionError.code === '23505') {
 			return json({ ok: false, message: "You've already marked this one as filled." });
 		}
+		logError('api/filled', 'Failed to record fill action', actionError, { potholeId: parsed.data.id });
 		throw error(500, 'Failed to record action');
 	}
 
@@ -63,7 +68,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.neq('status', 'expired')
 		.select('id, address');
 
-	if (updateError) throw error(500, 'Failed to update status');
+	if (updateError) {
+		logError('api/filled', 'Failed to update pothole status to filled', updateError, { potholeId: parsed.data.id });
+		throw error(500, 'Failed to update status');
+	}
 	if (!updated || updated.length === 0) throw error(409, 'Pothole is not in a fillable state');
 
 	const filledPothole = updated[0];

@@ -39,7 +39,10 @@ export const POST: RequestHandler = async ({ params, request, getClientAddress }
 		.eq('scope', 'fill_notify_subscribe')
 		.gte('created_at', windowStart);
 
-	if (rateLimitError) throw error(500, 'Failed to check rate limit');
+	if (rateLimitError) {
+		logError('api/notify', 'Failed to check rate limit', rateLimitError, { potholeId: id });
+		throw error(500, 'Failed to check rate limit');
+	}
 	if ((recent ?? 0) >= RATE_LIMIT) throw error(429, 'Too many requests. Please wait before trying again.');
 
 	// Confirm the pothole exists and is in a state where a fill notification makes sense.
@@ -61,7 +64,10 @@ export const POST: RequestHandler = async ({ params, request, getClientAddress }
 		},
 		{ onConflict: 'pothole_id,endpoint' }
 	);
-	if (dbError) throw error(500, 'Failed to save subscription');
+	if (dbError) {
+		logError('api/notify', 'Failed to save fill notification subscription', dbError, { potholeId: id });
+		throw error(500, 'Failed to save subscription');
+	}
 
 	const { error: rlErr } = await db
 		.from('api_rate_limit_events')
@@ -85,7 +91,10 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 		.delete()
 		.eq('pothole_id', parsedId.data.id)
 		.eq('endpoint', parsed.data.endpoint);
-	if (deleteError) throw error(500, 'Failed to remove subscription');
+	if (deleteError) {
+		logError('api/notify', 'Failed to remove fill notification subscription', deleteError, { potholeId: parsedId.data.id });
+		throw error(500, 'Failed to remove subscription');
+	}
 
 	return json({ ok: true });
 };
