@@ -178,6 +178,7 @@ src/
       vote/+server.ts          # POST/DELETE — upvote/downvote (community prioritization)
       ccc/[id]/+server.ts           # GET — ArcGIS CCC repair data proxy (off SSR path)
       notify/[id]/+server.ts        # POST/DELETE — per-pothole fill notification subscription
+      notify/ward/+server.ts        # POST/DELETE — ward-level "new pothole" alert subscription
       geocode/search/+server.ts     # GET — Nominatim search proxy (sets User-Agent server-side)
       geocode/reverse/+server.ts    # GET — Nominatim reverse geocode proxy
       admin/pothole/[id]/+server.ts  # DELETE — admin moderation
@@ -295,6 +296,7 @@ pending → reported → filled
 - **Photo EXIF**: server-side strip in `$lib/server/exif-strip` runs before SightEngine moderation and storage upload. `stripJpegMetadata` drops APP1–APP15 and COM segments from JPEGs. `stripPngMetadata` drops the `eXIf` chunk from PNGs. `stripWebpMetadata` drops EXIF/XMP chunks from VP8X-extended WebPs (simple VP8/VP8L files carry no metadata by spec). All three return the input unchanged on malformed input.
 - **Auto-expiry**: `reported` potholes expire after 90 days; `pending` potholes expire after 14 days (both via pg_cron)
 - **Real-time polling**: homepage polls `/api/potholes/recent?since=` every 60s for new/changed potholes without requiring page reload. Polling starts after map loads, pauses on disconnect.
+- **Ward alerts**: residents can subscribe (browser push, no account) to a council ward on `/stats/ward/[city]/[ward]` via `/api/notify/ward`; subscriptions live in `ward_subscriptions` (service-role only, keyed `${city}-${ward}`, no user location stored). When a pothole flips `pending → reported`, `api/report` resolves its ward and fans out via `notifyWardSubscribers` (`$lib/server/webpush`) — best-effort, awaited, prunes only 410/404 endpoints (persistent, unlike one-shot fill subs).
 - **Admin map**: Leaflet + markercluster at `/admin/map` with status-filtered layers and click-to-manage popups. Loads all 5000 potholes. Admin-auth required.
 - **Before/after photos**: when pothole status is `filled`, the detail page splits published photos into before/after galleries via `splitByFill()` in `$lib/photo-split` — a read-time classification (`created_at < filled_at` = before, `>= filled_at` = after); a photo taken exactly at `filled_at` counts as "after". The split renders only when both eras have a photo, else the flat gallery shows. Marking a pothole filled prompts (optionally) for an "after" photo.
 - **Admin description editing**: admins can edit pothole description via form action on `/admin/potholes/[id]`.
