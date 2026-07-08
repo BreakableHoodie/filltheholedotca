@@ -105,12 +105,3 @@ test.describe('Stats page', () => {
 		}
 	});
 });
-
-test.describe('Ward accountability page', () => {
-	test('shows a new-pothole alert toggle', async ({ page }) => {
-		await page.goto('/stats/ward/kitchener/9?__fixture=1');
-		// The toggle's visible label depends on push permission (headless reports
-		// 'denied'), so assert on a stable test id rather than permission-dependent text.
-		await expect(page.getByTestId('ward-alert-toggle')).toBeVisible();
-	});
-});

@@ -195,7 +195,6 @@
     {#if wardNotifState !== 'unsupported'}
       <button
         type="button"
-        data-testid="ward-alert-toggle"
         onclick={wardNotifState === 'subscribed' ? unsubscribeWardNotification : subscribeWardNotification}
         disabled={wardNotifState === 'pending' || wardNotifState === 'denied'}
         class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-900 disabled:opacity-60 {wardNotifState === 'subscribed' ? 'bg-amber-500 text-stone-900 hover:bg-amber-400' : 'bg-stone-800 text-amber-400 border border-stone-700 hover:bg-stone-700'}"
