@@ -1014,7 +1014,7 @@
 				City repair {cityRepairRequests.length === 1 ? 'request' : 'requests'} on file
 			</div>
 			<p class="text-stone-600 dark:text-stone-300 text-sm">
-				Kitchener's 311 system has
+				The City of Kitchener's Corporate Contact Centre has
 				<span class="text-stone-900 dark:text-white font-semibold">{cityRepairRequests.length} official pothole repair {cityRepairRequests.length === 1 ? 'request' : 'requests'}</span>
 				logged within 200 m of this location.
 			</p>
