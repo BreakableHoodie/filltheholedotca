@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { z } from 'zod';
 import { requireRole } from '$lib/server/admin-auth';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 const PAGE_SIZE = 50;
 
 export type AuditEntry = {
@@ -54,7 +55,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		getAdminClient().from('admin_users').select('id, email, first_name, last_name').order('email')
 	]);
 
-	if (dbErr) throw error(500, 'Failed to load audit log');
+	if (dbErr) {
+		logError('admin/audit', 'Failed to load audit log', dbErr);
+		throw error(500, 'Failed to load audit log');
+	}
 
 	const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 

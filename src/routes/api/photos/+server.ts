@@ -191,7 +191,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.eq('ip_hash', ipHash)
 		.eq('scope', 'photo_upload')
 		.gte('created_at', windowStart);
-	if (rateLimitError) throw error(500, 'Failed to check upload rate limit');
+	if (rateLimitError) {
+		logError('api/photos', 'Failed to check upload rate limit', rateLimitError);
+		throw error(500, 'Failed to check upload rate limit');
+	}
 	if ((recentUploads ?? 0) >= PHOTO_RATE_LIMIT) {
 		throw error(429, 'Too many photo uploads. Please wait before trying again.');
 	}
@@ -202,7 +205,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.select('id, status')
 		.eq('id', idParsed.data)
 		.maybeSingle();
-	if (potholeError) throw error(500, 'Failed to verify pothole status');
+	if (potholeError) {
+		logError('api/photos', 'Failed to verify pothole status', potholeError, { potholeId: idParsed.data });
+		throw error(500, 'Failed to verify pothole status');
+	}
 	if (!pothole) throw error(404, 'Pothole not found');
 	if (!ACTIVE_UPLOAD_STATUSES.has(pothole.status)) {
 		throw error(409, 'Photos are only allowed for pending or reported potholes');
@@ -221,7 +227,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.select('*', { count: 'exact', head: true })
 		.eq('pothole_id', idParsed.data)
 		.neq('moderation_status', 'rejected');
-	if (activePhotoCountError) throw error(500, 'Failed to check photo limit');
+	if (activePhotoCountError) {
+		logError('api/photos', 'Failed to check active photo count', activePhotoCountError, { potholeId: idParsed.data });
+		throw error(500, 'Failed to check photo limit');
+	}
 	if ((activePhotoCount ?? 0) >= MAX_ACTIVE_PHOTOS_PER_POTHOLE) {
 		throw error(409, 'This pothole already has the maximum number of active photos');
 	}

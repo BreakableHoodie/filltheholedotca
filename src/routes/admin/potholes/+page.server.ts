@@ -5,6 +5,7 @@ import type { PotholeStatus } from '$lib/types';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 const VALID_STATUSES: PotholeStatus[] = ['pending', 'reported', 'filled', 'expired'];
 const VALID_SORT_COLS = ['created_at', 'address', 'status', 'confirmed_count'] as const;
 const VALID_PAGE_SIZES = [25, 50, 100] as const;
@@ -72,7 +73,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	}
 
 	const { data, count, error: dbErr } = await query;
-	if (dbErr) throw error(500, 'Failed to load potholes');
+	if (dbErr) {
+		logError('admin/potholes', 'Failed to load potholes list', dbErr);
+		throw error(500, 'Failed to load potholes');
+	}
 
 	return {
 		potholes: data ?? [],
@@ -109,7 +113,10 @@ export const actions: Actions = {
 
 		await getAdminClient().from('pothole_confirmations').delete().in('pothole_id', ids);
 		const { error: dbErr } = await getAdminClient().from('potholes').delete().in('id', ids);
-		if (dbErr) return fail(500, { error: 'Failed to delete potholes' });
+		if (dbErr) {
+			logError('admin/potholes', 'Failed to bulk delete potholes', dbErr, { count: ids.length });
+			return fail(500, { error: 'Failed to delete potholes' });
+		}
 
 		const ipHash = await hashIp(getClientAddress());
 		for (const id of ids) {
@@ -141,7 +148,10 @@ export const actions: Actions = {
 		};
 
 		const { error: dbErr } = await getAdminClient().from('potholes').update(updates).in('id', ids);
-		if (dbErr) return fail(500, { error: 'Failed to update status' });
+		if (dbErr) {
+			logError('admin/potholes', 'Failed to bulk update pothole status', dbErr, { count: ids.length, status: s });
+			return fail(500, { error: 'Failed to update status' });
+		}
 
 		const ipHash = await hashIp(getClientAddress());
 		for (const id of ids) {
@@ -174,7 +184,10 @@ export const actions: Actions = {
 			.from('potholes')
 			.update({ photos_published: value })
 			.in('id', ids);
-		if (dbErr) return fail(500, { error: 'Failed to update photo visibility' });
+		if (dbErr) {
+			logError('admin/potholes', 'Failed to bulk toggle photo visibility', dbErr, { count: ids.length });
+			return fail(500, { error: 'Failed to update photo visibility' });
+		}
 
 		const ipHash = await hashIp(getClientAddress());
 		for (const id of ids) {

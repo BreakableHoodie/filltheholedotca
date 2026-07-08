@@ -11,6 +11,7 @@ import {
 } from '$lib/server/admin-crypto';
 import { generateTotpSecret, verifyTotpCode, generateTotpUri } from '$lib/server/admin-totp';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.adminUser) throw error(401, 'Unauthorized');
 	// Re-fetch totp_enabled fresh so UI reflects DB state, not session cache
@@ -84,7 +85,10 @@ export const actions: Actions = {
 			})
 			.eq('id', locals.adminUser.id);
 
-		if (dbErr) return fail(500, { error: 'Failed to enable MFA. Please try again.' });
+		if (dbErr) {
+			logError('admin/settings/mfa', 'Failed to enable MFA', dbErr, { userId: locals.adminUser.id });
+			return fail(500, { error: 'Failed to enable MFA. Please try again.' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,
@@ -130,7 +134,10 @@ export const actions: Actions = {
 			.update({ totp_enabled: false, totp_secret: null, backup_codes: null })
 			.eq('id', locals.adminUser.id);
 
-		if (dbErr) return fail(500, { error: 'Failed to disable MFA' });
+		if (dbErr) {
+			logError('admin/settings/mfa', 'Failed to disable MFA', dbErr, { userId: locals.adminUser.id });
+			return fail(500, { error: 'Failed to disable MFA' });
+		}
 
 		// Invalidate all other sessions so a stolen session token cannot continue
 		// to bypass the MFA requirement that was just removed.
@@ -176,7 +183,10 @@ export const actions: Actions = {
 			.update({ backup_codes: JSON.stringify(hashedCodes) })
 			.eq('id', locals.adminUser.id);
 
-		if (dbErr) return fail(500, { error: 'Failed to regenerate backup codes' });
+		if (dbErr) {
+			logError('admin/settings/mfa', 'Failed to regenerate backup codes', dbErr, { userId: locals.adminUser.id });
+			return fail(500, { error: 'Failed to regenerate backup codes' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,

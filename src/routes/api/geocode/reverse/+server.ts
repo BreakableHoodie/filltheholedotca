@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { z } from 'zod';
+import { logError } from '$lib/server/observability';
 
 const coordSchema = z.object({
 	lat: z.coerce.number().min(43.32).max(43.53),
@@ -29,7 +30,10 @@ export const GET: RequestHandler = async ({ url }) => {
 		}
 	});
 
-	if (!res.ok) throw error(502, 'Reverse geocode failed');
+	if (!res.ok) {
+		logError('api/geocode/reverse', 'Nominatim reverse geocode returned non-OK response', new Error(`Nominatim upstream ${res.status}`), { status: res.status });
+		throw error(502, 'Reverse geocode failed');
+	}
 
 	const data = await res.json();
 	return json(data);

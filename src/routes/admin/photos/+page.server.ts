@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireRole, writeAuditLog } from '$lib/server/admin-auth';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 type PhotoRow = {
 	id: string;
 	storage_path: string;
@@ -77,7 +78,10 @@ export const actions: Actions = {
 			.from('pothole_photos')
 			.update({ moderation_status: 'approved' })
 			.eq('id', id);
-		if (dbErr) return fail(500, { error: 'Failed to approve photo' });
+		if (dbErr) {
+			logError('admin/photos', 'Failed to approve photo', dbErr, { photoId: id });
+			return fail(500, { error: 'Failed to approve photo' });
+		}
 
 		await writeAuditLog(locals.adminUser.id, 'photo.approve', 'photo', id, null, await hashIp(getClientAddress()));
 		return { success: true };
@@ -94,7 +98,10 @@ export const actions: Actions = {
 			.from('pothole_photos')
 			.update({ moderation_status: 'rejected' })
 			.eq('id', id);
-		if (dbErr) return fail(500, { error: 'Failed to reject photo' });
+		if (dbErr) {
+			logError('admin/photos', 'Failed to reject photo', dbErr, { photoId: id });
+			return fail(500, { error: 'Failed to reject photo' });
+		}
 
 		await writeAuditLog(locals.adminUser.id, 'photo.reject', 'photo', id, null, await hashIp(getClientAddress()));
 		return { success: true };
@@ -115,7 +122,10 @@ export const actions: Actions = {
 			.from('pothole_photos')
 			.update({ moderation_status: 'approved' })
 			.in('id', ids);
-		if (dbErr) return fail(500, { error: 'Failed to approve photos' });
+		if (dbErr) {
+			logError('admin/photos', 'Failed to bulk approve photos', dbErr, { count: ids.length });
+			return fail(500, { error: 'Failed to approve photos' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,
@@ -143,7 +153,10 @@ export const actions: Actions = {
 			.from('pothole_photos')
 			.update({ moderation_status: 'rejected' })
 			.in('id', ids);
-		if (dbErr) return fail(500, { error: 'Failed to reject photos' });
+		if (dbErr) {
+			logError('admin/photos', 'Failed to bulk reject photos', dbErr, { count: ids.length });
+			return fail(500, { error: 'Failed to reject photos' });
+		}
 
 		await writeAuditLog(
 			locals.adminUser.id,

@@ -13,6 +13,7 @@ import {
 import { generateCsrfToken, CSRF_COOKIE } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 export const load: PageServerLoad = async ({ cookies, url }) => {
 	const sessionId = cookies.get(SESSION_COOKIE);
 	if (sessionId) {
@@ -156,7 +157,7 @@ export const actions: Actions = {
 					verified = true;
 				}
 			} catch (e) {
-				console.error('[mfa] TOTP decrypt/verify failed:', e);
+				logError('admin/mfa', 'TOTP decrypt/verify failed', e);
 			}
 		}
 
@@ -170,7 +171,7 @@ export const actions: Actions = {
 					remainingBackupCodes = result.remaining;
 				}
 			} catch (e) {
-				console.error('[mfa] Backup code check failed:', e);
+				logError('admin/mfa', 'Backup code check failed', e);
 			}
 		}
 
@@ -273,7 +274,7 @@ export const actions: Actions = {
 					maxAge: 30 * 24 * 60 * 60
 				});
 			} catch (e) {
-				console.error('[mfa] Failed to create trusted device:', e);
+				logError('admin/mfa', 'Failed to create trusted device', e);
 			}
 		}
 

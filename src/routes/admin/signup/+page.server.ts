@@ -7,6 +7,7 @@ import { checkAuthRateLimit, recordAuthAttempt } from '$lib/server/admin-auth';
 import { hashPassword } from '$lib/server/admin-crypto';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 
 const MIN_BOOTSTRAP_SECRET_LENGTH = 32;
 
@@ -199,6 +200,7 @@ export const actions: Actions = {
 				.single();
 
 			if (insertError || !newUser) {
+				logError('admin/signup', 'Failed to insert bootstrap admin account', insertError ?? new Error('no user returned'));
 				return fail(500, { error: 'Failed to create bootstrap account. Please try again.', ...echo });
 			}
 
@@ -287,8 +289,10 @@ export const actions: Actions = {
 			.select('id')
 			.single();
 
-		if (insertError || !newUser)
+		if (insertError || !newUser) {
+			logError('admin/signup', 'Failed to insert invited admin account', insertError ?? new Error('no user returned'));
 			return fail(500, { error: 'Failed to create account. Please try again.', ...echo });
+		}
 
 		// Atomically mark invite as used — the .is('used_at', null) guard ensures only one
 		// concurrent signup wins even if two requests arrive with the same valid code.

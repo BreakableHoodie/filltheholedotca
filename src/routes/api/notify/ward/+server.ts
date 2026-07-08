@@ -33,7 +33,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.eq('ip_hash', ipHash)
 		.eq('scope', 'ward_notify_subscribe')
 		.gte('created_at', windowStart);
-	if (rlErr) throw error(500, 'Failed to check rate limit');
+	if (rlErr) {
+		logError('api/notify/ward', 'Failed to check rate limit', rlErr, { wardKey: parsed.data.ward_key });
+		throw error(500, 'Failed to check rate limit');
+	}
 	if ((recent ?? 0) >= RATE_LIMIT) throw error(429, 'Too many requests. Please wait before trying again.');
 
 	const { error: dbError } = await db.from('ward_subscriptions').upsert(
@@ -45,7 +48,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		},
 		{ onConflict: 'ward_key,endpoint' }
 	);
-	if (dbError) throw error(500, 'Failed to save subscription');
+	if (dbError) {
+		logError('api/notify/ward', 'Failed to save ward subscription', dbError, { wardKey: parsed.data.ward_key });
+		throw error(500, 'Failed to save subscription');
+	}
 
 	const { error: insErr } = await db
 		.from('api_rate_limit_events')
@@ -68,7 +74,10 @@ export const DELETE: RequestHandler = async ({ request }) => {
 		.delete()
 		.eq('ward_key', parsed.data.ward_key)
 		.eq('endpoint', parsed.data.endpoint);
-	if (delErr) throw error(500, 'Failed to remove subscription');
+	if (delErr) {
+		logError('api/notify/ward', 'Failed to remove ward subscription', delErr, { wardKey: parsed.data.ward_key });
+		throw error(500, 'Failed to remove subscription');
+	}
 
 	return json({ ok: true });
 };

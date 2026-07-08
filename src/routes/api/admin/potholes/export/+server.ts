@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { requireRole } from '$lib/server/admin-auth';
 import type { PotholeStatus } from '$lib/types';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 const VALID_STATUSES: PotholeStatus[] = ['pending', 'reported', 'filled', 'expired'];
 
 function escapeCSV(val: unknown): string {
@@ -74,7 +75,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	}
 
 	const { data, error: dbErr } = await query;
-	if (dbErr) throw error(500, 'Failed to load potholes');
+	if (dbErr) {
+		logError('admin/potholes-export', 'Failed to load potholes for export', dbErr);
+		throw error(500, 'Failed to load potholes');
+	}
 
 	const rows = data ?? [];
 	const filename = `potholes-${new Date().toISOString().slice(0, 10)}`;

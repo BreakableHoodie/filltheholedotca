@@ -4,6 +4,7 @@ import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/publi
 import { createClient } from '@supabase/supabase-js';
 import { decodeHtmlEntities } from '$lib/escape';
 import { PUBLIC_COORD_DECIMALS, roundPublicCoord } from '$lib/geo';
+import { logError } from '$lib/server/observability';
 
 const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
@@ -79,7 +80,10 @@ export const GET: RequestHandler = async ({ request }) => {
 			.limit(50)
 	]);
 
-	if (reportedResult.error || filledResult.error) throw error(500, 'Failed to load data');
+	if (reportedResult.error || filledResult.error) {
+		logError('api/feed.xml', 'Failed to load potholes for feed', reportedResult.error ?? filledResult.error);
+		throw error(500, 'Failed to load data');
+	}
 
 	// Merge and deduplicate (a pothole could theoretically appear in both if status
 	// changed between the two queries — extremely unlikely but safe to guard).

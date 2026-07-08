@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private';
+import { logError } from '$lib/server/observability';
 
 /**
  * Hash a client IP address with HMAC-SHA-256 using a server-side secret.
@@ -43,7 +44,7 @@ export async function hashClientAddressForLog(
 	try {
 		return await hashIp(getClientAddress());
 	} catch (e) {
-		console.error('[%s] Failed to hash client IP for logging:', scope, e);
+		logError('hash', 'Failed to hash client IP for logging', e, { scope });
 		return 'unavailable';
 	}
 }

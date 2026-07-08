@@ -106,7 +106,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.eq('scope', 'report_submit')
 		.gte('created_at', windowStart);
 
-	if (reportRateError) throw error(500, 'Failed to check report rate limit');
+	if (reportRateError) {
+		logError('api/report', 'Failed to check report rate limit', reportRateError);
+		throw error(500, 'Failed to check report rate limit');
+	}
 	if ((recentReports ?? 0) >= REPORT_RATE_LIMIT) {
 		throw error(429, 'Too many report attempts. Please wait before trying again.');
 	}
@@ -132,7 +135,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.gte('lng', lng - delta * 1.4)
 		.lte('lng', lng + delta * 1.4);
 
-	if (queryError) throw error(500, 'Failed to check nearby reports');
+	if (queryError) {
+		logError('api/report', 'Failed to query nearby pending reports', queryError);
+		throw error(500, 'Failed to check nearby reports');
+	}
 
 	// Find the closest pending pothole within merge radius
 	const match = nearby
@@ -154,7 +160,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			p_threshold: confirmationsRequired
 		});
 
-		if (rpcError) throw error(500, 'Failed to update report');
+		if (rpcError) {
+			logError('api/report', 'increment_confirmation RPC failed', rpcError, { potholeId: match.id });
+			throw error(500, 'Failed to update report');
+		}
 
 		const rpc = result as ConfirmationResult;
 
@@ -228,7 +237,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.select('id')
 		.single();
 
-	if (insertError) throw error(500, 'Failed to submit report');
+	if (insertError) {
+		logError('api/report', 'Failed to insert new pending pothole', insertError);
+		throw error(500, 'Failed to submit report');
+	}
 
 	// Record the first confirmation — no conflict possible for a brand-new pothole
 	const { error: confirmInsertError } = await getAdminClient()

@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { z } from 'zod';
+import { logError } from '$lib/server/observability';
 
 const WR_VIEWBOX = '-80.59,43.32,-80.22,43.53';
 
@@ -33,7 +34,10 @@ export const GET: RequestHandler = async ({ url }) => {
 		}
 	});
 
-	if (!res.ok) throw error(502, 'Geocode search failed');
+	if (!res.ok) {
+		logError('api/geocode/search', 'Nominatim search returned non-OK response', new Error(`Nominatim upstream ${res.status}`), { status: res.status });
+		throw error(502, 'Geocode search failed');
+	}
 
 	const data = await res.json();
 	return json(data);

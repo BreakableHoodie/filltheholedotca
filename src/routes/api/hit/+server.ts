@@ -27,7 +27,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.eq('scope', 'hit_submit')
 		.gte('created_at', windowStart);
 
-	if (rateLimitError) throw error(500, 'Failed to check rate limit');
+	if (rateLimitError) {
+		logError('api/hit', 'Failed to check per-IP rate limit', rateLimitError);
+		throw error(500, 'Failed to check rate limit');
+	}
 	if ((recentHits ?? 0) >= HIT_RATE_LIMIT) {
 		throw error(429, 'Too many requests. Please wait before trying again.');
 	}
@@ -39,7 +42,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.select('*', { count: 'exact', head: true })
 		.eq('pothole_id', parsed.data.id)
 		.gte('created_at', windowStart);
-	if (potholeRateLimitError) throw error(500, 'Failed to check rate limit');
+	if (potholeRateLimitError) {
+		logError('api/hit', 'Failed to check per-pothole rate limit', potholeRateLimitError, { potholeId: parsed.data.id });
+		throw error(500, 'Failed to check rate limit');
+	}
 	if ((potholeHits ?? 0) >= HIT_PER_POTHOLE_LIMIT) {
 		throw error(429, 'Too many requests. Please wait before trying again.');
 	}
@@ -55,9 +61,13 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				.from('pothole_hits')
 				.select('*', { count: 'exact', head: true })
 				.eq('pothole_id', parsed.data.id);
-			if (countErr) throw error(500, 'Failed to fetch hit count');
+			if (countErr) {
+				logError('api/hit', 'Failed to fetch hit count', countErr, { potholeId: parsed.data.id });
+				throw error(500, 'Failed to fetch hit count');
+			}
 			return json({ ok: false, message: 'Already recorded.', count: count ?? 0 });
 		}
+		logError('api/hit', 'Failed to record hit', insertError, { potholeId: parsed.data.id });
 		throw error(500, 'Failed to record hit');
 	}
 
