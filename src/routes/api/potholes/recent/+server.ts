@@ -10,6 +10,10 @@ export const GET: RequestHandler = async ({ url }) => {
 		return json({ potholes: [] });
 	}
 
+	const cacheHeaders = {
+		'Cache-Control': 'public, s-maxage=55, stale-while-revalidate=60',
+	};
+
 	const { data, error: dbError } = await supabase
 		.from('potholes')
 		.select(
@@ -33,5 +37,5 @@ export const GET: RequestHandler = async ({ url }) => {
 		description: p.description ? decodeHtmlEntities(p.description) : null,
 	}));
 
-	return json({ potholes });
+	return json({ potholes }, { headers: cacheHeaders });
 };

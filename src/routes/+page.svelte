@@ -35,13 +35,24 @@
 	$effect(() => {
 		if (!mapReady) return;
 		pollTimer = setInterval(async () => {
-			const since = new Date(lastPoll - 5000).toISOString();
+			// Quantize the transmitted `since` to a 60s boundary so every client
+			// polling within the same minute requests the same URL — lets the CDN
+			// (see api/potholes/recent) serve one shared cached response instead of a
+			// unique, uncacheable ms-precision URL per client. Back off a FULL extra
+			// minute (not just a few seconds): the fetch window must always overlap
+			// the previous ~60s poll, or a change landing between the previous poll
+			// time and the current minute boundary would fall in a gap and never be
+			// polled. With the -1 minute, consecutive windows always overlap.
+			const since = new Date((Math.floor(lastPoll / 60000) - 1) * 60000).toISOString();
 			try {
 				const res = await fetch(`/api/potholes/recent?since=${encodeURIComponent(since)}`);
 				if (!res.ok) return;
 				const { potholes: updated } = await res.json();
-				if (!updated?.length) return;
+				// Advance on every successful poll, not just when updates arrive, so a
+				// quiet tab's `since` window doesn't grow unbounded. The 5s overlap
+				// above absorbs the gap between real time and the quantized value sent.
 				lastPoll = Date.now();
+				if (!updated?.length) return;
 				const L = LRef;
 				if (!L || !mapRef) return;
 				// Announce changes for screen readers
@@ -60,12 +71,8 @@
 				for (const p of updated) {
 					const existing = markersById[p.id];
 					if (existing) {
-						const oldContent = existing.getPopup()?.getContent()?.toString() ?? '';
-						const oldStatus = oldContent.includes('popup-status--filled')
-							? 'filled'
-							: oldContent.includes('popup-status--expired')
-								? 'expired'
-								: 'reported';
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const oldStatus = ((existing as any)._status as string | undefined) ?? 'reported';
 						if (oldStatus !== p.status) {
 							const layerKey = p.status in clusterGroups ? p.status : 'reported';
 							const oldLayerKey = oldStatus in clusterGroups ? oldStatus : 'reported';
@@ -80,6 +87,8 @@
 								cg[oldLayerKey].removeLayer(existing);
 								cg[layerKey].addLayer(existing);
 							}
+							// eslint-disable-next-line @typescript-eslint/no-explicit-any
+							(existing as any)._status = p.status;
 						}
 						const info =
 							STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG] ??
@@ -130,6 +139,8 @@
 						});
 						const marker = L.marker([p.lat, p.lng], { icon });
 						markersById[p.id] = marker;
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						(marker as any)._status = p.status;
 						const address = escapeHtml(
 							p.address || `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`,
 						);
@@ -589,6 +600,7 @@
 			const group = (L as any).markerClusterGroup({
 				maxClusterRadius: 40,
 				spiderfyOnMaxZoom: true,
+				chunkedLoading: true,
 			});
 			clusterGroups[status] = group;
 			if (layers[status]) map.addLayer(group);
@@ -602,6 +614,14 @@
 		fixturePotholes = seededPotholes?.length ? seededPotholes : null;
 		clientPotholes = seededPotholes?.length ? seededPotholes : null;
 		markersById = {};
+		// Accumulate markers per status and hand each cluster group a single
+		// batch via addLayers() after the loop — markercluster's fast path for
+		// bulk population, versus one addLayer() call (and re-cluster) per marker.
+		const layerBatches: Record<(typeof statuses)[number], Marker[]> = {
+			reported: [],
+			expired: [],
+			filled: [],
+		};
 
 		for (const pothole of potholesToRender) {
 			// Any unknown legacy status falls back to the reported layer.
@@ -614,6 +634,8 @@
 			const icon = markerIcons[pothole.status] ?? markerIcons['reported'];
 			const marker = L.marker([pothole.lat, pothole.lng], { icon });
 			markersById[pothole.id] = marker;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(marker as any)._status = pothole.status;
 
 			const address = escapeHtml(
 				pothole.address || `${pothole.lat.toFixed(5)}, ${pothole.lng.toFixed(5)}`,
@@ -650,7 +672,11 @@
 				{ maxWidth: 240 },
 			);
 
-			clusterGroups[layerKey].addLayer(marker);
+			layerBatches[layerKey as (typeof statuses)[number]].push(marker);
+		}
+
+		for (const status of statuses) {
+			if (layerBatches[status].length) clusterGroups[status].addLayers(layerBatches[status]);
 		}
 
 		// Delegated listener for popup Fixed button
@@ -720,6 +746,8 @@
 						const marker = (e as any).popup._source;
 						clusterGroups['reported']?.removeLayer(marker);
 						clusterGroups['filled']?.addLayer(marker);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						(marker as any)._status = 'filled';
 					}
 				} catch (err: unknown) {
 					toastError(err instanceof Error ? err.message : 'Something went wrong');
