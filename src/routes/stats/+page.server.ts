@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
 		return { potholes: fixture, wards: ALL_WARDS, freezeThawByMonth: {} as Record<string, number> };
 	}
 
-	setHeaders({ 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' });
+	setHeaders({ 'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=300' });
 
 	// Fetch potholes and pre-warm the ward boundary cache in parallel.
 	// fetchWards() now never rejects (errors are caught and cached as []) so

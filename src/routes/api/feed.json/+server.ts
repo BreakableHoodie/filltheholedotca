@@ -51,7 +51,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		return new Response(null, {
 			status: 304,
 			headers: {
-				'Cache-Control': 'public, max-age=60, stale-while-revalidate=600',
+				'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=600',
 				'Last-Modified': lastModified,
 				'Access-Control-Allow-Origin': '*',
 				'Cross-Origin-Resource-Policy': 'cross-origin'
@@ -67,7 +67,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		},
 		{
 			headers: {
-				'Cache-Control': 'public, max-age=60, stale-while-revalidate=600',
+				'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=600',
 				'Last-Modified': lastModified,
 				'Access-Control-Allow-Origin': '*',
 				// L8: This feed is intentionally public/cross-origin (CORS * above).

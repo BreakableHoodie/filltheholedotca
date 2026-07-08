@@ -137,7 +137,7 @@ ${items}
 		return new Response(null, {
 			status: 304,
 			headers: {
-				'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
+				'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600',
 				'Last-Modified': lastBuild,
 				'Access-Control-Allow-Origin': '*',
 				'Cross-Origin-Resource-Policy': 'cross-origin'
@@ -148,7 +148,7 @@ ${items}
 	return new Response(xml, {
 		headers: {
 			'Content-Type': 'application/rss+xml; charset=utf-8',
-			'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
+			'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600',
 			'Last-Modified': lastBuild,
 			'Access-Control-Allow-Origin': '*',
 			'Cross-Origin-Resource-Policy': 'cross-origin'
