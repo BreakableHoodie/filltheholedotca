@@ -227,12 +227,11 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
           moderation_status: "approved" as const,
           moderation_score: null,
           url: storage.getPublicUrl(p.storage_path).data.publicUrl,
-          // Supabase Image Transformation (Pro feature): serve an 800px-wide
-          // resized image for the thumbnail strip. The img onerror handler falls
-          // back to url if transformation is unavailable.
-          thumbnailUrl: storage.getPublicUrl(p.storage_path, {
-            transform: { width: 800, quality: 80, resize: 'contain' }
-          }).data.publicUrl,
+          // Uploads are client-side resized to <=800px (see $lib/image), so the
+          // stored original is already thumbnail-sized. Serve it directly rather
+          // than via Supabase Image Transformation (a paid-plan feature that,
+          // when unavailable, cost a failed request + onerror fallback per thumb).
+          thumbnailUrl: storage.getPublicUrl(p.storage_path).data.publicUrl,
         };
       })
     : [];
