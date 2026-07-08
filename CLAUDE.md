@@ -263,6 +263,7 @@ Run migrations in this order:
 26. `schema_votes_ttl.sql` — pg_cron purge job for `pothole_votes` older than 90 days (PIPEDA data minimization)
 27. `schema_ward_subscriptions.sql` — adds `ward_subscriptions` table (ward-level push alert subscriptions) and extends `api_rate_limit_events_scope_check` to include `ward_notify_subscribe`
 28. `schema_pothole_reported_at.sql` — adds `reported_at` timestamptz column (backfilled for existing non-pending rows) and redefines `increment_confirmation` to stamp it on the `pending → reported` flip, so the polling endpoint can detect that transition
+29. `schema_polling_indexes.sql` — partial indexes on `filled_at`/`expired_at` (where not null) so the `/api/potholes/recent` poll's `.or(...)` filter can use a BitmapOr instead of scanning all non-pending rows (#205)
 
 Eleven `pg_cron` jobs run nightly:
 
