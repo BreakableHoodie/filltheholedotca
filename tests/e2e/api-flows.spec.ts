@@ -127,6 +127,30 @@ test.describe("Ward notify API (/api/notify/ward)", () => {
   });
 });
 
+test.describe("Vote API (/api/vote)", () => {
+  test("accepts a valid UUID with an upvote direction", async ({ request }) => {
+    const response = await request.post("/api/vote", {
+      data: { id: "550e8400-e29b-41d4-a716-446655440003", direction: 1 },
+    });
+    // Schema accepted — not a 400
+    expect(response.status()).not.toBe(400);
+  });
+
+  test("rejects an invalid direction", async ({ request }) => {
+    const response = await request.post("/api/vote", {
+      data: { id: "550e8400-e29b-41d4-a716-446655440003", direction: 2 },
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("rejects a non-UUID id", async ({ request }) => {
+    const response = await request.post("/api/vote", {
+      data: { id: "not-a-uuid", direction: 1 },
+    });
+    expect(response.status()).toBe(400);
+  });
+});
+
 test.describe("Filled API (/api/filled)", () => {
   test("rejects request with missing id", async ({ request }) => {
     const response = await request.post("/api/filled", { data: {} });

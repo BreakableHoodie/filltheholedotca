@@ -302,6 +302,7 @@ pending → reported → filled
 - **Admin map**: Leaflet + markercluster at `/admin/map` with status-filtered layers and click-to-manage popups. Loads all 5000 potholes. Admin-auth required.
 - **Before/after photos**: when pothole status is `filled`, the detail page splits published photos into before/after galleries via `splitByFill()` in `$lib/photo-split` — a read-time classification (`created_at < filled_at` = before, `>= filled_at` = after); a photo taken exactly at `filled_at` counts as "after". The split renders only when both eras have a photo, else the flat gallery shows. Marking a pothole filled prompts (optionally) for an "after" photo.
 - **Admin description editing**: admins can edit pothole description via form action on `/admin/potholes/[id]`.
+- **"Prioritize" community vote**: an upvote-only signal on `reported` potholes, shown as "Prioritize · N" next to the "I hit this" card on the detail page. The `pothole_votes` backend supports `direction: 1 | -1` (up/down), but the UI only ever sends `direction: 1` via `POST /api/vote` — a second tap sends `DELETE /api/vote` to remove the vote, rather than exposing a downvote. This avoids downvotes suppressing legitimate hazards. Distinct from "I hit this" (a physical encounter) — Prioritize means "this needs attention." Vote state is tracked client-side in `localStorage` (`vote:<id>`); `pothole_votes` has no anon SELECT policy, so `voteCount` is loaded server-side via the service-role client, mirroring `hitCount`.
 
 ## Svelte 5 Patterns (important — don't use Svelte 4 syntax)
 
