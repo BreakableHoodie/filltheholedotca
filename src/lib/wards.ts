@@ -42,6 +42,12 @@ export const COUNCILLORS: Councillor[] = [
 	{ city: 'cambridge', ward: 8, name: 'Nicholas Ermeta', email: 'ermetan@cambridge.ca',   phone: '519-740-4517 ext. 4740', url: 'https://www.cambridge.ca/en/your-city/councillor-nicholas-ermeta.aspx' },
 ];
 
+export const WARD_KEYS: readonly string[] = COUNCILLORS.map((c) => `${c.city}-${c.ward}`);
+const WARD_KEY_SET = new Set(WARD_KEYS);
+export function isKnownWardKey(key: string): boolean {
+	return WARD_KEY_SET.has(key);
+}
+
 // ── Ward boundary sources ────────────────────────────────────────────────────
 
 const WARD_SOURCES: Record<City, { url: string; wardField: string }> = {
