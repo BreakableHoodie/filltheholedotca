@@ -20,6 +20,7 @@ interface E2eDetailFixture {
   photos: PotholePhoto[];
   confirmationThreshold: number;
   hitCount: number;
+  voteCount: number;
   nearbyFilled: { id: string; address: string | null; filled_at: string; created_at: string }[];
 }
 
@@ -46,6 +47,7 @@ const E2E_DETAIL_FIXTURES: Record<string, E2eDetailFixture> = {
     photos: [],
     confirmationThreshold: 2,
     hitCount: 3,
+    voteCount: 5,
     nearbyFilled: [],
   },
   "22222222-2222-4222-8222-222222222222": {
@@ -68,6 +70,7 @@ const E2E_DETAIL_FIXTURES: Record<string, E2eDetailFixture> = {
     photos: [],
     confirmationThreshold: 2,
     hitCount: 0,
+    voteCount: 0,
     nearbyFilled: [],
   },
   // Fixture with nearbyFilled data — exercises the recurring-road-issue banner
@@ -90,6 +93,7 @@ const E2E_DETAIL_FIXTURES: Record<string, E2eDetailFixture> = {
     photos: [],
     confirmationThreshold: 2,
     hitCount: 1,
+    voteCount: 2,
     nearbyFilled: [
       {
         id: "44444444-4444-4444-8444-444444444444",
@@ -141,6 +145,7 @@ const E2E_DETAIL_FIXTURES: Record<string, E2eDetailFixture> = {
     ],
     confirmationThreshold: 2,
     hitCount: 0,
+    voteCount: 0,
     nearbyFilled: [],
   },
 };
@@ -185,7 +190,14 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
   // Bounding box for proximity queries — ~110m radius
   const delta = 0.001;
 
-  const [councillor, photosResult, confirmationThreshold, hitCountResult, nearbyFilledResult] =
+  const [
+    councillor,
+    photosResult,
+    confirmationThreshold,
+    hitCountResult,
+    voteCountResult,
+    nearbyFilledResult,
+  ] =
     await Promise.all([
       lookupWard(pothole.lat, pothole.lng),
       supabase
@@ -200,6 +212,12 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
         .from("pothole_hits")
         .select("*", { count: "exact", head: true })
         .eq("pothole_id", params.id),
+      // Upvote count via service-role — pothole_votes has no anon SELECT policy
+      db
+        .from("pothole_votes")
+        .select("*", { count: "exact", head: true })
+        .eq("pothole_id", params.id)
+        .eq("vote_direction", 1),
       // Recently filled potholes nearby — surface repeat road issues.
       // Fetch more rows than needed so haversine post-filter has enough candidates.
       db
@@ -238,6 +256,7 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
     : [];
 
   const hitCount = hitCountResult.count ?? 0;
+  const voteCount = voteCountResult.count ?? 0;
   const nearbyFilled = (nearbyFilledResult.data ?? [])
     .filter((p) => haversineMetres(pothole.lat, pothole.lng, p.lat, p.lng) <= 110)
     .slice(0, 3)
@@ -256,6 +275,7 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
     origin: url.origin,
     confirmationThreshold,
     hitCount,
+    voteCount,
     nearbyFilled,
   };
 };
