@@ -148,6 +148,8 @@ src/
     +layout.server.ts         # Server layout loader
     +page.server.ts           # Loads potholes for map
     about/+page.svelte        # About page
+    privacy/+page.svelte      # Privacy policy (PIPEDA-grade; retention, third parties, rights)
+    terms/+page.svelte        # Terms of use (acceptable use, UGC licence, no-warranty, Ontario law)
     how-to/+page.svelte       # User-facing how-to / help guide
     stats/
       +page.server.ts         # SSR load — potholes for metrics

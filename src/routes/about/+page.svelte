@@ -27,9 +27,6 @@
 			fillthehole.ca makes the problem visible. Every reported pothole goes on a public map.
 			Every day it stays unfilled is tracked. Your councillor's contact is one tap away.
 		</p>
-		<p class="text-amber-700 dark:text-amber-400 font-medium">
-			Sunlight is the best disinfectant. A public map is hard to ignore.
-		</p>
 	</section>
 
 	<section class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-6 space-y-4">
@@ -139,7 +136,9 @@
 	<section class="space-y-4 text-stone-600 dark:text-stone-400 leading-relaxed" id="privacy">
 		<h2 class="section-title text-xl text-stone-900 dark:text-white">Privacy</h2>
 		<p>
-			No accounts. No names. No tracking. Here's exactly what this site does and doesn't do with your data.
+			No accounts. No names. No tracking. Here's the short version — the
+			<a href="/privacy" class="text-amber-700 dark:text-amber-400 underline hover:text-amber-600 dark:hover:text-amber-300 transition-colors">full privacy policy</a>
+			covers retention, your rights, and every third-party service in detail.
 		</p>
 
 		<div class="space-y-3">
@@ -221,6 +220,10 @@
 			</p>
 			<p>
 				For official road hazard reporting, use the city links above. To report an urgent road hazard, contact your municipality directly using the links above.
+			</p>
+			<p>
+				See the full <a href="/terms" class="text-amber-700 dark:text-amber-400 underline hover:text-amber-600 dark:hover:text-amber-300 transition-colors">Terms of use</a>
+				and <a href="/privacy" class="text-amber-700 dark:text-amber-400 underline hover:text-amber-600 dark:hover:text-amber-300 transition-colors">Privacy policy</a>.
 			</p>
 		</div>
 	</section>
