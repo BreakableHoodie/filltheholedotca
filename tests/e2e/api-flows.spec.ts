@@ -100,6 +100,33 @@ test.describe("OG image API (/api/og/[id])", () => {
   });
 });
 
+test.describe("Ward notify API (/api/notify/ward)", () => {
+  test("ward subscribe rejects unknown ward_key", async ({ request }) => {
+    const response = await request.post("/api/notify/ward", {
+      data: {
+        ward_key: "kitchener-99",
+        endpoint: "https://example.com/x",
+        keys: { p256dh: "a", auth: "b" },
+      },
+    });
+    expect(response.status()).toBe(400);
+  });
+
+  test("ward subscribe accepts a known ward_key (validation passes)", async ({
+    request,
+  }) => {
+    const response = await request.post("/api/notify/ward", {
+      data: {
+        ward_key: "kitchener-6",
+        endpoint: "https://fcm.googleapis.com/x",
+        keys: { p256dh: "a", auth: "b" },
+      },
+    });
+    // No real DB in fixture mode, so a 500 is acceptable — the point is validation did NOT reject it.
+    expect(response.status()).not.toBe(400);
+  });
+});
+
 test.describe("Filled API (/api/filled)", () => {
   test("rejects request with missing id", async ({ request }) => {
     const response = await request.post("/api/filled", { data: {} });

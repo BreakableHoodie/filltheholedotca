@@ -3,6 +3,7 @@ import { env } from '$env/dynamic/private';
 import { logError } from '$lib/server/observability';
 import { isSafePushEndpoint } from '$lib/server/ssrf';
 import { getAdminClient } from '$lib/server/supabase';
+import { wardSubscribersQuery } from '$lib/server/ward-query';
 
 let initialized = false;
 
@@ -126,4 +127,73 @@ export async function notifyFillSubscribers(potholeId: string, address: string |
 		.delete()
 		.eq('pothole_id', potholeId);
 	if (deleteError) logError('webpush/fill', 'failed to delete fill subscriptions after send', deleteError, { potholeId });
+}
+
+/**
+ * Notify everyone subscribed to a ward that a new pothole went live.
+ * Ward subscriptions are PERSISTENT — a resident stays subscribed to their
+ * ward across many potholes — so, unlike `notifyFillSubscribers`, this does
+ * NOT delete all rows after send. Only endpoints the push service reports as
+ * gone (410/404) are pruned, scoped to this ward (mirrors `broadcastPush`).
+ * Fire-and-forget safe: logs errors but does not throw.
+ */
+export async function notifyWardSubscribers(
+	wardKey: string,
+	potholeId: string,
+	address: string | null
+): Promise<void> {
+	init();
+	if (!initialized) return;
+
+	const db = getAdminClient();
+	const { data: subscriptions, error: queryError } = await wardSubscribersQuery(db, wardKey);
+
+	if (queryError) {
+		logError('webpush/ward', 'failed to load ward subscriptions', queryError, { wardKey });
+		return;
+	}
+	if (!subscriptions?.length) return;
+
+	const message = JSON.stringify({
+		title: 'New pothole reported',
+		body: `A new pothole was reported near ${address ?? 'your ward'}.`,
+		url: `/hole/${potholeId}`
+	});
+
+	const expired: string[] = [];
+
+	await Promise.allSettled(
+		subscriptions.map(async (sub) => {
+			if (!isSafePushEndpoint(sub.endpoint)) {
+				expired.push(sub.endpoint); // Treat unsafe endpoints as expired — purge them.
+				return;
+			}
+			try {
+				await webpush.sendNotification(
+					{ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+					message
+				);
+			} catch (err: unknown) {
+				const status = (err as { statusCode?: number }).statusCode;
+				if (status === 410 || status === 404) {
+					expired.push(sub.endpoint); // Subscription has expired or been unsubscribed
+				} else {
+					// Log endpoint origin only — the full URL is a device identifier.
+					const origin = (() => { try { return new URL(sub.endpoint).origin; } catch { return 'unknown'; } })();
+					logError('webpush/ward', 'send failed', err, { status, endpointOrigin: origin });
+				}
+			}
+		})
+	);
+
+	if (expired.length > 0) {
+		const { error: deleteError } = await db
+			.from('ward_subscriptions')
+			.delete()
+			.in('endpoint', expired)
+			.eq('ward_key', wardKey);
+		if (deleteError) {
+			logError('webpush/ward', 'failed to remove expired ward subscriptions', deleteError, { wardKey });
+		}
+	}
 }

@@ -21,6 +21,7 @@
 	import type { CityRepairRequest } from './+page.server';
 	import { env } from '$env/dynamic/public';
 	import { urlBase64ToUint8Array } from '$lib/push';
+	import { splitByFill } from '$lib/photo-split';
 
 	let { data }: { data: PageData } = $props();
 	let pothole = $derived(data.pothole as Pothole);
@@ -52,6 +53,11 @@
 		return () => controller.abort();
 	});
 	let photos = $derived(data.photos ?? []);
+	// Before/after only when filled AND both eras have at least one published photo.
+	let photoSplit = $derived(splitByFill(photos, pothole.filled_at));
+	let showBeforeAfter = $derived(
+		pothole.status === 'filled' && photoSplit.before.length > 0 && photoSplit.after.length > 0
+	);
 	let confirmationThreshold = $derived(data.confirmationThreshold);
 	let clampedConfirmationCount = $derived(Math.min(pothole.confirmed_count, confirmationThreshold));
 	let remainingConfirmations = $derived(Math.max(0, confirmationThreshold - pothole.confirmed_count));
@@ -220,6 +226,14 @@
 	let photoInput = $state<HTMLInputElement | undefined>(undefined);
 	let uploadingPhoto = $state(false);
 	let photoSubmitted = $state(false);
+	// Shown after a successful fill to invite an "after" photo for the before/after gallery.
+	let promptAfterPhoto = $state(false);
+	// Reset the prompt when navigating between potholes (client-side routing) so it
+	// never lingers onto a different pothole the user didn't just mark filled.
+	$effect(() => {
+		void pothole.id;
+		promptAfterPhoto = false;
+	});
 
 	let canUploadPhoto = $derived(
 		(pothole.status === 'pending' || pothole.status === 'reported') && !photoSubmitted
@@ -242,8 +256,10 @@
 		if (photoInput) photoInput.value = '';
 	}
 
-	async function uploadPhoto() {
-		if (!photoFile) return;
+	// Returns whether the upload succeeded so callers (e.g. the after-photo prompt)
+	// can react to success without duplicating the fetch/error-handling logic.
+	async function uploadPhoto(): Promise<boolean> {
+		if (!photoFile) return false;
 		uploadingPhoto = true;
 		try {
 			const fd = new FormData();
@@ -263,11 +279,17 @@
 			toast.success("Photo submitted — it'll appear here once reviewed.");
 			clearPhoto();
 			photoSubmitted = true;
+			return true;
 		} catch (err: unknown) {
 			toastError(err instanceof Error ? err.message : 'Photo upload failed');
+			return false;
 		} finally {
 			uploadingPhoto = false;
 		}
+	}
+
+	async function handleAfterPhotoUpload() {
+		if (await uploadPhoto()) promptAfterPhoto = false;
 	}
 
 	// Lightbox
@@ -352,6 +374,7 @@
 			toast.success('Marked as filled! Accountability works.');
 			showFilledForm = false;
 			await invalidateAll();
+			promptAfterPhoto = true;
 		} catch (err: unknown) {
 			toastError(err instanceof Error ? err.message : 'Something went wrong');
 		} finally {
@@ -715,23 +738,68 @@
 				<Icon name="camera" size={14} class="text-amber-500 shrink-0" />
 				{photos.length === 1 ? 'Photo' : 'Photos'}
 			</div>
-			<div class="grid grid-cols-2 gap-2">
-				{#each photos as photo, i (photo.id)}
-					<button
-						onclick={() => openLightbox(i)}
-						class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
-						aria-label="View photo {i + 1} of {photos.length}"
-					>
-						<img
-							src={photo.thumbnailUrl}
-							alt="Pothole at {pothole.address || 'this location'}"
-							class="w-full object-cover aspect-video"
-							loading="lazy"
-							onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
-						/>
-					</button>
-				{/each}
-			</div>
+			{#if showBeforeAfter}
+				<div class="grid gap-4 sm:grid-cols-2">
+					<div>
+						<h3 class="section-title text-sm text-stone-500 dark:text-stone-400 mb-2">Before</h3>
+						<div class="grid grid-cols-2 gap-2">
+							{#each photoSplit.before as photo (photo.id)}
+								<button
+									onclick={() => openLightbox(photos.indexOf(photo))}
+									class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
+									aria-label="View photo {photos.indexOf(photo) + 1} of {photos.length}"
+								>
+									<img
+										src={photo.thumbnailUrl}
+										alt="Pothole at {pothole.address || 'this location'}"
+										class="w-full object-cover aspect-video"
+										loading="lazy"
+										onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
+									/>
+								</button>
+							{/each}
+						</div>
+					</div>
+					<div>
+						<h3 class="section-title text-sm text-stone-500 dark:text-stone-400 mb-2">After</h3>
+						<div class="grid grid-cols-2 gap-2">
+							{#each photoSplit.after as photo (photo.id)}
+								<button
+									onclick={() => openLightbox(photos.indexOf(photo))}
+									class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
+									aria-label="View photo {photos.indexOf(photo) + 1} of {photos.length}"
+								>
+									<img
+										src={photo.thumbnailUrl}
+										alt="Pothole at {pothole.address || 'this location'}"
+										class="w-full object-cover aspect-video"
+										loading="lazy"
+										onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
+									/>
+								</button>
+							{/each}
+						</div>
+					</div>
+				</div>
+			{:else}
+				<div class="grid grid-cols-2 gap-2">
+					{#each photos as photo, i (photo.id)}
+						<button
+							onclick={() => openLightbox(i)}
+							class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
+							aria-label="View photo {i + 1} of {photos.length}"
+						>
+							<img
+								src={photo.thumbnailUrl}
+								alt="Pothole at {pothole.address || 'this location'}"
+								class="w-full object-cover aspect-video"
+								loading="lazy"
+								onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
+							/>
+						</button>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	{:else if canUploadPhoto}
 		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
@@ -785,6 +853,71 @@
 				onchange={handlePhotoSelect}
 			/>
 			<p class="text-xs text-stone-500 dark:text-stone-400">Photos are reviewed before appearing publicly. Only snap one if you're safely off the road.</p>
+		</div>
+	{/if}
+
+	<!-- After-photo prompt -->
+	{#if promptAfterPhoto && pothole.status === 'filled'}
+		<div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-md p-4 space-y-3">
+			<div class="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400">
+				<Icon name="camera" size={14} class="shrink-0" />
+				Show it's fixed — add an "after" photo
+			</div>
+			{#if photoPreview}
+				<div class="relative">
+					<img src={photoPreview} alt="Selected pothole preview" class="w-full rounded-md object-cover aspect-video" />
+					<button
+						type="button"
+						onclick={clearPhoto}
+						aria-label="Remove photo"
+						class="absolute top-2 right-2 bg-stone-900/80 hover:bg-stone-900 rounded-full p-1.5 text-stone-300 hover:text-white transition-colors"
+					>
+						<Icon name="x" size={14} />
+					</button>
+				</div>
+				<button
+					onclick={handleAfterPhotoUpload}
+					disabled={uploadingPhoto}
+					class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 disabled:bg-stone-200 dark:disabled:bg-stone-700 disabled:text-stone-400 dark:disabled:text-stone-500 text-white font-semibold rounded-md text-sm transition-colors flex items-center justify-center gap-1.5"
+				>
+					{#if uploadingPhoto}
+						<Icon name="loader" size={13} class="animate-spin shrink-0" />
+						Uploading…
+					{:else}
+						<Icon name="camera" size={13} class="shrink-0" />
+						Submit after photo
+					{/if}
+				</button>
+			{:else}
+				<button
+					type="button"
+					onclick={() => photoInput?.click()}
+					class="w-full py-3 rounded-md border-2 border-dashed border-amber-300 dark:border-amber-700 hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+				>
+					<Icon name="camera" size={15} class="shrink-0" />
+					Add an after photo
+				</button>
+			{/if}
+			<input
+				bind:this={photoInput}
+				type="file"
+				accept="image/jpeg,image/png,image/webp"
+				class="sr-only"
+				tabindex="-1"
+				aria-hidden="true"
+				aria-label="Upload an after photo"
+				onchange={handlePhotoSelect}
+			/>
+			<div class="flex items-center justify-between gap-3">
+				<p class="text-xs text-amber-700/80 dark:text-amber-400/80">Photos are reviewed before appearing publicly.</p>
+				<button
+					type="button"
+					onclick={() => (promptAfterPhoto = false)}
+					class="shrink-0 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 underline underline-offset-2 transition-colors"
+				>
+					Not now
+				</button>
+			</div>
 		</div>
 	{/if}
 
