@@ -12,7 +12,9 @@ const STATIC_PAGES = [
 	{ path: '/stats', changefreq: 'daily', priority: '0.8' },
 	{ path: '/how-to', changefreq: 'monthly', priority: '0.6' },
 	{ path: '/about', changefreq: 'monthly', priority: '0.5' },
-	{ path: '/updates', changefreq: 'monthly', priority: '0.4' }
+	{ path: '/updates', changefreq: 'monthly', priority: '0.4' },
+	{ path: '/privacy', changefreq: 'yearly', priority: '0.3' },
+	{ path: '/terms', changefreq: 'yearly', priority: '0.3' }
 ];
 
 const PRIORITY: Record<string, string> = {

@@ -73,10 +73,16 @@ test.describe("Navigation — core routes load", () => {
     await expect(page).toHaveURL("/");
   });
 
-  test("footer privacy link navigates to about#privacy", async ({ page }) => {
+  test("footer privacy link navigates to the privacy policy", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("link", { name: "Privacy" }).click();
-    await expect(page).toHaveURL("/about#privacy");
+    await expect(page).toHaveURL("/privacy");
+  });
+
+  test("footer terms link navigates to the terms page", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("link", { name: "Terms" }).click();
+    await expect(page).toHaveURL("/terms");
   });
 
   test("skip link is the first focusable element and points to #maincontent", async ({

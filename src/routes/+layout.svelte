@@ -118,9 +118,9 @@
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
 			<a href="/updates" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">What's new</a>
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
-			<a href="/about#privacy" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Privacy</a>
+			<a href="/privacy" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Privacy</a>
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
-			<a href="/about#disclaimer" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Disclaimer</a>
+			<a href="/terms" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Terms</a>
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
 			<a href="https://github.com/BreakableHoodie/filltheholedotca" target="_blank" rel="noopener noreferrer" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">GitHub</a>
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
