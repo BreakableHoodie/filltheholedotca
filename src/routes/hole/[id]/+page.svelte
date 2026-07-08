@@ -228,6 +228,12 @@
 	let photoSubmitted = $state(false);
 	// Shown after a successful fill to invite an "after" photo for the before/after gallery.
 	let promptAfterPhoto = $state(false);
+	// Reset the prompt when navigating between potholes (client-side routing) so it
+	// never lingers onto a different pothole the user didn't just mark filled.
+	$effect(() => {
+		void pothole.id;
+		promptAfterPhoto = false;
+	});
 
 	let canUploadPhoto = $derived(
 		(pothole.status === 'pending' || pothole.status === 'reported') && !photoSubmitted
