@@ -315,7 +315,7 @@ $effect(() => { ... })             // NOT: $: { ... } for side effects
 
 ## Coding Conventions
 
-- Dark zinc palette, sky-500 accent colour
+- Stone palette (light + dark), amber accent colour (the 2026-05 redesign; `--color-asphalt` dark bg, amber `#f59e0b` focus ring)
 - Tailwind v4 utility classes (not v3 — no `@apply` in components)
 - API routes validate with zod, return `json()` or throw `error()`
 - No auth system — all actions are public with IP-based deduplication
