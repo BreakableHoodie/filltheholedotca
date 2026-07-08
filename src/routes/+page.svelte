@@ -67,12 +67,8 @@
 				for (const p of updated) {
 					const existing = markersById[p.id];
 					if (existing) {
-						const oldContent = existing.getPopup()?.getContent()?.toString() ?? '';
-						const oldStatus = oldContent.includes('popup-status--filled')
-							? 'filled'
-							: oldContent.includes('popup-status--expired')
-								? 'expired'
-								: 'reported';
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const oldStatus = ((existing as any)._status as string | undefined) ?? 'reported';
 						if (oldStatus !== p.status) {
 							const layerKey = p.status in clusterGroups ? p.status : 'reported';
 							const oldLayerKey = oldStatus in clusterGroups ? oldStatus : 'reported';
@@ -87,6 +83,8 @@
 								cg[oldLayerKey].removeLayer(existing);
 								cg[layerKey].addLayer(existing);
 							}
+							// eslint-disable-next-line @typescript-eslint/no-explicit-any
+							(existing as any)._status = p.status;
 						}
 						const info =
 							STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG] ??
@@ -137,6 +135,8 @@
 						});
 						const marker = L.marker([p.lat, p.lng], { icon });
 						markersById[p.id] = marker;
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						(marker as any)._status = p.status;
 						const address = escapeHtml(
 							p.address || `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`,
 						);
@@ -621,6 +621,8 @@
 			const icon = markerIcons[pothole.status] ?? markerIcons['reported'];
 			const marker = L.marker([pothole.lat, pothole.lng], { icon });
 			markersById[pothole.id] = marker;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(marker as any)._status = pothole.status;
 
 			const address = escapeHtml(
 				pothole.address || `${pothole.lat.toFixed(5)}, ${pothole.lng.toFixed(5)}`,
@@ -727,6 +729,8 @@
 						const marker = (e as any).popup._source;
 						clusterGroups['reported']?.removeLayer(marker);
 						clusterGroups['filled']?.addLayer(marker);
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						(marker as any)._status = 'filled';
 					}
 				} catch (err: unknown) {
 					toastError(err instanceof Error ? err.message : 'Something went wrong');
