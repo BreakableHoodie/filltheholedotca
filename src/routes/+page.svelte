@@ -596,6 +596,7 @@
 			const group = (L as any).markerClusterGroup({
 				maxClusterRadius: 40,
 				spiderfyOnMaxZoom: true,
+				chunkedLoading: true,
 			});
 			clusterGroups[status] = group;
 			if (layers[status]) map.addLayer(group);
@@ -609,6 +610,14 @@
 		fixturePotholes = seededPotholes?.length ? seededPotholes : null;
 		clientPotholes = seededPotholes?.length ? seededPotholes : null;
 		markersById = {};
+		// Accumulate markers per status and hand each cluster group a single
+		// batch via addLayers() after the loop — markercluster's fast path for
+		// bulk population, versus one addLayer() call (and re-cluster) per marker.
+		const layerBatches: Record<(typeof statuses)[number], Marker[]> = {
+			reported: [],
+			expired: [],
+			filled: [],
+		};
 
 		for (const pothole of potholesToRender) {
 			// Any unknown legacy status falls back to the reported layer.
@@ -659,7 +668,11 @@
 				{ maxWidth: 240 },
 			);
 
-			clusterGroups[layerKey].addLayer(marker);
+			layerBatches[layerKey as (typeof statuses)[number]].push(marker);
+		}
+
+		for (const status of statuses) {
+			if (layerBatches[status].length) clusterGroups[status].addLayers(layerBatches[status]);
 		}
 
 		// Delegated listener for popup Fixed button
