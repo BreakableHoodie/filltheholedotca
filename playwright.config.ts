@@ -47,6 +47,12 @@ export default defineConfig({
       SUPABASE_CONFIGURED: process.env.PUBLIC_SUPABASE_URL?.startsWith("http")
         ? "true"
         : "false",
+      // Enable push UI in tests so the "Blocked" nav state (headless Chromium
+      // auto-denies notification permission) gets real regression coverage —
+      // without this, PushNotifications.svelte never renders in CI (#213).
+      PUBLIC_VAPID_PUBLIC_KEY:
+        process.env.PUBLIC_VAPID_PUBLIC_KEY ??
+        "BDPlaceholderPlaceholderPlaceholderPlaceholderPlaceholderPlaceholderPlaceholderPlaceho",
     },
   },
 });

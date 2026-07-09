@@ -103,7 +103,7 @@
 		title="Get notified when potholes are fixed"
 	>
 		<Icon name="bell" size={13} />
-		Notify me
+		<span class="max-[400px]:sr-only">Notify me</span>
 	</button>
 {:else if notifState === 'subscribed'}
 	<button
@@ -112,16 +112,16 @@
 		title="You're receiving fill notifications — click to turn off"
 	>
 		<Icon name="bell" size={13} />
-		Notified
+		<span class="max-[400px]:sr-only">Notified</span>
 	</button>
 {:else if notifState === 'denied'}
 	<span class="inline-flex items-center gap-1.5 text-xs text-stone-600 cursor-not-allowed" title="Notifications blocked — change in browser settings">
 		<Icon name="bell-off" size={13} />
-		Blocked
+		<span class="max-[400px]:sr-only">Blocked</span>
 	</span>
 {:else if notifState === 'pending'}
 	<span class="inline-flex items-center gap-1.5 text-xs text-stone-400 animate-pulse">
 		<Icon name="bell" size={13} />
-		…
+		<span class="max-[400px]:sr-only">…</span>
 	</span>
 {/if}
