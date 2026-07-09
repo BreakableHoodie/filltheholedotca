@@ -1,5 +1,4 @@
 import { env } from '$env/dynamic/private';
-import { logError } from '$lib/server/observability';
 
 /**
  * Hash a client IP address with HMAC-SHA-256 using a server-side secret.
@@ -35,16 +34,4 @@ export async function hashIp(ip: string): Promise<string> {
 	return Array.from(new Uint8Array(buf))
 		.map((b) => b.toString(16).padStart(2, '0'))
 		.join('');
-}
-
-export async function hashClientAddressForLog(
-	getClientAddress: () => string,
-	scope: string = 'security'
-): Promise<string> {
-	try {
-		return await hashIp(getClientAddress());
-	} catch (e) {
-		logError('hash', 'Failed to hash client IP for logging', e, { scope });
-		return 'unavailable';
-	}
 }
