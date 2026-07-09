@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { notify } from '$lib/server/pushover';
 import { logError } from '$lib/server/observability';
+import { checkAndRecordRateLimit } from '$lib/server/rate-limit';
 import { stripJpegMetadata, stripPngMetadata, stripWebpMetadata } from '$lib/server/exif-strip';
 import { getAdminClient } from '$lib/server/supabase';
 import { fixturePotholes } from '$lib/server/fixture-store';
@@ -184,20 +185,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const ipHash = await hashIp(getClientAddress());
 
 	// Persistent rate limit to prevent storage and moderation abuse.
-	const windowStart = new Date(Date.now() - PHOTO_RATE_WINDOW_MS).toISOString();
-	const { count: recentUploads, error: rateLimitError } = await getAdminClient()
-		.from('api_rate_limit_events')
-		.select('*', { count: 'exact', head: true })
-		.eq('ip_hash', ipHash)
-		.eq('scope', 'photo_upload')
-		.gte('created_at', windowStart);
-	if (rateLimitError) {
-		logError('api/photos', 'Failed to check upload rate limit', rateLimitError);
-		throw error(500, 'Failed to check upload rate limit');
-	}
-	if ((recentUploads ?? 0) >= PHOTO_RATE_LIMIT) {
-		throw error(429, 'Too many photo uploads. Please wait before trying again.');
-	}
+	await checkAndRecordRateLimit(
+		getAdminClient(),
+		ipHash,
+		'photo_upload',
+		PHOTO_RATE_LIMIT,
+		PHOTO_RATE_WINDOW_MS,
+		'Too many photo uploads. Please wait before trying again.',
+		'api/photos'
+	);
 
 	// Confirm the pothole exists and still accepts photos.
 	const { data: pothole, error: potholeError } = await getAdminClient()
@@ -212,13 +208,6 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!pothole) throw error(404, 'Pothole not found');
 	if (!ACTIVE_UPLOAD_STATUSES.has(pothole.status)) {
 		throw error(409, 'Photos are only allowed for pending or reported potholes');
-	}
-
-	const { error: rateLimitInsertError } = await getAdminClient()
-		.from('api_rate_limit_events')
-		.insert({ ip_hash: ipHash, scope: 'photo_upload' });
-	if (rateLimitInsertError) {
-		logError('photos/ratelimit', 'Failed to record rate limit event', rateLimitInsertError, { ipHashPrefix: ipHash.slice(0, 8) });
 	}
 
 	// Prevent unlimited media accumulation on a single pothole.

@@ -5,6 +5,7 @@ import { hashIp } from '$lib/hash';
 import { roundPublicCoord, haversineMetres } from '$lib/geo';
 import { GEOFENCE, MERGE_RADIUS_M } from '$lib/constants';
 import { getConfirmationThreshold } from '$lib/server/settings';
+import { checkAndRecordRateLimit } from '$lib/server/rate-limit';
 import { notify } from '$lib/server/pushover';
 import { postConfirmed } from '$lib/server/bluesky';
 import { notifyWardSubscribers } from '$lib/server/webpush';
@@ -98,31 +99,16 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const ipHash = await hashIp(getClientAddress());
 
 	// Persistent per-IP report throttling.
-	const windowStart = new Date(Date.now() - REPORT_RATE_WINDOW_MS).toISOString();
-	const { count: recentReports, error: reportRateError } = await getAdminClient()
-		.from('api_rate_limit_events')
-		.select('*', { count: 'exact', head: true })
-		.eq('ip_hash', ipHash)
-		.eq('scope', 'report_submit')
-		.gte('created_at', windowStart);
-
-	if (reportRateError) {
-		logError('api/report', 'Failed to check report rate limit', reportRateError);
-		throw error(500, 'Failed to check report rate limit');
-	}
-	if ((recentReports ?? 0) >= REPORT_RATE_LIMIT) {
-		throw error(429, 'Too many report attempts. Please wait before trying again.');
-	}
-
-	const { error: reportRateInsertError } = await getAdminClient()
-		.from('api_rate_limit_events')
-		.insert({ ip_hash: ipHash, scope: 'report_submit' });
-
-	if (reportRateInsertError) {
-		// Non-fatal: log and continue. A broken rate-limit table should not block
-		// legitimate reports — the next check will simply see a lower count.
-		logError('report', 'Failed to record rate limit event', reportRateInsertError, { ipHashPrefix: ipHash.slice(0, 8) });
-	}
+	await checkAndRecordRateLimit(
+		getAdminClient(),
+		ipHash,
+		'report_submit',
+		REPORT_RATE_LIMIT,
+		REPORT_RATE_WINDOW_MS,
+		'Too many report attempts. Please wait before trying again.',
+		'api/report',
+		'Failed to check report rate limit'
+	);
 
 	// Search for existing pending potholes nearby using a bounding box
 	const delta = 0.0005;
