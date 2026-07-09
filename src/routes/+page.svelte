@@ -149,7 +149,9 @@
 						const statusNote =
 							p.status === 'reported'
 								? 'Seen this too? Open details to watch it, share it, or report it officially.'
-								: 'Archived after no action. Open details if you need the full history.';
+								: p.status === 'filled'
+									? 'Marked filled by the community. Open details to review the timeline.'
+									: 'Archived after no action. Open details if you need the full history.';
 						marker.bindPopup(
 							`<div class="popup-content">
 								<div class="popup-header"><strong>${address}</strong><span class="popup-status popup-status--${p.status}">${info.label}</span></div>
