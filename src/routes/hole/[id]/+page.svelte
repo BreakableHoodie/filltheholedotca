@@ -825,6 +825,22 @@
 	{/if}
 
 	<!-- Photos -->
+	{#snippet thumb(photo: (typeof photos)[number])}
+		{@const idx = photos.indexOf(photo)}
+		<button
+			onclick={() => openLightbox(idx)}
+			class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
+			aria-label="View photo {idx + 1} of {photos.length}"
+		>
+			<img
+				src={photo.thumbnailUrl}
+				alt="Pothole at {pothole.address || 'this location'}"
+				class="w-full object-cover aspect-video"
+				loading="lazy"
+				onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
+			/>
+		</button>
+	{/snippet}
 	{#if photos.length > 0}
 		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
 			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
@@ -837,19 +853,7 @@
 						<h3 class="section-title text-sm text-stone-500 dark:text-stone-400 mb-2">Before</h3>
 						<div class="grid grid-cols-2 gap-2">
 							{#each photoSplit.before as photo (photo.id)}
-								<button
-									onclick={() => openLightbox(photos.indexOf(photo))}
-									class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
-									aria-label="View photo {photos.indexOf(photo) + 1} of {photos.length}"
-								>
-									<img
-										src={photo.thumbnailUrl}
-										alt="Pothole at {pothole.address || 'this location'}"
-										class="w-full object-cover aspect-video"
-										loading="lazy"
-										onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
-									/>
-								</button>
+								{@render thumb(photo)}
 							{/each}
 						</div>
 					</div>
@@ -857,39 +861,15 @@
 						<h3 class="section-title text-sm text-stone-500 dark:text-stone-400 mb-2">After</h3>
 						<div class="grid grid-cols-2 gap-2">
 							{#each photoSplit.after as photo (photo.id)}
-								<button
-									onclick={() => openLightbox(photos.indexOf(photo))}
-									class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
-									aria-label="View photo {photos.indexOf(photo) + 1} of {photos.length}"
-								>
-									<img
-										src={photo.thumbnailUrl}
-										alt="Pothole at {pothole.address || 'this location'}"
-										class="w-full object-cover aspect-video"
-										loading="lazy"
-										onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
-									/>
-								</button>
+								{@render thumb(photo)}
 							{/each}
 						</div>
 					</div>
 				</div>
 			{:else}
 				<div class="grid grid-cols-2 gap-2">
-					{#each photos as photo, i (photo.id)}
-						<button
-							onclick={() => openLightbox(i)}
-							class="block rounded-md overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 hover:ring-amber-500 transition-shadow cursor-zoom-in"
-							aria-label="View photo {i + 1} of {photos.length}"
-						>
-							<img
-								src={photo.thumbnailUrl}
-								alt="Pothole at {pothole.address || 'this location'}"
-								class="w-full object-cover aspect-video"
-								loading="lazy"
-								onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
-							/>
-						</button>
+					{#each photos as photo (photo.id)}
+						{@render thumb(photo)}
 					{/each}
 				</div>
 			{/if}
