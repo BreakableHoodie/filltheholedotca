@@ -224,6 +224,8 @@
 			description: ogDescription,
 			geo: {
 				'@type': 'GeoCoordinates',
+				// pothole.lat/lng arrive already rounded to ~11m from the server loader
+				// (+page.server.ts) as a privacy defense — no per-use-site rounding needed.
 				latitude: pothole.lat,
 				longitude: pothole.lng
 			},

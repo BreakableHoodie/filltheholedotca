@@ -5,7 +5,7 @@ import type { Pothole, PotholePhoto } from "$lib/types";
 import { COUNCILLORS, lookupWard, type Councillor } from "$lib/wards";
 import { decodeHtmlEntities } from "$lib/escape";
 import { getConfirmationThreshold } from "$lib/server/settings";
-import { haversineMetres } from "$lib/geo";
+import { haversineMetres, roundPublicCoord } from "$lib/geo";
 import { getAdminClient } from "$lib/server/supabase";
 
 export interface CityRepairRequest {
@@ -265,6 +265,15 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
       filled_at: p.filled_at as string,
       created_at: p.created_at as string,
     }));
+
+  // Defense in depth: round the reporter's coordinates before returning the pothole
+  // to the page, so every consumer (JSON-LD, Street View link, share text, page-title
+  // fallback) reads the ~11m-rounded value. Write-time rounding protects new rows;
+  // this covers any historical row stored at full precision. Done here — after the
+  // ward lookup, bounding-box query, and haversine filter above, which read the
+  // stored coords (all coarse enough that rounding wouldn't change their results).
+  pothole.lat = roundPublicCoord(pothole.lat);
+  pothole.lng = roundPublicCoord(pothole.lng);
 
   return {
     pothole,

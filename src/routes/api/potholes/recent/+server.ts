@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { supabase } from '$lib/supabase';
 import { decodeHtmlEntities } from '$lib/escape';
 import { logError } from '$lib/server/observability';
+import { roundPublicCoord } from '$lib/geo';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const since = url.searchParams.get('since');
@@ -33,6 +34,8 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	const potholes = (data ?? []).map((p) => ({
 		...p,
+		lat: roundPublicCoord(p.lat),
+		lng: roundPublicCoord(p.lng),
 		address: p.address ? decodeHtmlEntities(p.address) : null,
 		description: p.description ? decodeHtmlEntities(p.description) : null,
 	}));

@@ -3,6 +3,7 @@ import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getAdminClient } from '$lib/server/supabase';
 import { logError } from '$lib/server/observability';
+import { roundPublicCoord } from '$lib/geo';
 /**
  * GET /api/watchlist?ids=uuid1,uuid2,...
  *
@@ -44,7 +45,16 @@ export const GET: RequestHandler = async ({ url }) => {
 		throw error(500, 'Database error');
 	}
 
-	return json(potholes ?? [], {
+	// Defense in depth: write-time rounding (roundPublicCoord in api/report) protects
+	// new rows, but any historical row stored at full precision would otherwise leak
+	// exact reporter location through this endpoint.
+	const rounded = (potholes ?? []).map((p) => ({
+		...p,
+		lat: roundPublicCoord(p.lat),
+		lng: roundPublicCoord(p.lng)
+	}));
+
+	return json(rounded, {
 		headers: {
 			// Short cache — statuses change; but allow brief CDN caching to reduce load
 			'Cache-Control': 'private, max-age=30'
