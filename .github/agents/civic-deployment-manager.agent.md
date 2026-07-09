@@ -55,7 +55,6 @@ npm run test:a11y
 # - PUBLIC_SUPABASE_URL
 # - PUBLIC_SUPABASE_ANON_KEY
 # - SUPABASE_SERVICE_ROLE_KEY
-# - ADMIN_SECRET
 # - IP_HASH_SECRET
 # - ADMIN_SESSION_SECRET
 # - TOTP_ENCRYPTION_KEY
@@ -113,7 +112,7 @@ WHERE proname LIKE '%pothole%';
 
 ```bash
 # 1. Secrets audit
-grep -r "SUPABASE_SERVICE_ROLE_KEY\|ADMIN_SECRET" src/
+grep -r "SUPABASE_SERVICE_ROLE_KEY" src/
 # Should return ZERO results (secrets must be in env only)
 
 # 2. Check for hardcoded IPs
