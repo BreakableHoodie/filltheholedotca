@@ -39,9 +39,18 @@ export const load: LayoutServerLoad = async () => {
 			reported: reportedResult.count ?? 0,
 			filled: filledResult.count ?? 0
 		};
-		cachedCounts = counts;
-		cacheTimestamp = now;
-		return { counts };
+
+		// Only cache when both queries succeeded. A partial/errored result yields a
+		// fabricated 0 via `?? 0` above — caching that would serve a wrong "0" for
+		// the full 5-minute TTL. On error, prefer stale-but-real cached counts over
+		// the fabricated ones; fall back to the computed (possibly partial) counts,
+		// uncached, only if there's no cache yet.
+		if (!reportedResult.error && !filledResult.error) {
+			cachedCounts = counts;
+			cacheTimestamp = now;
+			return { counts };
+		}
+		return { counts: cachedCounts ?? counts };
 	} catch (e) {
 		logError('layout', 'Supabase load exception', e instanceof Error ? e : new Error(String(e)));
 		return { counts: cachedCounts ?? { reported: 0, filled: 0 } };

@@ -9,7 +9,7 @@ import { checkAndRecordRateLimit } from '$lib/server/rate-limit';
 import { notify } from '$lib/server/pushover';
 import { postConfirmed } from '$lib/server/bluesky';
 import { notifyWardSubscribers } from '$lib/server/webpush';
-import { lookupWard } from '$lib/wards';
+import { lookupWard } from '$lib/server/wards';
 import { logError } from '$lib/server/observability';
 import { getAdminClient } from '$lib/server/supabase';
 import { fixturePotholes } from '$lib/server/fixture-store';

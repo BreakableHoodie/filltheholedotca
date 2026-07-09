@@ -107,11 +107,21 @@ function pointInPolygon(lng: number, lat: number, geometry: GeoJSONFeature['geom
 
 // ── Ward lookup ───────────────────────────────────────────────────────────────
 
-export async function fetchWards(city: City): Promise<GeoJSONFeature[]> {
+// This module is client-bundled (the homepage imports COUNCILLORS), so it
+// cannot import `$lib/server/observability`. Callers that want failures logged
+// pass an `onError` callback instead — see `$lib/server/wards` for the
+// server-side wrapper that threads it through to `logError`.
+export type WardErrorHandler = (message: string, err: unknown) => void;
+
+export async function fetchWards(
+	city: City,
+	onError?: WardErrorHandler
+): Promise<GeoJSONFeature[]> {
 	if (city in wardCache) {
 		// Success cache — features are permanent; never re-fetch.
 		if (wardCache[city]!.length > 0) return wardCache[city]!;
 		// Failure cache — hold for 5 min to prevent thundering herd, then retry.
+		// Already-reported; do not call onError again for a cached failure.
 		if (Date.now() - (wardCacheFailedAt[city] ?? 0) < WARD_FAILURE_RETRY_MS) {
 			return wardCache[city]!;
 		}
@@ -122,26 +132,46 @@ export async function fetchWards(city: City): Promise<GeoJSONFeature[]> {
 		if (!res.ok) {
 			wardCache[city] = [];
 			wardCacheFailedAt[city] = Date.now();
+			onError?.(`ward boundary fetch failed for ${city}`, new Error(`HTTP ${res.status}`));
 			return [];
 		}
 		const geojson = await res.json();
-		wardCache[city] = geojson.features ?? [];
+		// ArcGIS REST services can return HTTP 200 with an `{"error": {...}}` body
+		// and no `features` key. An empty ward set is never legitimate for these
+		// three cities, so treat a missing or empty features array as a failure —
+		// caching it as a SUCCESS would clear wardCacheFailedAt and bypass the
+		// 5-minute thundering-herd hold on every subsequent call.
+		if (!Array.isArray(geojson.features) || geojson.features.length === 0) {
+			wardCache[city] = [];
+			wardCacheFailedAt[city] = Date.now();
+			onError?.(
+				`ward boundary fetch returned an empty or malformed body for ${city}`,
+				new Error('no features in ArcGIS response')
+			);
+			return [];
+		}
+		wardCache[city] = geojson.features;
 		delete wardCacheFailedAt[city];
 		return wardCache[city]!;
-	} catch {
+	} catch (err) {
 		wardCache[city] = [];
 		wardCacheFailedAt[city] = Date.now();
+		onError?.(`ward boundary fetch failed for ${city}`, err);
 		return [];
 	}
 }
 
-export async function lookupWard(lat: number, lng: number): Promise<Councillor | null> {
+export async function lookupWard(
+	lat: number,
+	lng: number,
+	onError?: WardErrorHandler
+): Promise<Councillor | null> {
 	try {
 		// Fetch all three cities in parallel
 		const [kitchenerFeatures, waterlooFeatures, cambridgeFeatures] = await Promise.all([
-			fetchWards('kitchener'),
-			fetchWards('waterloo'),
-			fetchWards('cambridge')
+			fetchWards('kitchener', onError),
+			fetchWards('waterloo', onError),
+			fetchWards('cambridge', onError)
 		]);
 
 		const sources: [City, GeoJSONFeature[]][] = [
@@ -160,8 +190,8 @@ export async function lookupWard(lat: number, lng: number): Promise<Councillor |
 				}
 			}
 		}
-	} catch {
-		// Network error or timeout — silently fail
+	} catch (err) {
+		onError?.('ward lookup failed', err);
 	}
 	return null;
 }

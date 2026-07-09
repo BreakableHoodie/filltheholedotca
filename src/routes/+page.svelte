@@ -31,6 +31,23 @@
 	let pollTimer: ReturnType<typeof setInterval> | null = null;
 	let lastPoll = $state(Date.now());
 	let liveAnnouncement = $state('');
+	// Two classes of poll failure, tracked separately (both plain lets, not
+	// $state — they drive no UI):
+	// 1. Transient network noise (fetch/HTTP/JSON) — expected occasionally, so a
+	//    consecutive-failure counter reports to Sentry once, at exactly the 3rd
+	//    failure, rather than once per minute for the life of an outage.
+	// 2. Deterministic processing bugs (malformed pothole, Leaflet throw) — these
+	//    recur on every poll, so they're reported immediately but only once per
+	//    page session (the boolean below) to avoid one Sentry event per minute.
+	let pollFailures = 0;
+	let processingErrorReported = false;
+	function reportPollFailure(err: unknown): void {
+		pollFailures++;
+		if (pollFailures === 3) {
+			const captured = err instanceof Error ? err : new Error(String(err));
+			Sentry.captureException(captured, { tags: { area: 'homepage-polling' } });
+		}
+	}
 
 	$effect(() => {
 		if (!mapReady) return;
@@ -44,17 +61,36 @@
 			// time and the current minute boundary would fall in a gap and never be
 			// polled. With the -1 minute, consecutive windows always overlap.
 			const since = new Date((Math.floor(lastPoll / 60000) - 1) * 60000).toISOString();
+			// Failure class 1: transient network noise (fetch/HTTP/JSON). Reset the
+			// counter as soon as the fetch round-trip succeeds — before any marker
+			// processing — so a deterministic processing bug below can't oscillate
+			// the counter between 0 and 1 and starve the threshold forever.
+			let updated: Pothole[] | undefined;
 			try {
 				const res = await fetch(`/api/potholes/recent?since=${encodeURIComponent(since)}`);
-				if (!res.ok) return;
-				const { potholes: updated } = await res.json();
+				if (!res.ok) {
+					reportPollFailure(new Error(`polling failed: HTTP ${res.status}`));
+					return;
+				}
+				({ potholes: updated } = await res.json());
 				// Advance on every successful poll, not just when updates arrive, so a
 				// quiet tab's `since` window doesn't grow unbounded. The 5s overlap
 				// above absorbs the gap between real time and the quantized value sent.
 				lastPoll = Date.now();
-				if (!updated?.length) return;
-				const L = LRef;
-				if (!L || !mapRef) return;
+				pollFailures = 0;
+			} catch (err) {
+				// A single failure should not degrade UX, so we keep polling silently —
+				// but a persistent outage is reported to Sentry once (see
+				// reportPollFailure) instead of being swallowed for the life of the outage.
+				reportPollFailure(err);
+				return;
+			}
+			if (!updated?.length) return;
+			const L = LRef;
+			if (!L || !mapRef) return;
+			// Failure class 2: deterministic processing bugs. A throw here would
+			// recur every 60s — report immediately, once per page session.
+			try {
 				// Announce changes for screen readers
 				const newCount = updated.filter((u: { id: string }) => !markersById[u.id]).length;
 				if (newCount > 0 || updated.length > 0) {
@@ -173,8 +209,13 @@
 					const match = updated.find((u: { id: string }) => u.id === cp.id);
 					return match ? { ...cp, ...match } : cp;
 				});
-			} catch {
-				// Silent — polling failures should not degrade UX
+			} catch (err) {
+				if (!processingErrorReported) {
+					processingErrorReported = true;
+					Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+						tags: { area: 'homepage-polling' },
+					});
+				}
 			}
 		}, 60000);
 		return () => {

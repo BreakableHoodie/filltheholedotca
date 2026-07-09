@@ -3,6 +3,7 @@
 	import { env } from '$env/dynamic/public';
 	import Icon from './Icon.svelte';
 	import { urlBase64ToUint8Array } from '$lib/push';
+	import { toastError } from '$lib/toast';
 
 	type NotifState = 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed' | 'pending';
 
@@ -26,9 +27,17 @@
 				return;
 			}
 			const existing = await registration.pushManager.getSubscription();
-			if (existing) notifState = 'subscribed';
+			// 'push-subscribed' records a SERVER-confirmed subscription. A browser
+			// subscription alone can be an orphan from a failed POST, or belong only
+			// to the per-pothole fill-notify feature (hole/[id]) — showing "Notified"
+			// from it alone would misreport server state.
+			if (existing && localStorage.getItem('push-subscribed') === '1') {
+				notifState = 'subscribed';
+			}
 		} catch {
-			// SW registration failed — push unavailable
+			// SW registration failed — push unavailable. Hide the button rather than
+			// leaving it in 'unsubscribed' state, which would render a dead control.
+			notifState = 'unsupported';
 		}
 	});
 
@@ -44,14 +53,23 @@
 				endpoint: string;
 				keys: { p256dh: string; auth: string };
 			};
-			await fetch('/api/subscribe', {
+			const res = await fetch('/api/subscribe', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ endpoint, keys })
 			});
+			if (!res.ok) throw new Error(`subscribe failed: HTTP ${res.status}`);
+			// Flag only after the server confirmed the subscription — see onMount.
+			localStorage.setItem('push-subscribed', '1');
 			notifState = 'subscribed';
 		} catch {
-			notifState = Notification.permission === 'denied' ? 'denied' : 'unsubscribed';
+			if (Notification.permission === 'denied') {
+				// The "Blocked" indicator already communicates this — no toast needed.
+				notifState = 'denied';
+			} else {
+				notifState = 'unsubscribed';
+				toastError('Could not turn on notifications. Try again.');
+			}
 		}
 	}
 
@@ -61,16 +79,19 @@
 		try {
 			const sub = await registration.pushManager.getSubscription();
 			if (sub) {
-				await fetch('/api/subscribe', {
+				const res = await fetch('/api/subscribe', {
 					method: 'DELETE',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ endpoint: sub.endpoint })
 				});
+				if (!res.ok) throw new Error(`unsubscribe failed: HTTP ${res.status}`);
+				localStorage.removeItem('push-subscribed');
 				await sub.unsubscribe();
 			}
 			notifState = 'unsubscribed';
 		} catch {
 			notifState = 'subscribed';
+			toastError('Could not turn off notifications. Try again.');
 		}
 	}
 </script>

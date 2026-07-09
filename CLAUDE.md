@@ -191,6 +191,7 @@ src/
       observability.ts        # logError() — console + Sentry with area tags
       exif-strip.ts           # stripJpegMetadata() — lossless APP-segment stripper
       og-helpers.ts           # Shared satori el() helper for OG image routes
+      wards.ts                # fetchWards/lookupWard wrapped with logError (server callers import from here)
     components/
       HomeIntroCard.svelte    # Homepage-only intro card shown on first visit
 ```

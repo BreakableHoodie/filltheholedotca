@@ -1,11 +1,17 @@
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 
 export async function getSetting(key: string, fallback: string): Promise<string> {
-	const { data } = await getAdminClient()
+	const { data, error } = await getAdminClient()
 		.from('site_settings')
 		.select('value')
 		.eq('key', key)
-		.single();
+		.maybeSingle();
+	if (error) {
+		// Key goes in the message, not the context object — the observability
+		// sanitizer strips any context key containing the token "key".
+		logError('settings', `site_settings lookup failed for "${key}"`, error);
+	}
 	return data?.value ?? fallback;
 }
 
