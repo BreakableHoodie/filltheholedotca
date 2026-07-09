@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { logError } from '$lib/server/observability';
+import { checkAndRecordRateLimit } from '$lib/server/rate-limit';
 import { getAdminClient } from '$lib/server/supabase';
 
 const postSchema = z.object({
@@ -44,17 +45,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const windowStart = new Date(Date.now() - VOTE_RATE_WINDOW_MS).toISOString();
 
 	// Per-IP rate limit
-	const { count: recentVotes, error: rateLimitError } = await db
-		.from('api_rate_limit_events')
-		.select('*', { count: 'exact', head: true })
-		.eq('ip_hash', ipHash)
-		.eq('scope', 'vote_submit')
-		.gte('created_at', windowStart);
-
-	if (rateLimitError) throw error(500, 'Failed to check rate limit');
-	if ((recentVotes ?? 0) >= VOTE_RATE_LIMIT) {
-		throw error(429, 'Too many requests. Please wait before trying again.');
-	}
+	await checkAndRecordRateLimit(
+		db,
+		ipHash,
+		'vote_submit',
+		VOTE_RATE_LIMIT,
+		VOTE_RATE_WINDOW_MS,
+		'Too many requests. Please wait before trying again.',
+		'api/vote'
+	);
 
 	// Per-pothole rate limit
 	const { count: potholeVotes, error: potholeRateError } = await db
@@ -79,14 +78,6 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (upsertError) {
 		logError('vote/upsert', 'Failed to upsert vote', upsertError);
 		throw error(500, 'Failed to record vote');
-	}
-
-	// Non-fatal rate limit event
-	const { error: rateLimitInsertError } = await db
-		.from('api_rate_limit_events')
-		.insert({ ip_hash: ipHash, scope: 'vote_submit' });
-	if (rateLimitInsertError) {
-		logError('vote/ratelimit', 'Failed to record rate limit event', rateLimitInsertError);
 	}
 
 	// Return current counts

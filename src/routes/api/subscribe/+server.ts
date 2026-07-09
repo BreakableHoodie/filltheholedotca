@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { logError } from '$lib/server/observability';
+import { checkAndRecordRateLimit } from '$lib/server/rate-limit';
 import { getAdminClient } from '$lib/server/supabase';
 import { isSafePushEndpoint } from '$lib/server/ssrf';
 
@@ -32,21 +33,16 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const ipHash = await hashIp(getClientAddress());
 	const db = getAdminClient();
 
-	const windowStart = new Date(Date.now() - SUBSCRIBE_RATE_WINDOW_MS).toISOString();
-	const { count: recentSubs, error: rateLimitError } = await db
-		.from('api_rate_limit_events')
-		.select('*', { count: 'exact', head: true })
-		.eq('ip_hash', ipHash)
-		.eq('scope', 'push_subscribe')
-		.gte('created_at', windowStart);
-
-	if (rateLimitError) {
-		logError('api/subscribe', 'Failed to check subscribe rate limit', rateLimitError);
-		throw error(500, 'Failed to check rate limit');
-	}
-	if ((recentSubs ?? 0) >= SUBSCRIBE_RATE_LIMIT) {
-		throw error(429, 'Too many subscription attempts. Please wait before trying again.');
-	}
+	await checkAndRecordRateLimit(
+		db,
+		ipHash,
+		'push_subscribe',
+		SUBSCRIBE_RATE_LIMIT,
+		SUBSCRIBE_RATE_WINDOW_MS,
+		'Too many subscription attempts. Please wait before trying again.',
+		'api/subscribe',
+		'Failed to check rate limit'
+	);
 
 	const { error: dbError } = await db.from('push_subscriptions').upsert(
 		{
@@ -63,13 +59,6 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(500, 'Failed to save subscription');
 	}
 
-	const { error: rateLimitInsertError } = await db
-		.from('api_rate_limit_events')
-		.insert({ ip_hash: ipHash, scope: 'push_subscribe' });
-	if (rateLimitInsertError) {
-		logError('subscribe/ratelimit', 'Failed to record rate limit event', rateLimitInsertError);
-	}
-
 	return json({ ok: true });
 };
 
@@ -82,21 +71,16 @@ export const DELETE: RequestHandler = async ({ request, getClientAddress }) => {
 	const ipHash = await hashIp(getClientAddress());
 	const db = getAdminClient();
 
-	const windowStart = new Date(Date.now() - SUBSCRIBE_RATE_WINDOW_MS).toISOString();
-	const { count: recentUnsubs, error: rateLimitError } = await db
-		.from('api_rate_limit_events')
-		.select('*', { count: 'exact', head: true })
-		.eq('ip_hash', ipHash)
-		.eq('scope', 'push_unsubscribe')
-		.gte('created_at', windowStart);
-
-	if (rateLimitError) {
-		logError('api/subscribe', 'Failed to check unsubscribe rate limit', rateLimitError);
-		throw error(500, 'Failed to check rate limit');
-	}
-	if ((recentUnsubs ?? 0) >= UNSUBSCRIBE_RATE_LIMIT) {
-		throw error(429, 'Too many unsubscribe attempts. Please wait before trying again.');
-	}
+	await checkAndRecordRateLimit(
+		db,
+		ipHash,
+		'push_unsubscribe',
+		UNSUBSCRIBE_RATE_LIMIT,
+		SUBSCRIBE_RATE_WINDOW_MS,
+		'Too many unsubscribe attempts. Please wait before trying again.',
+		'api/subscribe',
+		'Failed to check rate limit'
+	);
 
 	const { error: deleteError } = await db
 		.from('push_subscriptions')
@@ -105,13 +89,6 @@ export const DELETE: RequestHandler = async ({ request, getClientAddress }) => {
 	if (deleteError) {
 		logError('api/subscribe', 'Failed to remove push subscription', deleteError);
 		throw error(500, 'Failed to remove subscription');
-	}
-
-	const { error: rateLimitInsertError } = await db
-		.from('api_rate_limit_events')
-		.insert({ ip_hash: ipHash, scope: 'push_unsubscribe' });
-	if (rateLimitInsertError) {
-		logError('subscribe/ratelimit', 'Failed to record unsubscribe rate limit event', rateLimitInsertError);
 	}
 
 	return json({ ok: true });

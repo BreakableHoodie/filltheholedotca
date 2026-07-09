@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { logError } from '$lib/server/observability';
+import { checkAndRecordRateLimit } from '$lib/server/rate-limit';
 import { getAdminClient } from '$lib/server/supabase';
 import { isSafePushEndpoint } from '$lib/server/ssrf';
 
@@ -31,19 +32,17 @@ export const POST: RequestHandler = async ({ params, request, getClientAddress }
 	const ipHash = await hashIp(getClientAddress());
 	const db = getAdminClient();
 
-	const windowStart = new Date(Date.now() - RATE_WINDOW_MS).toISOString();
-	const { count: recent, error: rateLimitError } = await db
-		.from('api_rate_limit_events')
-		.select('*', { count: 'exact', head: true })
-		.eq('ip_hash', ipHash)
-		.eq('scope', 'fill_notify_subscribe')
-		.gte('created_at', windowStart);
-
-	if (rateLimitError) {
-		logError('api/notify', 'Failed to check rate limit', rateLimitError, { potholeId: id });
-		throw error(500, 'Failed to check rate limit');
-	}
-	if ((recent ?? 0) >= RATE_LIMIT) throw error(429, 'Too many requests. Please wait before trying again.');
+	await checkAndRecordRateLimit(
+		db,
+		ipHash,
+		'fill_notify_subscribe',
+		RATE_LIMIT,
+		RATE_WINDOW_MS,
+		'Too many requests. Please wait before trying again.',
+		'api/notify',
+		'Failed to check rate limit',
+		{ potholeId: id }
+	);
 
 	// Confirm the pothole exists and is in a state where a fill notification makes sense.
 	const { data: pothole, error: potholeErr } = await db
@@ -68,11 +67,6 @@ export const POST: RequestHandler = async ({ params, request, getClientAddress }
 		logError('api/notify', 'Failed to save fill notification subscription', dbError, { potholeId: id });
 		throw error(500, 'Failed to save subscription');
 	}
-
-	const { error: rlErr } = await db
-		.from('api_rate_limit_events')
-		.insert({ ip_hash: ipHash, scope: 'fill_notify_subscribe' });
-	if (rlErr) logError('notify/ratelimit', 'Failed to record rate limit event', rlErr);
 
 	return json({ ok: true });
 };

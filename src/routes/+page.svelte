@@ -149,7 +149,9 @@
 						const statusNote =
 							p.status === 'reported'
 								? 'Seen this too? Open details to watch it, share it, or report it officially.'
-								: 'Archived after no action. Open details if you need the full history.';
+								: p.status === 'filled'
+									? 'Marked filled by the community. Open details to review the timeline.'
+									: 'Archived after no action. Open details if you need the full history.';
 						marker.bindPopup(
 							`<div class="popup-content">
 								<div class="popup-header"><strong>${address}</strong><span class="popup-status popup-status--${p.status}">${info.label}</span></div>
@@ -378,32 +380,57 @@
 		}
 	}
 
+	/**
+	 * Shared "mark as filled" logic for the list-view button and the map
+	 * popup's "It's fixed!" button: POST /api/filled, toast the result, and
+	 * (on success) patch `clientPotholes` + move the marker into the filled
+	 * cluster group. `opts.beforeToast` lets a caller run UI cleanup (e.g.
+	 * closing a popup) at the same point the original call site did — after
+	 * the fetch resolves without throwing, but before the toast fires.
+	 */
+	async function applyFilledResult(
+		id: string,
+		opts?: { beforeToast?: () => void },
+	): Promise<{ ok: boolean }> {
+		const res = await fetch('/api/filled', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ id }),
+		});
+		const result = await res.json();
+		if (!res.ok && res.status !== 409) throw new Error(result.message || 'Failed');
+
+		opts?.beforeToast?.();
+		toast.success(result.ok ? 'Marked as fixed!' : result.message);
+		if (!result.ok) return { ok: false };
+
+		// Targeted delta: mutate only the changed element so $derived consumers
+		// don't recalculate the full array on every fill action.
+		if (!clientPotholes) clientPotholes = (potholes as Pothole[]).slice();
+		const idx = clientPotholes.findIndex((p) => p.id === id);
+		if (idx !== -1) {
+			clientPotholes[idx] = {
+				...clientPotholes[idx],
+				status: 'filled',
+				filled_at: new Date().toISOString(),
+			};
+		}
+
+		const marker = markersById[id];
+		if (marker) {
+			clusterGroups.reported?.removeLayer(marker);
+			clusterGroups.filled?.addLayer(marker);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(marker as any)._status = 'filled';
+		}
+
+		return { ok: true };
+	}
+
 	async function markPotholeFilled(id: string) {
 		try {
-			const res = await fetch('/api/filled', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ id }),
-			});
-			const result = await res.json();
-			if (!res.ok && res.status !== 409) throw new Error(result.message || 'Failed');
-
-			toast.success(result.ok ? 'Marked as fixed!' : result.message);
-			if (!result.ok) return;
-
-			if (!clientPotholes) clientPotholes = [...(potholes as Pothole[])];
-			clientPotholes = clientPotholes.map((pothole) =>
-				pothole.id === id
-					? { ...pothole, status: 'filled', filled_at: new Date().toISOString() }
-					: pothole,
-			);
-
-			const marker = markersById[id];
-			if (marker) {
-				clusterGroups.reported?.removeLayer(marker);
-				clusterGroups.filled?.addLayer(marker);
-			}
-			liveAnnouncement = 'Pothole marked fixed and moved to the filled list.';
+			const result = await applyFilledResult(id);
+			if (result.ok) liveAnnouncement = 'Pothole marked fixed and moved to the filled list.';
 		} catch (err: unknown) {
 			toastError(err instanceof Error ? err.message : 'Something went wrong');
 		}
@@ -718,37 +745,7 @@
 				if (!id) return;
 
 				try {
-					const res = await fetch('/api/filled', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ id }),
-					});
-					const result = await res.json();
-					if (!res.ok && res.status !== 409) throw new Error(result.message || 'Failed');
-
-					map.closePopup();
-					toast.success(result.ok ? 'Marked as fixed!' : result.message);
-
-					// Move marker from reported layer to filled layer.
-					if (result.ok) {
-						// Targeted delta: mutate only the changed element so $derived consumers
-						// don't recalculate the full array on every fill action.
-						if (!clientPotholes) clientPotholes = (potholes as Pothole[]).slice();
-						const idx = clientPotholes.findIndex((p) => p.id === id);
-						if (idx !== -1) {
-							clientPotholes[idx] = {
-								...clientPotholes[idx],
-								status: 'filled',
-								filled_at: new Date().toISOString(),
-							};
-						}
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						const marker = (e as any).popup._source;
-						clusterGroups['reported']?.removeLayer(marker);
-						clusterGroups['filled']?.addLayer(marker);
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						(marker as any)._status = 'filled';
-					}
+					await applyFilledResult(id, { beforeToast: () => map.closePopup() });
 				} catch (err: unknown) {
 					toastError(err instanceof Error ? err.message : 'Something went wrong');
 				}

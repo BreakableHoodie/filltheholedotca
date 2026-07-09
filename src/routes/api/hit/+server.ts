@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { logError } from '$lib/server/observability';
+import { checkAndRecordRateLimit } from '$lib/server/rate-limit';
 import { getAdminClient } from '$lib/server/supabase';
 const schema = z.object({ id: z.string().uuid() });
 
@@ -19,21 +20,16 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const db = getAdminClient();
 
 	// Persistent per-IP rate limit — prevents spraying hits across all potholes.
+	await checkAndRecordRateLimit(
+		db,
+		ipHash,
+		'hit_submit',
+		HIT_RATE_LIMIT,
+		HIT_RATE_WINDOW_MS,
+		'Too many requests. Please wait before trying again.',
+		'api/hit'
+	);
 	const windowStart = new Date(Date.now() - HIT_RATE_WINDOW_MS).toISOString();
-	const { count: recentHits, error: rateLimitError } = await db
-		.from('api_rate_limit_events')
-		.select('*', { count: 'exact', head: true })
-		.eq('ip_hash', ipHash)
-		.eq('scope', 'hit_submit')
-		.gte('created_at', windowStart);
-
-	if (rateLimitError) {
-		logError('api/hit', 'Failed to check per-IP rate limit', rateLimitError);
-		throw error(500, 'Failed to check rate limit');
-	}
-	if ((recentHits ?? 0) >= HIT_RATE_LIMIT) {
-		throw error(429, 'Too many requests. Please wait before trying again.');
-	}
 
 	// Per-pothole rate limit — prevents distributed bots from inflating a single
 	// pothole's hit count across many IPs within the per-IP ceiling.
@@ -69,14 +65,6 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		}
 		logError('api/hit', 'Failed to record hit', insertError, { potholeId: parsed.data.id });
 		throw error(500, 'Failed to record hit');
-	}
-
-	// Non-fatal rate limit event record
-	const { error: rateLimitInsertError } = await db
-		.from('api_rate_limit_events')
-		.insert({ ip_hash: ipHash, scope: 'hit_submit' });
-	if (rateLimitInsertError) {
-		logError('hit/ratelimit', 'Failed to record rate limit event', rateLimitInsertError);
 	}
 
 	const { count } = await db

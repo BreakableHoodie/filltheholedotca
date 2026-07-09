@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { z } from 'zod';
 import { hashIp } from '$lib/hash';
 import { logError } from '$lib/server/observability';
+import { checkAndRecordRateLimit } from '$lib/server/rate-limit';
 import { getAdminClient } from '$lib/server/supabase';
 import { isSafePushEndpoint } from '$lib/server/ssrf';
 import { isKnownWardKey } from '$lib/wards';
@@ -26,18 +27,17 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const ipHash = await hashIp(getClientAddress());
 	const db = getAdminClient();
 
-	const windowStart = new Date(Date.now() - RATE_WINDOW_MS).toISOString();
-	const { count: recent, error: rlErr } = await db
-		.from('api_rate_limit_events')
-		.select('*', { count: 'exact', head: true })
-		.eq('ip_hash', ipHash)
-		.eq('scope', 'ward_notify_subscribe')
-		.gte('created_at', windowStart);
-	if (rlErr) {
-		logError('api/notify/ward', 'Failed to check rate limit', rlErr, { wardKey: parsed.data.ward_key });
-		throw error(500, 'Failed to check rate limit');
-	}
-	if ((recent ?? 0) >= RATE_LIMIT) throw error(429, 'Too many requests. Please wait before trying again.');
+	await checkAndRecordRateLimit(
+		db,
+		ipHash,
+		'ward_notify_subscribe',
+		RATE_LIMIT,
+		RATE_WINDOW_MS,
+		'Too many requests. Please wait before trying again.',
+		'api/notify/ward',
+		'Failed to check rate limit',
+		{ wardKey: parsed.data.ward_key }
+	);
 
 	const { error: dbError } = await db.from('ward_subscriptions').upsert(
 		{
@@ -52,11 +52,6 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		logError('api/notify/ward', 'Failed to save ward subscription', dbError, { wardKey: parsed.data.ward_key });
 		throw error(500, 'Failed to save subscription');
 	}
-
-	const { error: insErr } = await db
-		.from('api_rate_limit_events')
-		.insert({ ip_hash: ipHash, scope: 'ward_notify_subscribe' });
-	if (insErr) logError('notify/ward/ratelimit', 'Failed to record rate limit event', insErr);
 
 	return json({ ok: true });
 };
