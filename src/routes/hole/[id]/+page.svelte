@@ -157,6 +157,11 @@
 			fillNotifState = 'subscribed';
 		} catch {
 			fillNotifState = Notification.permission === 'denied' ? 'denied' : 'unsubscribed';
+			if (Notification.permission === 'denied') {
+				toastError('Notifications are blocked in your browser settings.');
+			} else {
+				toastError('Could not turn on notifications. Try again.');
+			}
 		}
 	}
 
@@ -166,16 +171,18 @@
 		try {
 			const sub = await swRegistration.pushManager.getSubscription();
 			if (sub) {
-				await fetch(`/api/notify/${pothole.id}`, {
+				const res = await fetch(`/api/notify/${pothole.id}`, {
 					method: 'DELETE',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ endpoint: sub.endpoint })
 				});
+				if (!res.ok) throw new Error(`unsubscribe failed: HTTP ${res.status}`);
 			}
 			localStorage.removeItem(`fill-notify:${pothole.id}`);
 			fillNotifState = 'unsubscribed';
 		} catch {
 			fillNotifState = 'subscribed';
+			toastError('Could not turn off notifications. Try again.');
 		}
 	}
 

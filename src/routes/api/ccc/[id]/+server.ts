@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { supabase } from '$lib/supabase';
 import { logError } from '$lib/server/observability';
 import { roundPublicCoord } from '$lib/geo';
-import { lookupWard } from '$lib/wards';
+import { lookupWard } from '$lib/server/wards';
 
 const CCC_URL =
 	'https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Corporate_Contact_Centre_Requests/FeatureServer/0/query';
@@ -31,7 +31,7 @@ export const GET: RequestHandler = async ({ params }) => {
 	// Server-side city gate — the CCC dataset only covers Kitchener repairs.
 	// Sending coordinates for Waterloo/Cambridge potholes to ArcGIS would waste
 	// a network call and could leak coordinates unnecessarily.
-	const ward = await lookupWard(lat, lng).catch(() => null);
+	const ward = await lookupWard(lat, lng);
 	if (ward?.city !== 'kitchener') return json([]);
 
 	// Round coords before sending to ArcGIS — matches ~11 m public precision

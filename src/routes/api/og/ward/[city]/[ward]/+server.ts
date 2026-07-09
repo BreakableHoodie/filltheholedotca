@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
-import { COUNCILLORS, fetchWards, type GeoJSONFeature } from '$lib/wards';
+import { COUNCILLORS, type GeoJSONFeature } from '$lib/wards';
+import { fetchWards } from '$lib/server/wards';
 import { supabase } from '$lib/supabase';
 import { inWardFeature } from '$lib/geo';
 import { wardGrade } from '$lib/ward-grade';

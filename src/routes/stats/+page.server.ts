@@ -2,7 +2,8 @@ import { supabase } from '$lib/supabase';
 import { decodeHtmlEntities } from '$lib/escape';
 import type { PageServerLoad } from './$types';
 import type { Pothole } from '$lib/types';
-import { lookupWard, fetchWards, COUNCILLORS } from '$lib/wards';
+import { COUNCILLORS } from '$lib/wards';
+import { lookupWard, fetchWards } from '$lib/server/wards';
 import { logError } from '$lib/server/observability';
 import { getFreezeThawByMonth } from '$lib/server/weather';
 
@@ -56,9 +57,9 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
 			.neq('status', 'pending')
 			.order('created_at', { ascending: false }),
 		getFreezeThawByMonth(18),
-		fetchWards('kitchener').catch(() => []),
-		fetchWards('waterloo').catch(() => []),
-		fetchWards('cambridge').catch(() => [])
+		fetchWards('kitchener'),
+		fetchWards('waterloo'),
+		fetchWards('cambridge')
 	]);
 
 	if (error) {

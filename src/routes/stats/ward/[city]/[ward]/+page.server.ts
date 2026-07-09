@@ -1,7 +1,8 @@
 import { error } from '@sveltejs/kit';
 import { supabase } from '$lib/supabase';
 import { decodeHtmlEntities } from '$lib/escape';
-import { COUNCILLORS, fetchWards, type GeoJSONFeature } from '$lib/wards';
+import { COUNCILLORS, type GeoJSONFeature } from '$lib/wards';
+import { fetchWards } from '$lib/server/wards';
 import { inWardFeature } from '$lib/geo';
 import { logError } from '$lib/server/observability';
 import type { PageServerLoad } from './$types';
