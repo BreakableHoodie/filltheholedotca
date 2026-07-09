@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import type { Pothole } from '$lib/types';
 import { decodeHtmlEntities } from '$lib/escape';
 import { logError } from '$lib/server/observability';
+import { roundPublicCoord } from '$lib/geo';
 
 // Cap root-page payload to keep SSR memory and transfer size bounded as the
 // dataset grows. Tune with production telemetry if map coverage needs change.
@@ -35,6 +36,8 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 
 		const potholes = (data ?? []).map((p) => ({
 			...p,
+			lat: roundPublicCoord(p.lat),
+			lng: roundPublicCoord(p.lng),
 			address: p.address ? decodeHtmlEntities(p.address) : null,
 			description: p.description ? decodeHtmlEntities(p.description) : null
 		})) as Pothole[];

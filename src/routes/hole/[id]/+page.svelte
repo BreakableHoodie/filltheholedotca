@@ -22,6 +22,7 @@
 	import { env } from '$env/dynamic/public';
 	import { urlBase64ToUint8Array } from '$lib/push';
 	import { splitByFill } from '$lib/photo-split';
+	import { roundPublicCoord } from '$lib/geo';
 
 	let { data }: { data: PageData } = $props();
 	let pothole = $derived(data.pothole as Pothole);
@@ -224,8 +225,11 @@
 			description: ogDescription,
 			geo: {
 				'@type': 'GeoCoordinates',
-				latitude: pothole.lat,
-				longitude: pothole.lng
+				// Defense in depth: write-time rounding (roundPublicCoord in api/report)
+				// protects new rows, but a historical row stored at full precision would
+				// otherwise leak exact reporter location through this public JSON-LD block.
+				latitude: roundPublicCoord(pothole.lat),
+				longitude: roundPublicCoord(pothole.lng)
 			},
 			url: `${origin}/hole/${pothole.id}`,
 			dateCreated: pothole.created_at,
