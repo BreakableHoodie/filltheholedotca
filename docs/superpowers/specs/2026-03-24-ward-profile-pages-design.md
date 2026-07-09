@@ -1,3 +1,5 @@
+> **Status: Shipped** — implemented; retained for historical context.
+
 # Ward Profile Pages — Design Spec
 
 **Date:** 2026-03-24
