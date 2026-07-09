@@ -1,14 +1,8 @@
-import { generate, generateSecret, generateURI, verify } from "otplib";
+import { generateSecret, generateURI, verify } from "otplib";
 
 /** Generate a new base32-encoded TOTP secret. */
 export async function generateTotpSecret(): Promise<string> {
   return generateSecret();
-}
-
-/** Generate the current TOTP token for a secret (for testing). */
-export async function generateTotpToken(secret: string): Promise<string> {
-  const token = await generate({ secret });
-  return String(token);
 }
 
 /** Verify a TOTP code or backup code against a secret. */

@@ -96,7 +96,6 @@ App runs at `http://localhost:5173`.
 | `PUBLIC_SUPABASE_URL`       | Supabase project URL                                                      |
 | `PUBLIC_SUPABASE_ANON_KEY`  | Supabase anon key (public)                                                |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key for admin/moderation routes                      |
-| `ADMIN_SECRET`              | Bearer token required for `/api/admin/*` routes                           |
 | `SIGHTENGINE_API_USER`      | Image moderation — optional                                               |
 | `SIGHTENGINE_API_SECRET`    | Image moderation — optional                                               |
 | `SIGHTENGINE_WORKFLOW_ID`   | SightEngine workflow ID for automated moderation rules — optional         |

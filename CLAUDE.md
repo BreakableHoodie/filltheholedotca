@@ -126,7 +126,6 @@ Copy `.env.example` → `.env` with real values:
 - `PUBLIC_SUPABASE_URL` — Supabase project URL
 - `PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key
 - `SUPABASE_SERVICE_ROLE_KEY` — server-only key for admin routes and moderation
-- `ADMIN_SECRET` — bearer token for `/api/admin/*` endpoints
 - `SIGHTENGINE_API_USER` / `SIGHTENGINE_API_SECRET` / `SIGHTENGINE_WORKFLOW_ID` — image moderation (optional)
 - `IP_HASH_SECRET` — server-only HMAC key for IP hashing
 - `ADMIN_SESSION_SECRET` — 32-byte hex key for signing admin CSRF tokens

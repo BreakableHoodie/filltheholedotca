@@ -1,3 +1,5 @@
+> **Status: Shipped** — implemented; retained for historical context.
+
 # Spec: Freeze–Thaw Trend Overlay
 
 **Date:** 2026-06-11

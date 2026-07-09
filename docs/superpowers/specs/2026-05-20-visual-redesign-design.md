@@ -1,3 +1,5 @@
+> **Status: Shipped** — implemented; retained for historical context.
+
 # Visual Redesign — Civic Data Portal
 
 **Date:** 2026-05-20  

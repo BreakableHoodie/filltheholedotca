@@ -41,7 +41,6 @@ export default defineConfig({
         process.env.PUBLIC_SUPABASE_ANON_KEY ?? "placeholder_anon_key",
       SUPABASE_SERVICE_ROLE_KEY:
         process.env.SUPABASE_SERVICE_ROLE_KEY ?? "placeholder_service_role_key",
-      ADMIN_SECRET: process.env.ADMIN_SECRET ?? "placeholder_admin_secret",
       // Prevent app-level API rate limiting from introducing E2E flakiness.
       DISABLE_API_RATE_LIMIT: "true",
       // Pass flag to tests indicating whether Supabase is properly configured
