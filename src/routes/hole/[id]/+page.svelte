@@ -9,7 +9,7 @@
 	  REGION_REPORT_LINK
 	} from '$lib/official-reporting';
 	import { resizeImage } from '$lib/image';
-	import { toastError } from '$lib/toast';
+	import { toastError, toastErrorFromResponse } from '$lib/toast';
 	import { getPotholeEmailUrl } from '$lib/email';
 	import type { Pothole } from '$lib/types';
 	import type { Councillor } from '$lib/wards';
@@ -107,7 +107,7 @@
 					body: JSON.stringify({ id: pothole.id })
 				});
 				if (!res.ok) {
-					toastError('Something went wrong. Try again.');
+					await toastErrorFromResponse(res, 'Something went wrong. Try again.');
 					return;
 				}
 				const result = await res.json();
@@ -120,7 +120,7 @@
 					body: JSON.stringify({ id: pothole.id, direction: 1 })
 				});
 				if (!res.ok) {
-					toastError('Something went wrong. Try again.');
+					await toastErrorFromResponse(res, 'Something went wrong. Try again.');
 					return;
 				}
 				const result = await res.json();
@@ -152,7 +152,11 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ endpoint, keys })
 			});
-			if (!res.ok) throw new Error('subscribe failed');
+			if (!res.ok) {
+				fillNotifState = 'unsubscribed';
+				await toastErrorFromResponse(res, 'Could not turn on notifications. Try again.');
+				return;
+			}
 			localStorage.setItem(`fill-notify:${pothole.id}`, '1');
 			fillNotifState = 'subscribed';
 		} catch {
@@ -176,7 +180,11 @@
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ endpoint: sub.endpoint })
 				});
-				if (!res.ok) throw new Error(`unsubscribe failed: HTTP ${res.status}`);
+				if (!res.ok) {
+					fillNotifState = 'subscribed';
+					await toastErrorFromResponse(res, 'Could not turn off notifications. Try again.');
+					return;
+				}
 			}
 			localStorage.removeItem(`fill-notify:${pothole.id}`);
 			fillNotifState = 'unsubscribed';
@@ -196,7 +204,7 @@
 				body: JSON.stringify({ id: pothole.id })
 			});
 			if (!res.ok) {
-				toastError('Something went wrong. Try again.');
+				await toastErrorFromResponse(res, 'Something went wrong. Try again.');
 				return;
 			}
 			const result = await res.json();
