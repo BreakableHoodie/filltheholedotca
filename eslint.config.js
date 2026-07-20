@@ -2,6 +2,7 @@
 import svelte from "eslint-plugin-svelte";
 import svelteParser from "svelte-eslint-parser";
 import tsEslint from "typescript-eslint";
+import prettier from "eslint-config-prettier";
 
 /**
  * General ESLint flat config for the project.
@@ -47,4 +48,6 @@ export default tsEslint.config(
       "svelte/no-navigation-without-resolve": "off",
     },
   },
+  // Must stay last — disables stylistic rules that would conflict with Prettier.
+  prettier,
 );
