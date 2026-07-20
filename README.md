@@ -214,6 +214,42 @@ See [fillthehole.ca/about#privacy](https://fillthehole.ca/about#privacy) for the
 
 ---
 
+## Testing
+
+```bash
+npm run check    # svelte-check type checking
+npm run lint     # ESLint
+npm run test     # Playwright E2E (tests/e2e/)
+npm run test:a11y # axe-core accessibility checks
+```
+
+CI runs the E2E suite against a self-contained fixture server (no real Supabase
+needed) with a single worker. Running the same suite locally needs a bit more
+setup, or a handful of tests fail for reasons that have nothing to do with the
+code under test:
+
+- **`ADMIN_SESSION_SECRET` / `TOTP_ENCRYPTION_KEY` must be non-empty.** Both are
+  optional for `npm run dev`, but the admin-mfa and admin photo-upload E2E
+  specs hard-fail (`Zero-length key is not supported`) without them. Generate
+  real values (see `.env.example`) even if you're not using admin features
+  locally.
+- **Supabase-dependent tests need `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` /
+  `SUPABASE_SERVICE_ROLE_KEY` exported in your shell**, not just present in
+  `.env`. `playwright.config.ts`'s `webServer.env` only forwards these from
+  `process.env`; otherwise it injects a closed-port placeholder so
+  Supabase-backed tests fail fast instead of hanging.
+- **Kill anything already listening on port 4173 before running `npm run test`
+  locally.** `reuseExistingServer` is `true` outside CI — if a stale
+  `npm run preview` from an earlier session is still up, Playwright reuses it
+  as-is instead of starting a fresh one with the fixture env
+  (`PLAYWRIGHT_E2E_FIXTURES=true`, `CI=true`) injected, so tests silently fall
+  through to real Supabase calls instead of the fixture store.
+- **A handful of tests can still flake locally with real Supabase configured**
+  (data-dependent assertions against whatever's actually in the table, plus
+  parallel workers racing on shared DB state — CI pins `workers: 1`).
+  Treat CI as the authoritative gate; a local failure that doesn't reproduce
+  in CI usually isn't a real regression.
+
 ## Contributing
 
 Issues and PRs welcome. If you're adding a feature, open an issue first to discuss it — this is a focused civic tool, not a general platform.

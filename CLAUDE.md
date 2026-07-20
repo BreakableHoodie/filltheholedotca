@@ -119,6 +119,46 @@ npm run dev          # http://localhost:5173
 - **Supabase** (`.mcp.json`) — database inspection, schema management.
 - **Playwright** (`.mcp.json`) — browser automation for E2E testing.
 
+### Dependency updates (Dependabot) — recurring lockfile bug
+Dependabot's targeted (partial) `package-lock.json` updates repeatedly drop a
+nested, valid entry: `node_modules/@sentry/node/node_modules/vite@6.4.3`, an
+optional peer dependency `@sentry/node` needs because the root `vite` version
+doesn't satisfy its declared peer range. When that nested entry is missing,
+CI's `npm ci` (npm 10.9.8, bundled with the Node 22 runner) fails hard with
+`EUSAGE` / `Missing: vite@6.4.3 from lock file` (plus its rollup/esbuild
+platform binaries) — even though the PR's actual dependency bump is fine and
+`main`'s own lockfile is self-consistent. This has recurred across unrelated
+dependency groups (svelte, zod, supabase-js, tailwind), so treat it as
+Dependabot tooling noise, not a real incompatibility, unless proven otherwise.
+
+**Fix**: regenerate `package-lock.json` — but not with a bare local
+`npm install`. Two platform traps stack on top of each other:
+1. **macOS produces a platform-pruned lockfile** — missing the Linux-only
+   optional binaries (`@rollup/rollup-linux-*`, `@esbuild/linux-*`) CI needs.
+   This bit a real cleanup PR once already (see the `revert:` commit in
+   `e2c2068`) and was deferred at the time.
+2. **A newer local npm (11.x+) resolves peer deps more leniently** than CI's
+   npm 10.9.8 and will *not* re-add the nested `@sentry/node` vite entry, so
+   the regenerated lockfile still fails in CI even though it looks clean
+   locally.
+
+Regenerate inside a container matching CI's exact runtime instead:
+```bash
+container run --rm -v "$(pwd)":/work -w /work node:22 sh -c "npm install --package-lock-only"
+container run --rm -v "$(pwd)":/work -w /work node:22 sh -c "npm ci"   # verify
+```
+(`container` is Apple's runtime — see the global operating doctrine. `docker`/
+`podman` work identically if available.) Verify `npm run check`/`lint`/`build`
+too before pushing — `webServer`/build steps need real `PUBLIC_SUPABASE_*`
+values, so copy in `.env` for that step only and remove it afterward.
+
+**Don't push the fix directly to the Dependabot branch without expecting a
+reaction**: Dependabot treats any external push to its own branch as
+tampering and will auto-close the PR (sometimes) within seconds — `gh pr
+reopen <n>` immediately afterward is safe and picks the branch back up with
+your commit intact. This is inconsistent (some pushes are left alone), so
+always check `gh pr view <n> --json state,closed` after pushing.
+
 ## Environment
 
 Copy `.env.example` → `.env` with real values:
