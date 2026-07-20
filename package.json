@@ -21,8 +21,8 @@
     "@playwright/test": "^1.61.0",
     "@sveltejs/adapter-auto": "^7.0.0",
     "@sveltejs/adapter-netlify": "^6.0.4",
-    "@sveltejs/kit": "^2.68.0",
-    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@sveltejs/kit": "^2.69.2",
+    "@sveltejs/vite-plugin-svelte": "^7.2.0",
     "@tailwindcss/vite": "^4.3.2",
     "@types/web-push": "^3.6.4",
     "eslint": "^10.5.0",
@@ -39,7 +39,7 @@
     "@fontsource/public-sans": "^5.2.7",
     "@resvg/resvg-js": "^2.6.2",
     "@sentry/sveltekit": "^10.59.0",
-    "@supabase/supabase-js": "^2.108.2",
+    "@supabase/supabase-js": "^2.110.3",
     "@types/leaflet": "^1.9.21",
     "@types/leaflet.markercluster": "^1.5.6",
     "date-fns": "^4.1.0",
@@ -49,7 +49,7 @@
     "satori": "^0.26.0",
     "svelte-sonner": "^1.1.0",
     "web-push": "^3.6.7",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "overrides": {
     "cookie": "^0.7.0",
