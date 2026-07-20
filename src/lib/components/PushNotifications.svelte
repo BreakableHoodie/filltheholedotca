@@ -3,7 +3,7 @@
 	import { env } from '$env/dynamic/public';
 	import Icon from './Icon.svelte';
 	import { urlBase64ToUint8Array } from '$lib/push';
-	import { toastError } from '$lib/toast';
+	import { toastError, toastErrorFromResponse } from '$lib/toast';
 
 	type NotifState = 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed' | 'pending';
 
@@ -58,7 +58,11 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ endpoint, keys })
 			});
-			if (!res.ok) throw new Error(`subscribe failed: HTTP ${res.status}`);
+			if (!res.ok) {
+				notifState = 'unsubscribed';
+				await toastErrorFromResponse(res, 'Could not turn on notifications. Try again.');
+				return;
+			}
 			// Flag only after the server confirmed the subscription — see onMount.
 			localStorage.setItem('push-subscribed', '1');
 			notifState = 'subscribed';
@@ -84,7 +88,11 @@
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ endpoint: sub.endpoint })
 				});
-				if (!res.ok) throw new Error(`unsubscribe failed: HTTP ${res.status}`);
+				if (!res.ok) {
+					notifState = 'subscribed';
+					await toastErrorFromResponse(res, 'Could not turn off notifications. Try again.');
+					return;
+				}
 				localStorage.removeItem('push-subscribed');
 				await sub.unsubscribe();
 			}
