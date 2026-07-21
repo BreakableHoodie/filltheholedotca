@@ -39,19 +39,38 @@ test('fetchWards reports onError once when fetch rejects, suppressing repeats vi
 	}
 });
 
-test('fetchWards reports onError and returns [] on a non-ok response', async () => {
+test('fetchWards retries once and recovers from a transient failure without reporting onError', async () => {
 	const originalFetch = globalThis.fetch;
 	const calls: Array<{ message: string; err: unknown }> = [];
 	const onError = (message: string, err: unknown) => calls.push({ message, err });
+	const features = [
+		{
+			type: 'Feature',
+			properties: { WARD_NO: 1 },
+			geometry: { type: 'Polygon', coordinates: [] },
+		},
+	];
+	let fetchCalls = 0;
 
 	try {
-		globalThis.fetch = (() =>
-			Promise.resolve({ ok: false, status: 502 } as Response)) as typeof fetch;
+		// ArcGIS is a third-party service with no SLA — a single transient blip
+		// (here, one bad response) must not poison the 5-minute failure cache if
+		// the very next attempt succeeds.
+		globalThis.fetch = (() => {
+			fetchCalls++;
+			if (fetchCalls === 1) return Promise.resolve({ ok: false, status: 502 } as Response);
+			return Promise.resolve({
+				ok: true,
+				status: 200,
+				json: async () => ({ features }),
+			} as Response);
+		}) as typeof fetch;
+
 		const result = await fetchWards('waterloo', onError);
 
-		expect(result).toEqual([]);
-		expect(calls.length).toBe(1);
-		expect(calls[0].message).toContain('waterloo');
+		expect(result).toEqual(features);
+		expect(fetchCalls).toBe(2);
+		expect(calls.length).toBe(0);
 	} finally {
 		globalThis.fetch = originalFetch;
 	}
@@ -72,7 +91,7 @@ test('fetchWards treats an HTTP 200 ArcGIS error body (no features) as a cached 
 			return Promise.resolve({
 				ok: true,
 				status: 200,
-				json: async () => ({ error: { code: 498 } })
+				json: async () => ({ error: { code: 498 } }),
 			} as Response);
 		}) as typeof fetch;
 
@@ -80,13 +99,16 @@ test('fetchWards treats an HTTP 200 ArcGIS error body (no features) as a cached 
 		expect(result).toEqual([]);
 		expect(calls.length).toBe(1);
 		expect(calls[0].message).toContain('cambridge');
+		expect(calls[0].message).toContain('malformed');
+		// One retry before giving up — both attempts hit the same malformed body.
+		expect(fetchCalls).toBe(2);
 
 		// The failure must land in the FAILURE cache (5-min retry hold), not the
 		// success cache — an immediate second call must neither refetch
 		// (thundering-herd protection) nor re-report.
 		const second = await fetchWards('cambridge', onError);
 		expect(second).toEqual([]);
-		expect(fetchCalls).toBe(1);
+		expect(fetchCalls).toBe(2);
 		expect(calls.length).toBe(1);
 	} finally {
 		globalThis.fetch = originalFetch;

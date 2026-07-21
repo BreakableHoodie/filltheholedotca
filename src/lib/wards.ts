@@ -1,45 +1,220 @@
 export type City = 'kitchener' | 'waterloo' | 'cambridge';
 
 export interface Councillor {
-	ward:  number;
-	city:  City;
-	name:  string;
+	ward: number;
+	city: City;
+	name: string;
 	email: string;
 	phone: string;
-	url:   string;
+	url: string;
 }
 
 export const COUNCILLORS: Councillor[] = [
 	// ── Kitchener (wards 1–10) ──────────────────────────────────────────────
-	{ city: 'kitchener', ward: 1,  name: 'Scott Davey',       email: 'Scott.Davey@kitchener.ca',       phone: '519-741-2784', url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-scott-davey/' },
-	{ city: 'kitchener', ward: 2,  name: 'Dave Schnider',     email: 'Dave.Schnider@kitchener.ca',     phone: '519-741-3424', url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-dave-schnider/' },
-	{ city: 'kitchener', ward: 3,  name: 'Jason Deneault',    email: 'Jason.Deneault@kitchener.ca',    phone: '519-741-2790', url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-jason-deneault/' },
-	{ city: 'kitchener', ward: 4,  name: 'Christine Michaud', email: 'Christine.Michaud@kitchener.ca', phone: '519-741-2779', url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-christine-michaud/' },
-	{ city: 'kitchener', ward: 5,  name: 'Ayo Owodunni',      email: 'Ayo.Owodunni@kitchener.ca',      phone: '519-741-2791', url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-ayo-owodunni/' },
-	{ city: 'kitchener', ward: 6,  name: 'Paul Singh',        email: 'Paul.Singh@kitchener.ca',        phone: '519-741-2793', url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-paul-singh/' },
-	{ city: 'kitchener', ward: 7,  name: 'Bil Ioannidis',     email: 'Bil.Ioannidis@kitchener.ca',     phone: '519-741-2783', url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-bil-ioannidis/' },
-	{ city: 'kitchener', ward: 8,  name: 'Margaret Johnston', email: 'Margaret.Johnston@kitchener.ca', phone: '519-741-2796', url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-margaret-johnston/' },
-	{ city: 'kitchener', ward: 9,  name: 'Debbie Chapman',    email: 'Debbie.Chapman@kitchener.ca',    phone: '519-741-2798', url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-debbie-chapman/' },
-	{ city: 'kitchener', ward: 10, name: 'Stephanie Stretch', email: 'Stephanie.Stretch@kitchener.ca', phone: '519-741-2786', url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-stephanie-stretch/' },
+	{
+		city: 'kitchener',
+		ward: 1,
+		name: 'Scott Davey',
+		email: 'Scott.Davey@kitchener.ca',
+		phone: '519-741-2784',
+		url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-scott-davey/',
+	},
+	{
+		city: 'kitchener',
+		ward: 2,
+		name: 'Dave Schnider',
+		email: 'Dave.Schnider@kitchener.ca',
+		phone: '519-741-3424',
+		url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-dave-schnider/',
+	},
+	{
+		city: 'kitchener',
+		ward: 3,
+		name: 'Jason Deneault',
+		email: 'Jason.Deneault@kitchener.ca',
+		phone: '519-741-2790',
+		url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-jason-deneault/',
+	},
+	{
+		city: 'kitchener',
+		ward: 4,
+		name: 'Christine Michaud',
+		email: 'Christine.Michaud@kitchener.ca',
+		phone: '519-741-2779',
+		url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-christine-michaud/',
+	},
+	{
+		city: 'kitchener',
+		ward: 5,
+		name: 'Ayo Owodunni',
+		email: 'Ayo.Owodunni@kitchener.ca',
+		phone: '519-741-2791',
+		url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-ayo-owodunni/',
+	},
+	{
+		city: 'kitchener',
+		ward: 6,
+		name: 'Paul Singh',
+		email: 'Paul.Singh@kitchener.ca',
+		phone: '519-741-2793',
+		url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-paul-singh/',
+	},
+	{
+		city: 'kitchener',
+		ward: 7,
+		name: 'Bil Ioannidis',
+		email: 'Bil.Ioannidis@kitchener.ca',
+		phone: '519-741-2783',
+		url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-bil-ioannidis/',
+	},
+	{
+		city: 'kitchener',
+		ward: 8,
+		name: 'Margaret Johnston',
+		email: 'Margaret.Johnston@kitchener.ca',
+		phone: '519-741-2796',
+		url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-margaret-johnston/',
+	},
+	{
+		city: 'kitchener',
+		ward: 9,
+		name: 'Debbie Chapman',
+		email: 'Debbie.Chapman@kitchener.ca',
+		phone: '519-741-2798',
+		url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-debbie-chapman/',
+	},
+	{
+		city: 'kitchener',
+		ward: 10,
+		name: 'Stephanie Stretch',
+		email: 'Stephanie.Stretch@kitchener.ca',
+		phone: '519-741-2786',
+		url: 'https://www.kitchener.ca/council-and-city-administration/mayor-and-council/city-council/councillor-stephanie-stretch/',
+	},
 
 	// ── Waterloo (wards 1–7) ────────────────────────────────────────────────
-	{ city: 'waterloo', ward: 1, name: 'Sandra Hanmer',  email: 'sandra.hanmer@waterloo.ca',  phone: '519-747-8784', url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-1-councillor/' },
-	{ city: 'waterloo', ward: 2, name: 'Royce Bodaly',   email: 'royce.bodaly@waterloo.ca',   phone: '519-747-8784', url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-2-councillor/' },
-	{ city: 'waterloo', ward: 3, name: 'Hans Roach',     email: 'hans.roach@waterloo.ca',     phone: '519-747-8784', url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-3-councillor/' },
-	{ city: 'waterloo', ward: 4, name: 'Diane Freeman',  email: 'diane.freeman@waterloo.ca',  phone: '519-747-8784', url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-4-councillor/' },
-	{ city: 'waterloo', ward: 5, name: 'Jen Vasic',      email: 'jen.vasic@waterloo.ca',      phone: '519-747-8784', url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-5-councillor/' },
-	{ city: 'waterloo', ward: 6, name: 'Mary Lou Roe',   email: 'mary.lou.roe@waterloo.ca',   phone: '519-747-8784', url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-6-councillor/' },
-	{ city: 'waterloo', ward: 7, name: 'Julie Wright',   email: 'julie.wright@waterloo.ca',   phone: '519-747-8784', url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-7-councillor/' },
+	{
+		city: 'waterloo',
+		ward: 1,
+		name: 'Sandra Hanmer',
+		email: 'sandra.hanmer@waterloo.ca',
+		phone: '519-747-8784',
+		url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-1-councillor/',
+	},
+	{
+		city: 'waterloo',
+		ward: 2,
+		name: 'Royce Bodaly',
+		email: 'royce.bodaly@waterloo.ca',
+		phone: '519-747-8784',
+		url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-2-councillor/',
+	},
+	{
+		city: 'waterloo',
+		ward: 3,
+		name: 'Hans Roach',
+		email: 'hans.roach@waterloo.ca',
+		phone: '519-747-8784',
+		url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-3-councillor/',
+	},
+	{
+		city: 'waterloo',
+		ward: 4,
+		name: 'Diane Freeman',
+		email: 'diane.freeman@waterloo.ca',
+		phone: '519-747-8784',
+		url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-4-councillor/',
+	},
+	{
+		city: 'waterloo',
+		ward: 5,
+		name: 'Jen Vasic',
+		email: 'jen.vasic@waterloo.ca',
+		phone: '519-747-8784',
+		url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-5-councillor/',
+	},
+	{
+		city: 'waterloo',
+		ward: 6,
+		name: 'Mary Lou Roe',
+		email: 'mary.lou.roe@waterloo.ca',
+		phone: '519-747-8784',
+		url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-6-councillor/',
+	},
+	{
+		city: 'waterloo',
+		ward: 7,
+		name: 'Julie Wright',
+		email: 'julie.wright@waterloo.ca',
+		phone: '519-747-8784',
+		url: 'https://www.waterloo.ca/council-and-committees/mayor-and-city-council/ward-7-councillor/',
+	},
 
 	// ── Cambridge (wards 1–8) ───────────────────────────────────────────────
-	{ city: 'cambridge', ward: 1, name: 'Helen Shwery',    email: 'shweryh@cambridge.ca',   phone: '519-740-4517 ext. 4741', url: 'https://www.cambridge.ca/en/your-city/councillor-helen-shwery.aspx' },
-	{ city: 'cambridge', ward: 2, name: 'Mike Devine',     email: 'devinem@cambridge.ca',   phone: '519-740-4517 ext. 4731', url: 'https://www.cambridge.ca/en/your-city/councillor-mike-devine.aspx' },
-	{ city: 'cambridge', ward: 3, name: 'Corey Kimpson',   email: 'kimpsonc@cambridge.ca',  phone: '519-740-4517 ext. 4467', url: 'https://www.cambridge.ca/en/your-city/councillor-kimpson-s-biography.aspx' },
-	{ city: 'cambridge', ward: 4, name: 'Ross Earnshaw',   email: 'earnshawr@cambridge.ca', phone: '519-740-4517 ext. 4081', url: 'https://www.cambridge.ca/en/your-city/councillor-earnshaw-s-biography.aspx' },
-	{ city: 'cambridge', ward: 5, name: 'Sheri Roberts',   email: 'robertss@cambridge.ca',  phone: '519-740-4517 ext. 4540', url: 'https://www.cambridge.ca/en/your-city/councillor-roberts-biography.aspx' },
-	{ city: 'cambridge', ward: 6, name: 'Adam Cooper',     email: 'coopera@cambridge.ca',   phone: '519-740-4517 ext. 4269', url: 'https://www.cambridge.ca/en/your-city/councillor-cooper-s-biography.aspx' },
-	{ city: 'cambridge', ward: 7, name: 'Scott Hamilton',  email: 'hamiltons@cambridge.ca', phone: '519-740-4517 ext. 4738', url: 'https://www.cambridge.ca/en/your-city/councillor-hamilton-s-biography.aspx' },
-	{ city: 'cambridge', ward: 8, name: 'Nicholas Ermeta', email: 'ermetan@cambridge.ca',   phone: '519-740-4517 ext. 4740', url: 'https://www.cambridge.ca/en/your-city/councillor-nicholas-ermeta.aspx' },
+	{
+		city: 'cambridge',
+		ward: 1,
+		name: 'Helen Shwery',
+		email: 'shweryh@cambridge.ca',
+		phone: '519-740-4517 ext. 4741',
+		url: 'https://www.cambridge.ca/en/your-city/councillor-helen-shwery.aspx',
+	},
+	{
+		city: 'cambridge',
+		ward: 2,
+		name: 'Mike Devine',
+		email: 'devinem@cambridge.ca',
+		phone: '519-740-4517 ext. 4731',
+		url: 'https://www.cambridge.ca/en/your-city/councillor-mike-devine.aspx',
+	},
+	{
+		city: 'cambridge',
+		ward: 3,
+		name: 'Corey Kimpson',
+		email: 'kimpsonc@cambridge.ca',
+		phone: '519-740-4517 ext. 4467',
+		url: 'https://www.cambridge.ca/en/your-city/councillor-kimpson-s-biography.aspx',
+	},
+	{
+		city: 'cambridge',
+		ward: 4,
+		name: 'Ross Earnshaw',
+		email: 'earnshawr@cambridge.ca',
+		phone: '519-740-4517 ext. 4081',
+		url: 'https://www.cambridge.ca/en/your-city/councillor-earnshaw-s-biography.aspx',
+	},
+	{
+		city: 'cambridge',
+		ward: 5,
+		name: 'Sheri Roberts',
+		email: 'robertss@cambridge.ca',
+		phone: '519-740-4517 ext. 4540',
+		url: 'https://www.cambridge.ca/en/your-city/councillor-roberts-biography.aspx',
+	},
+	{
+		city: 'cambridge',
+		ward: 6,
+		name: 'Adam Cooper',
+		email: 'coopera@cambridge.ca',
+		phone: '519-740-4517 ext. 4269',
+		url: 'https://www.cambridge.ca/en/your-city/councillor-cooper-s-biography.aspx',
+	},
+	{
+		city: 'cambridge',
+		ward: 7,
+		name: 'Scott Hamilton',
+		email: 'hamiltons@cambridge.ca',
+		phone: '519-740-4517 ext. 4738',
+		url: 'https://www.cambridge.ca/en/your-city/councillor-hamilton-s-biography.aspx',
+	},
+	{
+		city: 'cambridge',
+		ward: 8,
+		name: 'Nicholas Ermeta',
+		email: 'ermetan@cambridge.ca',
+		phone: '519-740-4517 ext. 4740',
+		url: 'https://www.cambridge.ca/en/your-city/councillor-nicholas-ermeta.aspx',
+	},
 ];
 
 export const WARD_KEYS: readonly string[] = COUNCILLORS.map((c) => `${c.city}-${c.ward}`);
@@ -53,16 +228,16 @@ export function isKnownWardKey(key: string): boolean {
 const WARD_SOURCES: Record<City, { url: string; wardField: string }> = {
 	kitchener: {
 		url: 'https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Wards/FeatureServer/0/query?where=1%3D1&outFields=WARDID&outSR=4326&f=geojson',
-		wardField: 'WARDID'
+		wardField: 'WARDID',
 	},
 	waterloo: {
 		url: 'https://services.arcgis.com/ZpeBVw5o1kjit7LT/arcgis/rest/services/Wards2022/FeatureServer/0/query?where=1%3D1&outFields=WARD_NO&outSR=4326&f=geojson',
-		wardField: 'WARD_NO'
+		wardField: 'WARD_NO',
 	},
 	cambridge: {
 		url: 'https://maps.cambridge.ca/arcgispub03/rest/services/Voting/FeatureServer/2/query?where=1%3D1&outFields=WARD_ID&outSR=4326&f=geojson',
-		wardField: 'WARD_ID'
-	}
+		wardField: 'WARD_ID',
+	},
 };
 
 // ── Per-city GeoJSON cache ────────────────────────────────────────────────────
@@ -100,7 +275,9 @@ function pointInPolygon(lng: number, lat: number, geometry: GeoJSONFeature['geom
 		return pointInRing(lng, lat, (geometry.coordinates as number[][][])[0]);
 	}
 	if (geometry.type === 'MultiPolygon') {
-		return (geometry.coordinates as number[][][][]).some((poly) => pointInRing(lng, lat, poly[0]));
+		return (geometry.coordinates as number[][][][]).some((poly) =>
+			pointInRing(lng, lat, poly[0]),
+		);
 	}
 	return false;
 }
@@ -115,7 +292,7 @@ export type WardErrorHandler = (message: string, err: unknown) => void;
 
 export async function fetchWards(
 	city: City,
-	onError?: WardErrorHandler
+	onError?: WardErrorHandler,
 ): Promise<GeoJSONFeature[]> {
 	if (city in wardCache) {
 		// Success cache — features are permanent; never re-fetch.
@@ -126,58 +303,69 @@ export async function fetchWards(
 			return wardCache[city]!;
 		}
 	}
-	try {
-		const { url } = WARD_SOURCES[city];
-		const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-		if (!res.ok) {
-			wardCache[city] = [];
-			wardCacheFailedAt[city] = Date.now();
-			onError?.(`ward boundary fetch failed for ${city}`, new Error(`HTTP ${res.status}`));
-			return [];
+	const { url } = WARD_SOURCES[city];
+	let lastError: unknown;
+	let lastWasMalformed = false;
+	// ArcGIS is a third-party service with no SLA for us — a single transient
+	// blip (slow TLS handshake, momentary 5xx) shouldn't immediately poison the
+	// 5-minute failure cache for every ward-dependent feature. One quick retry
+	// absorbs that without masking a genuinely-down upstream.
+	for (let attempt = 0; attempt < 2; attempt++) {
+		if (attempt > 0) await new Promise((r) => setTimeout(r, 300));
+		try {
+			const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+			if (!res.ok) {
+				lastError = new Error(`HTTP ${res.status}`);
+				lastWasMalformed = false;
+				continue;
+			}
+			const geojson = await res.json();
+			// ArcGIS REST services can return HTTP 200 with an `{"error": {...}}` body
+			// and no `features` key. An empty ward set is never legitimate for these
+			// three cities, so treat a missing or empty features array as a failure —
+			// caching it as a SUCCESS would clear wardCacheFailedAt and bypass the
+			// 5-minute thundering-herd hold on every subsequent call.
+			if (!Array.isArray(geojson.features) || geojson.features.length === 0) {
+				lastError = new Error('no features in ArcGIS response');
+				lastWasMalformed = true;
+				continue;
+			}
+			wardCache[city] = geojson.features;
+			delete wardCacheFailedAt[city];
+			return wardCache[city]!;
+		} catch (err) {
+			lastError = err;
+			lastWasMalformed = false;
 		}
-		const geojson = await res.json();
-		// ArcGIS REST services can return HTTP 200 with an `{"error": {...}}` body
-		// and no `features` key. An empty ward set is never legitimate for these
-		// three cities, so treat a missing or empty features array as a failure —
-		// caching it as a SUCCESS would clear wardCacheFailedAt and bypass the
-		// 5-minute thundering-herd hold on every subsequent call.
-		if (!Array.isArray(geojson.features) || geojson.features.length === 0) {
-			wardCache[city] = [];
-			wardCacheFailedAt[city] = Date.now();
-			onError?.(
-				`ward boundary fetch returned an empty or malformed body for ${city}`,
-				new Error('no features in ArcGIS response')
-			);
-			return [];
-		}
-		wardCache[city] = geojson.features;
-		delete wardCacheFailedAt[city];
-		return wardCache[city]!;
-	} catch (err) {
-		wardCache[city] = [];
-		wardCacheFailedAt[city] = Date.now();
-		onError?.(`ward boundary fetch failed for ${city}`, err);
-		return [];
 	}
+	wardCache[city] = [];
+	wardCacheFailedAt[city] = Date.now();
+	onError?.(
+		lastWasMalformed
+			? `ward boundary fetch returned an empty or malformed body for ${city}`
+			: `ward boundary fetch failed for ${city}`,
+		lastError,
+	);
+	return [];
 }
 
 export async function lookupWard(
 	lat: number,
 	lng: number,
-	onError?: WardErrorHandler
+	onError?: WardErrorHandler,
 ): Promise<Councillor | null> {
 	try {
 		// Fetch all three cities in parallel
 		const [kitchenerFeatures, waterlooFeatures, cambridgeFeatures] = await Promise.all([
 			fetchWards('kitchener', onError),
 			fetchWards('waterloo', onError),
-			fetchWards('cambridge', onError)
+			fetchWards('cambridge', onError),
 		]);
 
 		const sources: [City, GeoJSONFeature[]][] = [
 			['kitchener', kitchenerFeatures],
-			['waterloo',  waterlooFeatures],
-			['cambridge', cambridgeFeatures]
+			['waterloo', waterlooFeatures],
+			['cambridge', cambridgeFeatures],
 		];
 
 		for (const [city, features] of sources) {
@@ -185,7 +373,9 @@ export async function lookupWard(
 			for (const feature of features) {
 				if (pointInPolygon(lng, lat, feature.geometry)) {
 					const wardNum = Number(feature.properties[wardField]);
-					const councillor = COUNCILLORS.find((c) => c.city === city && c.ward === wardNum);
+					const councillor = COUNCILLORS.find(
+						(c) => c.city === city && c.ward === wardNum,
+					);
 					if (councillor) return councillor;
 				}
 			}
