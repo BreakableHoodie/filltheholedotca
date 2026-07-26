@@ -35,12 +35,16 @@ test.describe('Geofence API validation', () => {
 				data: { lat: point.lat, lng: point.lng },
 			});
 
-			// Geofence passes — not a 422. With real DB creds this returns 200;
-			// with placeholder creds the downstream DB query fails (500), but the
-			// geofence logic itself is verified by the non-422 response.
-			expect(response.status()).not.toBe(422);
-			const body = await response.json();
-			expect(body.message ?? '').not.toMatch(/isn't in the Waterloo Region/i);
+			// Geofence passes — with real DB creds this returns 200; with
+			// placeholder creds the downstream DB query fails (500), but the
+			// geofence logic itself is still verified either way. A 400/429
+			// would mean something other than the geofence rejected the
+			// request, so those must fail the test rather than pass silently.
+			expect([200, 500]).toContain(response.status());
+			if (response.status() === 200) {
+				const body = await response.json();
+				expect(body.message ?? '').not.toMatch(/isn't in the Waterloo Region/i);
+			}
 		});
 	}
 

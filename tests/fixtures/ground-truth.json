@@ -17,8 +17,8 @@
   "mergeRadius": {
     "basePoint": { "lat": 43.4516, "lng": -80.4925 },
     "duplicateReport": {
-      "lat": 43.45178,
-      "lng": -80.49224,
+      "lat": 43.45176,
+      "lng": -80.4925,
       "note": "~18m from basePoint — should merge (within the 25m radius)"
     },
     "distinctReport": {
