@@ -1,0 +1,80 @@
+{
+  "_comment": "Synthetic, deterministic test data. Coordinates are validated against the Waterloo Region geofence (lat 43.32-43.53, lng -80.59--80.22) documented in CLAUDE.md. Addresses/descriptions are fictional. Not sourced from production.",
+  "geofence": {
+    "insideWaterlooRegion": [
+      { "label": "Central Kitchener", "lat": 43.45, "lng": -80.5 },
+      { "label": "Uptown Waterloo", "lat": 43.4643, "lng": -80.5204 },
+      { "label": "Cambridge Galt core", "lat": 43.3601, "lng": -80.3144 }
+    ],
+    "outsideWaterlooRegion": [
+      { "label": "Toronto", "lat": 43.7, "lng": -79.4 },
+      { "label": "Just below southern boundary", "lat": 43.31, "lng": -80.5 },
+      { "label": "Just above northern boundary", "lat": 43.54, "lng": -80.5 },
+      { "label": "Just west of western boundary", "lat": 43.45, "lng": -80.6 },
+      { "label": "Just east of eastern boundary", "lat": 43.45, "lng": -80.21 }
+    ]
+  },
+  "mergeRadius": {
+    "basePoint": { "lat": 43.4516, "lng": -80.4925 },
+    "duplicateReport": {
+      "lat": 43.45176,
+      "lng": -80.4925,
+      "note": "~18m from basePoint — should merge (within the 25m radius)"
+    },
+    "distinctReport": {
+      "lat": 43.455,
+      "lng": -80.4925,
+      "note": "~380m from basePoint — should NOT merge"
+    }
+  },
+  "potholes": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "status": "pending",
+      "lat": 43.4516,
+      "lng": -80.4925,
+      "address": "100 Regina St S, Waterloo, ON",
+      "description": "Deep pothole near the curb, roughly 30cm wide.",
+      "confirmed_count": 1,
+      "photos_published": false,
+      "city": "waterloo",
+      "ward": 7
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "status": "reported",
+      "lat": 43.4234,
+      "lng": -80.4801,
+      "address": "255 King St E, Kitchener, ON",
+      "description": "Large pothole spanning half the lane.",
+      "confirmed_count": 2,
+      "photos_published": true,
+      "city": "kitchener",
+      "ward": 9
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "status": "filled",
+      "lat": 43.3894,
+      "lng": -80.3125,
+      "address": "45 Ainslie St S, Cambridge, ON",
+      "description": "Pothole at the intersection, previously reported.",
+      "confirmed_count": 2,
+      "photos_published": true,
+      "city": "cambridge",
+      "ward": 3
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "status": "expired",
+      "lat": 43.475,
+      "lng": -80.54,
+      "address": "12 Bridgeport Rd E, Waterloo, ON",
+      "description": "Small surface crack, never confirmed by a second report.",
+      "confirmed_count": 1,
+      "photos_published": false,
+      "city": "waterloo",
+      "ward": 2
+    }
+  ]
+}
