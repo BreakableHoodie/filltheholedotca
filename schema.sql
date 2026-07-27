@@ -192,16 +192,50 @@ create policy "Public read approved photos"
     and (select photos_published from potholes where id = pothole_id)
   );
 
--- Storage bucket: create a public bucket called 'pothole-photos'
--- In Supabase dashboard: Storage → New Bucket → Name: pothole-photos → Public: ON
--- Then add these storage policies:
+-- Storage bucket: 'pothole-photos', PRIVATE.
+--
+-- Created by the statement below, so a from-scratch environment needs no
+-- dashboard step. An EXISTING environment may still have a public bucket until
+-- schema_private_photo_bucket.sql (#32) has been applied — do not assume direct
+-- object access is blocked before then.
+--
+-- Private is deliberate (#245). A public object URL is permanent and, once
+-- shared or scraped, keeps serving after a photo is unpublished or rejected —
+-- it outlives the moderation decision entirely. Every read path now mints a
+-- short-lived signed URL via the service-role client instead:
+--   - src/routes/hole/[id]/+page.server.ts            (public detail page, 1h)
+--   - src/routes/admin/photos/+page.server.ts         (moderation queue, 1h)
+--   - src/routes/admin/potholes/[id]/+page.server.ts  (admin detail, 1h)
+-- The detail-page TTL must stay comfortably above that page's own Cache-Control
+-- window (max-age=300 + stale-while-revalidate=600) or cached HTML will
+-- reference already-expired URLs.
+--
+-- No SELECT policy is needed for anon: signed URLs are minted server-side with
+-- the service-role key, which bypasses RLS. Granting anon SELECT here would
+-- re-open the direct-object-access hole this change closes.
 --
 -- Policy: Allow public uploads
 --   Operation: INSERT
 --   Target roles: anon, authenticated
 --   Policy: true
 --
--- Policy: Allow public reads
---   Operation: SELECT
---   Target roles: anon, authenticated
---   Policy: true
+-- MIGRATION NOTE — order matters for EXISTING environments. Signed URLs work
+-- against a public bucket, so deploy the application code FIRST, verify photos
+-- still render, and only then apply schema_private_photo_bucket.sql (#32).
+-- Flipping first breaks every image on the live site until the deploy lands.
+-- A from-scratch environment has no such constraint: there is nothing serving
+-- yet, so the statement below can simply run in order.
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'pothole-photos',
+  'pothole-photos',
+  false,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp']
+)
+on conflict (id) do update
+set
+  public = false,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;

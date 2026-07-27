@@ -8,6 +8,7 @@ import { decodeHtmlEntities } from '$lib/escape';
 import { getConfirmationThreshold } from '$lib/server/settings';
 import { haversineMetres, roundPublicCoord } from '$lib/geo';
 import { getAdminClient } from '$lib/server/supabase';
+import { logError } from '$lib/server/observability';
 
 export interface CityRepairRequest {
 	intersection: string;
@@ -232,23 +233,75 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
 
 	// Only expose photos publicly when admin has explicitly published them for this pothole.
 	// A reported (live) pothole does not imply its photos are visible.
-	const photos: PotholePhoto[] = pothole.photos_published
-		? (photosResult.data ?? []).map((p) => {
-				const storage = supabase.storage.from('pothole-photos');
-				return {
-					...p,
-					pothole_id: params.id,
-					moderation_status: 'approved' as const,
-					moderation_score: null,
-					url: storage.getPublicUrl(p.storage_path).data.publicUrl,
-					// Uploads are client-side resized to <=800px (see $lib/image), so the
-					// stored original is already thumbnail-sized. Serve it directly rather
-					// than via Supabase Image Transformation (a paid-plan feature that,
-					// when unavailable, cost a failed request + onerror fallback per thumb).
-					thumbnailUrl: storage.getPublicUrl(p.storage_path).data.publicUrl,
-				};
-			})
-		: [];
+	// Signed rather than public URLs. A public object URL is permanent and, once
+	// shared or scraped, keeps serving after a photo is unpublished or rejected —
+	// it outlives the moderation decision entirely. Signing scopes access to a
+	// window instead. Signed URLs work on a public bucket too, so this ships
+	// safely before the bucket is flipped to private (see #245 for that step).
+	//
+	// TTL must comfortably exceed how long this HTML can be served from cache:
+	// setHeaders above allows max-age=300 + stale-while-revalidate=600, i.e. up
+	// to ~15 min, and an embedded URL must still be valid at the end of that.
+	// 1h gives ~4x margin and matches what the admin surfaces already use.
+	const SIGNED_URL_TTL_S = 3600;
+
+	const publishedPhotos = pothole.photos_published ? (photosResult.data ?? []) : [];
+	const photoPaths = publishedPhotos.map((p) => p.storage_path).filter(Boolean);
+	const signedUrlByPath: Record<string, string> = {};
+
+	if (photoPaths.length > 0) {
+		const { data: signed, error: signError } = await db.storage
+			.from('pothole-photos')
+			.createSignedUrls(photoPaths, SIGNED_URL_TTL_S);
+
+		if (signError) {
+			logError('hole/detail', 'Failed to sign photo URLs', signError, {
+				potholeId: params.id,
+				count: photoPaths.length,
+			});
+		}
+
+		// createSignedUrls resolves with a batch-level error of null even when
+		// individual entries failed — each item carries its own `error` and a
+		// nullable `signedUrl`. Without this, a partial failure would drop photos
+		// from the gallery below with no signal at all, because the batch check
+		// above never fires. Aggregated into one log rather than one per photo.
+		const failed: string[] = [];
+		for (const item of signed ?? []) {
+			if (item.signedUrl && item.path) {
+				signedUrlByPath[item.path] = item.signedUrl;
+			} else {
+				failed.push(
+					`${item.path ?? '(unknown path)'}: ${item.error ?? 'no signedUrl returned'}`,
+				);
+			}
+		}
+		if (failed.length > 0) {
+			logError(
+				'hole/detail',
+				'Some photos could not be signed and were omitted from the gallery',
+				new Error(failed.join('; ')),
+				{ potholeId: params.id, failedCount: failed.length, requested: photoPaths.length },
+			);
+		}
+	}
+
+	// Drop any photo that could not be signed rather than emitting a broken
+	// <img>. A signing failure makes the gallery incomplete, not the page dead.
+	const photos: PotholePhoto[] = publishedPhotos
+		.filter((p) => signedUrlByPath[p.storage_path])
+		.map((p) => ({
+			...p,
+			pothole_id: params.id,
+			moderation_status: 'approved' as const,
+			moderation_score: null,
+			url: signedUrlByPath[p.storage_path],
+			// Uploads are client-side resized to <=800px (see $lib/image), so the
+			// stored original is already thumbnail-sized. Serve it directly rather
+			// than via Supabase Image Transformation (a paid-plan feature that,
+			// when unavailable, cost a failed request + onerror fallback per thumb).
+			thumbnailUrl: signedUrlByPath[p.storage_path],
+		}));
 
 	const hitCount = hitCountResult.count ?? 0;
 	const voteCount = voteCountResult.count ?? 0;
