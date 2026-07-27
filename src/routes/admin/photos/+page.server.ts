@@ -103,11 +103,20 @@ export const actions: Actions = {
 
 		// Capture the storage path before the flip — the bucket is public, so a
 		// rejected image keeps serving from its object URL unless we pull it too.
-		const { data: photo } = await getAdminClient()
+		const { data: photo, error: lookupError } = await getAdminClient()
 			.from('pothole_photos')
 			.select('storage_path')
 			.eq('id', id)
 			.single();
+
+		// Deliberately not fatal: the moderation flag is what gates display, so
+		// aborting here would leave the photo in its previous (possibly approved)
+		// state. Log so a skipped cleanup is visible rather than silent.
+		if (lookupError) {
+			logError('admin/photos', 'Failed to load storage path before reject', lookupError, {
+				photoId: id,
+			});
+		}
 
 		const { error: dbErr } = await getAdminClient()
 			.from('pothole_photos')
@@ -186,10 +195,22 @@ export const actions: Actions = {
 
 		// Same rationale as the single reject: the bucket is public, so the objects
 		// must go too. Collect paths before the flip, remove them in one call after.
-		const { data: photos } = await getAdminClient()
+		const { data: photos, error: lookupError } = await getAdminClient()
 			.from('pothole_photos')
 			.select('storage_path')
 			.in('id', ids);
+
+		// Same rationale as the single reject above — log, do not abort.
+		if (lookupError) {
+			logError(
+				'admin/photos',
+				'Failed to load storage paths before bulk reject',
+				lookupError,
+				{
+					count: ids.length,
+				},
+			);
+		}
 
 		const { error: dbErr } = await getAdminClient()
 			.from('pothole_photos')

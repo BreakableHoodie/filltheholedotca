@@ -11,20 +11,21 @@ import { test, expect } from '@playwright/test';
  * anything about the real "open data" contract these tests exist to check
  * (correct CSV columns, a well-formed RSS envelope, a `potholes` array).
  *
- * SUPABASE_CONFIGURED (also set in playwright.config.ts) tells us honestly
- * whether a real PUBLIC_SUPABASE_URL was supplied for this run. When it
- * wasn't, skip the whole block rather than accepting whatever status code the
- * closed-port fallback happens to produce.
+ * PUBLIC_SUPABASE_URL tells us honestly whether a real connection was supplied
+ * for this run. When it wasn't, skip the whole block rather than accepting
+ * whatever status code the closed-port fallback happens to produce.
+ *
+ * It is read directly rather than via playwright.config.ts's
+ * SUPABASE_CONFIGURED: that is set under `webServer.env`, which reaches the
+ * *server* process only, while this file runs in the *test runner* process
+ * where it is always undefined. Reading it here made the gate permanently
+ * false even when real credentials were supplied — exactly the silent skip
+ * this gate exists to prevent.
  */
-// Derived from PUBLIC_SUPABASE_URL, not SUPABASE_CONFIGURED. The latter is set in
-// playwright.config.ts under `webServer.env`, which reaches the *server* process
-// only — this file runs in the *test runner* process, where it is always
-// undefined. Reading it here made the gate permanently false even when real
-// credentials were supplied: exactly the silent skip this gate exists to prevent.
 const supabaseConfigured = process.env.PUBLIC_SUPABASE_URL?.startsWith('http') ?? false;
 
 test.describe('CSV export (/api/export.csv)', () => {
-	test.skip(!supabaseConfigured, 'Requires a live Supabase connection (SUPABASE_CONFIGURED)');
+	test.skip(!supabaseConfigured, 'Requires a live Supabase connection (set PUBLIC_SUPABASE_URL)');
 
 	test('returns 200 with text/csv content-type', async ({ request }) => {
 		const response = await request.get('/api/export.csv');
@@ -50,7 +51,7 @@ test.describe('CSV export (/api/export.csv)', () => {
 });
 
 test.describe('RSS feed (/api/feed.xml)', () => {
-	test.skip(!supabaseConfigured, 'Requires a live Supabase connection (SUPABASE_CONFIGURED)');
+	test.skip(!supabaseConfigured, 'Requires a live Supabase connection (set PUBLIC_SUPABASE_URL)');
 
 	test('returns 200 with RSS content-type', async ({ request }) => {
 		const response = await request.get('/api/feed.xml');
@@ -70,7 +71,7 @@ test.describe('RSS feed (/api/feed.xml)', () => {
 });
 
 test.describe('JSON feed (/api/feed.json)', () => {
-	test.skip(!supabaseConfigured, 'Requires a live Supabase connection (SUPABASE_CONFIGURED)');
+	test.skip(!supabaseConfigured, 'Requires a live Supabase connection (set PUBLIC_SUPABASE_URL)');
 
 	test('returns 200 with application/json content-type', async ({ request }) => {
 		const response = await request.get('/api/feed.json');

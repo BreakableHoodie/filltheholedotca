@@ -25,10 +25,25 @@ export const POST: RequestHandler = async ({ request, locals, getClientAddress }
 	// so a rejected image keeps serving from its object URL unless removed too.
 	// This is the fourth reject path in the codebase — the other three live in
 	// admin/photos/+page.server.ts (reject, bulkReject) and api/admin/photo/[id].
-	const { data: photos } =
+	const { data: photos, error: lookupError } =
 		moderation_status === 'rejected'
 			? await getAdminClient().from('pothole_photos').select('storage_path').in('id', ids)
-			: { data: null };
+			: { data: null, error: null };
+
+	// A failed lookup means cleanup cannot run. Deliberately do NOT abort: the
+	// moderation flag is what gates display, so bailing here would leave the
+	// photos in their previous (possibly approved, publicly rendered) state —
+	// strictly worse than an orphaned object. Log so the leak is visible.
+	if (lookupError) {
+		logError(
+			'admin/photos-bulk',
+			'Failed to load storage paths before bulk reject',
+			lookupError,
+			{
+				count: ids.length,
+			},
+		);
+	}
 
 	const { error: updateError } = await getAdminClient()
 		.from('pothole_photos')

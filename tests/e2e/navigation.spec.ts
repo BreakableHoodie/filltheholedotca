@@ -101,15 +101,20 @@ test.describe('Feed API', () => {
 	// playwright.config.ts), so the query fails and the route deterministically
 	// returns 500 (see src/routes/api/feed.json/+server.ts) — asserting on that
 	// wouldn't verify anything about the real feed shape this test exists to
-	// check. SUPABASE_CONFIGURED (also set in playwright.config.ts) tells us
-	// honestly whether a real connection was supplied for this run.
-	// Derived from PUBLIC_SUPABASE_URL rather than SUPABASE_CONFIGURED: the latter
-	// is set under `webServer.env`, so it reaches the server process only and is
-	// always undefined here in the test runner. See open-data.spec.ts.
+	// check. PUBLIC_SUPABASE_URL tells us honestly whether a real connection was
+	// supplied for this run.
+	//
+	// Note it is read directly rather than via playwright.config.ts's
+	// SUPABASE_CONFIGURED: that is set under `webServer.env`, so it reaches the
+	// server process only and is always undefined here in the test runner.
+	// See open-data.spec.ts.
 	const supabaseConfigured = process.env.PUBLIC_SUPABASE_URL?.startsWith('http') ?? false;
 
 	test('GET /api/feed.json returns valid JSON array', async ({ request }) => {
-		test.skip(!supabaseConfigured, 'Requires a live Supabase connection (SUPABASE_CONFIGURED)');
+		test.skip(
+			!supabaseConfigured,
+			'Requires a live Supabase connection (set PUBLIC_SUPABASE_URL)',
+		);
 
 		const response = await request.get('/api/feed.json');
 		expect(response.status()).toBe(200);
