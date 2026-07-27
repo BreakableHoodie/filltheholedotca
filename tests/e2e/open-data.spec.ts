@@ -16,7 +16,12 @@ import { test, expect } from '@playwright/test';
  * wasn't, skip the whole block rather than accepting whatever status code the
  * closed-port fallback happens to produce.
  */
-const supabaseConfigured = process.env.SUPABASE_CONFIGURED === 'true';
+// Derived from PUBLIC_SUPABASE_URL, not SUPABASE_CONFIGURED. The latter is set in
+// playwright.config.ts under `webServer.env`, which reaches the *server* process
+// only — this file runs in the *test runner* process, where it is always
+// undefined. Reading it here made the gate permanently false even when real
+// credentials were supplied: exactly the silent skip this gate exists to prevent.
+const supabaseConfigured = process.env.PUBLIC_SUPABASE_URL?.startsWith('http') ?? false;
 
 test.describe('CSV export (/api/export.csv)', () => {
 	test.skip(!supabaseConfigured, 'Requires a live Supabase connection (SUPABASE_CONFIGURED)');
