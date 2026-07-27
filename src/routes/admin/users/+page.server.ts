@@ -15,13 +15,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 		getAdminClient()
 			.from('admin_users')
 			.select(
-				'id, email, first_name, last_name, role, is_active, activated_at, last_login_at, totp_enabled, created_at'
+				'id, email, first_name, last_name, role, is_active, activated_at, last_login_at, totp_enabled, created_at',
 			)
 			.order('created_at', { ascending: true }),
 		getAdminClient()
 			.from('admin_sessions')
 			.select('user_id')
-			.gt('expires_at', new Date().toISOString())
+			.gt('expires_at', new Date().toISOString()),
 	]);
 
 	// Count active sessions per user
@@ -33,9 +33,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		users: (usersRes.data ?? []).map((u) => ({
 			...u,
-			activeSessions: sessionCounts[u.id] ?? 0
+			activeSessions: sessionCounts[u.id] ?? 0,
 		})),
-		currentUserId: locals.adminUser.id
+		currentUserId: locals.adminUser.id,
 	};
 };
 
@@ -53,7 +53,8 @@ export const actions: Actions = {
 		const role = fd.get('role')?.toString() ?? '';
 
 		if (!uuidSchema.safeParse(userId).success) return fail(400, { error: 'Invalid user ID' });
-		if (userId === locals.adminUser.id) return fail(400, { error: 'Cannot change your own role' });
+		if (userId === locals.adminUser.id)
+			return fail(400, { error: 'Cannot change your own role' });
 
 		const roleParsed = z.enum(['admin', 'editor', 'viewer']).safeParse(role);
 		if (!roleParsed.success) return fail(400, { error: 'Invalid role' });
@@ -73,7 +74,7 @@ export const actions: Actions = {
 			'user',
 			userId,
 			{ role: roleParsed.data },
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 		return { success: true };
 	},
@@ -101,7 +102,7 @@ export const actions: Actions = {
 			'user',
 			userId,
 			null,
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 		return { success: true };
 	},
@@ -134,7 +135,7 @@ export const actions: Actions = {
 			'user',
 			userId,
 			null,
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 		return { success: true };
 	},
@@ -155,8 +156,8 @@ export const actions: Actions = {
 			'user',
 			userId,
 			null,
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 		return { success: true };
-	}
+	},
 };

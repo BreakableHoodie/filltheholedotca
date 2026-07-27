@@ -26,7 +26,7 @@ export async function getConfirmationThreshold(): Promise<number> {
 		'settings',
 		`confirmation_threshold has an invalid stored value; falling back to 2`,
 		new Error('invalid confirmation_threshold'),
-		{ value: val }
+		{ value: val },
 	);
 	return 2;
 }

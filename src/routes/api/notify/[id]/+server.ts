@@ -11,8 +11,8 @@ const subscribeSchema = z.object({
 	endpoint: z.string().url().max(2048),
 	keys: z.object({
 		p256dh: z.string().min(1).max(512),
-		auth: z.string().min(1).max(256)
-	})
+		auth: z.string().min(1).max(256),
+	}),
 });
 
 const RATE_LIMIT = 10;
@@ -41,7 +41,7 @@ export const POST: RequestHandler = async ({ params, request, getClientAddress }
 		'Too many requests. Please wait before trying again.',
 		'api/notify',
 		'Failed to check rate limit',
-		{ potholeId: id }
+		{ potholeId: id },
 	);
 
 	// Confirm the pothole exists and is in a state where a fill notification makes sense.
@@ -59,12 +59,14 @@ export const POST: RequestHandler = async ({ params, request, getClientAddress }
 			pothole_id: id,
 			endpoint: parsed.data.endpoint,
 			p256dh: parsed.data.keys.p256dh,
-			auth: parsed.data.keys.auth
+			auth: parsed.data.keys.auth,
 		},
-		{ onConflict: 'pothole_id,endpoint' }
+		{ onConflict: 'pothole_id,endpoint' },
 	);
 	if (dbError) {
-		logError('api/notify', 'Failed to save fill notification subscription', dbError, { potholeId: id });
+		logError('api/notify', 'Failed to save fill notification subscription', dbError, {
+			potholeId: id,
+		});
 		throw error(500, 'Failed to save subscription');
 	}
 
@@ -86,7 +88,9 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 		.eq('pothole_id', parsedId.data.id)
 		.eq('endpoint', parsed.data.endpoint);
 	if (deleteError) {
-		logError('api/notify', 'Failed to remove fill notification subscription', deleteError, { potholeId: parsedId.data.id });
+		logError('api/notify', 'Failed to remove fill notification subscription', deleteError, {
+			potholeId: parsedId.data.id,
+		});
 		throw error(500, 'Failed to remove subscription');
 	}
 

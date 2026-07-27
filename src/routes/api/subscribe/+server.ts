@@ -11,12 +11,12 @@ const subscribeSchema = z.object({
 	endpoint: z.string().url().max(2048),
 	keys: z.object({
 		p256dh: z.string().min(1).max(512),
-		auth: z.string().min(1).max(256)
-	})
+		auth: z.string().min(1).max(256),
+	}),
 });
 
 const unsubscribeSchema = z.object({
-	endpoint: z.string().url().max(2048)
+	endpoint: z.string().url().max(2048),
 });
 
 const SUBSCRIBE_RATE_LIMIT = 5;
@@ -41,7 +41,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		SUBSCRIBE_RATE_WINDOW_MS,
 		'Too many subscription attempts. Please wait before trying again.',
 		'api/subscribe',
-		'Failed to check rate limit'
+		'Failed to check rate limit',
 	);
 
 	const { error: dbError } = await db.from('push_subscriptions').upsert(
@@ -49,9 +49,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			endpoint: parsed.data.endpoint,
 			p256dh: parsed.data.keys.p256dh,
 			auth: parsed.data.keys.auth,
-			last_used_at: new Date().toISOString()
+			last_used_at: new Date().toISOString(),
 		},
-		{ onConflict: 'endpoint' }
+		{ onConflict: 'endpoint' },
 	);
 
 	if (dbError) {
@@ -79,7 +79,7 @@ export const DELETE: RequestHandler = async ({ request, getClientAddress }) => {
 		SUBSCRIBE_RATE_WINDOW_MS,
 		'Too many unsubscribe attempts. Please wait before trying again.',
 		'api/subscribe',
-		'Failed to check rate limit'
+		'Failed to check rate limit',
 	);
 
 	const { error: deleteError } = await db

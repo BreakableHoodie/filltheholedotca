@@ -17,7 +17,7 @@ const signupSchema = z.object({
 		.regex(/[0-9]/, 'Password must contain at least one number')
 		.regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
 	firstName: z.string().trim().min(1).max(100),
-	lastName: z.string().trim().min(1).max(100)
+	lastName: z.string().trim().min(1).max(100),
 });
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
@@ -37,7 +37,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!rateCheck.allowed) {
 		throw error(
 			429,
-			`Too many signup attempts. Try again in ${rateCheck.remainingMinutes} minutes.`
+			`Too many signup attempts. Try again in ${rateCheck.remainingMinutes} minutes.`,
 		);
 	}
 
@@ -58,7 +58,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			userAgent,
 			attemptType: 'signup',
 			success: false,
-			failureReason: 'invalid_invite_code'
+			failureReason: 'invalid_invite_code',
 		});
 		throw error(403, 'Invite code is invalid, expired, or already used');
 	}
@@ -71,7 +71,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			userAgent,
 			attemptType: 'signup',
 			success: false,
-			failureReason: 'email_mismatch'
+			failureReason: 'email_mismatch',
 		});
 		throw error(403, 'This invite code is restricted to a different email address');
 	}
@@ -99,7 +99,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			first_name: firstName,
 			last_name: lastName,
 			role: userRole,
-			is_active: false
+			is_active: false,
 		})
 		.select('id, email, role')
 		.single();
@@ -124,7 +124,13 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			.from('admin_users')
 			.delete()
 			.eq('id', newUser.id);
-		if (rollbackError) logError('admin-auth/signup', 'Failed to rollback user after invite race', rollbackError, { userId: newUser.id });
+		if (rollbackError)
+			logError(
+				'admin-auth/signup',
+				'Failed to rollback user after invite race',
+				rollbackError,
+				{ userId: newUser.id },
+			);
 		throw error(409, 'This invite code has already been used');
 	}
 
@@ -134,17 +140,19 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		ipHash,
 		userAgent,
 		attemptType: 'signup',
-		success: true
+		success: true,
 	});
 
 	// TODO: send activation email when SMTP is configured.
 	// For now, an admin must manually activate the account via the Supabase dashboard.
 	// Log only the UUID — never log the email address or raw SQL to stdout.
-	console.info(`[signup] New admin account created (id: ${newUser.id}, role: ${userRole}). Pending activation.`);
+	console.info(
+		`[signup] New admin account created (id: ${newUser.id}, role: ${userRole}). Pending activation.`,
+	);
 
 	return json({
 		ok: true,
 		message: 'Account created. Contact your administrator to activate it.',
-		requiresActivation: true
+		requiresActivation: true,
 	});
 };

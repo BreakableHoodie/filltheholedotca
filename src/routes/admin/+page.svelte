@@ -37,12 +37,18 @@
 		<!-- Pending photos — actionable if > 0 -->
 		<a
 			href="/admin/photos"
-			class="bg-stone-900 border {data.counts.pendingPhotos > 0 ? 'border-amber-600/40 hover:border-amber-500/60' : 'border-stone-800 hover:border-stone-700'} rounded-lg p-4 transition-colors group"
+			class="bg-stone-900 border {data.counts.pendingPhotos > 0
+				? 'border-amber-600/40 hover:border-amber-500/60'
+				: 'border-stone-800 hover:border-stone-700'} rounded-lg p-4 transition-colors group"
 		>
 			<p class="text-xs text-stone-500 mb-1 group-hover:text-stone-400 transition-colors">
 				Photos pending
 			</p>
-			<p class="text-2xl font-semibold {data.counts.pendingPhotos > 0 ? 'text-amber-400' : 'text-stone-300'}">
+			<p
+				class="text-2xl font-semibold {data.counts.pendingPhotos > 0
+					? 'text-amber-400'
+					: 'text-stone-300'}"
+			>
 				{data.counts.pendingPhotos}
 			</p>
 		</a>
@@ -96,7 +102,10 @@
 	<div class="bg-stone-900 border border-stone-800 rounded-lg">
 		<div class="px-4 py-3 border-b border-stone-800 flex items-center justify-between">
 			<h2 class="text-sm font-medium text-stone-300">Recent activity</h2>
-			<a href="/admin/audit" class="text-xs text-stone-500 hover:text-stone-300 transition-colors">
+			<a
+				href="/admin/audit"
+				class="text-xs text-stone-500 hover:text-stone-300 transition-colors"
+			>
 				View all →
 			</a>
 		</div>
@@ -106,11 +115,17 @@
 				<div class="px-4 py-3 flex items-start gap-3">
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 flex-wrap">
-							<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono {actionBadgeClass(entry.action)}">
+							<span
+								class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono {actionBadgeClass(
+									entry.action,
+								)}"
+							>
 								{entry.action}
 							</span>
 							{#if entry.resource_type}
-								<span class="text-stone-500 text-xs capitalize">{entry.resource_type}</span>
+								<span class="text-stone-500 text-xs capitalize"
+									>{entry.resource_type}</span
+								>
 								{#if entry.resource_type === 'pothole' && entry.resource_id}
 									<a
 										href="/admin/potholes/{entry.resource_id}"

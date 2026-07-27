@@ -7,7 +7,7 @@ import {
 	decryptTotpSecret,
 	generateBackupCodes,
 	hashBackupCode,
-	verifyBackupCode
+	verifyBackupCode,
 } from '$lib/server/admin-crypto';
 import { generateTotpSecret, verifyTotpCode, generateTotpUri } from '$lib/server/admin-totp';
 import { getAdminClient } from '$lib/server/supabase';
@@ -38,7 +38,12 @@ export const actions: Actions = {
 		const encrypted = await encryptTotpSecret(secret);
 		const totpUri = generateTotpUri(secret, locals.adminUser.email);
 
-		return { pendingSetup: true as const, encryptedSecret: encrypted, displaySecret: secret, totpUri };
+		return {
+			pendingSetup: true as const,
+			encryptedSecret: encrypted,
+			displaySecret: secret,
+			totpUri,
+		};
 	},
 
 	// Step 2: confirm 6-digit code, save encrypted secret + backup codes
@@ -50,7 +55,12 @@ export const actions: Actions = {
 		const encryptedSecret = fd.get('encryptedSecret')?.toString() ?? '';
 		const code = fd.get('code')?.toString().replace(/\s/g, '') ?? '';
 
-		if (!/^\d{6}$/.test(code)) return fail(400, { error: 'Enter a 6-digit code', pendingSetup: true as const, encryptedSecret });
+		if (!/^\d{6}$/.test(code))
+			return fail(400, {
+				error: 'Enter a 6-digit code',
+				pendingSetup: true as const,
+				encryptedSecret,
+			});
 
 		let secret: string;
 		try {
@@ -68,7 +78,7 @@ export const actions: Actions = {
 			return fail(400, {
 				error: 'Invalid code — check the time on your authenticator and try again.',
 				pendingSetup: true as const,
-				encryptedSecret
+				encryptedSecret,
 			});
 		}
 
@@ -81,12 +91,14 @@ export const actions: Actions = {
 			.update({
 				totp_enabled: true,
 				totp_secret: encryptedSecret,
-				backup_codes: JSON.stringify(hashedCodes)
+				backup_codes: JSON.stringify(hashedCodes),
 			})
 			.eq('id', locals.adminUser.id);
 
 		if (dbErr) {
-			logError('admin/settings/mfa', 'Failed to enable MFA', dbErr, { userId: locals.adminUser.id });
+			logError('admin/settings/mfa', 'Failed to enable MFA', dbErr, {
+				userId: locals.adminUser.id,
+			});
 			return fail(500, { error: 'Failed to enable MFA. Please try again.' });
 		}
 
@@ -96,7 +108,7 @@ export const actions: Actions = {
 			'user',
 			locals.adminUser.id,
 			null,
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 
 		return { confirmed: true as const, backupCodes: plainCodes };
@@ -135,7 +147,9 @@ export const actions: Actions = {
 			.eq('id', locals.adminUser.id);
 
 		if (dbErr) {
-			logError('admin/settings/mfa', 'Failed to disable MFA', dbErr, { userId: locals.adminUser.id });
+			logError('admin/settings/mfa', 'Failed to disable MFA', dbErr, {
+				userId: locals.adminUser.id,
+			});
 			return fail(500, { error: 'Failed to disable MFA' });
 		}
 
@@ -149,7 +163,7 @@ export const actions: Actions = {
 			'user',
 			locals.adminUser.id,
 			null,
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 
 		return { disabled: true as const };
@@ -184,7 +198,9 @@ export const actions: Actions = {
 			.eq('id', locals.adminUser.id);
 
 		if (dbErr) {
-			logError('admin/settings/mfa', 'Failed to regenerate backup codes', dbErr, { userId: locals.adminUser.id });
+			logError('admin/settings/mfa', 'Failed to regenerate backup codes', dbErr, {
+				userId: locals.adminUser.id,
+			});
 			return fail(500, { error: 'Failed to regenerate backup codes' });
 		}
 
@@ -194,9 +210,9 @@ export const actions: Actions = {
 			'user',
 			locals.adminUser.id,
 			null,
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 
 		return { newBackupCodes: plainCodes };
-	}
+	},
 };

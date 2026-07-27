@@ -8,7 +8,7 @@ import {
 	createAdminSession,
 	validateAdminSession,
 	SESSION_COOKIE,
-	TRUSTED_DEVICE_COOKIE
+	TRUSTED_DEVICE_COOKIE,
 } from '$lib/server/admin-auth';
 import { generateCsrfToken, CSRF_COOKIE } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
@@ -36,7 +36,11 @@ export const actions: Actions = {
 		// Prevent open redirect
 		const next = rawNext.startsWith('/admin') ? rawNext : '/admin/photos';
 
-		if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true' && email === 'e2e-mfa@test.local') {
+		if (
+			process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' &&
+			process.env.CI === 'true' &&
+			email === 'e2e-mfa@test.local'
+		) {
 			if (password !== 'e2e-password') {
 				return fail(401, { error: 'Invalid email or password', email });
 			}
@@ -44,12 +48,28 @@ export const actions: Actions = {
 			const trustedToken = cookies.get(TRUSTED_DEVICE_COOKIE);
 			if (trustedToken === 'e2e-trusted-device-token') {
 				const csrfToken = await generateCsrfToken('e2e-session-id');
-				cookies.set(SESSION_COOKIE, 'e2e-session-id', { httpOnly: true, sameSite: 'strict', path: '/', secure: isSecure, maxAge: 24 * 60 * 60 });
-				cookies.set(CSRF_COOKIE, csrfToken, { httpOnly: false, sameSite: 'strict', path: '/', secure: isSecure, maxAge: 24 * 60 * 60 });
+				cookies.set(SESSION_COOKIE, 'e2e-session-id', {
+					httpOnly: true,
+					sameSite: 'strict',
+					path: '/',
+					secure: isSecure,
+					maxAge: 24 * 60 * 60,
+				});
+				cookies.set(CSRF_COOKIE, csrfToken, {
+					httpOnly: false,
+					sameSite: 'strict',
+					path: '/',
+					secure: isSecure,
+					maxAge: 24 * 60 * 60,
+				});
 				throw redirect(302, next);
 			}
 			cookies.set('admin_mfa_pending', 'e2e-mfa-challenge-token', {
-				httpOnly: true, sameSite: 'strict', path: '/admin/login', secure: isSecure, maxAge: 5 * 60
+				httpOnly: true,
+				sameSite: 'strict',
+				path: '/admin/login',
+				secure: isSecure,
+				maxAge: 5 * 60,
 			});
 			throw redirect(302, `/admin/login/mfa?next=${encodeURIComponent(next)}`);
 		}
@@ -59,10 +79,12 @@ export const actions: Actions = {
 		// M1: Use build-time flag — url.protocol can be spoofed via reverse proxy.
 		const isSecure = import.meta.env.PROD;
 
-		const parsed = z.object({ email: z.string().email(), password: z.string().min(1) }).safeParse({
-			email,
-			password
-		});
+		const parsed = z
+			.object({ email: z.string().email(), password: z.string().min(1) })
+			.safeParse({
+				email,
+				password,
+			});
 		if (!parsed.success) {
 			return fail(400, { error: 'Email and password are required', email });
 		}
@@ -73,13 +95,15 @@ export const actions: Actions = {
 		if (!rateCheck.allowed) {
 			return fail(429, {
 				error: `Too many attempts. Try again in ${rateCheck.remainingMinutes} minutes.`,
-				email
+				email,
 			});
 		}
 
 		const { data: user } = await getAdminClient()
 			.from('admin_users')
-			.select('id, email, first_name, last_name, role, is_active, activated_at, password_hash, totp_enabled')
+			.select(
+				'id, email, first_name, last_name, role, is_active, activated_at, password_hash, totp_enabled',
+			)
 			.eq('email', email)
 			.maybeSingle();
 
@@ -90,7 +114,7 @@ export const actions: Actions = {
 				userAgent,
 				attemptType: 'login',
 				success: false,
-				failureReason: 'user_not_found'
+				failureReason: 'user_not_found',
 			});
 			return fail(401, { error: 'Invalid email or password', email });
 		}
@@ -109,7 +133,7 @@ export const actions: Actions = {
 				userAgent,
 				attemptType: 'login',
 				success: false,
-				failureReason: 'activation_required'
+				failureReason: 'activation_required',
 			});
 			return fail(401, { error: 'Invalid credentials.', email });
 		}
@@ -122,7 +146,7 @@ export const actions: Actions = {
 				userAgent,
 				attemptType: 'login',
 				success: false,
-				failureReason: 'account_disabled'
+				failureReason: 'account_disabled',
 			});
 			return fail(401, { error: 'Invalid credentials.', email });
 		}
@@ -136,7 +160,7 @@ export const actions: Actions = {
 				userAgent,
 				attemptType: 'login',
 				success: false,
-				failureReason: 'wrong_password'
+				failureReason: 'wrong_password',
 			});
 			return fail(401, { error: 'Invalid email or password', email });
 		}
@@ -163,14 +187,14 @@ export const actions: Actions = {
 						sameSite: 'strict',
 						path: '/',
 						secure: isSecure,
-						maxAge: 24 * 60 * 60
+						maxAge: 24 * 60 * 60,
 					});
 					cookies.set(CSRF_COOKIE, csrfToken, {
 						httpOnly: false,
 						sameSite: 'strict',
 						path: '/',
 						secure: isSecure,
-						maxAge: 24 * 60 * 60
+						maxAge: 24 * 60 * 60,
 					});
 					const now = new Date().toISOString();
 					await getAdminClient()
@@ -181,14 +205,20 @@ export const actions: Actions = {
 						.from('admin_trusted_devices')
 						.update({ last_used_at: now })
 						.eq('id', trusted.id);
-					if (trustedUpdateErr) logError('admin/login', 'Failed to update trusted device last_used_at', trustedUpdateErr, { userId: user.id });
+					if (trustedUpdateErr)
+						logError(
+							'admin/login',
+							'Failed to update trusted device last_used_at',
+							trustedUpdateErr,
+							{ userId: user.id },
+						);
 					await recordAuthAttempt({
 						userId: user.id,
 						email,
 						ipHash,
 						userAgent,
 						attemptType: 'login',
-						success: true
+						success: true,
 					});
 					throw redirect(302, next);
 				}
@@ -208,26 +238,33 @@ export const actions: Actions = {
 				.gt('expires_at', now);
 
 			if (invalidateError) {
-				logError('admin/login', 'Failed to invalidate prior MFA challenges', invalidateError, { userId: user.id });
+				logError(
+					'admin/login',
+					'Failed to invalidate prior MFA challenges',
+					invalidateError,
+					{ userId: user.id },
+				);
 				return fail(500, { error: 'Login failed. Please try again.', email });
 			}
 
 			// M2 fix: token is stored in an HttpOnly cookie rather than the URL query string.
 			// A URL token leaks into browser history, server logs, and Referer headers.
 			const mfaToken = crypto.randomUUID();
-			await getAdminClient().from('admin_mfa_challenges').insert({
-				token: mfaToken,
-				user_id: user.id,
-				ip_address: ipHash,
-				user_agent: userAgent,
-				expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString()
-			});
+			await getAdminClient()
+				.from('admin_mfa_challenges')
+				.insert({
+					token: mfaToken,
+					user_id: user.id,
+					ip_address: ipHash,
+					user_agent: userAgent,
+					expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+				});
 			cookies.set('admin_mfa_pending', mfaToken, {
 				httpOnly: true,
 				sameSite: 'strict',
 				path: '/admin/login',
 				secure: isSecure,
-				maxAge: 5 * 60 // matches challenge expiry
+				maxAge: 5 * 60, // matches challenge expiry
 			});
 			throw redirect(302, `/admin/login/mfa?next=${encodeURIComponent(next)}`);
 		}
@@ -240,14 +277,14 @@ export const actions: Actions = {
 			sameSite: 'strict',
 			path: '/',
 			secure: isSecure,
-			maxAge: 24 * 60 * 60
+			maxAge: 24 * 60 * 60,
 		});
 		cookies.set(CSRF_COOKIE, csrfToken, {
 			httpOnly: false,
 			sameSite: 'strict',
 			path: '/',
 			secure: isSecure,
-			maxAge: 24 * 60 * 60
+			maxAge: 24 * 60 * 60,
 		});
 		await getAdminClient()
 			.from('admin_users')
@@ -259,8 +296,8 @@ export const actions: Actions = {
 			ipHash,
 			userAgent,
 			attemptType: 'login',
-			success: true
+			success: true,
 		});
 		throw redirect(302, next);
-	}
+	},
 };

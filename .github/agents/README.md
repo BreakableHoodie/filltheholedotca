@@ -5,6 +5,7 @@ Project-specific Claude Code agents tailored for the fillthehole.ca civic pothol
 ## Overview
 
 These agents are specialized helpers that understand the unique requirements of this civic tech project:
+
 - Public pothole reporting and tracking
 - Security-first approach (untrusted public input)
 - SvelteKit + Svelte 5 runes architecture
@@ -15,9 +16,11 @@ These agents are specialized helpers that understand the unique requirements of 
 ## Available Agents
 
 ### 1. Civic Feature Builder (`civic-feature-builder`)
+
 **Use when:** Building new features or modifying existing functionality
 
 **Specializes in:**
+
 - Security-first feature development
 - Svelte 5 runes syntax (not Svelte 4)
 - API validation with zod
@@ -26,6 +29,7 @@ These agents are specialized helpers that understand the unique requirements of 
 - Supabase RLS-aware development
 
 **Example prompts:**
+
 - "Add a feature to let users mark a pothole as 'still not fixed'"
 - "Create an API endpoint for exporting ward statistics"
 - "Build a notification system for pothole status changes"
@@ -33,9 +37,11 @@ These agents are specialized helpers that understand the unique requirements of 
 ---
 
 ### 2. Supabase Schema Designer (`supabase-schema-designer`)
+
 **Use when:** Designing new database tables or modifying schema
 
 **Specializes in:**
+
 - RLS policy design (secure by default)
 - Migration file creation
 - Index optimization
@@ -44,6 +50,7 @@ These agents are specialized helpers that understand the unique requirements of 
 - Data integrity constraints
 
 **Example prompts:**
+
 - "Design a table to track user feedback on filled potholes"
 - "Create a schema for ward councillor response times"
 - "Add an index to speed up queries by ward and status"
@@ -51,9 +58,11 @@ These agents are specialized helpers that understand the unique requirements of 
 ---
 
 ### 3. Civic UX Reviewer (`civic-ux-reviewer`)
+
 **Use when:** Reviewing user experience, accessibility, or design
 
 **Specializes in:**
+
 - WCAG 2.1 AA accessibility compliance
 - Mobile-first responsive design
 - Touch target sizing and keyboard navigation
@@ -62,6 +71,7 @@ These agents are specialized helpers that understand the unique requirements of 
 - Progressive disclosure and empty states
 
 **Example prompts:**
+
 - "Review the report form for accessibility issues"
 - "Check if the map interface is mobile-friendly"
 - "Ensure the stats page is screen-reader accessible"
@@ -69,9 +79,11 @@ These agents are specialized helpers that understand the unique requirements of 
 ---
 
 ### 4. Migration Runner (`migration-runner`)
+
 **Use when:** Applying database migrations to Supabase
 
 **Specializes in:**
+
 - Safe migration execution
 - Pre-migration validation
 - Rollback planning
@@ -80,6 +92,7 @@ These agents are specialized helpers that understand the unique requirements of 
 - Data integrity checks
 
 **Example prompts:**
+
 - "Apply the schema_push.sql migration safely"
 - "Verify all RLS policies are working after migration"
 - "Create a rollback plan for the latest schema change"
@@ -87,9 +100,11 @@ These agents are specialized helpers that understand the unique requirements of 
 ---
 
 ### 5. Civic Deployment Manager (`civic-deployment-manager`)
+
 **Use when:** Deploying to production or troubleshooting deploy issues
 
 **Specializes in:**
+
 - Pre-deployment checklists
 - Build and test validation
 - Environment variable management
@@ -98,6 +113,7 @@ These agents are specialized helpers that understand the unique requirements of 
 - Error monitoring (Sentry, Netlify logs)
 
 **Example prompts:**
+
 - "Run pre-deployment checks before pushing to main"
 - "Deploy to production and verify all systems are working"
 - "Roll back the last deploy and identify the issue"
@@ -109,60 +125,64 @@ These agents are specialized helpers that understand the unique requirements of 
 ### In Claude Code Desktop
 
 1. **Direct invocation** - Use the Task tool:
-   ```
-   Ask "civic-feature-builder" to add a new API endpoint for...
-   ```
+
+    ```
+    Ask "civic-feature-builder" to add a new API endpoint for...
+    ```
 
 2. **Natural language** - Claude will suggest the right agent:
-   ```
-   I need to add a new table to track ward response metrics
-   # Claude may suggest: "Should I invoke supabase-schema-designer?"
-   ```
+
+    ```
+    I need to add a new table to track ward response metrics
+    # Claude may suggest: "Should I invoke supabase-schema-designer?"
+    ```
 
 3. **Agent chaining** - Combine multiple agents:
-   ```
-   1. Ask "supabase-schema-designer" to design the schema
-   2. Ask "migration-runner" to apply it safely
-   3. Ask "civic-feature-builder" to build the API
-   4. Ask "civic-ux-reviewer" to check accessibility
-   5. Ask "civic-deployment-manager" to deploy
-   ```
+    ```
+    1. Ask "supabase-schema-designer" to design the schema
+    2. Ask "migration-runner" to apply it safely
+    3. Ask "civic-feature-builder" to build the API
+    4. Ask "civic-ux-reviewer" to check accessibility
+    5. Ask "civic-deployment-manager" to deploy
+    ```
 
 ### Best Practices
 
 1. **Start with the right agent** - Choose based on the task:
-   - Adding features → Civic Feature Builder
-   - Database changes → Supabase Schema Designer → Migration Runner
-   - UX concerns → Civic UX Reviewer
-   - Deploying → Civic Deployment Manager
+    - Adding features → Civic Feature Builder
+    - Database changes → Supabase Schema Designer → Migration Runner
+    - UX concerns → Civic UX Reviewer
+    - Deploying → Civic Deployment Manager
 
 2. **Read the agent's output** - Each agent provides:
-   - Security analysis
-   - Code examples
-   - Testing instructions
-   - Documentation updates
+    - Security analysis
+    - Code examples
+    - Testing instructions
+    - Documentation updates
 
 3. **Follow the process** - Agents follow structured workflows:
-   - Phase 1: Analysis/Planning
-   - Phase 2: Implementation
-   - Phase 3: Testing/Validation
-   - Phase 4: Documentation
+    - Phase 1: Analysis/Planning
+    - Phase 2: Implementation
+    - Phase 3: Testing/Validation
+    - Phase 4: Documentation
 
 4. **Update docs** - Agents will remind you to update:
-   - `README.md` for user-facing changes
-   - `CLAUDE.md` for architecture changes
-   - `.env.example` for new env vars
-   - Schema migration files
+    - `README.md` for user-facing changes
+    - `CLAUDE.md` for architecture changes
+    - `.env.example` for new env vars
+    - Schema migration files
 
 ## Agent vs Manual Work
 
 **Use agents when:**
+
 - You want security best practices enforced automatically
 - You need structured guidance through complex processes
 - You're working on an unfamiliar part of the codebase
 - You want consistent code quality and patterns
 
 **Work manually when:**
+
 - You need fine-grained control over every line
 - The task is simpler than agent setup
 - You're experimenting and learning
@@ -172,12 +192,14 @@ These agents are specialized helpers that understand the unique requirements of 
 You have both sets of agents:
 
 **User-level agents** (`.github/instructions/`):
+
 - `debug` - General debugging
 - `se-security-reviewer` - Security review
 - `playwright-tester` - E2E testing
 - `devops-expert` - CI/CD and infrastructure
 
 **Project-level agents** (`.github/agents/`):
+
 - `civic-feature-builder` - fillthehole.ca features
 - `supabase-schema-designer` - fillthehole.ca schema
 - `civic-ux-reviewer` - fillthehole.ca UX
@@ -221,6 +243,7 @@ You have both sets of agents:
 ## Maintenance
 
 These agents are project-specific and should be updated when:
+
 - Major stack changes (e.g., SvelteKit 3.0)
 - New security patterns emerge
 - Business rules change (e.g., confirmation threshold)
@@ -231,6 +254,7 @@ Keep them in sync with `CLAUDE.md` and `README.md`.
 ## Questions?
 
 If an agent doesn't understand your request:
+
 1. Check you're using the right agent for the task
 2. Provide more context about what you're trying to achieve
 3. Reference specific files or features by name

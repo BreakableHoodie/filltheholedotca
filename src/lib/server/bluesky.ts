@@ -22,7 +22,9 @@ async function createSession(): Promise<Session | null> {
 	if (!handle || !password) {
 		if (!_warnedNotConfigured) {
 			_warnedNotConfigured = true;
-			console.info('[bluesky] BLUESKY_HANDLE or BLUESKY_APP_PASSWORD not set — posting disabled');
+			console.info(
+				'[bluesky] BLUESKY_HANDLE or BLUESKY_APP_PASSWORD not set — posting disabled',
+			);
 		}
 		return null;
 	}
@@ -31,7 +33,7 @@ async function createSession(): Promise<Session | null> {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ identifier: handle, password }),
-		signal: AbortSignal.timeout(8_000)
+		signal: AbortSignal.timeout(8_000),
 	});
 
 	if (!res.ok) {
@@ -39,7 +41,7 @@ async function createSession(): Promise<Session | null> {
 		logError(
 			'bluesky/session',
 			`Auth failed — check BLUESKY_HANDLE and BLUESKY_APP_PASSWORD environment variables (HTTP ${res.status})`,
-			new Error(body || String(res.status))
+			new Error(body || String(res.status)),
 		);
 		return null;
 	}
@@ -62,7 +64,7 @@ function buildUrlFacet(text: string, url: string) {
 	const byteEnd = byteStart + encoder.encode(url).length;
 	return {
 		index: { byteStart, byteEnd },
-		features: [{ $type: 'app.bsky.richtext.facet#link', uri: url }]
+		features: [{ $type: 'app.bsky.richtext.facet#link', uri: url }],
 	};
 }
 
@@ -74,22 +76,26 @@ async function post(text: string, url: string): Promise<void> {
 		$type: 'app.bsky.feed.post',
 		text,
 		createdAt: new Date().toISOString(),
-		facets: text.includes(url) ? [buildUrlFacet(text, url)] : []
+		facets: text.includes(url) ? [buildUrlFacet(text, url)] : [],
 	};
 
 	const res = await fetch(`${BSKY_PDS}/xrpc/com.atproto.repo.createRecord`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			Authorization: `Bearer ${session.accessJwt}`
+			Authorization: `Bearer ${session.accessJwt}`,
 		},
 		body: JSON.stringify({ repo: session.did, collection: 'app.bsky.feed.post', record }),
-		signal: AbortSignal.timeout(8_000)
+		signal: AbortSignal.timeout(8_000),
 	});
 
 	if (!res.ok) {
 		const body = await res.text().catch(() => '');
-		logError('bluesky/post', `Post failed with HTTP ${res.status}`, new Error(body || String(res.status)));
+		logError(
+			'bluesky/post',
+			`Post failed with HTTP ${res.status}`,
+			new Error(body || String(res.status)),
+		);
 	}
 }
 
@@ -110,7 +116,11 @@ export async function postConfirmed(id: string, address: string | null | undefin
 		const text = `🚧 New pothole confirmed at ${location}.\n\nIt's now live on the map — see it and help report it to the city:\n${url}`;
 
 		if ([...text].length > MAX_POST_LENGTH) {
-			logError('bluesky/post', 'postConfirmed: text too long, skipping', new Error('text exceeded MAX_POST_LENGTH'));
+			logError(
+				'bluesky/post',
+				'postConfirmed: text too long, skipping',
+				new Error('text exceeded MAX_POST_LENGTH'),
+			);
 			return;
 		}
 
@@ -131,7 +141,11 @@ export async function postFilled(id: string, address: string | null | undefined)
 		const text = `✅ Pothole at ${location} has been filled!\n\nThanks to everyone who reported and confirmed it. 🙌\n${url}`;
 
 		if ([...text].length > MAX_POST_LENGTH) {
-			logError('bluesky/post', 'postFilled: text too long, skipping', new Error('text exceeded MAX_POST_LENGTH'));
+			logError(
+				'bluesky/post',
+				'postFilled: text too long, skipping',
+				new Error('text exceeded MAX_POST_LENGTH'),
+			);
 			return;
 		}
 

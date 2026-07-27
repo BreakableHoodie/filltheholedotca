@@ -68,7 +68,11 @@ export function stripJpegMetadata(input: Uint8Array): Uint8Array {
 			// (e.g. an interrupted upload) has no EOI. Return the original rather
 			// than a partially-stripped copy, consistent with the malformed-input
 			// contract above.
-			if (rest.length < 2 || rest[rest.length - 2] !== 0xff || rest[rest.length - 1] !== 0xd9) {
+			if (
+				rest.length < 2 ||
+				rest[rest.length - 2] !== 0xff ||
+				rest[rest.length - 1] !== 0xd9
+			) {
 				return input;
 			}
 			out.set(rest, w);
@@ -113,7 +117,8 @@ export function stripPngMetadata(input: Uint8Array): Uint8Array {
 	let i = 8;
 
 	while (i + 12 <= input.length) {
-		const chunkLen = ((input[i] << 24) | (input[i + 1] << 16) | (input[i + 2] << 8) | input[i + 3]) >>> 0;
+		const chunkLen =
+			((input[i] << 24) | (input[i + 1] << 16) | (input[i + 2] << 8) | input[i + 3]) >>> 0;
 		if (i + 12 + chunkLen > input.length) return input;
 		const type = String.fromCharCode(input[i + 4], input[i + 5], input[i + 6], input[i + 7]);
 		const total = 12 + chunkLen; // 4 (len) + 4 (type) + chunkLen (data) + 4 (CRC)
@@ -144,14 +149,23 @@ export function stripWebpMetadata(input: Uint8Array): Uint8Array {
 	// RIFF + WEBP signature
 	if (
 		input.length < 30 ||
-		input[0] !== 0x52 || input[1] !== 0x49 || input[2] !== 0x46 || input[3] !== 0x46 ||
-		input[8] !== 0x57 || input[9] !== 0x45 || input[10] !== 0x42 || input[11] !== 0x50
-	) return input;
+		input[0] !== 0x52 ||
+		input[1] !== 0x49 ||
+		input[2] !== 0x46 ||
+		input[3] !== 0x46 ||
+		input[8] !== 0x57 ||
+		input[9] !== 0x45 ||
+		input[10] !== 0x42 ||
+		input[11] !== 0x50
+	)
+		return input;
 
 	// Only VP8X (0x56 0x50 0x38 0x58 = "VP8X") carries metadata chunks.
-	if (input[12] !== 0x56 || input[13] !== 0x50 || input[14] !== 0x38 || input[15] !== 0x58) return input;
+	if (input[12] !== 0x56 || input[13] !== 0x50 || input[14] !== 0x38 || input[15] !== 0x58)
+		return input;
 
-	const vp8xDataSize = (input[16] | (input[17] << 8) | (input[18] << 16) | (input[19] << 24)) >>> 0;
+	const vp8xDataSize =
+		(input[16] | (input[17] << 8) | (input[18] << 16) | (input[19] << 24)) >>> 0;
 	if (vp8xDataSize < 1 || 20 + vp8xDataSize > input.length) return input;
 
 	const out = new Uint8Array(input.length);
@@ -165,7 +179,9 @@ export function stripWebpMetadata(input: Uint8Array): Uint8Array {
 	let i = 20 + vp8xDataSize + (vp8xDataSize & 1);
 	while (i + 8 <= input.length) {
 		const type = String.fromCharCode(input[i], input[i + 1], input[i + 2], input[i + 3]);
-		const chunkSize = (input[i + 4] | (input[i + 5] << 8) | (input[i + 6] << 16) | (input[i + 7] << 24)) >>> 0;
+		const chunkSize =
+			(input[i + 4] | (input[i + 5] << 8) | (input[i + 6] << 16) | (input[i + 7] << 24)) >>>
+			0;
 		const paddedSize = chunkSize + (chunkSize & 1);
 		if (i + 8 + paddedSize > input.length) return input;
 

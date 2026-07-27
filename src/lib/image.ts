@@ -5,7 +5,7 @@ export interface ResizeImageOptions {
 
 export async function resizeImage(
 	file: File,
-	{ maxPixels = 800, quality = 0.82 }: ResizeImageOptions = {}
+	{ maxPixels = 800, quality = 0.82 }: ResizeImageOptions = {},
 ): Promise<Blob> {
 	return new Promise((resolve, reject) => {
 		const objectUrl = URL.createObjectURL(file);
@@ -37,7 +37,7 @@ export async function resizeImage(
 					resolve(blob);
 				},
 				'image/jpeg',
-				quality
+				quality,
 			);
 		};
 

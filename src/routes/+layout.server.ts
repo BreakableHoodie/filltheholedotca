@@ -29,15 +29,17 @@ export const load: LayoutServerLoad = async () => {
 			supabase
 				.from('potholes')
 				.select('*', { count: 'exact', head: true })
-				.eq('status', 'filled')
+				.eq('status', 'filled'),
 		]);
 
-		if (reportedResult.error) logError('layout', 'Supabase load error (reported count)', reportedResult.error);
-		if (filledResult.error) logError('layout', 'Supabase load error (filled count)', filledResult.error);
+		if (reportedResult.error)
+			logError('layout', 'Supabase load error (reported count)', reportedResult.error);
+		if (filledResult.error)
+			logError('layout', 'Supabase load error (filled count)', filledResult.error);
 
 		const counts: Counts = {
 			reported: reportedResult.count ?? 0,
-			filled: filledResult.count ?? 0
+			filled: filledResult.count ?? 0,
 		};
 
 		// Only cache when both queries succeeded. A partial/errored result yields a
@@ -52,7 +54,11 @@ export const load: LayoutServerLoad = async () => {
 		}
 		return { counts: cachedCounts ?? counts };
 	} catch (e) {
-		logError('layout', 'Supabase load exception', e instanceof Error ? e : new Error(String(e)));
+		logError(
+			'layout',
+			'Supabase load exception',
+			e instanceof Error ? e : new Error(String(e)),
+		);
 		return { counts: cachedCounts ?? { reported: 0, filled: 0 } };
 	}
 };

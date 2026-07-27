@@ -41,7 +41,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		.from('admin_audit_log')
 		.select(
 			'id, action, resource_type, resource_id, details, ip_address, created_at, admin_users(id, email, first_name, last_name, role)',
-			{ count: 'exact' }
+			{ count: 'exact' },
 		)
 		.order('created_at', { ascending: false })
 		.range(offset, offset + PAGE_SIZE - 1);
@@ -52,7 +52,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	const [{ data: entries, count, error: dbErr }, { data: users }] = await Promise.all([
 		query,
-		getAdminClient().from('admin_users').select('id, email, first_name, last_name').order('email')
+		getAdminClient()
+			.from('admin_users')
+			.select('id, email, first_name, last_name')
+			.order('email'),
 	]);
 
 	if (dbErr) {
@@ -87,6 +90,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		prevUrl: page > 1 ? pageUrl(page - 1) : null,
 		nextUrl: page < totalPages ? pageUrl(page + 1) : null,
 		firstEntry: offset + 1,
-		lastEntry: Math.min(offset + PAGE_SIZE, count ?? 0)
+		lastEntry: Math.min(offset + PAGE_SIZE, count ?? 0),
 	};
 };

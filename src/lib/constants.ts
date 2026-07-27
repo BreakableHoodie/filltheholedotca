@@ -11,8 +11,11 @@ export const GEOFENCE = {
 /** Radius within which two reports are merged into a single pothole (metres). */
 export const MERGE_RADIUS_M = 25;
 
-// prettier-ignore — the column alignment below is deliberate: it makes a colour or
-// label drifting out of step with its siblings visible at a glance during review.
+// The column alignment below is deliberate: it makes a colour or label drifting
+// out of step with its siblings visible at a glance during review. The directive
+// must be exactly "prettier-ignore" on its own line — any trailing text and
+// Prettier silently ignores it and reflows the table.
+// prettier-ignore
 export const STATUS_CONFIG: Record<
 	string,
 	{ icon: IconName; label: string; colorClass: string; hex: string }
@@ -21,28 +24,8 @@ export const STATUS_CONFIG: Record<
 	// failed WCAG AA (4.5:1) on the light stone surfaces introduced in the redesign
 	// (e.g. text-orange-400 ≈ 2:1, text-green-400 ≈ 1.6:1 on white). hex is unchanged
 	// — it drives map markers, not body text.
-	pending: {
-		icon: 'clock',
-		label: 'Pending confirmation',
-		colorClass: 'text-stone-500 dark:text-stone-400',
-		hex: '#a1a1aa',
-	},
-	reported: {
-		icon: 'map-pin',
-		label: 'Reported',
-		colorClass: 'text-orange-700 dark:text-orange-400',
-		hex: '#f97316',
-	},
-	expired: {
-		icon: 'clock',
-		label: 'Expired',
-		colorClass: 'text-stone-500 dark:text-stone-400',
-		hex: '#71717a',
-	},
-	filled: {
-		icon: 'check-circle',
-		label: 'Filled',
-		colorClass: 'text-green-700 dark:text-green-400',
-		hex: '#22c55e',
-	},
+	pending:  { icon: 'clock',        label: 'Pending confirmation', colorClass: 'text-stone-500 dark:text-stone-400',  hex: '#a1a1aa' },
+	reported: { icon: 'map-pin',      label: 'Reported',             colorClass: 'text-orange-700 dark:text-orange-400', hex: '#f97316' },
+	expired:  { icon: 'clock',        label: 'Expired',              colorClass: 'text-stone-500 dark:text-stone-400',   hex: '#71717a' },
+	filled:   { icon: 'check-circle', label: 'Filled',               colorClass: 'text-green-700 dark:text-green-400',  hex: '#22c55e' },
 } as const;

@@ -7,10 +7,10 @@ test.describe('Stats page', () => {
 			origins: [
 				{
 					origin: 'http://localhost:4173',
-					localStorage: [{ name: 'fth-home-intro-dismissed', value: '1' }]
-				}
-			]
-		}
+					localStorage: [{ name: 'fth-home-intro-dismissed', value: '1' }],
+				},
+			],
+		},
 	});
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/stats');
@@ -33,13 +33,22 @@ test.describe('Stats page', () => {
 	});
 
 	test('"All time" is selected by default (aria-pressed)', async ({ page }) => {
-		await expect(page.getByRole('button', { name: 'All time' })).toHaveAttribute('aria-pressed', 'true');
+		await expect(page.getByRole('button', { name: 'All time' })).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
 	});
 
 	test('clicking a time filter updates aria-pressed state', async ({ page }) => {
 		await page.getByRole('button', { name: '30 days' }).click();
-		await expect(page.getByRole('button', { name: '30 days' })).toHaveAttribute('aria-pressed', 'true');
-		await expect(page.getByRole('button', { name: 'All time' })).toHaveAttribute('aria-pressed', 'false');
+		await expect(page.getByRole('button', { name: '30 days' })).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
+		await expect(page.getByRole('button', { name: 'All time' })).toHaveAttribute(
+			'aria-pressed',
+			'false',
+		);
 	});
 
 	test('summary section has stat cards', async ({ page }) => {
@@ -53,11 +62,13 @@ test.describe('Stats page', () => {
 		// The chart has role="img" with an aria-label. Match the stable phrase in
 		// the label so adding the freeze–thaw line to the description doesn't break it.
 		await expect(
-			page.getByRole('img', { name: /monthly pothole reports and fills/i })
+			page.getByRole('img', { name: /monthly pothole reports and fills/i }),
 		).toBeVisible();
 	});
 
-	test('monthly activity chart has a screen-reader accessible table (WCAG 1.1.1)', async ({ page }) => {
+	test('monthly activity chart has a screen-reader accessible table (WCAG 1.1.1)', async ({
+		page,
+	}) => {
 		// The sr-only table is the accessible equivalent of the visual bar chart.
 		// It must be in the DOM (visually hidden, not display:none) so screen readers can reach it.
 		const table = page.getByRole('table', { name: /Monthly pothole reports/i });
@@ -86,9 +97,12 @@ test.describe('Stats page', () => {
 		// before settling. Wait for the spinner to disappear, then check that
 		// either the grade-column table or the empty-state message is present.
 		// Both are valid outcomes — no live DB means empty state.
-		await page.locator('[aria-busy="true"]').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {
-			// aria-busy element may already be gone if GeoJSON loaded quickly
-		});
+		await page
+			.locator('[aria-busy="true"]')
+			.waitFor({ state: 'hidden', timeout: 10000 })
+			.catch(() => {
+				// aria-busy element may already be gone if GeoJSON loaded quickly
+			});
 		const hasTable = (await page.locator('th[title*="Accountability grade"]').count()) > 0;
 		const hasEmptyState = (await page.getByText(/No ward data available/i).count()) > 0;
 		expect(hasTable || hasEmptyState).toBe(true);

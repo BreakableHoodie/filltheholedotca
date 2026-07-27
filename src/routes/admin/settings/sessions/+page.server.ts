@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
 
 	return {
 		sessions: (sessions ?? []).map((s) => ({ ...s, isCurrent: s.id === currentSessionId })),
-		hasOtherSessions: (sessions ?? []).some((s) => s.id !== currentSessionId)
+		hasOtherSessions: (sessions ?? []).some((s) => s.id !== currentSessionId),
 	};
 };
 
@@ -29,7 +29,10 @@ export const actions: Actions = {
 		const currentSessionId = cookies.get(SESSION_COOKIE) ?? null;
 		if (!currentSessionId) return fail(400, { error: 'Cannot determine current session' });
 
-		let query = getAdminClient().from('admin_sessions').delete().eq('user_id', locals.adminUser.id);
+		let query = getAdminClient()
+			.from('admin_sessions')
+			.delete()
+			.eq('user_id', locals.adminUser.id);
 		query = query.neq('id', currentSessionId);
 		await query;
 
@@ -39,9 +42,9 @@ export const actions: Actions = {
 			'user',
 			locals.adminUser.id,
 			null,
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 
 		return { success: true };
-	}
+	},
 };

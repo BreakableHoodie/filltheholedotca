@@ -26,13 +26,17 @@
 	<h1 class="text-xl font-semibold text-stone-100 mb-6">Change Password</h1>
 
 	{#if form?.success}
-		<div class="mb-5 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm">
+		<div
+			class="mb-5 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm"
+		>
 			Password updated successfully.
 		</div>
 	{/if}
 
 	{#if form?.error}
-		<div class="mb-5 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+		<div
+			class="mb-5 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"
+		>
 			{form.error}
 		</div>
 	{/if}
@@ -50,7 +54,9 @@
 			class="space-y-4"
 		>
 			<div>
-				<label for="current" class="block text-xs text-stone-500 mb-1.5">Current password</label>
+				<label for="current" class="block text-xs text-stone-500 mb-1.5"
+					>Current password</label
+				>
 				<input
 					id="current"
 					name="current"
@@ -62,7 +68,9 @@
 			</div>
 
 			<div>
-				<label for="password" class="block text-xs text-stone-500 mb-1.5">New password</label>
+				<label for="password" class="block text-xs text-stone-500 mb-1.5"
+					>New password</label
+				>
 				<input
 					id="password"
 					name="password"
@@ -76,7 +84,9 @@
 			</div>
 
 			<div>
-				<label for="confirm" class="block text-xs text-stone-500 mb-1.5">Confirm new password</label>
+				<label for="confirm" class="block text-xs text-stone-500 mb-1.5"
+					>Confirm new password</label
+				>
 				<input
 					id="confirm"
 					name="confirm"

@@ -10,6 +10,7 @@ This skill enables comprehensive testing and debugging of local web applications
 ## When to Use This Skill
 
 Use this skill when you need to:
+
 - Test frontend functionality in a real browser
 - Verify UI behavior and interactions
 - Debug web application issues
@@ -27,6 +28,7 @@ Use this skill when you need to:
 ## Core Capabilities
 
 ### 1. Browser Automation
+
 - Navigate to URLs
 - Click buttons and links
 - Fill form fields
@@ -34,6 +36,7 @@ Use this skill when you need to:
 - Handle dialogs and alerts
 
 ### 2. Verification
+
 - Assert element presence
 - Verify text content
 - Check element visibility
@@ -41,6 +44,7 @@ Use this skill when you need to:
 - Test responsive behavior
 
 ### 3. Debugging
+
 - Capture screenshots
 - View console logs
 - Inspect network requests
@@ -49,6 +53,7 @@ Use this skill when you need to:
 ## Usage Examples
 
 ### Example 1: Basic Navigation Test
+
 ```javascript
 // Navigate to a page and verify title
 await page.goto('http://localhost:3000');
@@ -57,6 +62,7 @@ console.log('Page title:', title);
 ```
 
 ### Example 2: Form Interaction
+
 ```javascript
 // Fill out and submit a form
 await page.fill('#username', 'testuser');
@@ -66,6 +72,7 @@ await page.waitForURL('**/dashboard');
 ```
 
 ### Example 3: Screenshot Capture
+
 ```javascript
 // Capture a screenshot for debugging
 await page.screenshot({ path: 'debug.png', fullPage: true });
@@ -84,27 +91,31 @@ await page.screenshot({ path: 'debug.png', fullPage: true });
 ## Common Patterns
 
 ### Pattern: Wait for Element
+
 ```javascript
 await page.waitForSelector('#element-id', { state: 'visible' });
 ```
 
 ### Pattern: Check if Element Exists
+
 ```javascript
-const exists = await page.locator('#element-id').count() > 0;
+const exists = (await page.locator('#element-id').count()) > 0;
 ```
 
 ### Pattern: Get Console Logs
+
 ```javascript
-page.on('console', msg => console.log('Browser log:', msg.text()));
+page.on('console', (msg) => console.log('Browser log:', msg.text()));
 ```
 
 ### Pattern: Handle Errors
+
 ```javascript
 try {
-  await page.click('#button');
+	await page.click('#button');
 } catch (error) {
-  await page.screenshot({ path: 'error.png' });
-  throw error;
+	await page.screenshot({ path: 'error.png' });
+	throw error;
 }
 ```
 

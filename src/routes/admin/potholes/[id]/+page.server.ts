@@ -118,7 +118,9 @@ export const actions: Actions = {
 			.update({ description: descParsed.data || null })
 			.eq('id', id);
 		if (dbErr) {
-			logError('admin/potholes', 'Failed to update pothole description', dbErr, { potholeId: id });
+			logError('admin/potholes', 'Failed to update pothole description', dbErr, {
+				potholeId: id,
+			});
 			return fail(500, { error: 'Failed to update description' });
 		}
 
@@ -151,7 +153,9 @@ export const actions: Actions = {
 			.update({ address: addressParsed.data })
 			.eq('id', id);
 		if (dbErr) {
-			logError('admin/potholes', 'Failed to update pothole address', dbErr, { potholeId: id });
+			logError('admin/potholes', 'Failed to update pothole address', dbErr, {
+				potholeId: id,
+			});
 			return fail(500, { error: 'Failed to update address' });
 		}
 
@@ -182,7 +186,9 @@ export const actions: Actions = {
 			.update({ photos_published: value })
 			.eq('id', id);
 		if (dbErr) {
-			logError('admin/potholes', 'Failed to toggle photo visibility', dbErr, { potholeId: id });
+			logError('admin/potholes', 'Failed to toggle photo visibility', dbErr, {
+				potholeId: id,
+			});
 			return fail(500, { error: 'Failed to update photo visibility' });
 		}
 

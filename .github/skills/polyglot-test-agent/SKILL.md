@@ -10,6 +10,7 @@ An AI-powered skill that generates comprehensive, workable unit tests for any pr
 ## When to Use This Skill
 
 Use this skill when you need to:
+
 - Generate unit tests for an entire project or specific files
 - Improve test coverage for existing codebases
 - Create test files that follow project conventions
@@ -68,6 +69,7 @@ The Test Generator will manage the entire pipeline automatically.
 ### Step 3: Research Phase (Automatic)
 
 The `polyglot-test-researcher` agent analyzes your codebase to understand:
+
 - **Language & Framework**: Detects C#, TypeScript, Python, Go, Rust, Java, etc.
 - **Testing Framework**: Identifies MSTest, xUnit, Jest, pytest, go test, etc.
 - **Project Structure**: Maps source files, existing tests, and dependencies
@@ -78,6 +80,7 @@ Output: `.testagent/research.md`
 ### Step 4: Planning Phase (Automatic)
 
 The `polyglot-test-planner` agent creates a structured implementation plan:
+
 - Groups files into logical phases (2-5 phases typical)
 - Prioritizes by complexity and dependencies
 - Specifies test cases for each file
@@ -99,6 +102,7 @@ The `polyglot-test-implementer` agent executes each phase sequentially:
 Each phase completes before the next begins, ensuring incremental progress.
 
 ### Coverage Types
+
 - **Happy path**: Valid inputs produce expected outputs
 - **Edge cases**: Empty values, boundaries, special characters
 - **Error cases**: Invalid inputs, null handling, exceptions
@@ -107,41 +111,44 @@ Each phase completes before the next begins, ensuring incremental progress.
 
 All pipeline state is stored in `.testagent/` folder:
 
-| File | Purpose |
-|------|---------|
-| `.testagent/research.md` | Codebase analysis results |
-| `.testagent/plan.md` | Phased implementation plan |
-| `.testagent/status.md` | Progress tracking (optional) |
+| File                     | Purpose                      |
+| ------------------------ | ---------------------------- |
+| `.testagent/research.md` | Codebase analysis results    |
+| `.testagent/plan.md`     | Phased implementation plan   |
+| `.testagent/status.md`   | Progress tracking (optional) |
 
 ## Examples
 
 ### Example 1: Full Project Testing
+
 ```
 Generate unit tests for my Calculator project at C:\src\Calculator
 ```
 
 ### Example 2: Specific File Testing
+
 ```
 Generate unit tests for src/services/UserService.ts
 ```
 
 ### Example 3: Targeted Coverage
+
 ```
 Add tests for the authentication module with focus on edge cases
 ```
 
 ## Agent Reference
 
-| Agent | Purpose | Tools |
-|-------|---------|-------|
-| `polyglot-test-generator` | Coordinates pipeline | runCommands, codebase, editFiles, search, runSubagent |
-| `polyglot-test-researcher` | Analyzes codebase | runCommands, codebase, editFiles, search, fetch, runSubagent |
-| `polyglot-test-planner` | Creates test plan | codebase, editFiles, search, runSubagent |
-| `polyglot-test-implementer` | Writes test files | runCommands, codebase, editFiles, search, runSubagent |
-| `polyglot-test-builder` | Compiles code | runCommands, codebase, search |
-| `polyglot-test-tester` | Runs tests | runCommands, codebase, search |
-| `polyglot-test-fixer` | Fixes errors | runCommands, codebase, editFiles, search |
-| `polyglot-test-linter` | Formats code | runCommands, codebase, search |
+| Agent                       | Purpose              | Tools                                                        |
+| --------------------------- | -------------------- | ------------------------------------------------------------ |
+| `polyglot-test-generator`   | Coordinates pipeline | runCommands, codebase, editFiles, search, runSubagent        |
+| `polyglot-test-researcher`  | Analyzes codebase    | runCommands, codebase, editFiles, search, fetch, runSubagent |
+| `polyglot-test-planner`     | Creates test plan    | codebase, editFiles, search, runSubagent                     |
+| `polyglot-test-implementer` | Writes test files    | runCommands, codebase, editFiles, search, runSubagent        |
+| `polyglot-test-builder`     | Compiles code        | runCommands, codebase, search                                |
+| `polyglot-test-tester`      | Runs tests           | runCommands, codebase, search                                |
+| `polyglot-test-fixer`       | Fixes errors         | runCommands, codebase, editFiles, search                     |
+| `polyglot-test-linter`      | Formats code         | runCommands, codebase, search                                |
 
 ## Requirements
 
@@ -152,10 +159,13 @@ Add tests for the authentication module with focus on edge cases
 ## Troubleshooting
 
 ### Tests don't compile
+
 The `polyglot-test-fixer` agent will attempt to resolve compilation errors. Check `.testagent/plan.md` for the expected test structure.
 
 ### Tests fail
+
 Review the test output and adjust test expectations. Some tests may require mocking dependencies.
 
 ### Wrong testing framework detected
+
 Specify your preferred framework in the initial request: "Generate Jest tests for..."

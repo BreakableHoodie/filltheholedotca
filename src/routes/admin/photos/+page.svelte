@@ -13,9 +13,7 @@
 	let selected = new SvelteSet<string>();
 	let bulkFormEl: HTMLFormElement | undefined = $state();
 
-	const allSelected = $derived(
-		data.photos.length > 0 && selected.size === data.photos.length
-	);
+	const allSelected = $derived(data.photos.length > 0 && selected.size === data.photos.length);
 	const someSelected = $derived(selected.size > 0);
 
 	function toggleSelect(id: string) {
@@ -121,7 +119,12 @@
 					: 'text-stone-600 cursor-not-allowed border border-stone-800'}"
 			>
 				<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2.5"
+						d="M5 13l4 4L19 7"
+					/>
 				</svg>
 				Approve {someSelected ? `(${selected.size})` : ''}
 			</button>
@@ -137,7 +140,12 @@
 					: 'text-stone-600 cursor-not-allowed border border-stone-800'}"
 			>
 				<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2.5"
+						d="M6 18L18 6M6 6l12 12"
+					/>
 				</svg>
 				Reject {someSelected ? `(${selected.size})` : ''}
 			</button>
@@ -178,7 +186,9 @@
 								/>
 							</a>
 						{:else}
-							<div class="w-full h-48 bg-stone-800 flex items-center justify-center text-stone-600 text-sm">
+							<div
+								class="w-full h-48 bg-stone-800 flex items-center justify-center text-stone-600 text-sm"
+							>
 								Image unavailable
 							</div>
 						{/if}
@@ -186,38 +196,66 @@
 
 					<!-- Info -->
 					<div class="p-3">
-						<p class="text-sm text-stone-200 truncate font-medium" title={pothole?.address ?? ''}>
+						<p
+							class="text-sm text-stone-200 truncate font-medium"
+							title={pothole?.address ?? ''}
+						>
 							{pothole?.address ?? 'Unknown address'}
 						</p>
 
 						<div class="flex items-center gap-2 mt-1.5">
 							{#if pothole}
 								<span
-									class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium capitalize {statusColor(pothole.status)}"
+									class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium capitalize {statusColor(
+										pothole.status,
+									)}"
 								>
 									{pothole.status}
 								</span>
 								<span class="text-stone-600 text-xs">·</span>
-								<span class="text-stone-500 text-xs">{pothole.confirmed_count} confirmation{pothole.confirmed_count !== 1 ? 's' : ''}</span>
+								<span class="text-stone-500 text-xs"
+									>{pothole.confirmed_count} confirmation{pothole.confirmed_count !==
+									1
+										? 's'
+										: ''}</span
+								>
 							{/if}
 						</div>
 
 						{#if photo.moderation_status === 'deferred'}
-							<div class="flex items-center gap-1.5 mt-1.5 px-1.5 py-1 rounded bg-amber-500/10 border border-amber-500/30">
-								<svg class="w-3 h-3 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+							<div
+								class="flex items-center gap-1.5 mt-1.5 px-1.5 py-1 rounded bg-amber-500/10 border border-amber-500/30"
+							>
+								<svg
+									class="w-3 h-3 text-amber-400 shrink-0"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+									/>
 								</svg>
-								<span class="text-xs font-medium text-amber-400">Auto-mod skipped — review required</span>
+								<span class="text-xs font-medium text-amber-400"
+									>Auto-mod skipped — review required</span
+								>
 							</div>
 						{/if}
 						<div class="flex items-center justify-between mt-1.5">
 							<span
-								class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium {scoreColor(photo.moderation_score)}"
+								class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium {scoreColor(
+									photo.moderation_score,
+								)}"
 							>
 								{scoreLabel(photo.moderation_score)}
 							</span>
 							<span class="text-stone-600 text-xs">
-								{formatDistanceToNow(new Date(photo.created_at), { addSuffix: true })}
+								{formatDistanceToNow(new Date(photo.created_at), {
+									addSuffix: true,
+								})}
 							</span>
 						</div>
 

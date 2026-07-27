@@ -4,9 +4,9 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { STATUS_CONFIG } from '$lib/constants';
 	import {
-	  CITY_REPORT_LINKS,
-	  MTO_REPORT_LINK,
-	  REGION_REPORT_LINK
+		CITY_REPORT_LINKS,
+		MTO_REPORT_LINK,
+		REGION_REPORT_LINK,
 	} from '$lib/official-reporting';
 	import { resizeImage } from '$lib/image';
 	import { toastError, toastErrorFromResponse } from '$lib/toast';
@@ -25,12 +25,16 @@
 
 	let { data }: { data: PageData } = $props();
 	let pothole = $derived(data.pothole as Pothole);
-	let info = $derived(STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported);
+	let info = $derived(
+		STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported,
+	);
 	let councillor = $derived(data.councillor as Councillor | null);
 	let origin = $derived(data.origin as string);
 	// Loaded client-side after paint to keep ArcGIS latency off the SSR critical path.
 	// In E2E fixture mode data.cityRepairRequests is pre-populated and no fetch is needed.
-	let cityRepairRequests = $state<CityRepairRequest[]>(untrack(() => data.cityRepairRequests) ?? []);
+	let cityRepairRequests = $state<CityRepairRequest[]>(
+		untrack(() => data.cityRepairRequests) ?? [],
+	);
 
 	// Re-fetch CCC data whenever the pothole changes (handles client-side navigation
 	// between detail pages, where onMount doesn't re-run). Gate to Kitchener-only —
@@ -47,7 +51,9 @@
 		const controller = new AbortController();
 		fetch(`/api/ccc/${id}`, { signal: controller.signal })
 			.then((r) => (r.ok ? r.json() : []))
-			.then((result) => { cityRepairRequests = result; })
+			.then((result) => {
+				cityRepairRequests = result;
+			})
 			.catch(() => {}); // AbortError on navigation; other errors = CCC card stays hidden
 
 		return () => controller.abort();
@@ -56,13 +62,19 @@
 	// Before/after only when filled AND both eras have at least one published photo.
 	let photoSplit = $derived(splitByFill(photos, pothole.filled_at));
 	let showBeforeAfter = $derived(
-		pothole.status === 'filled' && photoSplit.before.length > 0 && photoSplit.after.length > 0
+		pothole.status === 'filled' && photoSplit.before.length > 0 && photoSplit.after.length > 0,
 	);
 	let confirmationThreshold = $derived(data.confirmationThreshold);
-	let clampedConfirmationCount = $derived(Math.min(pothole.confirmed_count, confirmationThreshold));
-	let remainingConfirmations = $derived(Math.max(0, confirmationThreshold - pothole.confirmed_count));
+	let clampedConfirmationCount = $derived(
+		Math.min(pothole.confirmed_count, confirmationThreshold),
+	);
+	let remainingConfirmations = $derived(
+		Math.max(0, confirmationThreshold - pothole.confirmed_count),
+	);
 	let confirmationProgressPct = $derived(
-		confirmationThreshold > 0 ? Math.min(100, (clampedConfirmationCount / confirmationThreshold) * 100) : 0
+		confirmationThreshold > 0
+			? Math.min(100, (clampedConfirmationCount / confirmationThreshold) * 100)
+			: 0,
 	);
 	let submitted = $derived(page.url.searchParams.get('submitted') === '1');
 	let officialCityLink = $derived(councillor ? CITY_REPORT_LINKS[councillor.city] : null);
@@ -104,7 +116,7 @@
 				const res = await fetch('/api/vote', {
 					method: 'DELETE',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ id: pothole.id })
+					body: JSON.stringify({ id: pothole.id }),
 				});
 				if (!res.ok) {
 					await toastErrorFromResponse(res, 'Something went wrong. Try again.');
@@ -117,7 +129,7 @@
 				const res = await fetch('/api/vote', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ id: pothole.id, direction: 1 })
+					body: JSON.stringify({ id: pothole.id, direction: 1 }),
 				});
 				if (!res.ok) {
 					await toastErrorFromResponse(res, 'Something went wrong. Try again.');
@@ -143,14 +155,17 @@
 			if (!sub) {
 				sub = await swRegistration.pushManager.subscribe({
 					userVisibleOnly: true,
-					applicationServerKey: urlBase64ToUint8Array(vapidKey).buffer as ArrayBuffer
+					applicationServerKey: urlBase64ToUint8Array(vapidKey).buffer as ArrayBuffer,
 				});
 			}
-			const { endpoint, keys } = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } };
+			const { endpoint, keys } = sub.toJSON() as {
+				endpoint: string;
+				keys: { p256dh: string; auth: string };
+			};
 			const res = await fetch(`/api/notify/${pothole.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ endpoint, keys })
+				body: JSON.stringify({ endpoint, keys }),
 			});
 			if (!res.ok) {
 				fillNotifState = 'unsubscribed';
@@ -178,11 +193,14 @@
 				const res = await fetch(`/api/notify/${pothole.id}`, {
 					method: 'DELETE',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ endpoint: sub.endpoint })
+					body: JSON.stringify({ endpoint: sub.endpoint }),
 				});
 				if (!res.ok) {
 					fillNotifState = 'subscribed';
-					await toastErrorFromResponse(res, 'Could not turn off notifications. Try again.');
+					await toastErrorFromResponse(
+						res,
+						'Could not turn off notifications. Try again.',
+					);
 					return;
 				}
 			}
@@ -201,7 +219,7 @@
 			const res = await fetch('/api/hit', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ id: pothole.id })
+				body: JSON.stringify({ id: pothole.id }),
 			});
 			if (!res.ok) {
 				await toastErrorFromResponse(res, 'Something went wrong. Try again.');
@@ -222,7 +240,7 @@
 	let ogDescription = $derived(
 		pothole.status === 'filled'
 			? `This pothole at ${pothole.address || 'this location'} has been filled. Accountability worked.`
-			: `Unfilled pothole at ${pothole.address || 'this location'} in Waterloo Region. Help get it filled.`
+			: `Unfilled pothole at ${pothole.address || 'this location'} in Waterloo Region. Help get it filled.`,
 	);
 
 	// Build the full JSON-LD <script> block as a plain string in TypeScript context.
@@ -232,27 +250,32 @@
 	// on the ${} expression inside it.
 	let jsonLdScript = $derived(
 		'<script type="application/ld+json">' +
-		JSON.stringify({
-			'@context': 'https://schema.org',
-			'@type': 'Place',
-			name: `Pothole at ${pothole.address || 'unknown location'}`,
-			description: ogDescription,
-			geo: {
-				'@type': 'GeoCoordinates',
-				// pothole.lat/lng arrive already rounded to ~11m from the server loader
-				// (+page.server.ts) as a privacy defense — no per-use-site rounding needed.
-				latitude: pothole.lat,
-				longitude: pothole.lng
-			},
-			url: `${origin}/hole/${pothole.id}`,
-			dateCreated: pothole.created_at,
-			...(pothole.filled_at ? { dateModified: pothole.filled_at } : {}),
-			additionalProperty: [
-				{ '@type': 'PropertyValue', name: 'status', value: pothole.status },
-				{ '@type': 'PropertyValue', name: 'confirmedBy', value: pothole.confirmed_count }
-			]
-		}).replace(new RegExp('<' + '/script', 'gi'), '<\\/script') +
-		'<' + '/script>'
+			JSON.stringify({
+				'@context': 'https://schema.org',
+				'@type': 'Place',
+				name: `Pothole at ${pothole.address || 'unknown location'}`,
+				description: ogDescription,
+				geo: {
+					'@type': 'GeoCoordinates',
+					// pothole.lat/lng arrive already rounded to ~11m from the server loader
+					// (+page.server.ts) as a privacy defense — no per-use-site rounding needed.
+					latitude: pothole.lat,
+					longitude: pothole.lng,
+				},
+				url: `${origin}/hole/${pothole.id}`,
+				dateCreated: pothole.created_at,
+				...(pothole.filled_at ? { dateModified: pothole.filled_at } : {}),
+				additionalProperty: [
+					{ '@type': 'PropertyValue', name: 'status', value: pothole.status },
+					{
+						'@type': 'PropertyValue',
+						name: 'confirmedBy',
+						value: pothole.confirmed_count,
+					},
+				],
+			}).replace(new RegExp('<' + '/script', 'gi'), '<\\/script') +
+			'<' +
+			'/script>',
 	);
 
 	// ── Fill notification ─────────────────────────────────────────────────────
@@ -269,23 +292,35 @@
 		const id = pothole.id;
 		const status = pothole.status;
 		fillNotifState = 'unsupported';
-		if (!vapidKey || !('serviceWorker' in navigator) || !('PushManager' in window) || status !== 'reported') return;
+		if (
+			!vapidKey ||
+			!('serviceWorker' in navigator) ||
+			!('PushManager' in window) ||
+			status !== 'reported'
+		)
+			return;
 		let cancelled = false;
 		(async () => {
 			try {
 				if (!untrack(() => swRegistration)) {
-					swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+					swRegistration = await navigator.serviceWorker.register('/sw.js', {
+						scope: '/',
+					});
 				}
 				if (cancelled) return;
 				fillNotifState =
-					Notification.permission === 'denied' ? 'denied'
-					: localStorage.getItem(`fill-notify:${id}`) === '1' ? 'subscribed'
-					: 'unsubscribed';
+					Notification.permission === 'denied'
+						? 'denied'
+						: localStorage.getItem(`fill-notify:${id}`) === '1'
+							? 'subscribed'
+							: 'unsubscribed';
 			} catch {
 				// fillNotifState stays 'unsupported'
 			}
 		})();
-		return () => { cancelled = true; };
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	let submitting = $state(false);
@@ -307,7 +342,7 @@
 	});
 
 	let canUploadPhoto = $derived(
-		(pothole.status === 'pending' || pothole.status === 'reported') && !photoSubmitted
+		(pothole.status === 'pending' || pothole.status === 'reported') && !photoSubmitted,
 	);
 
 	async function handlePhotoSelect(e: Event) {
@@ -375,9 +410,16 @@
 		lightboxTriggerEl = active instanceof HTMLElement ? active : null;
 		lightboxIndex = index;
 	}
-	function closeLightbox() { lightboxIndex = null; }
-	function prevPhoto() { if (lightboxIndex !== null) lightboxIndex = (lightboxIndex - 1 + photos.length) % photos.length; }
-	function nextPhoto() { if (lightboxIndex !== null) lightboxIndex = (lightboxIndex + 1) % photos.length; }
+	function closeLightbox() {
+		lightboxIndex = null;
+	}
+	function prevPhoto() {
+		if (lightboxIndex !== null)
+			lightboxIndex = (lightboxIndex - 1 + photos.length) % photos.length;
+	}
+	function nextPhoto() {
+		if (lightboxIndex !== null) lightboxIndex = (lightboxIndex + 1) % photos.length;
+	}
 
 	$effect(() => {
 		if (lightboxIndex === null) return;
@@ -387,21 +429,36 @@
 		if (!lightboxOpen) lightboxCloseBtn?.focus();
 		lightboxOpen = true;
 		function onKeydown(e: KeyboardEvent) {
-			if (e.key === 'Escape') { closeLightbox(); return; }
-			if (e.key === 'ArrowLeft') { prevPhoto(); return; }
-			if (e.key === 'ArrowRight') { nextPhoto(); return; }
+			if (e.key === 'Escape') {
+				closeLightbox();
+				return;
+			}
+			if (e.key === 'ArrowLeft') {
+				prevPhoto();
+				return;
+			}
+			if (e.key === 'ArrowRight') {
+				nextPhoto();
+				return;
+			}
 			// Trap Tab within the dialog — prevents focus escaping to header/nav.
 			if (e.key === 'Tab' && lightboxDialogEl) {
 				const focusable = Array.from(
-					lightboxDialogEl.querySelectorAll<HTMLElement>('button:not([disabled])')
+					lightboxDialogEl.querySelectorAll<HTMLElement>('button:not([disabled])'),
 				);
 				if (focusable.length === 0) return;
 				const first = focusable[0];
 				const last = focusable[focusable.length - 1];
 				if (e.shiftKey) {
-					if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+					if (document.activeElement === first) {
+						e.preventDefault();
+						last.focus();
+					}
 				} else {
-					if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+					if (document.activeElement === last) {
+						e.preventDefault();
+						first.focus();
+					}
 				}
 			}
 		}
@@ -439,7 +496,7 @@
 			const res = await fetch('/api/filled', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ id: pothole.id })
+				body: JSON.stringify({ id: pothole.id }),
 			});
 			if (!res.ok) throw new Error((await res.json()).message || 'Failed');
 			toast.success('Marked as filled! Accountability works.');
@@ -489,14 +546,15 @@
 			}
 		}
 	}
-
-
 </script>
 
 <svelte:head>
 	<title>Pothole at {pothole.address || 'Unknown location'} — FillTheHole.ca</title>
 	<meta name="description" content={ogDescription} />
-	<meta property="og:title" content="Pothole at {pothole.address || 'Unknown location'} — FillTheHole.ca" />
+	<meta
+		property="og:title"
+		content="Pothole at {pothole.address || 'Unknown location'} — FillTheHole.ca"
+	/>
 	<meta property="og:description" content={ogDescription} />
 	<meta property="og:image" content="{origin}/api/og/{pothole.id}" />
 	<meta property="og:image:width" content="1200" />
@@ -512,7 +570,12 @@
 	<!-- Header -->
 	<div>
 		<div class="flex items-center justify-between mb-3">
-			<a href={pothole.status === 'reported' ? `/?focus=${pothole.id}&lat=${pothole.lat}&lng=${pothole.lng}` : '/'} class="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 text-sm transition-colors">
+			<a
+				href={pothole.status === 'reported'
+					? `/?focus=${pothole.id}&lat=${pothole.lat}&lng=${pothole.lng}`
+					: '/'}
+				class="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 text-sm transition-colors"
+			>
 				<Icon name="arrow-left" size={14} />
 				Back to map
 			</a>
@@ -523,10 +586,14 @@
 					aria-label={watching ? 'Remove from watchlist' : 'Add to watchlist'}
 					class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors
 						{watching
-							? 'bg-amber-50 dark:bg-amber-900/30 border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50'
-							: 'bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-700 dark:hover:text-stone-200'}"
+						? 'bg-amber-50 dark:bg-amber-900/30 border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50'
+						: 'bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-700 dark:hover:text-stone-200'}"
 				>
-					<Icon name={watching ? 'bookmark-filled' : 'bookmark'} size={13} class="shrink-0" />
+					<Icon
+						name={watching ? 'bookmark-filled' : 'bookmark'}
+						size={13}
+						class="shrink-0"
+					/>
 					{watching ? 'Watching' : 'Watch'}
 				</button>
 			{/if}
@@ -540,34 +607,62 @@
 				<span class="font-semibold {info.colorClass}">{info.label}</span>
 			{/if}
 			<span class="text-stone-300 dark:text-stone-600">·</span>
-			<span class="text-stone-500 dark:text-stone-400 text-sm">Reported {fmt(pothole.created_at)}</span>
+			<span class="text-stone-500 dark:text-stone-400 text-sm"
+				>Reported {fmt(pothole.created_at)}</span
+			>
 		</div>
 	</div>
 
 	{#if submitted}
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-5 space-y-3">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-5 space-y-3"
+		>
 			<div class="flex items-start gap-3">
 				<div class="shrink-0 p-2">
 					<Icon name="check-circle" size={18} class="text-amber-500" />
 				</div>
 				<div class="space-y-1.5">
-					<h2 id="submitted-card-heading" class="text-base font-semibold text-stone-900 dark:text-white">Report received</h2>
+					<h2
+						id="submitted-card-heading"
+						class="text-base font-semibold text-stone-900 dark:text-white"
+					>
+						Report received
+					</h2>
 					{#if pothole.status === 'pending'}
 						<p class="text-sm text-stone-600 dark:text-stone-300">
-							Your report is saved and waiting for independent confirmation before it appears on the public map.
+							Your report is saved and waiting for independent confirmation before it
+							appears on the public map.
 						</p>
 						<div class="space-y-1">
-							<div class="h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-labelledby="submitted-card-heading">
-								<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{confirmationProgressPct}%"></div>
+							<div
+								class="h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden"
+								role="progressbar"
+								aria-valuenow={clampedConfirmationCount}
+								aria-valuemin={0}
+								aria-valuemax={confirmationThreshold}
+								aria-labelledby="submitted-card-heading"
+							>
+								<div
+									class="h-full bg-sky-500 rounded-full transition-all"
+									style="width:{confirmationProgressPct}%"
+								></div>
 							</div>
-							<div class="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 tabular-nums">
-								<span>{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</span>
+							<div
+								class="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 tabular-nums"
+							>
+								<span
+									>{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold ===
+									1
+										? ''
+										: 's'}</span
+								>
 								<span>{remainingConfirmations} more needed</span>
 							</div>
 						</div>
 					{:else if pothole.status === 'reported'}
 						<p class="text-sm text-stone-600 dark:text-stone-300">
-							This pothole is now live on the public map. Share the link or report it officially to help it get fixed faster.
+							This pothole is now live on the public map. Share the link or report it
+							officially to help it get fixed faster.
 						</p>
 					{:else}
 						<p class="text-sm text-stone-600 dark:text-stone-300">
@@ -584,7 +679,9 @@
 					class="inline-flex items-center justify-center gap-1.5 rounded-md bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm font-semibold text-stone-600 dark:text-stone-300 transition-colors hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-900 dark:hover:text-white"
 				>
 					<Icon name="external-link" size={13} class="shrink-0" />
-					{officialCityLink ? `File with ${officialCityLink.label}` : 'Official reporting links'}
+					{officialCityLink
+						? `File with ${officialCityLink.label}`
+						: 'Official reporting links'}
 				</a>
 				<button
 					onclick={() => share(pothole.address, pothole.lat, pothole.lng)}
@@ -599,22 +696,44 @@
 
 	<!-- Pending notice -->
 	{#if pothole.status === 'pending'}
-		<div class="bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
-			<p id="pending-notice-heading" class="flex items-center gap-2 text-stone-600 dark:text-stone-300 font-semibold">
+		<div
+			class="bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3"
+		>
+			<p
+				id="pending-notice-heading"
+				class="flex items-center gap-2 text-stone-600 dark:text-stone-300 font-semibold"
+			>
 				<Icon name="clock" size={16} class="text-stone-500 dark:text-stone-400 shrink-0" />
 				Awaiting confirmation
 			</p>
 			<p class="text-stone-500 dark:text-stone-400 text-sm">
-				This pothole needs independent reports from others physically at this location before
-				it appears on the public map.
+				This pothole needs independent reports from others physically at this location
+				before it appears on the public map.
 			</p>
 			<div class="space-y-1.5">
-				<div class="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 tabular-nums">
-					<span>{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold === 1 ? '' : 's'}</span>
+				<div
+					class="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 tabular-nums"
+				>
+					<span
+						>{pothole.confirmed_count} of {confirmationThreshold} confirmation{confirmationThreshold ===
+						1
+							? ''
+							: 's'}</span
+					>
 					<span>{remainingConfirmations} more needed</span>
 				</div>
-				<div class="h-2 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={clampedConfirmationCount} aria-valuemin={0} aria-valuemax={confirmationThreshold} aria-labelledby="pending-notice-heading">
-					<div class="h-full bg-sky-500 rounded-full transition-all" style="width:{confirmationProgressPct}%"></div>
+				<div
+					class="h-2 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden"
+					role="progressbar"
+					aria-valuenow={clampedConfirmationCount}
+					aria-valuemin={0}
+					aria-valuemax={confirmationThreshold}
+					aria-labelledby="pending-notice-heading"
+				>
+					<div
+						class="h-full bg-sky-500 rounded-full transition-all"
+						style="width:{confirmationProgressPct}%"
+					></div>
 				</div>
 			</div>
 		</div>
@@ -622,23 +741,37 @@
 
 	<!-- Status pipeline -->
 	{#if pothole.status !== 'pending' && pothole.status !== 'expired'}
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4"
+		>
 			<div class="flex items-center justify-between text-sm">
-				{#each (['reported', 'filled'] as const) as s (s)}
+				{#each ['reported', 'filled'] as const as s (s)}
 					{@const cfg = STATUS_CONFIG[s]}
 					{@const isCurrent = pothole.status === s}
 					{@const isPast = s === 'reported' || pothole.status === 'filled'}
 					<div class="flex flex-col items-center gap-1.5 flex-1">
-						<div class="transition-colors {isPast ? cfg.colorClass : 'text-stone-300 dark:text-stone-600'}">
+						<div
+							class="transition-colors {isPast
+								? cfg.colorClass
+								: 'text-stone-300 dark:text-stone-600'}"
+						>
 							<Icon name={cfg.icon} size={22} />
 						</div>
-						<span class="text-xs {isCurrent ? 'text-stone-900 dark:text-white font-semibold' : isPast ? 'text-stone-600 dark:text-stone-300' : 'text-stone-400 dark:text-stone-600'}">{cfg.label}</span>
+						<span
+							class="text-xs {isCurrent
+								? 'text-stone-900 dark:text-white font-semibold'
+								: isPast
+									? 'text-stone-600 dark:text-stone-300'
+									: 'text-stone-400 dark:text-stone-600'}">{cfg.label}</span
+						>
 						{#if isCurrent}
 							<div class="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
 						{/if}
 					</div>
 					{#if s !== 'filled'}
-						<div class="flex-1 h-px bg-stone-200 dark:bg-stone-700 self-center mb-6 max-w-12"></div>
+						<div
+							class="flex-1 h-px bg-stone-200 dark:bg-stone-700 self-center mb-6 max-w-12"
+						></div>
 					{/if}
 				{/each}
 			</div>
@@ -647,25 +780,33 @@
 
 	<!-- "I hit this" + "Prioritize" community signals -->
 	{#if pothole.status === 'reported'}
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-4">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-4"
+		>
 			<div class="flex items-center justify-between gap-3">
 				<div class="space-y-0.5">
-					<p class="text-sm font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-1.5">
+					<p
+						class="text-sm font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-1.5"
+					>
 						<Icon name="zap" size={14} class="text-orange-400 shrink-0" />
 						Hit this pothole?
 					</p>
 					<p class="text-xs text-stone-500 dark:text-stone-400">
-						{hitCount === 0 ? 'No hits recorded yet.' : `${hitCount} driver${hitCount === 1 ? '' : 's'} hit this.`}
+						{hitCount === 0
+							? 'No hits recorded yet.'
+							: `${hitCount} driver${hitCount === 1 ? '' : 's'} hit this.`}
 					</p>
 				</div>
 				<button
 					onclick={recordHit}
 					disabled={hitSubmitted || hittingIt}
-					aria-label={hitSubmitted ? 'Hit already recorded' : 'Record that you hit this pothole'}
+					aria-label={hitSubmitted
+						? 'Hit already recorded'
+						: 'Record that you hit this pothole'}
 					class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors
 						{hitSubmitted
-							? 'bg-orange-900/30 border border-orange-800/60 text-orange-400 cursor-default'
-							: 'bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:border-orange-600 hover:text-orange-400'}"
+						? 'bg-orange-900/30 border border-orange-800/60 text-orange-400 cursor-default'
+						: 'bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:border-orange-600 hover:text-orange-400'}"
 				>
 					{#if hittingIt}
 						<Icon name="loader" size={13} class="animate-spin shrink-0" />
@@ -676,44 +817,56 @@
 				</button>
 			</div>
 			{#if pothole.status === 'reported'}
-			<div class="flex items-center justify-between gap-3 pt-4 border-t border-stone-100 dark:border-stone-800">
-				<div class="space-y-0.5">
-					<p class="text-sm font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-1.5">
-						<Icon name="arrow-up" size={14} class="text-amber-500 shrink-0" />
-						Needs attention?
-					</p>
-					<p class="text-xs text-stone-500 dark:text-stone-400">
-						{voteCount === 0 ? 'No votes yet.' : `${voteCount} ${voteCount === 1 ? 'person wants' : 'people want'} this prioritized.`}
-					</p>
-				</div>
-				<button
-					onclick={toggleVote}
-					disabled={voting}
-					aria-pressed={voted}
-					aria-label={voted ? 'Remove your prioritize vote' : 'Prioritize this pothole'}
-					class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors
+				<div
+					class="flex items-center justify-between gap-3 pt-4 border-t border-stone-100 dark:border-stone-800"
+				>
+					<div class="space-y-0.5">
+						<p
+							class="text-sm font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-1.5"
+						>
+							<Icon name="arrow-up" size={14} class="text-amber-500 shrink-0" />
+							Needs attention?
+						</p>
+						<p class="text-xs text-stone-500 dark:text-stone-400">
+							{voteCount === 0
+								? 'No votes yet.'
+								: `${voteCount} ${voteCount === 1 ? 'person wants' : 'people want'} this prioritized.`}
+						</p>
+					</div>
+					<button
+						onclick={toggleVote}
+						disabled={voting}
+						aria-pressed={voted}
+						aria-label={voted
+							? 'Remove your prioritize vote'
+							: 'Prioritize this pothole'}
+						class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors
 						{voted
 							? 'bg-amber-50 dark:bg-amber-900/30 border border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50'
 							: 'bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:border-amber-500 hover:text-amber-500'}"
-				>
-					{#if voting}
-						<Icon name="loader" size={13} class="animate-spin shrink-0" />
-					{:else}
-						<Icon name="arrow-up" size={13} class="shrink-0" />
-					{/if}
-					Prioritize · {voteCount}
-				</button>
-			</div>
+					>
+						{#if voting}
+							<Icon name="loader" size={13} class="animate-spin shrink-0" />
+						{:else}
+							<Icon name="arrow-up" size={13} class="shrink-0" />
+						{/if}
+						Prioritize · {voteCount}
+					</button>
+				</div>
 			{/if}
 		</div>
 	{/if}
 
 	<!-- Fill notification -->
 	{#if pothole.status === 'reported' && fillNotifState !== 'unsupported'}
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4"
+		>
 			<div class="flex items-center justify-between gap-3">
 				<div class="space-y-0.5">
-					<p class="text-sm font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-1.5">
+					<p
+						class="text-sm font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-1.5"
+					>
 						<Icon name="bell" size={14} class="text-amber-500 shrink-0" />
 						Get notified when filled
 					</p>
@@ -746,12 +899,16 @@
 						Subscribed
 					</button>
 				{:else if fillNotifState === 'pending'}
-					<span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-sm text-stone-500 dark:text-stone-400">
+					<span
+						class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-sm text-stone-500 dark:text-stone-400"
+					>
 						<Icon name="loader" size={13} class="animate-spin shrink-0" />
 						…
 					</span>
 				{:else if fillNotifState === 'denied'}
-					<span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-sm text-stone-400 dark:text-stone-600 cursor-not-allowed">
+					<span
+						class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-sm text-stone-400 dark:text-stone-600 cursor-not-allowed"
+					>
 						<Icon name="bell-off" size={13} class="shrink-0" />
 						Blocked
 					</span>
@@ -763,8 +920,12 @@
 	<!-- Repeat pothole notice -->
 	{#if nearbyFilled.length > 0}
 		{@const mostRecent = nearbyFilled[0]}
-		<div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-md p-4 space-y-1.5">
-			<div class="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
+		<div
+			class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-md p-4 space-y-1.5"
+		>
+			<div
+				class="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400"
+			>
 				<Icon name="alert-triangle" size={14} class="shrink-0" />
 				Recurring road issue
 			</div>
@@ -773,23 +934,32 @@
 				{#if mostRecent.address}
 					at <span class="text-stone-600 dark:text-stone-300">{mostRecent.address}</span>
 				{/if}
-				was previously filled on <span class="text-stone-600 dark:text-stone-300">{format(new Date(mostRecent.filled_at), 'MMM d, yyyy')}</span>
+				was previously filled on
+				<span class="text-stone-600 dark:text-stone-300"
+					>{format(new Date(mostRecent.filled_at), 'MMM d, yyyy')}</span
+				>
 				— this location may need a permanent repair.
 			</p>
 			<p class="text-xs text-stone-400 dark:text-stone-600">
-				{nearbyFilled.length === 1 ? '1 prior fill' : `${nearbyFilled.length} prior fills`} recorded within 110 m of this spot.
+				{nearbyFilled.length === 1 ? '1 prior fill' : `${nearbyFilled.length} prior fills`} recorded
+				within 110 m of this spot.
 			</p>
 		</div>
 	{/if}
 
 	{#if pothole.status !== 'filled'}
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3"
+		>
+			<div
+				class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300"
+			>
 				<Icon name="flag" size={14} class="text-amber-500 shrink-0" />
 				Report it officially too
 			</div>
 			<p class="text-stone-600 dark:text-stone-300 text-sm">
-				This page creates public visibility. Reporting it to the road owner through official channels can help start their repair or claims process.
+				This page creates public visibility. Reporting it to the road owner through official
+				channels can help start their repair or claims process.
 			</p>
 			<div class="grid gap-2 sm:grid-cols-2">
 				{#if officialCityLink}
@@ -813,9 +983,12 @@
 					Submit a claim — {REGION_REPORT_LINK.label}
 				</a>
 			</div>
-			<div class="rounded-md bg-stone-100 dark:bg-stone-800 p-3 text-xs text-stone-600 dark:text-stone-300 leading-relaxed space-y-1.5">
+			<div
+				class="rounded-md bg-stone-100 dark:bg-stone-800 p-3 text-xs text-stone-600 dark:text-stone-300 leading-relaxed space-y-1.5"
+			>
 				<p>
-					Local residential streets usually belong to the city. Major roads like King, Weber, Victoria, and Erb are often Regional roads.
+					Local residential streets usually belong to the city. Major roads like King,
+					Weber, Victoria, and Erb are often Regional roads.
 				</p>
 				<p>
 					Highways 401, 7/8, and 85 are provincial roads.
@@ -845,20 +1018,30 @@
 				alt="Pothole at {pothole.address || 'this location'}"
 				class="w-full object-cover aspect-video"
 				loading="lazy"
-				onerror={(e) => { const img = e.currentTarget as HTMLImageElement; img.onerror = null; img.src = photo.url; }}
+				onerror={(e) => {
+					const img = e.currentTarget as HTMLImageElement;
+					img.onerror = null;
+					img.src = photo.url;
+				}}
 			/>
 		</button>
 	{/snippet}
 	{#if photos.length > 0}
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3"
+		>
+			<div
+				class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300"
+			>
 				<Icon name="camera" size={14} class="text-amber-500 shrink-0" />
 				{photos.length === 1 ? 'Photo' : 'Photos'}
 			</div>
 			{#if showBeforeAfter}
 				<div class="grid gap-4 sm:grid-cols-2">
 					<div>
-						<h3 class="section-title text-sm text-stone-500 dark:text-stone-400 mb-2">Before</h3>
+						<h3 class="section-title text-sm text-stone-500 dark:text-stone-400 mb-2">
+							Before
+						</h3>
 						<div class="grid grid-cols-2 gap-2">
 							{#each photoSplit.before as photo (photo.id)}
 								{@render thumb(photo)}
@@ -866,7 +1049,9 @@
 						</div>
 					</div>
 					<div>
-						<h3 class="section-title text-sm text-stone-500 dark:text-stone-400 mb-2">After</h3>
+						<h3 class="section-title text-sm text-stone-500 dark:text-stone-400 mb-2">
+							After
+						</h3>
 						<div class="grid grid-cols-2 gap-2">
 							{#each photoSplit.after as photo (photo.id)}
 								{@render thumb(photo)}
@@ -883,14 +1068,22 @@
 			{/if}
 		</div>
 	{:else if canUploadPhoto}
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3"
+		>
+			<div
+				class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300"
+			>
 				<Icon name="camera" size={14} class="text-amber-500 shrink-0" />
 				Photo
 			</div>
 			{#if photoPreview}
 				<div class="relative">
-					<img src={photoPreview} alt="Selected pothole preview" class="w-full rounded-md object-cover aspect-video" />
+					<img
+						src={photoPreview}
+						alt="Selected pothole preview"
+						class="w-full rounded-md object-cover aspect-video"
+					/>
 					<button
 						type="button"
 						onclick={clearPhoto}
@@ -933,20 +1126,31 @@
 				aria-label="Upload a pothole photo"
 				onchange={handlePhotoSelect}
 			/>
-			<p class="text-xs text-stone-500 dark:text-stone-400">Photos are reviewed before appearing publicly. Only snap one if you're safely off the road.</p>
+			<p class="text-xs text-stone-500 dark:text-stone-400">
+				Photos are reviewed before appearing publicly. Only snap one if you're safely off
+				the road.
+			</p>
 		</div>
 	{/if}
 
 	<!-- After-photo prompt -->
 	{#if promptAfterPhoto && pothole.status === 'filled'}
-		<div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-md p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400">
+		<div
+			class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-md p-4 space-y-3"
+		>
+			<div
+				class="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400"
+			>
 				<Icon name="camera" size={14} class="shrink-0" />
 				Show it's fixed — add an "after" photo
 			</div>
 			{#if photoPreview}
 				<div class="relative">
-					<img src={photoPreview} alt="Selected pothole preview" class="w-full rounded-md object-cover aspect-video" />
+					<img
+						src={photoPreview}
+						alt="Selected pothole preview"
+						class="w-full rounded-md object-cover aspect-video"
+					/>
 					<button
 						type="button"
 						onclick={clearPhoto}
@@ -990,7 +1194,9 @@
 				onchange={handlePhotoSelect}
 			/>
 			<div class="flex items-center justify-between gap-3">
-				<p class="text-xs text-amber-700/80 dark:text-amber-400/80">Photos are reviewed before appearing publicly.</p>
+				<p class="text-xs text-amber-700/80 dark:text-amber-400/80">
+					Photos are reviewed before appearing publicly.
+				</p>
 				<button
 					type="button"
 					onclick={() => (promptAfterPhoto = false)}
@@ -1004,12 +1210,18 @@
 
 	<!-- Info -->
 	{#if pothole.description || pothole.filled_at}
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-2 text-sm">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-2 text-sm"
+		>
 			{#if pothole.description}
 				<p class="text-stone-600 dark:text-stone-300 italic">"{pothole.description}"</p>
 			{/if}
 			{#if pothole.filled_at}
-				<p class="text-stone-500 dark:text-stone-400">Filled on <span class="text-stone-700 dark:text-stone-200">{fmt(pothole.filled_at)}</span></p>
+				<p class="text-stone-500 dark:text-stone-400">
+					Filled on <span class="text-stone-700 dark:text-stone-200"
+						>{fmt(pothole.filled_at)}</span
+					>
+				</p>
 			{/if}
 		</div>
 	{/if}
@@ -1025,17 +1237,24 @@
 				Mark as filled
 			</button>
 		{:else}
-			<div class="bg-white dark:bg-stone-900 border border-green-600 dark:border-green-800 rounded-md p-4 space-y-3">
-				<h3 class="flex items-center gap-2 font-semibold text-green-600 dark:text-green-400">
+			<div
+				class="bg-white dark:bg-stone-900 border border-green-600 dark:border-green-800 rounded-md p-4 space-y-3"
+			>
+				<h3
+					class="flex items-center gap-2 font-semibold text-green-600 dark:text-green-400"
+				>
 					<Icon name="check-circle" size={15} class="shrink-0" />
 					It's been filled!
 				</h3>
-				<p class="text-stone-600 dark:text-stone-300 text-sm">Confirm the city has patched this one up.</p>
+				<p class="text-stone-600 dark:text-stone-300 text-sm">
+					Confirm the city has patched this one up.
+				</p>
 				<div class="flex gap-2">
 					<button
 						onclick={() => (showFilledForm = false)}
 						class="flex-1 py-2 border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-300 rounded-md text-sm hover:border-stone-400 dark:hover:border-stone-500 transition-colors"
-					>Cancel</button>
+						>Cancel</button
+					>
 					<button
 						onclick={markFilled}
 						disabled={submitting}
@@ -1055,18 +1274,26 @@
 	{/if}
 
 	{#if pothole.status === 'filled'}
-		<div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/60 rounded-md p-5 text-center">
+		<div
+			class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/60 rounded-md p-5 text-center"
+		>
 			<div class="flex justify-center mb-3">
 				<Icon name="check-circle" size={36} class="text-green-500 dark:text-green-400" />
 			</div>
-			<p class="text-green-700 dark:text-green-300 font-semibold">This pothole has been filled!</p>
-			<p class="text-stone-600 dark:text-stone-300 text-sm mt-1">The city responded. Accountability worked.</p>
+			<p class="text-green-700 dark:text-green-300 font-semibold">
+				This pothole has been filled!
+			</p>
+			<p class="text-stone-600 dark:text-stone-300 text-sm mt-1">
+				The city responded. Accountability worked.
+			</p>
 		</div>
 	{/if}
 
 	<!-- Expired state -->
 	{#if pothole.status === 'expired'}
-		<div class="bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md p-4 text-center space-y-1">
+		<div
+			class="bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md p-4 text-center space-y-1"
+		>
 			<div class="flex justify-center mb-2">
 				<Icon name="clock" size={36} class="text-stone-400 dark:text-stone-500" />
 			</div>
@@ -1082,30 +1309,50 @@
 		{@const days = daysSince(pothole.created_at)}
 		{#if days !== null && days > 0}
 			<p class="text-center text-stone-500 dark:text-stone-400 text-sm">
-				Reported <span class="text-orange-500 dark:text-orange-400 font-semibold tabular-nums">{days} day{days === 1 ? '' : 's'} ago</span> — still unfilled.
+				Reported <span
+					class="text-orange-500 dark:text-orange-400 font-semibold tabular-nums"
+					>{days} day{days === 1 ? '' : 's'} ago</span
+				> — still unfilled.
 			</p>
 		{/if}
 	{/if}
 
 	<!-- City repair requests (Kitchener CCC data) -->
 	{#if cityRepairRequests.length > 0}
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3"
+		>
+			<div
+				class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300"
+			>
 				<Icon name="flag" size={14} class="text-amber-500 shrink-0" />
 				City repair {cityRepairRequests.length === 1 ? 'request' : 'requests'} on file
 			</div>
 			<p class="text-stone-600 dark:text-stone-300 text-sm">
 				The City of Kitchener's Corporate Contact Centre has
-				<span class="text-stone-900 dark:text-white font-semibold">{cityRepairRequests.length} official pothole repair {cityRepairRequests.length === 1 ? 'request' : 'requests'}</span>
+				<span class="text-stone-900 dark:text-white font-semibold"
+					>{cityRepairRequests.length} official pothole repair {cityRepairRequests.length ===
+					1
+						? 'request'
+						: 'requests'}</span
+				>
 				logged within 200 m of this location.
 			</p>
 			<ul class="space-y-1.5">
 				{#each cityRepairRequests as req (req.date + req.intersection)}
 					<li class="flex items-start gap-2 text-xs text-stone-600 dark:text-stone-300">
-						<Icon name="clock" size={12} class="text-stone-400 dark:text-stone-600 shrink-0 mt-0.5" />
+						<Icon
+							name="clock"
+							size={12}
+							class="text-stone-400 dark:text-stone-600 shrink-0 mt-0.5"
+						/>
 						<span>
-							<span class="text-stone-600 dark:text-stone-300">{req.intersection}</span>
-							<span class="text-stone-400 dark:text-stone-600 ml-1.5 tabular-nums">{fmt(req.date)}</span>
+							<span class="text-stone-600 dark:text-stone-300"
+								>{req.intersection}</span
+							>
+							<span class="text-stone-400 dark:text-stone-600 ml-1.5 tabular-nums"
+								>{fmt(req.date)}</span
+							>
 						</span>
 					</li>
 				{/each}
@@ -1115,13 +1362,18 @@
 
 	<!-- Councillor contact -->
 	{#if councillor && pothole.status !== 'filled'}
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3"
+		>
+			<div
+				class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300"
+			>
 				<Icon name="mail" size={14} class="text-amber-500 shrink-0" />
 				Contact your councillor
 			</div>
 			<p class="text-stone-600 dark:text-stone-300 text-sm">
-				{councillor.city.charAt(0).toUpperCase() + councillor.city.slice(1)}, Ward {councillor.ward} — <span class="text-stone-900 dark:text-white">{councillor.name}</span>
+				{councillor.city.charAt(0).toUpperCase() + councillor.city.slice(1)}, Ward {councillor.ward}
+				— <span class="text-stone-900 dark:text-white">{councillor.name}</span>
 			</p>
 			<div class="flex flex-wrap gap-2">
 				<a
@@ -1145,8 +1397,12 @@
 	{/if}
 
 	<!-- Links -->
-	<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
-		<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+	<div
+		class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3"
+	>
+		<div
+			class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-300"
+		>
 			<Icon name="share-2" size={14} class="text-stone-500 dark:text-stone-400 shrink-0" />
 			Share & links
 		</div>
@@ -1181,12 +1437,17 @@
 		aria-label="Photo viewer"
 		tabindex="-1"
 		onclick={closeLightbox}
-		onkeydown={(e) => { if (e.key === 'Escape') closeLightbox(); }}
+		onkeydown={(e) => {
+			if (e.key === 'Escape') closeLightbox();
+		}}
 	>
 		<!-- Close -->
 		<button
 			bind:this={lightboxCloseBtn}
-			onclick={(e) => { e.stopPropagation(); closeLightbox(); }}
+			onclick={(e) => {
+				e.stopPropagation();
+				closeLightbox();
+			}}
 			aria-label="Close photo viewer"
 			class="absolute top-4 right-4 p-2 rounded-md bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
 		>
@@ -1196,7 +1457,10 @@
 		<!-- Prev -->
 		{#if photos.length > 1}
 			<button
-				onclick={(e) => { e.stopPropagation(); prevPhoto(); }}
+				onclick={(e) => {
+					e.stopPropagation();
+					prevPhoto();
+				}}
 				aria-label="Previous photo"
 				class="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-md bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
 			>
@@ -1205,12 +1469,17 @@
 		{/if}
 
 		<!-- Image — render current + ±1 adjacent so prev/next navigate instantly -->
-		<div role="presentation" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+		<div
+			role="presentation"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+		>
 			{#each photos as photo, i (photo.id)}
 				{#if Math.abs(i - lightboxIndex) <= 1}
 					<img
 						src={photo.url}
-						alt="Pothole at {pothole.address || 'this location'} — photo {i + 1} of {photos.length}"
+						alt="Pothole at {pothole.address || 'this location'} — photo {i +
+							1} of {photos.length}"
 						class="max-w-full max-h-[90vh] object-contain rounded-md shadow-2xl"
 						class:hidden={i !== lightboxIndex}
 						aria-hidden={i !== lightboxIndex}
@@ -1222,7 +1491,10 @@
 		<!-- Next -->
 		{#if photos.length > 1}
 			<button
-				onclick={(e) => { e.stopPropagation(); nextPhoto(); }}
+				onclick={(e) => {
+					e.stopPropagation();
+					nextPhoto();
+				}}
 				aria-label="Next photo"
 				class="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-md bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
 			>
@@ -1240,7 +1512,9 @@
 					<button
 						onclick={() => (lightboxIndex = i)}
 						aria-label="Go to photo {i + 1}"
-						class="w-1.5 h-1.5 rounded-full transition-colors {i === lightboxIndex ? 'bg-white' : 'bg-white/30 hover:bg-white/60'}"
+						class="w-1.5 h-1.5 rounded-full transition-colors {i === lightboxIndex
+							? 'bg-white'
+							: 'bg-white/30 hover:bg-white/60'}"
 					></button>
 				{/each}
 			</div>

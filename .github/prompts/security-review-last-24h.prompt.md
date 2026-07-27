@@ -52,13 +52,13 @@ Create `docs/code-review/YYYY-MM-DD-security-review-last-24h.md` (using today's 
 1. Executive summary (2-4 bullets)
 2. Findings by severity: Critical, High, Medium, Low
 3. For each finding include:
-   - Rule ID
-   - Severity
-   - Location (file + line numbers)
-   - Evidence (code snippet)
-   - Impact
-   - Exploit path (how an attacker would trigger it)
-   - Minimal fix recommendation
+    - Rule ID
+    - Severity
+    - Location (file + line numbers)
+    - Evidence (code snippet)
+    - Impact
+    - Exploit path (how an attacker would trigger it)
+    - Minimal fix recommendation
 4. A "No finding" section for controls reviewed and found acceptable
 5. A short "Suggested tests to add" section (security regression tests only)
 

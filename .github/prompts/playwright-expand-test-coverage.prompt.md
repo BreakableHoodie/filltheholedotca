@@ -1,22 +1,22 @@
 ---
 agent: agent
-description: "Expand Playwright test coverage for fillthehole.ca — pothole detail page, geofence rejection, status transitions, homepage intro card, and map smoke test"
+description: 'Expand Playwright test coverage for fillthehole.ca — pothole detail page, geofence rejection, status transitions, homepage intro card, and map smoke test'
 tools:
-  [
-    "changes",
-    "codebase",
-    "edit/editFiles",
-    "fetch",
-    "problems",
-    "runCommands",
-    "runTasks",
-    "runTests",
-    "search",
-    "searchResults",
-    "terminalLastCommand",
-    "terminalSelection",
-    "testFailure",
-  ]
+    [
+        'changes',
+        'codebase',
+        'edit/editFiles',
+        'fetch',
+        'problems',
+        'runCommands',
+        'runTasks',
+        'runTests',
+        'search',
+        'searchResults',
+        'terminalLastCommand',
+        'terminalSelection',
+        'testFailure',
+    ]
 ---
 
 Expand the Playwright test suite for fillthehole.ca.
@@ -33,30 +33,30 @@ Expand the Playwright test suite for fillthehole.ca.
 **Gaps to fill — in priority order:**
 
 1. **Pothole detail page** (`/hole/[id]`)
-   - Loads with a valid ID (fetch a real one from `/api/feed.json` first)
-   - Displays status badge, coordinates, description
-   - Shows councillor contact block (ward name, email link)
-   - "Confirm this hole" button is present when status is `reported`
-   - Share button/link is present
+    - Loads with a valid ID (fetch a real one from `/api/feed.json` first)
+    - Displays status badge, coordinates, description
+    - Shows councillor contact block (ward name, email link)
+    - "Confirm this hole" button is present when status is `reported`
+    - Share button/link is present
 
 2. **Geofence rejection**
-   - POST to `/api/report` with coordinates outside Waterloo Region (e.g. lat: 43.7, lng: -79.4 — Toronto)
-   - Expects a 422 or 400 response with a rejection message
-   - POST with coordinates just inside the boundary — expects 200
+    - POST to `/api/report` with coordinates outside Waterloo Region (e.g. lat: 43.7, lng: -79.4 — Toronto)
+    - Expects a 422 or 400 response with a rejection message
+    - POST with coordinates just inside the boundary — expects 200
 
 3. **Filled API flows**
-   - POST to `/api/filled` with a valid pothole ID (mock the DB response) — expects 200
-   - POST with a missing or malformed ID — expects 400 or 422
+    - POST to `/api/filled` with a valid pothole ID (mock the DB response) — expects 200
+    - POST with a missing or malformed ID — expects 400 or 422
 
 4. **Homepage intro first-visit behaviour**
-   - Visit `/` with no `fth-home-intro-dismissed` key in localStorage
-   - Intro card is visible on `/` only and does not block navigation
-   - Clicking `Report a pothole` or the dismiss button hides it and sets the localStorage key
-   - Subsequent home visit (key present) — intro does not appear
+    - Visit `/` with no `fth-home-intro-dismissed` key in localStorage
+    - Intro card is visible on `/` only and does not block navigation
+    - Clicking `Report a pothole` or the dismiss button hides it and sets the localStorage key
+    - Subsequent home visit (key present) — intro does not appear
 
 5. **Map page smoke test**
-   - Map container renders (the Leaflet div is present and has non-zero dimensions)
-   - "Locate me" button is present in the UI
+    - Map container renders (the Leaflet div is present and has non-zero dimensions)
+    - "Locate me" button is present in the UI
 
 **Conventions in this codebase:**
 

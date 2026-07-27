@@ -54,7 +54,7 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 			try {
 				await webpush.sendNotification(
 					{ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-					message
+					message,
 				);
 			} catch (err: unknown) {
 				const status = (err as { statusCode?: number }).statusCode;
@@ -62,16 +62,26 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
 					expired.push(sub.endpoint); // Subscription has expired or been unsubscribed
 				} else {
 					// Log endpoint origin only — the full URL is a device identifier.
-					const origin = (() => { try { return new URL(sub.endpoint).origin; } catch { return 'unknown'; } })();
+					const origin = (() => {
+						try {
+							return new URL(sub.endpoint).origin;
+						} catch {
+							return 'unknown';
+						}
+					})();
 					logError('webpush', 'send failed', err, { status, endpointOrigin: origin });
 				}
 			}
-		})
+		}),
 	);
 
 	if (expired.length > 0) {
-		const { error: deleteError } = await db.from('push_subscriptions').delete().in('endpoint', expired);
-		if (deleteError) logError('webpush', 'failed to remove expired push subscriptions', deleteError);
+		const { error: deleteError } = await db
+			.from('push_subscriptions')
+			.delete()
+			.in('endpoint', expired);
+		if (deleteError)
+			logError('webpush', 'failed to remove expired push subscriptions', deleteError);
 	}
 }
 
@@ -80,7 +90,10 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
  * One-shot: subscriptions are consumed on send regardless of delivery outcome.
  * Fire-and-forget safe: logs errors but does not throw.
  */
-export async function notifyFillSubscribers(potholeId: string, address: string | null): Promise<void> {
+export async function notifyFillSubscribers(
+	potholeId: string,
+	address: string | null,
+): Promise<void> {
 	init();
 	if (!initialized) return;
 
@@ -96,11 +109,13 @@ export async function notifyFillSubscribers(potholeId: string, address: string |
 	}
 	if (!subscriptions?.length) return;
 
-	const body = address ? `${address} was marked as fixed.` : 'A pothole you were watching was marked as fixed.';
+	const body = address
+		? `${address} was marked as fixed.`
+		: 'A pothole you were watching was marked as fixed.';
 	const message = JSON.stringify({
 		title: '✅ Pothole filled!',
 		body,
-		url: `/hole/${potholeId}`
+		url: `/hole/${potholeId}`,
 	});
 
 	await Promise.allSettled(
@@ -109,16 +124,25 @@ export async function notifyFillSubscribers(potholeId: string, address: string |
 			try {
 				await webpush.sendNotification(
 					{ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-					message
+					message,
 				);
 			} catch (err: unknown) {
 				const status = (err as { statusCode?: number }).statusCode;
 				if (status !== 410 && status !== 404) {
-					const origin = (() => { try { return new URL(sub.endpoint).origin; } catch { return 'unknown'; } })();
-					logError('webpush/fill', 'send failed', err, { status, endpointOrigin: origin });
+					const origin = (() => {
+						try {
+							return new URL(sub.endpoint).origin;
+						} catch {
+							return 'unknown';
+						}
+					})();
+					logError('webpush/fill', 'send failed', err, {
+						status,
+						endpointOrigin: origin,
+					});
 				}
 			}
-		})
+		}),
 	);
 
 	// Delete all subscriptions for this pothole — one-shot regardless of send outcome.
@@ -126,7 +150,10 @@ export async function notifyFillSubscribers(potholeId: string, address: string |
 		.from('pothole_fill_subscriptions')
 		.delete()
 		.eq('pothole_id', potholeId);
-	if (deleteError) logError('webpush/fill', 'failed to delete fill subscriptions after send', deleteError, { potholeId });
+	if (deleteError)
+		logError('webpush/fill', 'failed to delete fill subscriptions after send', deleteError, {
+			potholeId,
+		});
 }
 
 /**
@@ -140,7 +167,7 @@ export async function notifyFillSubscribers(potholeId: string, address: string |
 export async function notifyWardSubscribers(
 	wardKey: string,
 	potholeId: string,
-	address: string | null
+	address: string | null,
 ): Promise<void> {
 	init();
 	if (!initialized) return;
@@ -157,7 +184,7 @@ export async function notifyWardSubscribers(
 	const message = JSON.stringify({
 		title: 'New pothole reported',
 		body: `A new pothole was reported near ${address ?? 'your ward'}.`,
-		url: `/hole/${potholeId}`
+		url: `/hole/${potholeId}`,
 	});
 
 	const expired: string[] = [];
@@ -171,7 +198,7 @@ export async function notifyWardSubscribers(
 			try {
 				await webpush.sendNotification(
 					{ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-					message
+					message,
 				);
 			} catch (err: unknown) {
 				const status = (err as { statusCode?: number }).statusCode;
@@ -179,11 +206,20 @@ export async function notifyWardSubscribers(
 					expired.push(sub.endpoint); // Subscription has expired or been unsubscribed
 				} else {
 					// Log endpoint origin only — the full URL is a device identifier.
-					const origin = (() => { try { return new URL(sub.endpoint).origin; } catch { return 'unknown'; } })();
-					logError('webpush/ward', 'send failed', err, { status, endpointOrigin: origin });
+					const origin = (() => {
+						try {
+							return new URL(sub.endpoint).origin;
+						} catch {
+							return 'unknown';
+						}
+					})();
+					logError('webpush/ward', 'send failed', err, {
+						status,
+						endpointOrigin: origin,
+					});
 				}
 			}
-		})
+		}),
 	);
 
 	if (expired.length > 0) {
@@ -193,7 +229,9 @@ export async function notifyWardSubscribers(
 			.in('endpoint', expired)
 			.eq('ward_key', wardKey);
 		if (deleteError) {
-			logError('webpush/ward', 'failed to remove expired ward subscriptions', deleteError, { wardKey });
+			logError('webpush/ward', 'failed to remove expired ward subscriptions', deleteError, {
+				wardKey,
+			});
 		}
 	}
 }

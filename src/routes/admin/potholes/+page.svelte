@@ -34,20 +34,24 @@
 		Object.fromEntries(
 			data.potholes.map((p) => [
 				p.id,
-				p.id in localOverrides ? localOverrides[p.id] : (p.photos_published ?? false)
-			])
-		)
+				p.id in localOverrides ? localOverrides[p.id] : (p.photos_published ?? false),
+			]),
+		),
 	);
 
 	async function togglePhotosPublished(id: string) {
 		const next = !photosPublished[id];
 		localOverrides[id] = next;
-		const csrfToken = document.cookie.split('; ').find((c) => c.startsWith('admin_csrf='))?.split('=')[1] ?? '';
+		const csrfToken =
+			document.cookie
+				.split('; ')
+				.find((c) => c.startsWith('admin_csrf='))
+				?.split('=')[1] ?? '';
 		try {
 			const res = await fetch(`/api/admin/pothole/${id}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
-				body: JSON.stringify({ photos_published: next })
+				body: JSON.stringify({ photos_published: next }),
 			});
 			if (!res.ok) {
 				localOverrides[id] = !next;
@@ -68,17 +72,32 @@
 			// Inject selected IDs into whichever form was submitted
 			selected.forEach((id) => formData.append('ids', id));
 
-			return async ({ result, update }: { result: import('@sveltejs/kit').ActionResult; update: (opts?: { reset?: boolean }) => Promise<void> }) => {
+			return async ({
+				result,
+				update,
+			}: {
+				result: import('@sveltejs/kit').ActionResult;
+				update: (opts?: { reset?: boolean }) => Promise<void>;
+			}) => {
 				await update({ reset: false });
 				selected.clear();
 				localOverrides = {};
 
 				if (result.type === 'success' && result.data) {
-					const d = result.data as { action: string; count: number; status?: string; published?: boolean };
-					if (d.action === 'delete') toast.success(`Deleted ${d.count} pothole${d.count !== 1 ? 's' : ''}`);
-					else if (d.action === 'status') toast.success(`Set ${d.count} to "${d.status}"`);
+					const d = result.data as {
+						action: string;
+						count: number;
+						status?: string;
+						published?: boolean;
+					};
+					if (d.action === 'delete')
+						toast.success(`Deleted ${d.count} pothole${d.count !== 1 ? 's' : ''}`);
+					else if (d.action === 'status')
+						toast.success(`Set ${d.count} to "${d.status}"`);
 					else if (d.action === 'photos')
-						toast.success(`Photos ${d.published ? 'published' : 'hidden'} for ${d.count} pothole${d.count !== 1 ? 's' : ''}`);
+						toast.success(
+							`Photos ${d.published ? 'published' : 'hidden'} for ${d.count} pothole${d.count !== 1 ? 's' : ''}`,
+						);
 				} else if (result.type === 'failure') {
 					toast.error((result.data as { error?: string })?.error ?? 'Action failed');
 				}
@@ -92,12 +111,13 @@
 		const current: Record<string, string | null> = {
 			status: data.filterStatus,
 			search: data.search,
-			photosPublished: data.filterPhotosPublished === null ? null : String(data.filterPhotosPublished),
+			photosPublished:
+				data.filterPhotosPublished === null ? null : String(data.filterPhotosPublished),
 			dateFrom: data.dateFrom,
 			dateTo: data.dateTo,
 			sort: data.sort,
 			dir: data.dir,
-			pageSize: String(data.pageSize)
+			pageSize: String(data.pageSize),
 		};
 		const merged = { ...current, ...overrides };
 		for (const [k, v] of Object.entries(merged)) {
@@ -135,10 +155,14 @@
 	// ── Misc helpers ──────────────────────────────────────────────────────────
 	function statusColor(status: string): string {
 		switch (status) {
-			case 'reported': return 'text-sky-400 bg-sky-500/10';
-			case 'filled':   return 'text-emerald-400 bg-emerald-500/10';
-			case 'expired':  return 'text-amber-400 bg-amber-500/10';
-			default:         return 'text-stone-400 bg-stone-700/50';
+			case 'reported':
+				return 'text-sky-400 bg-sky-500/10';
+			case 'filled':
+				return 'text-emerald-400 bg-emerald-500/10';
+			case 'expired':
+				return 'text-amber-400 bg-amber-500/10';
+			default:
+				return 'text-stone-400 bg-stone-700/50';
 		}
 	}
 
@@ -149,9 +173,11 @@
 	// Filter form local values (bound to hidden inputs for submission)
 	let filterSearch = $state(untrack(() => data.search ?? ''));
 	let filterStatus = $state(untrack(() => data.filterStatus ?? ''));
-	let filterPhotos = $state(untrack(() =>
-		data.filterPhotosPublished === null ? '' : String(data.filterPhotosPublished)
-	));
+	let filterPhotos = $state(
+		untrack(() =>
+			data.filterPhotosPublished === null ? '' : String(data.filterPhotosPublished),
+		),
+	);
 	let filterDateFrom = $state(untrack(() => data.dateFrom ?? ''));
 	let filterDateTo = $state(untrack(() => data.dateTo ?? ''));
 </script>
@@ -164,10 +190,22 @@
 <form id="bulk-main" method="post" use:enhance={makeBulkEnhance()} hidden>
 	<input type="hidden" name="status" value={bulkStatus} />
 </form>
-<form id="bulk-pub" method="post" action="?/bulkTogglePhotos" use:enhance={makeBulkEnhance()} hidden>
+<form
+	id="bulk-pub"
+	method="post"
+	action="?/bulkTogglePhotos"
+	use:enhance={makeBulkEnhance()}
+	hidden
+>
 	<input type="hidden" name="photos_published" value="true" />
 </form>
-<form id="bulk-unpub" method="post" action="?/bulkTogglePhotos" use:enhance={makeBulkEnhance()} hidden>
+<form
+	id="bulk-unpub"
+	method="post"
+	action="?/bulkTogglePhotos"
+	use:enhance={makeBulkEnhance()}
+	hidden
+>
 	<input type="hidden" name="photos_published" value="false" />
 </form>
 
@@ -178,7 +216,11 @@
 			<h1 class="text-xl font-semibold text-stone-100">Potholes</h1>
 			<p class="text-stone-500 text-sm mt-0.5">
 				{data.total} pothole{data.total !== 1 ? 's' : ''}
-				{data.filterStatus ? `with status "${data.filterStatus}"` : data.search ? `matching "${data.search}"` : 'total'}
+				{data.filterStatus
+					? `with status "${data.filterStatus}"`
+					: data.search
+						? `matching "${data.search}"`
+						: 'total'}
 			</p>
 		</div>
 		<div class="flex items-center gap-2">
@@ -188,7 +230,12 @@
 				title={someSelected ? `Export ${selected.size} selected` : 'Export current filters'}
 			>
 				<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+					/>
 				</svg>
 				CSV
 			</a>
@@ -198,7 +245,12 @@
 				title={someSelected ? `Export ${selected.size} selected` : 'Export current filters'}
 			>
 				<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+					/>
 				</svg>
 				JSON
 			</a>
@@ -287,8 +339,12 @@
 
 	<!-- Bulk toolbar (sticky, appears when items selected) -->
 	{#if someSelected}
-		<div class="sticky top-0 z-10 flex flex-wrap items-center gap-3 px-4 py-3 bg-stone-900 border border-stone-700 rounded-lg shadow-lg">
-			<span class="text-sm text-stone-300 font-medium tabular-nums">{selected.size} selected</span>
+		<div
+			class="sticky top-0 z-10 flex flex-wrap items-center gap-3 px-4 py-3 bg-stone-900 border border-stone-700 rounded-lg shadow-lg"
+		>
+			<span class="text-sm text-stone-300 font-medium tabular-nums"
+				>{selected.size} selected</span
+			>
 			<div class="w-px h-4 bg-stone-700"></div>
 
 			<!-- Change status -->
@@ -336,11 +392,13 @@
 			<a
 				href={exportUrl('csv')}
 				class="px-3 py-1 text-xs font-medium border border-stone-700 text-stone-400 hover:text-stone-200 rounded transition-colors"
-			>↓ CSV</a>
+				>↓ CSV</a
+			>
 			<a
 				href={exportUrl('json')}
 				class="px-3 py-1 text-xs font-medium border border-stone-700 text-stone-400 hover:text-stone-200 rounded transition-colors"
-			>↓ JSON</a>
+				>↓ JSON</a
+			>
 
 			{#if data.adminRole === 'admin'}
 				<div class="w-px h-4 bg-stone-700"></div>
@@ -349,7 +407,12 @@
 					form="bulk-main"
 					formaction="?/bulkDelete"
 					onclick={(e) => {
-						if (!confirm(`Delete ${selected.size} pothole${selected.size !== 1 ? 's' : ''} permanently? This cannot be undone.`)) e.preventDefault();
+						if (
+							!confirm(
+								`Delete ${selected.size} pothole${selected.size !== 1 ? 's' : ''} permanently? This cannot be undone.`,
+							)
+						)
+							e.preventDefault();
 					}}
 					class="px-3 py-1 text-xs font-medium bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-600/30 rounded transition-colors"
 				>
@@ -390,25 +453,42 @@
 								/>
 							</th>
 							<th class="px-4 py-3 text-stone-500 font-medium">
-								<a href={sortHref('address')} class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors">
-									Address <span class="text-stone-600">{sortIcon('address')}</span>
+								<a
+									href={sortHref('address')}
+									class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors"
+								>
+									Address <span class="text-stone-600">{sortIcon('address')}</span
+									>
 								</a>
 							</th>
 							<th class="px-4 py-3 text-stone-500 font-medium">
-								<a href={sortHref('status')} class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors">
+								<a
+									href={sortHref('status')}
+									class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors"
+								>
 									Status <span class="text-stone-600">{sortIcon('status')}</span>
 								</a>
 							</th>
 							<th class="px-4 py-3 text-stone-500 font-medium">
-								<a href={sortHref('confirmed_count')} class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors">
-									Conf. <span class="text-stone-600">{sortIcon('confirmed_count')}</span>
+								<a
+									href={sortHref('confirmed_count')}
+									class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors"
+								>
+									Conf. <span class="text-stone-600"
+										>{sortIcon('confirmed_count')}</span
+									>
 								</a>
 							</th>
 							<th class="px-4 py-3 text-stone-500 font-medium">Photos</th>
 							<th class="px-4 py-3 text-stone-500 font-medium">Visibility</th>
 							<th class="px-4 py-3 text-stone-500 font-medium">
-								<a href={sortHref('created_at')} class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors">
-									Reported <span class="text-stone-600">{sortIcon('created_at')}</span>
+								<a
+									href={sortHref('created_at')}
+									class="inline-flex items-center gap-1 hover:text-stone-300 transition-colors"
+								>
+									Reported <span class="text-stone-600"
+										>{sortIcon('created_at')}</span
+									>
 								</a>
 							</th>
 							<th class="px-4 py-3 text-stone-500 font-medium sr-only">Actions</th>
@@ -418,14 +498,19 @@
 						{#each data.potholes as pothole (pothole.id)}
 							{@const photoCount = pothole.pothole_photos?.length ?? 0}
 							<tr
-								class="hover:bg-stone-800/40 transition-colors {selected.has(pothole.id) ? 'bg-amber-500/5' : ''}"
+								class="hover:bg-stone-800/40 transition-colors {selected.has(
+									pothole.id,
+								)
+									? 'bg-amber-500/5'
+									: ''}"
 							>
 								<td class="px-4 py-3">
 									<input
 										type="checkbox"
 										checked={selected.has(pothole.id)}
 										onchange={() => {
-											if (selected.has(pothole.id)) selected.delete(pothole.id);
+											if (selected.has(pothole.id))
+												selected.delete(pothole.id);
 											else selected.add(pothole.id);
 										}}
 										class="rounded border-stone-600 bg-stone-800 text-amber-500 focus:ring-amber-500/20"
@@ -433,7 +518,10 @@
 									/>
 								</td>
 								<td class="px-4 py-3 max-w-xs">
-									<p class="text-stone-200 truncate" title={pothole.address ?? ''}>
+									<p
+										class="text-stone-200 truncate"
+										title={pothole.address ?? ''}
+									>
 										{pothole.address ?? 'No address'}
 									</p>
 									<p class="text-stone-600 text-xs mt-0.5 font-mono">
@@ -442,7 +530,9 @@
 								</td>
 								<td class="px-4 py-3">
 									<span
-										class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize {statusColor(pothole.status)}"
+										class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize {statusColor(
+											pothole.status,
+										)}"
 									>
 										{pothole.status}
 									</span>
@@ -452,10 +542,27 @@
 								</td>
 								<td class="px-4 py-3">
 									{#if photoCount > 0}
-										<span class="inline-flex items-center gap-1 text-xs text-stone-300">
-											<svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+										<span
+											class="inline-flex items-center gap-1 text-xs text-stone-300"
+										>
+											<svg
+												class="w-3.5 h-3.5 text-stone-500"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+												/>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+												/>
 											</svg>
 											{photoCount}
 										</span>
@@ -479,7 +586,9 @@
 									{/if}
 								</td>
 								<td class="px-4 py-3 text-stone-500 text-xs whitespace-nowrap">
-									{formatDistanceToNow(new Date(pothole.created_at), { addSuffix: true })}
+									{formatDistanceToNow(new Date(pothole.created_at), {
+										addSuffix: true,
+									})}
 								</td>
 								<td class="px-4 py-3 text-right">
 									<a
@@ -526,10 +635,22 @@
 			</div>
 			<form method="get" class="flex items-center gap-2">
 				<!-- Preserve current filters when changing page size -->
-				{#if data.filterStatus}<input type="hidden" name="status" value={data.filterStatus} />{/if}
+				{#if data.filterStatus}<input
+						type="hidden"
+						name="status"
+						value={data.filterStatus}
+					/>{/if}
 				{#if data.search}<input type="hidden" name="search" value={data.search} />{/if}
-				{#if data.filterPhotosPublished !== null}<input type="hidden" name="photosPublished" value={String(data.filterPhotosPublished)} />{/if}
-				{#if data.dateFrom}<input type="hidden" name="dateFrom" value={data.dateFrom} />{/if}
+				{#if data.filterPhotosPublished !== null}<input
+						type="hidden"
+						name="photosPublished"
+						value={String(data.filterPhotosPublished)}
+					/>{/if}
+				{#if data.dateFrom}<input
+						type="hidden"
+						name="dateFrom"
+						value={data.dateFrom}
+					/>{/if}
 				{#if data.dateTo}<input type="hidden" name="dateTo" value={data.dateTo} />{/if}
 				<input type="hidden" name="sort" value={data.sort} />
 				<input type="hidden" name="dir" value={data.dir} />

@@ -13,9 +13,8 @@ const config = {
 		// checks outside automated test runs.
 		csrf: {
 			checkOrigin: !(
-				process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' &&
-				process.env.CI === 'true'
-			)
+				process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true'
+			),
 		},
 		// H2: Nonce-based CSP removes the need for 'unsafe-inline' in script-src.
 		// SvelteKit generates a fresh nonce per request, injects it into all inline
@@ -32,23 +31,23 @@ const config = {
 					'data:',
 					'blob:',
 					'https://*.supabase.co',
-					'https://*.tile.openstreetmap.org'
+					'https://*.tile.openstreetmap.org',
 				],
 				'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com'],
 				'connect-src': [
 					"'self'",
 					'https://*.supabase.co',
 					'https://nominatim.openstreetmap.org',
-					'https://*.sentry.io'
+					'https://*.sentry.io',
 				],
 				'frame-ancestors': ["'none'"],
 				'object-src': ["'none'"],
 				'base-uri': ["'none'"],
 				'form-action': ["'self'"],
-				'worker-src': ["'self'"]  // 'self' required for service worker registration (/sw.js)
-			}
-		}
-	}
+				'worker-src': ["'self'"], // 'self' required for service worker registration (/sw.js)
+			},
+		},
+	},
 };
 
 export default config;

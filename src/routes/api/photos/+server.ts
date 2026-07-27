@@ -41,7 +41,9 @@ interface SightEngineWorkflowResponse {
 	};
 }
 
-function detectImageType(bytes: Uint8Array): { mimeType: DetectedMimeType; ext: DetectedExtension } | null {
+function detectImageType(
+	bytes: Uint8Array,
+): { mimeType: DetectedMimeType; ext: DetectedExtension } | null {
 	if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
 		return { mimeType: 'image/jpeg', ext: 'jpg' };
 	}
@@ -79,7 +81,7 @@ type ModerationResult = { score: number | null; rejected: boolean; deferred?: bo
 async function runModeration(
 	bytes: Uint8Array,
 	mimeType: DetectedMimeType,
-	ext: DetectedExtension
+	ext: DetectedExtension,
 ): Promise<ModerationResult> {
 	const workflowId = env.SIGHTENGINE_WORKFLOW_ID;
 
@@ -92,7 +94,11 @@ async function runModeration(
 		// Cast Uint8Array<ArrayBufferLike> → BlobPart: TS 6 widened typed-array
 		// buffers to accept SharedArrayBuffer, but at runtime bytes always comes
 		// from file.arrayBuffer() or stripJpegMetadata — both ArrayBuffer-backed.
-		seForm.append('media', new Blob([bytes as unknown as BlobPart], { type: mimeType }), `photo.${ext}`);
+		seForm.append(
+			'media',
+			new Blob([bytes as unknown as BlobPart], { type: mimeType }),
+			`photo.${ext}`,
+		);
 		seForm.append('api_user', apiUser);
 		seForm.append('api_secret', apiSecret);
 
@@ -103,14 +109,15 @@ async function runModeration(
 			const res = await fetch('https://api.sightengine.com/1.0/check-workflow.json', {
 				method: 'POST',
 				body: seForm,
-				signal: AbortSignal.timeout(10_000)
+				signal: AbortSignal.timeout(10_000),
 			});
 			if (!res.ok) return { score: null, rejected: false, deferred: true };
 			const data: SightEngineWorkflowResponse = await res.json();
-			if (data.status !== 'success' || !data.summary) return { score: null, rejected: false, deferred: true };
+			if (data.status !== 'success' || !data.summary)
+				return { score: null, rejected: false, deferred: true };
 			return {
 				score: data.summary.reject_prob ?? null,
-				rejected: data.summary.action === 'reject'
+				rejected: data.summary.action === 'reject',
 			};
 		}
 
@@ -119,12 +126,15 @@ async function runModeration(
 		const res = await fetch('https://api.sightengine.com/1.0/check.json', {
 			method: 'POST',
 			body: seForm,
-			signal: AbortSignal.timeout(10_000)
+			signal: AbortSignal.timeout(10_000),
 		});
 		if (!res.ok) return { score: null, rejected: false, deferred: true };
 		const data: SightEngineResponse = await res.json();
 		if (data.status !== 'success') return { score: null, rejected: false, deferred: true };
-		const nudityScore = Math.max(data.nudity?.sexual_activity ?? 0, data.nudity?.sexual_display ?? 0);
+		const nudityScore = Math.max(
+			data.nudity?.sexual_activity ?? 0,
+			data.nudity?.sexual_display ?? 0,
+		);
 		const offensiveScore = data.offensive?.prob ?? 0;
 		const score = Math.max(nudityScore, offensiveScore);
 		return { score, rejected: score > MODERATION_THRESHOLD };
@@ -132,20 +142,29 @@ async function runModeration(
 		// H3 fix: fail to a distinct 'deferred' state rather than silently passing.
 		// An attacker who disrupts SightEngine would previously bypass automated moderation
 		// entirely. Now the photo is uploaded but flagged for mandatory admin review.
-		logError('photos/moderation', 'SightEngine check failed — photo will require manual admin review', err);
+		logError(
+			'photos/moderation',
+			'SightEngine check failed — photo will require manual admin review',
+			err,
+		);
 		return { score: null, rejected: false, deferred: true };
 	}
 }
 
 async function cleanupStorageObject(storagePath: string): Promise<void> {
-	const { error: cleanupError } = await getAdminClient().storage.from('pothole-photos').remove([storagePath]);
+	const { error: cleanupError } = await getAdminClient()
+		.storage.from('pothole-photos')
+		.remove([storagePath]);
 	if (cleanupError) {
-		logError('photos/cleanup', 'Failed to clean up orphaned storage object', cleanupError, { storagePath });
+		logError('photos/cleanup', 'Failed to clean up orphaned storage object', cleanupError, {
+			storagePath,
+		});
 	}
 }
 
 export const DELETE: RequestHandler = async () => {
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true' || process.env.CI !== 'true') throw error(405, 'Method not allowed');
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true' || process.env.CI !== 'true')
+		throw error(405, 'Method not allowed');
 	fixturePhotos.clear();
 	return json({ ok: true });
 };
@@ -177,7 +196,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			throw error(422, 'Photo rejected by content moderation');
 		}
 		const id = crypto.randomUUID();
-		const moderationStatus = request.headers.get('x-e2e-moderation') === 'deferred' ? 'deferred' : 'pending';
+		const moderationStatus =
+			request.headers.get('x-e2e-moderation') === 'deferred' ? 'deferred' : 'pending';
 		fixturePhotos.set(id, { id, potholeId: idParsed.data, moderationStatus });
 		return json({ ok: true, id });
 	}
@@ -192,7 +212,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		PHOTO_RATE_LIMIT,
 		PHOTO_RATE_WINDOW_MS,
 		'Too many photo uploads. Please wait before trying again.',
-		'api/photos'
+		'api/photos',
 	);
 
 	// Confirm the pothole exists and still accepts photos.
@@ -202,7 +222,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.eq('id', idParsed.data)
 		.maybeSingle();
 	if (potholeError) {
-		logError('api/photos', 'Failed to verify pothole status', potholeError, { potholeId: idParsed.data });
+		logError('api/photos', 'Failed to verify pothole status', potholeError, {
+			potholeId: idParsed.data,
+		});
 		throw error(500, 'Failed to verify pothole status');
 	}
 	if (!pothole) throw error(404, 'Pothole not found');
@@ -217,7 +239,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.eq('pothole_id', idParsed.data)
 		.neq('moderation_status', 'rejected');
 	if (activePhotoCountError) {
-		logError('api/photos', 'Failed to check active photo count', activePhotoCountError, { potholeId: idParsed.data });
+		logError('api/photos', 'Failed to check active photo count', activePhotoCountError, {
+			potholeId: idParsed.data,
+		});
 		throw error(500, 'Failed to check photo limit');
 	}
 	if ((activePhotoCount ?? 0) >= MAX_ACTIVE_PHOTOS_PER_POTHOLE) {
@@ -251,8 +275,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// Upload to Supabase Storage
-	const { error: uploadError } = await getAdminClient().storage
-		.from('pothole-photos')
+	const { error: uploadError } = await getAdminClient()
+		.storage.from('pothole-photos')
 		.upload(storagePath, cleanBytes, { contentType: mimeType, upsert: false });
 
 	if (uploadError) {
@@ -270,13 +294,18 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			storage_path: storagePath,
 			moderation_status: moderation.deferred ? 'deferred' : 'pending',
 			moderation_score: moderation.score,
-			ip_hash: ipHash
+			ip_hash: ipHash,
 		})
 		.select('id')
 		.single();
 
 	if (insertError || !photo) {
-		logError('photos/insert', 'Failed to insert photo DB record — storage cleanup triggered', insertError ?? new Error('no photo returned'), { storagePath });
+		logError(
+			'photos/insert',
+			'Failed to insert photo DB record — storage cleanup triggered',
+			insertError ?? new Error('no photo returned'),
+			{ storagePath },
+		);
 		await cleanupStorageObject(storagePath);
 		throw error(500, 'Failed to save photo record');
 	}
@@ -284,13 +313,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	// Fire-and-forget — do not block the client response on Pushover latency.
 	// Deferred photos get higher priority since SightEngine was down.
 	void notify('photos', {
-		title: moderation.deferred ? '⚠️ Photo needs review (SightEngine down)' : '📸 New photo to review',
+		title: moderation.deferred
+			? '⚠️ Photo needs review (SightEngine down)'
+			: '📸 New photo to review',
 		message: moderation.deferred
 			? 'SightEngine was unavailable — automated moderation skipped. Manual review required.'
 			: 'A new photo passed automated moderation and is waiting for admin approval.',
 		url: `https://fillthehole.ca/admin`,
 		urlTitle: 'Open admin panel',
-		priority: moderation.deferred ? 1 : 0
+		priority: moderation.deferred ? 1 : 0,
 	});
 
 	return json({ ok: true, id: photo.id });

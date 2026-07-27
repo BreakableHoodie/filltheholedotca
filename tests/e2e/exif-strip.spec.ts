@@ -14,13 +14,25 @@ function makeSegment(marker: number, payload: number[]): number[] {
 test.describe('stripJpegMetadata', () => {
 	test('removes EXIF/comment metadata while preserving image scan data', async () => {
 		const app0 = makeSegment(MARKER_APP0, [0x4a, 0x46, 0x49, 0x46, 0x00]);
-		const app1Exif = makeSegment(MARKER_APP1, [0x45, 0x78, 0x69, 0x66, 0x00, 0x00, 0x47, 0x50, 0x53]);
+		const app1Exif = makeSegment(
+			MARKER_APP1,
+			[0x45, 0x78, 0x69, 0x66, 0x00, 0x00, 0x47, 0x50, 0x53],
+		);
 		const com = makeSegment(MARKER_COM, [0x53, 0x65, 0x6e, 0x73, 0x69, 0x74, 0x69, 0x76, 0x65]);
 		const dqt = makeSegment(MARKER_DQT, [0x00, 0x01, 0x02, 0x03]);
 		const sos = makeSegment(0xda, [0x00, 0x3f, 0x00]);
 		const scanAndEoi = [0x11, 0x22, 0xff, 0x00, 0x33, 0x44, 0xff, 0xd9];
 
-		const input = Uint8Array.from([0xff, 0xd8, ...app0, ...app1Exif, ...com, ...dqt, ...sos, ...scanAndEoi]);
+		const input = Uint8Array.from([
+			0xff,
+			0xd8,
+			...app0,
+			...app1Exif,
+			...com,
+			...dqt,
+			...sos,
+			...scanAndEoi,
+		]);
 		const clean = stripJpegMetadata(input);
 		const cleanBytes = Array.from(clean);
 

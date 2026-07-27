@@ -23,7 +23,6 @@
 		}
 		visible = false;
 	}
-
 </script>
 
 {#if visible}
@@ -31,14 +30,23 @@
 		aria-labelledby="welcome-title"
 		class="absolute top-4 left-4 right-4 z-[1001] sm:left-6 sm:right-auto sm:max-w-md"
 	>
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-5 shadow-xl">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-5 shadow-xl"
+		>
 			<div class="flex items-start justify-between gap-3">
 				<div class="space-y-2">
-					<p class="text-xs font-semibold text-stone-500 dark:text-stone-400">Waterloo Region civic tool</p>
-					<h2 id="welcome-title" class="page-title text-3xl text-stone-900 dark:text-white">Report a pothole in about 30 seconds</h2>
+					<p class="text-xs font-semibold text-stone-500 dark:text-stone-400">
+						Waterloo Region civic tool
+					</p>
+					<h2
+						id="welcome-title"
+						class="page-title text-3xl text-stone-900 dark:text-white"
+					>
+						Report a pothole in about 30 seconds
+					</h2>
 					<p class="text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-						Independent community tracker for Kitchener, Waterloo, and Cambridge.
-						No account required.
+						Independent community tracker for Kitchener, Waterloo, and Cambridge. No
+						account required.
 					</p>
 				</div>
 				<button
@@ -55,19 +63,25 @@
 				<li class="flex gap-3 items-start border-l-2 border-amber-500 pl-3">
 					<div>
 						<span class="font-semibold text-stone-900 dark:text-white">Report</span>
-						<span class="text-stone-500 dark:text-stone-400"> — confirm the location and submit. Nearby reports are merged.</span>
+						<span class="text-stone-500 dark:text-stone-400">
+							— confirm the location and submit. Nearby reports are merged.</span
+						>
 					</div>
 				</li>
 				<li class="flex gap-3 items-start border-l-2 border-amber-500 pl-3">
 					<div>
 						<span class="font-semibold text-stone-900 dark:text-white">Contact</span>
-						<span class="text-stone-500 dark:text-stone-400"> — email your ward councillor directly from the pothole page.</span>
+						<span class="text-stone-500 dark:text-stone-400">
+							— email your ward councillor directly from the pothole page.</span
+						>
 					</div>
 				</li>
 				<li class="flex gap-3 items-start border-l-2 border-amber-500 pl-3">
 					<div>
 						<span class="font-semibold text-stone-900 dark:text-white">Track</span>
-						<span class="text-stone-500 dark:text-stone-400"> — once the city fills it, mark it done.</span>
+						<span class="text-stone-500 dark:text-stone-400">
+							— once the city fills it, mark it done.</span
+						>
 					</div>
 				</li>
 			</ol>

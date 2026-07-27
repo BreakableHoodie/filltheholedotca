@@ -68,168 +68,196 @@
 
 	<div class="bg-stone-900 border border-stone-800 rounded-lg overflow-hidden">
 		<div class="overflow-x-auto">
-		<table class="w-full text-sm min-w-[560px]">
-			<thead>
-				<tr class="border-b border-stone-800 text-left">
-					<th class="px-4 py-3 text-stone-500 font-medium">User</th>
-					<th class="px-4 py-3 text-stone-500 font-medium">Role</th>
-					<th class="px-4 py-3 text-stone-500 font-medium">Status</th>
-					<th class="px-4 py-3 text-stone-500 font-medium">MFA</th>
-					<th class="px-4 py-3 text-stone-500 font-medium">Sessions</th>
-					<th class="px-4 py-3 text-stone-500 font-medium">Last login</th>
-					<th class="px-4 py-3 text-stone-500 font-medium">Actions</th>
-				</tr>
-			</thead>
-			<tbody class="divide-y divide-stone-800">
-				{#each data.users as user (user.id)}
-					{@const isSelf = user.id === data.currentUserId}
-					<tr class="hover:bg-stone-800/30 transition-colors">
-						<!-- Name + email -->
-						<td class="px-4 py-3">
-							<p class="text-stone-200 font-medium">
-								{user.first_name}
-								{user.last_name}
-								{#if isSelf}
-									<span class="text-xs text-stone-500 font-normal">(you)</span>
-								{/if}
-							</p>
-							<p class="text-stone-500 text-xs mt-0.5">{user.email}</p>
-						</td>
-
-						<!-- Role (with change form) -->
-						<td class="px-4 py-3">
-							{#if isSelf}
-								<span
-									class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize {roleColor(user.role)}"
-								>
-									{user.role}
-								</span>
-							{:else}
-								<form
-									method="post"
-									action="?/changeRole"
-									use:enhance
-									class="flex items-center gap-1.5"
-								>
-									<input type="hidden" name="userId" value={user.id} />
-									<select
-										name="role"
-										class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
-									>
-										{#each ['admin', 'editor', 'viewer'] as r (r)}
-											<option value={r} selected={user.role === r}>{r}</option>
-										{/each}
-									</select>
-									<button
-										type="submit"
-										class="text-xs text-stone-400 hover:text-stone-100 transition-colors px-1 py-0.5"
-										title="Save role"
-									>
-										Save
-									</button>
-								</form>
-							{/if}
-						</td>
-
-						<!-- Status -->
-						<td class="px-4 py-3">
-							{#if user.is_active}
-								<span
-									class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-emerald-400 bg-emerald-500/10"
-									>Active</span
-								>
-							{:else if user.activated_at}
-								<span
-									class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-amber-400 bg-amber-500/10"
-									>Deactivated</span
-								>
-							{:else}
-								<span
-									class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-stone-400 bg-stone-700/50"
-									>Pending</span
-								>
-							{/if}
-						</td>
-
-						<!-- MFA -->
-						<td class="px-4 py-3">
-							{#if user.totp_enabled}
-								<span class="text-emerald-400 text-xs">Enabled</span>
-							{:else}
-								<span class="text-stone-600 text-xs">—</span>
-							{/if}
-						</td>
-
-						<!-- Active sessions -->
-						<td class="px-4 py-3 text-stone-400 tabular-nums text-xs">
-							{user.activeSessions}
-						</td>
-
-						<!-- Last login -->
-						<td class="px-4 py-3 text-stone-500 text-xs">
-							{#if user.last_login_at}
-								{formatDistanceToNow(new Date(user.last_login_at), { addSuffix: true })}
-							{:else}
-								Never
-							{/if}
-						</td>
-
-						<!-- Actions -->
-						<td class="px-4 py-3">
-							{#if !isSelf}
-								<div class="flex items-center gap-2">
-									<!-- Activate / Deactivate -->
-									{#if user.is_active}
-										<form method="post" action="?/deactivate" use:enhance>
-											<input type="hidden" name="userId" value={user.id} />
-											<button
-												type="submit"
-												class="text-xs text-amber-400 hover:text-amber-300 transition-colors"
-												onclick={(e) => {
-													if (!confirm('Deactivate this user and revoke all their sessions?'))
-														e.preventDefault();
-												}}
-											>
-												Deactivate
-											</button>
-										</form>
-									{:else}
-										<form method="post" action="?/activate" use:enhance>
-											<input type="hidden" name="userId" value={user.id} />
-											<button
-												type="submit"
-												class="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
-											>
-												Activate
-											</button>
-										</form>
-									{/if}
-
-									<!-- Revoke sessions -->
-									{#if user.activeSessions > 0}
-										<span class="text-stone-700">·</span>
-										<form method="post" action="?/revokeAll" use:enhance>
-											<input type="hidden" name="userId" value={user.id} />
-											<button
-												type="submit"
-												class="text-xs text-stone-500 hover:text-red-400 transition-colors"
-												onclick={(e) => {
-													if (!confirm('Revoke all sessions for this user?')) e.preventDefault();
-												}}
-											>
-												Revoke sessions
-											</button>
-										</form>
-									{/if}
-								</div>
-							{:else}
-								<span class="text-stone-700 text-xs">—</span>
-							{/if}
-						</td>
+			<table class="w-full text-sm min-w-[560px]">
+				<thead>
+					<tr class="border-b border-stone-800 text-left">
+						<th class="px-4 py-3 text-stone-500 font-medium">User</th>
+						<th class="px-4 py-3 text-stone-500 font-medium">Role</th>
+						<th class="px-4 py-3 text-stone-500 font-medium">Status</th>
+						<th class="px-4 py-3 text-stone-500 font-medium">MFA</th>
+						<th class="px-4 py-3 text-stone-500 font-medium">Sessions</th>
+						<th class="px-4 py-3 text-stone-500 font-medium">Last login</th>
+						<th class="px-4 py-3 text-stone-500 font-medium">Actions</th>
 					</tr>
-				{/each}
-			</tbody>
-		</table>
+				</thead>
+				<tbody class="divide-y divide-stone-800">
+					{#each data.users as user (user.id)}
+						{@const isSelf = user.id === data.currentUserId}
+						<tr class="hover:bg-stone-800/30 transition-colors">
+							<!-- Name + email -->
+							<td class="px-4 py-3">
+								<p class="text-stone-200 font-medium">
+									{user.first_name}
+									{user.last_name}
+									{#if isSelf}
+										<span class="text-xs text-stone-500 font-normal">(you)</span
+										>
+									{/if}
+								</p>
+								<p class="text-stone-500 text-xs mt-0.5">{user.email}</p>
+							</td>
+
+							<!-- Role (with change form) -->
+							<td class="px-4 py-3">
+								{#if isSelf}
+									<span
+										class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize {roleColor(
+											user.role,
+										)}"
+									>
+										{user.role}
+									</span>
+								{:else}
+									<form
+										method="post"
+										action="?/changeRole"
+										use:enhance
+										class="flex items-center gap-1.5"
+									>
+										<input type="hidden" name="userId" value={user.id} />
+										<select
+											name="role"
+											class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
+										>
+											{#each ['admin', 'editor', 'viewer'] as r (r)}
+												<option value={r} selected={user.role === r}
+													>{r}</option
+												>
+											{/each}
+										</select>
+										<button
+											type="submit"
+											class="text-xs text-stone-400 hover:text-stone-100 transition-colors px-1 py-0.5"
+											title="Save role"
+										>
+											Save
+										</button>
+									</form>
+								{/if}
+							</td>
+
+							<!-- Status -->
+							<td class="px-4 py-3">
+								{#if user.is_active}
+									<span
+										class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-emerald-400 bg-emerald-500/10"
+										>Active</span
+									>
+								{:else if user.activated_at}
+									<span
+										class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-amber-400 bg-amber-500/10"
+										>Deactivated</span
+									>
+								{:else}
+									<span
+										class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-stone-400 bg-stone-700/50"
+										>Pending</span
+									>
+								{/if}
+							</td>
+
+							<!-- MFA -->
+							<td class="px-4 py-3">
+								{#if user.totp_enabled}
+									<span class="text-emerald-400 text-xs">Enabled</span>
+								{:else}
+									<span class="text-stone-600 text-xs">—</span>
+								{/if}
+							</td>
+
+							<!-- Active sessions -->
+							<td class="px-4 py-3 text-stone-400 tabular-nums text-xs">
+								{user.activeSessions}
+							</td>
+
+							<!-- Last login -->
+							<td class="px-4 py-3 text-stone-500 text-xs">
+								{#if user.last_login_at}
+									{formatDistanceToNow(new Date(user.last_login_at), {
+										addSuffix: true,
+									})}
+								{:else}
+									Never
+								{/if}
+							</td>
+
+							<!-- Actions -->
+							<td class="px-4 py-3">
+								{#if !isSelf}
+									<div class="flex items-center gap-2">
+										<!-- Activate / Deactivate -->
+										{#if user.is_active}
+											<form method="post" action="?/deactivate" use:enhance>
+												<input
+													type="hidden"
+													name="userId"
+													value={user.id}
+												/>
+												<button
+													type="submit"
+													class="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+													onclick={(e) => {
+														if (
+															!confirm(
+																'Deactivate this user and revoke all their sessions?',
+															)
+														)
+															e.preventDefault();
+													}}
+												>
+													Deactivate
+												</button>
+											</form>
+										{:else}
+											<form method="post" action="?/activate" use:enhance>
+												<input
+													type="hidden"
+													name="userId"
+													value={user.id}
+												/>
+												<button
+													type="submit"
+													class="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+												>
+													Activate
+												</button>
+											</form>
+										{/if}
+
+										<!-- Revoke sessions -->
+										{#if user.activeSessions > 0}
+											<span class="text-stone-700">·</span>
+											<form method="post" action="?/revokeAll" use:enhance>
+												<input
+													type="hidden"
+													name="userId"
+													value={user.id}
+												/>
+												<button
+													type="submit"
+													class="text-xs text-stone-500 hover:text-red-400 transition-colors"
+													onclick={(e) => {
+														if (
+															!confirm(
+																'Revoke all sessions for this user?',
+															)
+														)
+															e.preventDefault();
+													}}
+												>
+													Revoke sessions
+												</button>
+											</form>
+										{/if}
+									</div>
+								{:else}
+									<span class="text-stone-700 text-xs">—</span>
+								{/if}
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		</div>
 	</div>
 </div>

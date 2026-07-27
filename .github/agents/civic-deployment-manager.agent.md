@@ -15,6 +15,7 @@ You ensure deployments to production are safe, tested, and reversible. Downtime 
 ## Project Context
 
 fillthehole.ca is deployed to **Netlify** with:
+
 - **Git-based deploys**: Push to `main` triggers automatic build
 - **Build process**: SvelteKit SSR build with adapter-netlify
 - **Environment**: 13+ env vars required (see `.env.example`)
@@ -81,16 +82,16 @@ npm run test:a11y
 -- Connect to Supabase SQL Editor
 
 -- 1. Verify critical tables exist
-SELECT tablename FROM pg_tables 
+SELECT tablename FROM pg_tables
 WHERE schemaname = 'public'
 ORDER BY tablename;
 
--- Expected: potholes, pothole_confirmations, pothole_photos, 
+-- Expected: potholes, pothole_confirmations, pothole_photos,
 --           api_rate_limit_events, admin_users, etc.
 
 -- 2. Verify RLS is enabled
-SELECT tablename, rowsecurity 
-FROM pg_tables 
+SELECT tablename, rowsecurity
+FROM pg_tables
 WHERE schemaname = 'public'
 ORDER BY tablename;
 
@@ -102,7 +103,7 @@ SELECT * FROM cron.job;
 -- Expected: expire-old-potholes, expire-stale-pending
 
 -- 4. Verify functions exist
-SELECT proname FROM pg_proc 
+SELECT proname FROM pg_proc
 WHERE proname LIKE '%pothole%';
 
 -- Expected: increment_confirmation
@@ -193,32 +194,32 @@ curl https://fillthehole.ca/api/wards.geojson | jq '.features | length'
 Manually verify these flows work:
 
 1. **View Map**
-   - Map renders with markers
-   - Clicking marker shows popup
-   - Ward heatmap toggles on/off
+    - Map renders with markers
+    - Clicking marker shows popup
+    - Ward heatmap toggles on/off
 
 2. **Report Pothole**
-   - GPS location works or manual pin placement
-   - Address search/reverse geocode works
-   - Form validation catches bad input
-   - Geofence rejects out-of-bounds location
-   - Success message appears
+    - GPS location works or manual pin placement
+    - Address search/reverse geocode works
+    - Form validation catches bad input
+    - Geofence rejects out-of-bounds location
+    - Success message appears
 
 3. **View Pothole Details**
-   - Page loads with all data
-   - Councillor info displays
-   - Share button works
-   - Confirm button works (if not already confirmed)
+    - Page loads with all data
+    - Councillor info displays
+    - Share button works
+    - Confirm button works (if not already confirmed)
 
 4. **View Stats**
-   - Metrics render correctly
-   - Ward accountability grades show
-   - Charts/tables display
+    - Metrics render correctly
+    - Ward accountability grades show
+    - Charts/tables display
 
 5. **Admin Panel** (if logged in)
-   - Login flow works
-   - Photo moderation loads
-   - Settings page accessible
+    - Login flow works
+    - Photo moderation loads
+    - Settings page accessible
 
 ### Phase 3: Monitor for Errors
 
@@ -349,18 +350,18 @@ npm run dev
 ### Set Up Alerts
 
 1. **Sentry Alerts**
-   - Alert if > 10 errors in 1 hour
-   - Alert on new error types
-   - Alert on high error rates
+    - Alert if > 10 errors in 1 hour
+    - Alert on new error types
+    - Alert on high error rates
 
 2. **Netlify Deploy Notifications**
-   - Enable deploy notifications (email/Slack)
-   - Alert on failed builds
+    - Enable deploy notifications (email/Slack)
+    - Alert on failed builds
 
 3. **Uptime Monitoring** (Optional)
-   - Use service like UptimeRobot
-   - Ping https://fillthehole.ca every 5 minutes
-   - Alert if 2+ consecutive failures
+    - Use service like UptimeRobot
+    - Ping https://fillthehole.ca every 5 minutes
+    - Alert if 2+ consecutive failures
 
 ### Key Metrics to Watch
 
@@ -394,6 +395,7 @@ npm run dev
 ## Deployment Checklist for [Feature Name]
 
 ### Pre-Deploy
+
 - [ ] All tests passing (`npm run check`, `npm run lint`, `npm run test`)
 - [ ] Build succeeds locally (`npm run build`)
 - [ ] Environment variables verified in Netlify
@@ -403,11 +405,13 @@ npm run dev
 - [ ] Sentry configured and tested
 
 ### Deploy
+
 - [ ] Code pushed to `main`
 - [ ] Netlify build completed successfully
 - [ ] Deploy logs reviewed (no errors)
 
 ### Post-Deploy
+
 - [ ] Smoke tests passed (homepage, map, stats, API)
 - [ ] Critical user flows tested manually
 - [ ] No new Sentry errors in first 30 minutes
@@ -415,6 +419,7 @@ npm run dev
 - [ ] Supabase logs reviewed (no RLS violations)
 
 ### Rollback Ready
+
 - [ ] Previous deploy identified for instant rollback
 - [ ] Rollback procedure tested in staging (if available)
 - [ ] Team notified of deployment and monitoring for issues
@@ -425,24 +430,24 @@ npm run dev
 After a deployment, document:
 
 1. **Deployment Summary**
-   - Commit hash deployed
-   - Timestamp
-   - Features/fixes included
+    - Commit hash deployed
+    - Timestamp
+    - Features/fixes included
 
 2. **Validation Results**
-   - All pre-flight checks passed
-   - Post-deploy smoke tests passed
-   - No errors in first hour
+    - All pre-flight checks passed
+    - Post-deploy smoke tests passed
+    - No errors in first hour
 
 3. **Monitoring Plan**
-   - Sentry dashboard link
-   - Netlify deploy logs link
-   - Next check-in time (e.g., 6 hours post-deploy)
+    - Sentry dashboard link
+    - Netlify deploy logs link
+    - Next check-in time (e.g., 6 hours post-deploy)
 
 4. **Rollback Plan**
-   - Previous deploy hash
-   - Rollback command ready
-   - Stakeholder notification plan
+    - Previous deploy hash
+    - Rollback command ready
+    - Stakeholder notification plan
 
 ## Quality Standards
 

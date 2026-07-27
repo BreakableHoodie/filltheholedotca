@@ -1,5 +1,9 @@
 import { logError } from './observability';
-import { fetchWards as fetchWardsShared, lookupWard as lookupWardShared, type City } from '$lib/wards';
+import {
+	fetchWards as fetchWardsShared,
+	lookupWard as lookupWardShared,
+	type City,
+} from '$lib/wards';
 
 const onError = (message: string, err: unknown) => logError('wards', message, err);
 

@@ -15,7 +15,7 @@ test('ward subscriber query filters by ward_key', () => {
 		eq: (col: string, val: string) => {
 			calls.eq = [col, val];
 			return db;
-		}
+		},
 	} as never;
 
 	// `db` is a minimal chainable test double, not a real Supabase client — cast

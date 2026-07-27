@@ -7,7 +7,7 @@ import { getAdminClient } from '$lib/server/supabase';
 import { logError } from '$lib/server/observability';
 const bulkSchema = z.object({
 	action: z.enum(['approve', 'reject']),
-	ids: z.array(z.string().uuid()).min(1).max(50)
+	ids: z.array(z.string().uuid()).min(1).max(50),
 });
 
 export const POST: RequestHandler = async ({ request, locals, getClientAddress }) => {
@@ -27,7 +27,10 @@ export const POST: RequestHandler = async ({ request, locals, getClientAddress }
 		.in('id', ids);
 
 	if (updateError) {
-		logError('admin/photos-bulk', 'Failed to bulk update photos', updateError, { action, count: ids.length });
+		logError('admin/photos-bulk', 'Failed to bulk update photos', updateError, {
+			action,
+			count: ids.length,
+		});
 		throw error(500, 'Failed to bulk update photos');
 	}
 
@@ -37,7 +40,7 @@ export const POST: RequestHandler = async ({ request, locals, getClientAddress }
 		'photo',
 		null,
 		{ ids, count: ids.length },
-		await hashIp(getClientAddress())
+		await hashIp(getClientAddress()),
 	);
 
 	return json({ ok: true, updated: ids.length });

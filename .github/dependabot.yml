@@ -5,18 +5,18 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: "09:00"
+      time: '09:00'
       timezone: America/Toronto
     open-pull-requests-limit: 5
     groups:
       svelte:
         patterns:
           - svelte
-          - "@sveltejs/*"
+          - '@sveltejs/*'
       tailwind:
         patterns:
           - tailwindcss
-          - "@tailwindcss/*"
+          - '@tailwindcss/*'
       supabase:
         patterns:
-          - "@supabase/*"
+          - '@supabase/*'

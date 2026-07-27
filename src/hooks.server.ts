@@ -8,7 +8,7 @@ import {
 	checkSessionExpiry,
 	touchSession,
 	invalidateSession,
-	SESSION_COOKIE
+	SESSION_COOKIE,
 } from '$lib/server/admin-auth';
 import { CSRF_HEADER, validateCsrfToken } from '$lib/server/admin-csrf';
 
@@ -20,7 +20,7 @@ Sentry.init({
 	enabled: !!sentryDsn,
 	// Ignore expected client errors — only capture genuine server faults.
 	ignoreErrors: [/^4\d\d /],
-	tracesSampleRate: 0.1
+	tracesSampleRate: 0.1,
 });
 
 // In-memory coarse rate limit store: ip -> { count, resetAt }.
@@ -36,7 +36,9 @@ const DISABLE_API_RATE_LIMIT = env.DISABLE_API_RATE_LIMIT === 'true';
 // CI is exempted: GitHub Actions sets process.env.CI='true'; Netlify production
 // functions do not, so this guard fires only on real production deployments.
 if (DISABLE_API_RATE_LIMIT && import.meta.env.PROD && !process.env.CI) {
-	throw new Error('[hooks] DISABLE_API_RATE_LIMIT must not be set in production. Aborting startup.');
+	throw new Error(
+		'[hooks] DISABLE_API_RATE_LIMIT must not be set in production. Aborting startup.',
+	);
 }
 
 /**
@@ -48,10 +50,13 @@ function applySecurityHeaders(response: Response): Response {
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 	// L7: preload enables HSTS preload list submission (https://hstspreload.org).
-	response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+	response.headers.set(
+		'Strict-Transport-Security',
+		'max-age=63072000; includeSubDomains; preload',
+	);
 	response.headers.set(
 		'Permissions-Policy',
-		'camera=(), microphone=(), payment=(), geolocation=(self)'
+		'camera=(), microphone=(), payment=(), geolocation=(self)',
 	);
 	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
 	// L8: Prevent cross-origin reads by default. Routes that intentionally expose
@@ -112,7 +117,8 @@ const appHandle: Handle = async ({ event, resolve }) => {
 		pathname.startsWith('/admin') &&
 		!pathname.startsWith('/admin/login') &&
 		!pathname.startsWith('/admin/signup');
-	const isAdminApi = pathname.startsWith('/api/admin') && !pathname.startsWith('/api/admin/auth/');
+	const isAdminApi =
+		pathname.startsWith('/api/admin') && !pathname.startsWith('/api/admin/auth/');
 
 	if (isAdminPage || isAdminApi) {
 		const sessionId = event.cookies.get(SESSION_COOKIE) ?? null;
@@ -129,7 +135,7 @@ const appHandle: Handle = async ({ event, resolve }) => {
 						path: '/',
 						expires: new Date(0),
 						httpOnly: true,
-						sameSite: 'strict'
+						sameSite: 'strict',
 					});
 				} else {
 					// Valid session — inject into locals and touch
@@ -146,8 +152,8 @@ const appHandle: Handle = async ({ event, resolve }) => {
 				return applySecurityHeaders(
 					new Response(JSON.stringify({ error: 'Unauthorized' }), {
 						status: 401,
-						headers: { 'Content-Type': 'application/json' }
-					})
+						headers: { 'Content-Type': 'application/json' },
+					}),
 				);
 			}
 			const loginUrl = `/admin/login?next=${encodeURIComponent(pathname)}`;
@@ -167,8 +173,8 @@ const appHandle: Handle = async ({ event, resolve }) => {
 				return applySecurityHeaders(
 					new Response(JSON.stringify({ error: 'Invalid CSRF token' }), {
 						status: 403,
-						headers: { 'Content-Type': 'application/json' }
-					})
+						headers: { 'Content-Type': 'application/json' },
+					}),
 				);
 			}
 		}
@@ -184,8 +190,8 @@ const appHandle: Handle = async ({ event, resolve }) => {
 			return applySecurityHeaders(
 				new Response(JSON.stringify({ error: 'Request too large' }), {
 					status: 413,
-					headers: { 'Content-Type': 'application/json' }
-				})
+					headers: { 'Content-Type': 'application/json' },
+				}),
 			);
 		}
 	}
@@ -207,7 +213,7 @@ export const handle: Handle = (input) =>
 	Sentry.sentryHandle()({
 		...input,
 		resolve: (event: RequestEvent, opts?: ResolveOptions) =>
-			appHandle({ event, resolve: (e) => input.resolve(e, opts) })
+			appHandle({ event, resolve: (e) => input.resolve(e, opts) }),
 	});
 
 export const handleError: HandleServerError = Sentry.handleErrorWithSentry();

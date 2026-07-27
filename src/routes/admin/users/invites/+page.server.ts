@@ -27,13 +27,13 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		.select(
 			`id, code, email, role, is_active, created_at, expires_at, used_at,
        creator:created_by ( first_name, last_name ),
-       used_by_user:used_by ( first_name, last_name, email )`
+       used_by_user:used_by ( first_name, last_name, email )`,
 		)
 		.order('created_at', { ascending: false });
 
 	return {
 		invites: (data ?? []) as unknown as InviteRow[],
-		origin: url.origin
+		origin: url.origin,
 	};
 };
 
@@ -62,14 +62,16 @@ export const actions: Actions = {
 		const code = crypto.randomUUID();
 		const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-		const { error: dbErr } = await getAdminClient().from('admin_invite_codes').insert({
-			code,
-			email: emailRaw ?? null,
-			role: roleParsed.data,
-			created_by: locals.adminUser.id,
-			expires_at: expiresAt,
-			is_active: true
-		});
+		const { error: dbErr } = await getAdminClient()
+			.from('admin_invite_codes')
+			.insert({
+				code,
+				email: emailRaw ?? null,
+				role: roleParsed.data,
+				created_by: locals.adminUser.id,
+				expires_at: expiresAt,
+				is_active: true,
+			});
 
 		if (dbErr) {
 			logError('admin/users/invites', 'Failed to create invite', dbErr);
@@ -82,7 +84,7 @@ export const actions: Actions = {
 			'invite',
 			null,
 			{ role: roleParsed.data },
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 		return { success: true };
 	},
@@ -109,8 +111,8 @@ export const actions: Actions = {
 			'invite',
 			id,
 			null,
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 		return { success: true };
-	}
+	},
 };

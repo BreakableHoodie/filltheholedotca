@@ -47,7 +47,7 @@
 		try {
 			const subscription = await registration.pushManager.subscribe({
 				userVisibleOnly: true,
-				applicationServerKey: urlBase64ToUint8Array(vapidPublicKey).buffer as ArrayBuffer
+				applicationServerKey: urlBase64ToUint8Array(vapidPublicKey).buffer as ArrayBuffer,
 			});
 			const { endpoint, keys } = subscription.toJSON() as {
 				endpoint: string;
@@ -56,7 +56,7 @@
 			const res = await fetch('/api/subscribe', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ endpoint, keys })
+				body: JSON.stringify({ endpoint, keys }),
 			});
 			if (!res.ok) {
 				notifState = 'unsubscribed';
@@ -86,11 +86,14 @@
 				const res = await fetch('/api/subscribe', {
 					method: 'DELETE',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ endpoint: sub.endpoint })
+					body: JSON.stringify({ endpoint: sub.endpoint }),
 				});
 				if (!res.ok) {
 					notifState = 'subscribed';
-					await toastErrorFromResponse(res, 'Could not turn off notifications. Try again.');
+					await toastErrorFromResponse(
+						res,
+						'Could not turn off notifications. Try again.',
+					);
 					return;
 				}
 				localStorage.removeItem('push-subscribed');
@@ -123,7 +126,10 @@
 		<span class="max-[400px]:sr-only">Notified</span>
 	</button>
 {:else if notifState === 'denied'}
-	<span class="inline-flex items-center gap-1.5 text-xs text-stone-600 cursor-not-allowed" title="Notifications blocked — change in browser settings">
+	<span
+		class="inline-flex items-center gap-1.5 text-xs text-stone-600 cursor-not-allowed"
+		title="Notifications blocked — change in browser settings"
+	>
 		<Icon name="bell-off" size={13} />
 		<span class="max-[400px]:sr-only">Blocked</span>
 	</span>

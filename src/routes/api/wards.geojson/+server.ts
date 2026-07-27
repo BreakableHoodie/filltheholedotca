@@ -26,24 +26,31 @@ const SOURCES = [
 		// geometryPrecision=5 (~1m) roughly halves the boundary payload with no
 		// visible difference at map zoom levels (verified: 153 kB -> 87 kB).
 		url: 'https://services1.arcgis.com/qAo1OsXi67t7XgmS/arcgis/rest/services/Wards/FeatureServer/0/query?where=1%3D1&outFields=WARDID&outSR=4326&geometryPrecision=5&f=geojson',
-		wardField: 'WARDID'
+		wardField: 'WARDID',
 	},
 	{
 		city: 'waterloo',
 		url: 'https://services.arcgis.com/ZpeBVw5o1kjit7LT/arcgis/rest/services/Wards2022/FeatureServer/0/query?where=1%3D1&outFields=WARD_NO&outSR=4326&geometryPrecision=5&f=geojson',
-		wardField: 'WARD_NO'
+		wardField: 'WARD_NO',
 	},
 	{
 		city: 'cambridge',
 		url: 'https://maps.cambridge.ca/arcgispub03/rest/services/Voting/FeatureServer/2/query?where=1%3D1&outFields=WARD_ID&outSR=4326&geometryPrecision=5&f=geojson',
-		wardField: 'WARD_ID'
-	}
+		wardField: 'WARD_ID',
+	},
 ] satisfies SourceConfig[];
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const CACHE_CONTROL = 'public, max-age=300, s-maxage=86400, stale-while-revalidate=604800';
-const ALLOWED_SOURCE_HOSTS = new Set(['services1.arcgis.com', 'services.arcgis.com', 'maps.cambridge.ca']);
-let cached: { data: { type: 'FeatureCollection'; features: NormalizedFeature[] }; expiresAt: number } | null = null;
+const ALLOWED_SOURCE_HOSTS = new Set([
+	'services1.arcgis.com',
+	'services.arcgis.com',
+	'maps.cambridge.ca',
+]);
+let cached: {
+	data: { type: 'FeatureCollection'; features: NormalizedFeature[] };
+	expiresAt: number;
+} | null = null;
 
 function isFiniteNumber(v: unknown): v is number {
 	return typeof v === 'number' && Number.isFinite(v);
@@ -68,10 +75,14 @@ function isMultiPolygonCoords(v: unknown): v is number[][][][] {
 function normalizeFeature(
 	city: SourceConfig['city'],
 	wardField: SourceConfig['wardField'],
-	feature: unknown
+	feature: unknown,
 ): NormalizedFeature | null {
 	if (!feature || typeof feature !== 'object') return null;
-	const raw = feature as { type?: unknown; geometry?: unknown; properties?: Record<string, unknown> };
+	const raw = feature as {
+		type?: unknown;
+		geometry?: unknown;
+		properties?: Record<string, unknown>;
+	};
 	if (raw.type !== 'Feature' || !raw.geometry || typeof raw.geometry !== 'object') return null;
 
 	const geometry = raw.geometry as { type?: unknown; coordinates?: unknown };
@@ -92,12 +103,16 @@ function normalizeFeature(
 		geometry: normalizedGeometry,
 		properties: {
 			CITY: city,
-			WARDID_NORM: Math.trunc(wardIdRaw)
-		}
+			WARDID_NORM: Math.trunc(wardIdRaw),
+		},
 	};
 }
 
-async function fetchWardSource({ city, url, wardField }: SourceConfig): Promise<NormalizedFeature[]> {
+async function fetchWardSource({
+	city,
+	url,
+	wardField,
+}: SourceConfig): Promise<NormalizedFeature[]> {
 	const sourceUrl = new URL(url);
 	if (!ALLOWED_SOURCE_HOSTS.has(sourceUrl.hostname)) {
 		throw new Error(`Unexpected ward source host: ${sourceUrl.hostname}`);
@@ -136,7 +151,10 @@ export const GET: RequestHandler = async () => {
 		throw error(502, 'Ward boundary data unavailable');
 	}
 
-	cached = { data: { type: 'FeatureCollection', features }, expiresAt: Date.now() + CACHE_TTL_MS };
+	cached = {
+		data: { type: 'FeatureCollection', features },
+		expiresAt: Date.now() + CACHE_TTL_MS,
+	};
 
 	return json(cached.data, { headers: { 'Cache-Control': CACHE_CONTROL } });
 };

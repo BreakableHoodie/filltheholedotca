@@ -48,41 +48,68 @@
 		Skip to main content
 	</a>
 
-	<header class="bg-white border-b border-stone-200 dark:bg-stone-900 dark:border-stone-700 sticky top-0 z-50 safe-header">
+	<header
+		class="bg-white border-b border-stone-200 dark:bg-stone-900 dark:border-stone-700 sticky top-0 z-50 safe-header"
+	>
 		<div class="max-w-6xl mx-auto py-3 safe-header-inner">
 			<div class="flex items-center justify-between gap-3 flex-wrap">
 				<!-- Logo mark + wordmark -->
 				<a href="/" class="flex items-center gap-2.5 group">
-					<img src="/icon-192.png" alt="" aria-hidden="true" width="26" height="26" class="shrink-0 rounded-sm" />
-					<span class="font-brand font-bold text-xl leading-none text-stone-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+					<img
+						src="/icon-192.png"
+						alt=""
+						aria-hidden="true"
+						width="26"
+						height="26"
+						class="shrink-0 rounded-sm"
+					/>
+					<span
+						class="font-brand font-bold text-xl leading-none text-stone-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors"
+					>
 						FillTheHole<span class="text-amber-600 dark:text-amber-400">.ca</span>
 					</span>
 				</a>
 
 				<!-- Live stat dots -->
-				<div class="hidden sm:flex items-center gap-3 text-sm" aria-label="Pothole statistics">
+				<div
+					class="hidden sm:flex items-center gap-3 text-sm"
+					aria-label="Pothole statistics"
+				>
 					<span class="flex items-center gap-1.5 text-stone-600 dark:text-stone-300">
 						<span class="w-2 h-2 rounded-full bg-orange-500 shrink-0"></span>
-						<span class="text-stone-900 dark:text-white font-semibold tabular-nums">{counts.reported}</span>
+						<span class="text-stone-900 dark:text-white font-semibold tabular-nums"
+							>{counts.reported}</span
+						>
 						reported
 					</span>
 					<span class="text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
 					<span class="flex items-center gap-1.5 text-stone-600 dark:text-stone-300">
 						<span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
-						<span class="text-stone-900 dark:text-white font-semibold tabular-nums">{counts.filled}</span>
+						<span class="text-stone-900 dark:text-white font-semibold tabular-nums"
+							>{counts.filled}</span
+						>
 						filled
 					</span>
 				</div>
 
 				<nav class="flex items-center gap-3 text-sm">
 					<PushNotifications />
-					<a href="/stats" class="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors">
+					<a
+						href="/stats"
+						class="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors"
+					>
 						Stats
 					</a>
-					<a href="/how-to" class="hidden sm:inline text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors">
+					<a
+						href="/how-to"
+						class="hidden sm:inline text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors"
+					>
 						How to
 					</a>
-					<a href="/about" class="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors">
+					<a
+						href="/about"
+						class="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors"
+					>
 						About
 					</a>
 					<a
@@ -110,21 +137,51 @@
 		{@render children()}
 	</main>
 
-	<footer class="bg-white border-t border-stone-200 dark:bg-stone-900 dark:border-stone-700 py-5 text-center text-stone-500 dark:text-stone-400 text-xs px-4 space-y-1.5">
+	<footer
+		class="bg-white border-t border-stone-200 dark:bg-stone-900 dark:border-stone-700 py-5 text-center text-stone-500 dark:text-stone-400 text-xs px-4 space-y-1.5"
+	>
 		<p>Track potholes. Contact your councillor. Hold the city accountable.</p>
 		<p>
 			Community-sourced data — not official. Use at your own risk.
-			<a href="/how-to" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">How to use</a>
+			<a
+				href="/how-to"
+				class="underline hover:text-stone-900 dark:hover:text-white transition-colors"
+				>How to use</a
+			>
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
-			<a href="/updates" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">What's new</a>
+			<a
+				href="/updates"
+				class="underline hover:text-stone-900 dark:hover:text-white transition-colors"
+				>What's new</a
+			>
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
-			<a href="/privacy" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Privacy</a>
+			<a
+				href="/privacy"
+				class="underline hover:text-stone-900 dark:hover:text-white transition-colors"
+				>Privacy</a
+			>
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
-			<a href="/terms" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Terms</a>
+			<a
+				href="/terms"
+				class="underline hover:text-stone-900 dark:hover:text-white transition-colors"
+				>Terms</a
+			>
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
-			<a href="https://github.com/BreakableHoodie/filltheholedotca" target="_blank" rel="noopener noreferrer" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">GitHub</a>
+			<a
+				href="https://github.com/BreakableHoodie/filltheholedotca"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="underline hover:text-stone-900 dark:hover:text-white transition-colors"
+				>GitHub</a
+			>
 			<span class="mx-1 text-stone-300 dark:text-stone-600" aria-hidden="true">·</span>
-			<a href="https://github.com/BreakableHoodie/filltheholedotca/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="underline hover:text-stone-900 dark:hover:text-white transition-colors">AGPL-3.0</a>
+			<a
+				href="https://github.com/BreakableHoodie/filltheholedotca/blob/main/LICENSE"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="underline hover:text-stone-900 dark:hover:text-white transition-colors"
+				>AGPL-3.0</a
+			>
 		</p>
 		<p><SocialShare compact /></p>
 	</footer>

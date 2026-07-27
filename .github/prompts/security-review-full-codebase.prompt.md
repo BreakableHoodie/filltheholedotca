@@ -51,14 +51,14 @@ Create `docs/code-review/YYYY-MM-DD-security-review-full-codebase.md` (using tod
 2. Attack surface map (entry points, trust boundaries, sensitive data flows)
 3. Findings by severity: Critical, High, Medium, Low
 4. For each finding include:
-   - Rule ID
-   - Severity
-   - Location (file + line numbers)
-   - Evidence (code snippet)
-   - Impact
-   - Exploit path (step-by-step attacker path)
-   - Minimal fix recommendation
-   - Defense-in-depth recommendation
+    - Rule ID
+    - Severity
+    - Location (file + line numbers)
+    - Evidence (code snippet)
+    - Impact
+    - Exploit path (step-by-step attacker path)
+    - Minimal fix recommendation
+    - Defense-in-depth recommendation
 5. "No finding" controls reviewed and judged acceptable
 6. "Security test gaps" with concrete regression tests to add
 7. "Top 5 fixes to implement first" prioritized by risk reduction vs effort

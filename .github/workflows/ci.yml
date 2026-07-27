@@ -79,6 +79,12 @@ jobs:
 
       - run: npm run lint
 
+      # Formatting is NOT covered by the pre-commit hook: lint-staged only
+      # touches staged files, so anything landing outside a hook drifts forever
+      # (this is how 118 files ended up unformatted). This gate is what actually
+      # keeps .prettierrc honest.
+      - run: npm run format:check
+
   lint-a11y:
     name: A11y static analysis
     runs-on: ubuntu-latest

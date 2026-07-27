@@ -43,7 +43,9 @@ function secureSecretMatch(provided: string, expected: string): boolean {
 }
 
 async function getAdminUserCount(): Promise<number> {
-	const { count } = await getAdminClient().from('admin_users').select('*', { count: 'exact', head: true });
+	const { count } = await getAdminClient()
+		.from('admin_users')
+		.select('*', { count: 'exact', head: true });
 	return count ?? 0;
 }
 
@@ -60,7 +62,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			bootstrap: true,
 			bootstrapConfigured: Boolean(getConfiguredBootstrapSecret()),
 			invite: null,
-			error: null
+			error: null,
 		};
 	}
 
@@ -70,7 +72,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			bootstrap: false,
 			bootstrapConfigured: false,
 			invite: null,
-			error: 'No invite code provided.'
+			error: 'No invite code provided.',
 		};
 	}
 
@@ -91,14 +93,14 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			bootstrap: false,
 			bootstrapConfigured: false,
 			invite: null,
-			error: 'This invite link is invalid or has expired.'
+			error: 'This invite link is invalid or has expired.',
 		};
 	}
 
 	return {
 		bootstrap: false,
 		bootstrapConfigured: false,
-		invite: { code: invite.code, email: invite.email, role: invite.role as string }
+		invite: { code: invite.code, email: invite.email, role: invite.role as string },
 	};
 };
 
@@ -135,12 +137,15 @@ export const actions: Actions = {
 					.regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
 					.regex(/[a-z]/, 'Password must contain at least one lowercase letter')
 					.regex(/[0-9]/, 'Password must contain at least one number')
-					.regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character')
+					.regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
 			})
 			.safeParse({ email, firstName, lastName, password });
 
 		if (!fieldsParsed.success)
-			return fail(400, { error: fieldsParsed.error.issues[0]?.message ?? 'Invalid input', ...echo });
+			return fail(400, {
+				error: fieldsParsed.error.issues[0]?.message ?? 'Invalid input',
+				...echo,
+			});
 
 		if (password !== confirmPassword)
 			return fail(400, { error: 'Passwords do not match', ...echo });
@@ -149,7 +154,7 @@ export const actions: Actions = {
 		if (!rateCheck.allowed) {
 			return fail(429, {
 				error: `Too many signup attempts. Try again in ${rateCheck.remainingMinutes} minutes.`,
-				...echo
+				...echo,
 			});
 		}
 
@@ -158,9 +163,8 @@ export const actions: Actions = {
 			const configuredBootstrapSecret = getConfiguredBootstrapSecret();
 			if (!configuredBootstrapSecret) {
 				return fail(503, {
-					error:
-						'Bootstrap is not configured. Set ADMIN_BOOTSTRAP_SECRET to a strong random value and retry.',
-					...echo
+					error: 'Bootstrap is not configured. Set ADMIN_BOOTSTRAP_SECRET to a strong random value and retry.',
+					...echo,
 				});
 			}
 
@@ -171,7 +175,7 @@ export const actions: Actions = {
 					userAgent,
 					attemptType: 'signup',
 					success: false,
-					failureReason: 'invalid_bootstrap_secret'
+					failureReason: 'invalid_bootstrap_secret',
 				});
 				return fail(403, { error: 'Invalid bootstrap secret', ...echo });
 			}
@@ -182,7 +186,8 @@ export const actions: Actions = {
 				.eq('email', email)
 				.maybeSingle();
 
-			if (existing) return fail(400, { error: 'An account with that email already exists', ...echo });
+			if (existing)
+				return fail(400, { error: 'An account with that email already exists', ...echo });
 
 			const passwordHash = await hashPassword(password);
 			const { data: newUser, error: insertError } = await getAdminClient()
@@ -194,14 +199,21 @@ export const actions: Actions = {
 					last_name: lastName,
 					role: 'admin',
 					is_active: true,
-					activated_at: new Date().toISOString()
+					activated_at: new Date().toISOString(),
 				})
 				.select('id')
 				.single();
 
 			if (insertError || !newUser) {
-				logError('admin/signup', 'Failed to insert bootstrap admin account', insertError ?? new Error('no user returned'));
-				return fail(500, { error: 'Failed to create bootstrap account. Please try again.', ...echo });
+				logError(
+					'admin/signup',
+					'Failed to insert bootstrap admin account',
+					insertError ?? new Error('no user returned'),
+				);
+				return fail(500, {
+					error: 'Failed to create bootstrap account. Please try again.',
+					...echo,
+				});
 			}
 
 			// Guard against concurrent bootstrap: elect a winner by earliest created_at (id as
@@ -220,7 +232,7 @@ export const actions: Actions = {
 				await getAdminClient().from('admin_users').delete().eq('id', newUser.id);
 				return fail(409, {
 					error: 'Another admin account was created simultaneously. Please log in instead.',
-					...echo
+					...echo,
 				});
 			}
 
@@ -230,7 +242,7 @@ export const actions: Actions = {
 				ipHash,
 				userAgent,
 				attemptType: 'signup',
-				success: true
+				success: true,
 			});
 
 			// Log only the UUID — never log the email address to stdout.
@@ -252,13 +264,27 @@ export const actions: Actions = {
 			new Date(invite.expires_at) < new Date();
 
 		if (invalid) {
-			await recordAuthAttempt({ email, ipHash, userAgent, attemptType: 'signup', success: false, failureReason: 'invalid_invite_code' });
+			await recordAuthAttempt({
+				email,
+				ipHash,
+				userAgent,
+				attemptType: 'signup',
+				success: false,
+				failureReason: 'invalid_invite_code',
+			});
 			return fail(400, { error: 'Invalid or expired invite code', ...echo });
 		}
 
 		// If invite is email-restricted, enforce it
 		if (invite.email && invite.email.toLowerCase() !== email) {
-			await recordAuthAttempt({ email, ipHash, userAgent, attemptType: 'signup', success: false, failureReason: 'invite_email_mismatch' });
+			await recordAuthAttempt({
+				email,
+				ipHash,
+				userAgent,
+				attemptType: 'signup',
+				success: false,
+				failureReason: 'invite_email_mismatch',
+			});
 			return fail(400, { error: 'Email does not match this invite', ...echo });
 		}
 
@@ -270,7 +296,14 @@ export const actions: Actions = {
 			.maybeSingle();
 
 		if (existing) {
-			await recordAuthAttempt({ email, ipHash, userAgent, attemptType: 'signup', success: false, failureReason: 'email_taken' });
+			await recordAuthAttempt({
+				email,
+				ipHash,
+				userAgent,
+				attemptType: 'signup',
+				success: false,
+				failureReason: 'email_taken',
+			});
 			return fail(400, { error: 'An account with that email already exists', ...echo });
 		}
 
@@ -284,13 +317,17 @@ export const actions: Actions = {
 				first_name: firstName,
 				last_name: lastName,
 				role: invite.role,
-				is_active: false // admin must activate before user can log in
+				is_active: false, // admin must activate before user can log in
 			})
 			.select('id')
 			.single();
 
 		if (insertError || !newUser) {
-			logError('admin/signup', 'Failed to insert invited admin account', insertError ?? new Error('no user returned'));
+			logError(
+				'admin/signup',
+				'Failed to insert invited admin account',
+				insertError ?? new Error('no user returned'),
+			);
 			return fail(500, { error: 'Failed to create account. Please try again.', ...echo });
 		}
 
@@ -315,9 +352,9 @@ export const actions: Actions = {
 			ipHash,
 			userAgent,
 			attemptType: 'signup',
-			success: true
+			success: true,
 		});
 
 		return { registered: true, requiresActivation: true, role: invite.role };
-	}
+	},
 };

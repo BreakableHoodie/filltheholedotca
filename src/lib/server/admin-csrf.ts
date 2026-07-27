@@ -25,7 +25,7 @@ async function getKey(): Promise<CryptoKey> {
 	const raw = new TextEncoder().encode(env.ADMIN_SESSION_SECRET);
 	keyCache = await crypto.subtle.importKey('raw', raw, { name: 'HMAC', hash: 'SHA-256' }, false, [
 		'sign',
-		'verify'
+		'verify',
 	]);
 	return keyCache;
 }

@@ -12,14 +12,10 @@
 
 	// Split into active / expired
 	const activeInvites = $derived(
-		data.invites.filter(
-			(i) => i.is_active && !i.used_at && !isPast(new Date(i.expires_at))
-		)
+		data.invites.filter((i) => i.is_active && !i.used_at && !isPast(new Date(i.expires_at))),
 	);
 	const inactiveInvites = $derived(
-		data.invites.filter(
-			(i) => !i.is_active || i.used_at || isPast(new Date(i.expires_at))
-		)
+		data.invites.filter((i) => !i.is_active || i.used_at || isPast(new Date(i.expires_at))),
 	);
 
 	function copyInviteUrl(code: string) {
@@ -77,7 +73,12 @@
 	<!-- Create invite form -->
 	<div class="bg-stone-900 border border-stone-800 rounded-lg p-4 mb-6">
 		<h2 class="text-sm font-medium text-stone-300 mb-3">Create Invite</h2>
-		<form method="post" action="?/createInvite" use:enhance class="flex items-end gap-3 flex-wrap">
+		<form
+			method="post"
+			action="?/createInvite"
+			use:enhance
+			class="flex items-end gap-3 flex-wrap"
+		>
 			<div>
 				<label for="role" class="block text-xs text-stone-500 mb-1.5">Role</label>
 				<select
@@ -124,7 +125,9 @@
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 flex-wrap">
 								<span
-									class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize {roleColor(invite.role)}"
+									class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize {roleColor(
+										invite.role,
+									)}"
 								>
 									{invite.role}
 								</span>
@@ -137,7 +140,9 @@
 							</div>
 							<div class="flex items-center gap-3 mt-1">
 								<span class="text-stone-600 text-xs">
-									Expires {formatDistanceToNow(new Date(invite.expires_at), { addSuffix: true })}
+									Expires {formatDistanceToNow(new Date(invite.expires_at), {
+										addSuffix: true,
+									})}
 								</span>
 								{#if invite.creator}
 									<span class="text-stone-700 text-xs">·</span>
@@ -155,7 +160,12 @@
 								onclick={() => copyInviteUrl(invite.code)}
 								class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-400 border border-amber-600/30 rounded hover:bg-amber-600/10 transition-colors"
 							>
-								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg
+									class="w-3.5 h-3.5"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
 									<path
 										stroke-linecap="round"
 										stroke-linejoin="round"
@@ -193,7 +203,9 @@
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 flex-wrap">
 								<span
-									class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize {roleColor(invite.role)}"
+									class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize {roleColor(
+										invite.role,
+									)}"
 								>
 									{invite.role}
 								</span>
@@ -206,11 +218,15 @@
 									<span class="text-stone-600 text-xs">
 										Used by {invite.used_by_user.first_name}
 										{invite.used_by_user.last_name}
-										{formatDistanceToNow(new Date(invite.used_at), { addSuffix: true })}
+										{formatDistanceToNow(new Date(invite.used_at), {
+											addSuffix: true,
+										})}
 									</span>
 								{:else if invite.used_at}
 									<span class="text-stone-600 text-xs">
-										Used {formatDistanceToNow(new Date(invite.used_at), { addSuffix: true })}
+										Used {formatDistanceToNow(new Date(invite.used_at), {
+											addSuffix: true,
+										})}
 									</span>
 								{:else}
 									<span class="text-stone-600 text-xs">

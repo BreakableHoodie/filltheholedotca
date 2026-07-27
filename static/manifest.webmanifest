@@ -1,26 +1,26 @@
 {
-  "name": "FillTheHole.ca",
-  "short_name": "FillTheHole",
-  "description": "Track and report potholes in Waterloo Region. Hold the city accountable.",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#09090b",
-  "lang": "en-CA",
-  "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [],
-  "categories": ["utilities", "travel"]
+	"name": "FillTheHole.ca",
+	"short_name": "FillTheHole",
+	"description": "Track and report potholes in Waterloo Region. Hold the city accountable.",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#09090b",
+	"theme_color": "#09090b",
+	"lang": "en-CA",
+	"icons": [
+		{
+			"src": "/icon-192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/icon-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any maskable"
+		}
+	],
+	"screenshots": [],
+	"categories": ["utilities", "travel"]
 }

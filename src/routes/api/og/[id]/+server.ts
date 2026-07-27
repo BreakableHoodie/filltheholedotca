@@ -34,33 +34,15 @@ async function loadFont(): Promise<ArrayBuffer> {
 	}
 }
 
-// Colours kept in sync with STATUS_CONFIG hex values in src/lib/constants.ts
-// prettier-ignore — alignment is deliberate so a drifted colour is visible in review.
+// Colours kept in sync with STATUS_CONFIG hex values in src/lib/constants.ts.
+// Alignment is deliberate so a drifted colour is visible in review; the directive
+// below must be exactly "prettier-ignore" on its own line or Prettier reflows it.
+// prettier-ignore
 const STATUS_STYLES = {
-	reported: {
-		label: 'Unfilled',
-		dot: '#f97316',
-		bg: 'rgba(249,115,22,0.12)',
-		border: 'rgba(249,115,22,0.3)',
-	},
-	filled: {
-		label: 'Filled',
-		dot: '#22c55e',
-		bg: 'rgba(34,197,94,0.12)',
-		border: 'rgba(34,197,94,0.3)',
-	},
-	pending: {
-		label: 'Pending',
-		dot: '#a1a1aa',
-		bg: 'rgba(161,161,170,0.12)',
-		border: 'rgba(161,161,170,0.3)',
-	},
-	expired: {
-		label: 'Expired',
-		dot: '#71717a',
-		bg: 'rgba(113,113,122,0.12)',
-		border: 'rgba(113,113,122,0.3)',
-	},
+	reported: { label: 'Unfilled', dot: '#f97316', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)' },
+	filled:   { label: 'Filled',   dot: '#22c55e', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.3)'  },
+	pending:  { label: 'Pending',  dot: '#a1a1aa', bg: 'rgba(161,161,170,0.12)', border: 'rgba(161,161,170,0.3)' },
+	expired:  { label: 'Expired',  dot: '#71717a', bg: 'rgba(113,113,122,0.12)', border: 'rgba(113,113,122,0.3)' },
 } as const;
 
 export const GET: RequestHandler = async ({ params }) => {

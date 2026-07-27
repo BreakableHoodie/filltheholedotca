@@ -16,7 +16,7 @@ export interface DailyTemps {
  */
 export function computeFreezeThawByMonth(
 	daily: DailyTemps,
-	monthKeys: string[]
+	monthKeys: string[],
 ): Record<string, number> {
 	const counts: Record<string, number> = {};
 	for (const k of monthKeys) counts[k] = 0;

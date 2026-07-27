@@ -6,16 +6,14 @@ import type { Pothole } from '$lib/types';
  * Used on ward profile pages where there is no single pothole to reference.
  */
 export function getWardEmailUrl(
-  councillor: Councillor,
-  fillRate: number | null,
-  openCount: number,
-  wardUrl: string
+	councillor: Councillor,
+	fillRate: number | null,
+	openCount: number,
+	wardUrl: string,
 ): string {
-  const subject = `Pothole accountability — Ward ${councillor.ward}`;
-  const fillLine = fillRate !== null
-    ? `Current fill rate: ${fillRate.toFixed(0)}%`
-    : '';
-  const body = `Hi ${councillor.name},
+	const subject = `Pothole accountability — Ward ${councillor.ward}`;
+	const fillLine = fillRate !== null ? `Current fill rate: ${fillRate.toFixed(0)}%` : '';
+	const body = `Hi ${councillor.name},
 
 I'm writing about the pothole situation in Ward ${councillor.ward}.
 
@@ -26,7 +24,7 @@ Ward accountability page: ${wardUrl}
 Residents are tracking these potholes and would appreciate faster action on repairs.
 
 Thank you.`;
-  return `mailto:${councillor.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+	return `mailto:${councillor.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 /**
@@ -34,8 +32,8 @@ Thank you.`;
  * Moved from hole/[id]/+page.svelte to allow reuse.
  */
 export function getPotholeEmailUrl(councillor: Councillor, pothole: Pothole): string {
-  const subject = `Pothole at ${pothole.address || 'my location'}`;
-  const body = `Hi ${councillor.name},
+	const subject = `Pothole at ${pothole.address || 'my location'}`;
+	const body = `Hi ${councillor.name},
 
 I'd like to report an unfilled pothole in Ward ${councillor.ward}.
 
@@ -45,5 +43,5 @@ Tracked at: https://fillthehole.ca/hole/${pothole.id}
 This pothole has been reported and is awaiting city action. Please help get it on the city's radar.
 
 Thank you.`;
-  return `mailto:${councillor.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+	return `mailto:${councillor.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }

@@ -52,7 +52,7 @@ Many repository owners will have guidance on prerequisite steps which need to be
 - running linters and ensuring any issues are resolved
 - naming guidelines and other patterns
 - unit tests, end to end tests, or other tests which need to be created and pass
-  - related, there may be required coverage percentages
+    - related, there may be required coverage percentages
 
 Look through all guidance you find and identify any prerequisites. List the commands the user should run (builds, linters, tests) and ask them to confirm the results before proceeding. Do not run build or test commands directly.
 

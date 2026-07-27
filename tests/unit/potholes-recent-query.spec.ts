@@ -10,14 +10,15 @@ import { fileURLToPath } from 'node:url';
 // (see manual verification steps in the PR description).
 test('recent potholes endpoint filters on reported_at alongside created_at/filled_at/expired_at', () => {
 	const source = readFileSync(
-		fileURLToPath(
-			new URL('../../src/routes/api/potholes/recent/+server.ts', import.meta.url),
-		),
+		fileURLToPath(new URL('../../src/routes/api/potholes/recent/+server.ts', import.meta.url)),
 		'utf-8',
 	);
 
 	const orCallMatch = source.match(/\.or\(\s*`([^`]+)`/);
-	expect(orCallMatch, 'expected a `.or(`...`)` filter call in the recent potholes endpoint').not.toBeNull();
+	expect(
+		orCallMatch,
+		'expected a `.or(`...`)` filter call in the recent potholes endpoint',
+	).not.toBeNull();
 
 	const filter = orCallMatch![1];
 	expect(filter).toContain('created_at.gt.');

@@ -6,7 +6,7 @@ import {
 	recordAuthAttempt,
 	createAdminSession,
 	TRUSTED_DEVICE_COOKIE,
-	buildSessionCookie
+	buildSessionCookie,
 } from '$lib/server/admin-auth';
 import { verifyPassword, hashToken } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
@@ -16,7 +16,7 @@ import { logError } from '$lib/server/observability';
 import { getAdminClient } from '$lib/server/supabase';
 const loginSchema = z.object({
 	email: z.string().email().toLowerCase(),
-	password: z.string().min(1)
+	password: z.string().min(1),
 });
 
 export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
@@ -37,19 +37,21 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			void notify('security', {
 				title: '🚨 Login rate limit triggered',
 				message: `Too many failed login attempts (IP hash: ${ipHash.slice(0, 8)}…). Possible brute-force.`,
-				priority: 1
+				priority: 1,
 			});
 		}
 		throw error(
 			429,
-			`Too many failed login attempts. Try again in ${rateCheck.remainingMinutes} minutes.`
+			`Too many failed login attempts. Try again in ${rateCheck.remainingMinutes} minutes.`,
 		);
 	}
 
 	// Look up user
 	const { data: user } = await getAdminClient()
 		.from('admin_users')
-		.select('id, email, password_hash, first_name, last_name, role, is_active, activated_at, totp_enabled')
+		.select(
+			'id, email, password_hash, first_name, last_name, role, is_active, activated_at, totp_enabled',
+		)
 		.eq('email', email)
 		.maybeSingle();
 
@@ -60,7 +62,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			userAgent,
 			attemptType: 'login',
 			success: false,
-			failureReason: 'user_not_found'
+			failureReason: 'user_not_found',
 		});
 		// Deliberate vague message to prevent user enumeration
 		throw error(401, 'Invalid email or password');
@@ -74,9 +76,12 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			userAgent,
 			attemptType: 'login',
 			success: false,
-			failureReason: 'activation_required'
+			failureReason: 'activation_required',
 		});
-		return json({ error: 'Account not yet activated', requiresActivation: true }, { status: 403 });
+		return json(
+			{ error: 'Account not yet activated', requiresActivation: true },
+			{ status: 403 },
+		);
 	}
 
 	if (!user.is_active) {
@@ -87,7 +92,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			userAgent,
 			attemptType: 'login',
 			success: false,
-			failureReason: 'account_disabled'
+			failureReason: 'account_disabled',
 		});
 		throw error(403, 'Account has been deactivated. Contact an administrator.');
 	}
@@ -101,7 +106,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			userAgent,
 			attemptType: 'login',
 			success: false,
-			failureReason: 'invalid_password'
+			failureReason: 'invalid_password',
 		});
 		throw error(401, 'Invalid email or password');
 	}
@@ -132,17 +137,28 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 						.from('admin_trusted_devices')
 						.update({ last_used_at: new Date().toISOString() })
 						.eq('token', trustedTokenHash);
-					if (touchError) logError('admin/trusted-device', 'Failed to update last_used_at', touchError);
+					if (touchError)
+						logError(
+							'admin/trusted-device',
+							'Failed to update last_used_at',
+							touchError,
+						);
 				} else {
 					// UA mismatch — possible cookie theft from a different device.
 					// Don't skip MFA; surface for forensics.
-					logError('admin/trusted_device', 'Trusted device UA mismatch — MFA not skipped', new Error('ua_mismatch'), {
-						ipHashPrefix: ipHash.slice(0, 8)
-					});
+					logError(
+						'admin/trusted_device',
+						'Trusted device UA mismatch — MFA not skipped',
+						new Error('ua_mismatch'),
+						{
+							ipHashPrefix: ipHash.slice(0, 8),
+						},
+					);
 					void notify('security', {
 						title: '⚠️ Trusted device UA mismatch',
-						message: 'A trusted device cookie was presented from an unexpected browser. MFA was not skipped.',
-						priority: 0
+						message:
+							'A trusted device cookie was presented from an unexpected browser. MFA was not skipped.',
+						priority: 0,
 					});
 				}
 			}
@@ -165,7 +181,13 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			.order('expires_at', { ascending: false })
 			.limit(1)
 			.maybeSingle();
-		if (challengeLookupError) logError('admin/mfa', 'Failed to look up existing MFA challenge', challengeLookupError, { userId: user.id });
+		if (challengeLookupError)
+			logError(
+				'admin/mfa',
+				'Failed to look up existing MFA challenge',
+				challengeLookupError,
+				{ userId: user.id },
+			);
 		if (existingChallenge) {
 			return json({ mfaRequired: true, mfaToken: existingChallenge.token });
 		}
@@ -176,14 +198,17 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			.delete()
 			.eq('user_id', user.id)
 			.or('used.eq.true,expires_at.lt.' + new Date().toISOString());
-		if (cleanupError) logError('admin/mfa', 'Failed to clean up stale MFA challenges', cleanupError, { userId: user.id });
+		if (cleanupError)
+			logError('admin/mfa', 'Failed to clean up stale MFA challenges', cleanupError, {
+				userId: user.id,
+			});
 
 		await getAdminClient().from('admin_mfa_challenges').insert({
 			token: mfaToken,
 			user_id: user.id,
 			ip_address: ipHash,
 			user_agent: userAgent,
-			expires_at: expiresAt
+			expires_at: expiresAt,
 		});
 
 		await recordAuthAttempt({
@@ -192,7 +217,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			ipHash,
 			userAgent,
 			attemptType: 'login',
-			success: true
+			success: true,
 		});
 
 		// Return only the mfaToken needed to continue the MFA challenge.
@@ -201,7 +226,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		// be able to enumerate user PII via the pre-auth response.
 		return json({
 			mfaRequired: true,
-			mfaToken
+			mfaToken,
 		});
 	}
 
@@ -220,7 +245,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		ipHash,
 		userAgent,
 		attemptType: 'login',
-		success: true
+		success: true,
 	});
 
 	// Fire-and-forget — do not block the auth response on Pushover latency.
@@ -228,7 +253,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	void notify('security', {
 		title: '🔐 Admin login',
 		message: `Successful login (role: ${user.role})`,
-		priority: -1
+		priority: -1,
 	});
 
 	const headers = new Headers({ 'Content-Type': 'application/json' });
@@ -243,9 +268,9 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 				email: user.email,
 				firstName: user.first_name,
 				lastName: user.last_name,
-				role: user.role
-			}
+				role: user.role,
+			},
 		}),
-		{ status: 200, headers }
+		{ status: 200, headers },
 	);
 };

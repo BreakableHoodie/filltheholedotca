@@ -6,7 +6,9 @@ test.describe('isSafePushEndpoint', () => {
 
 	test('allows a public HTTPS push endpoint', () => {
 		expect(isSafePushEndpoint('https://fcm.googleapis.com/fcm/send/abc123')).toBe(true);
-		expect(isSafePushEndpoint('https://updates.push.services.mozilla.com/wpush/v2/abc')).toBe(true);
+		expect(isSafePushEndpoint('https://updates.push.services.mozilla.com/wpush/v2/abc')).toBe(
+			true,
+		);
 	});
 
 	// ── Protocol ───────────────────────────────────────────────────────────────

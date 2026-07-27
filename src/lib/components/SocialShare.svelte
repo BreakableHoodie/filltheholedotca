@@ -6,7 +6,7 @@
 
 	const SITE_URL = 'https://fillthehole.ca';
 	const SHARE_TEXT = encodeURIComponent(
-		'Track potholes in Waterloo Region, Ontario 🕳️ — fillthehole.ca'
+		'Track potholes in Waterloo Region, Ontario 🕳️ — fillthehole.ca',
 	);
 	const SHARE_URL = encodeURIComponent(SITE_URL);
 
@@ -14,28 +14,28 @@
 		{
 			name: 'Reddit',
 			href: `https://www.reddit.com/submit?url=${SHARE_URL}&title=${SHARE_TEXT}`,
-			hoverClass: 'hover:border-orange-500/40 hover:text-orange-400'
+			hoverClass: 'hover:border-orange-500/40 hover:text-orange-400',
 		},
 		{
 			name: 'Facebook',
 			href: `https://www.facebook.com/sharer/sharer.php?u=${SHARE_URL}`,
-			hoverClass: 'hover:border-blue-500/40 hover:text-blue-400'
+			hoverClass: 'hover:border-blue-500/40 hover:text-blue-400',
 		},
 		{
 			name: 'Bluesky',
 			href: `https://bsky.app/intent/compose?text=${SHARE_TEXT}`,
-			hoverClass: 'hover:border-amber-500/40 hover:text-amber-400'
+			hoverClass: 'hover:border-amber-500/40 hover:text-amber-400',
 		},
 		{
 			name: 'Threads',
 			href: `https://www.threads.net/intent/post?text=${SHARE_TEXT}`,
-			hoverClass: 'hover:border-stone-400/40 hover:text-stone-200'
+			hoverClass: 'hover:border-stone-400/40 hover:text-stone-200',
 		},
 		{
 			name: 'LinkedIn',
 			href: `https://www.linkedin.com/sharing/share-offsite/?url=${SHARE_URL}`,
-			hoverClass: 'hover:border-blue-400/40 hover:text-blue-300'
-		}
+			hoverClass: 'hover:border-blue-400/40 hover:text-blue-300',
+		},
 	] as const;
 
 	let canNativeShare = $state(false);
@@ -55,7 +55,7 @@
 			await navigator.share({
 				title: 'FillTheHole.ca',
 				text: 'Track potholes in Waterloo Region, Ontario 🕳️',
-				url: SITE_URL
+				url: SITE_URL,
 			});
 		} catch {
 			// User cancelled or share failed — not an error worth surfacing
@@ -109,7 +109,9 @@
 			</a>
 		{/each}
 		<!-- aria-live announces the "Copied!" state change to screen readers -->
-		<span class="sr-only" role="status" aria-live="polite">{copied ? 'Link copied to clipboard' : ''}</span>
+		<span class="sr-only" role="status" aria-live="polite"
+			>{copied ? 'Link copied to clipboard' : ''}</span
+		>
 		<button
 			type="button"
 			onclick={copyLink}

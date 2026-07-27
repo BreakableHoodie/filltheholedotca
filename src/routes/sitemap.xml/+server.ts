@@ -14,13 +14,13 @@ const STATIC_PAGES = [
 	{ path: '/about', changefreq: 'monthly', priority: '0.5' },
 	{ path: '/updates', changefreq: 'monthly', priority: '0.4' },
 	{ path: '/privacy', changefreq: 'yearly', priority: '0.3' },
-	{ path: '/terms', changefreq: 'yearly', priority: '0.3' }
+	{ path: '/terms', changefreq: 'yearly', priority: '0.3' },
 ];
 
 const PRIORITY: Record<string, string> = {
 	reported: '0.7',
 	filled: '0.5',
-	expired: '0.3'
+	expired: '0.3',
 };
 
 export const GET: RequestHandler = async () => {
@@ -41,7 +41,7 @@ export const GET: RequestHandler = async () => {
     <loc>${ORIGIN}${path}</loc>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
-  </url>`
+  </url>`,
 	).join('');
 
 	// One accountability page per councillor ward (/stats/ward/<city>/<ward>).
@@ -51,7 +51,7 @@ export const GET: RequestHandler = async () => {
     <loc>${ORIGIN}/stats/ward/${city}/${ward}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
-  </url>`
+  </url>`,
 	).join('');
 
 	const potholeEntries = potholes
@@ -76,7 +76,7 @@ export const GET: RequestHandler = async () => {
 	return new Response(xml, {
 		headers: {
 			'Content-Type': 'application/xml',
-			'Cache-Control': 'public, max-age=3600'
-		}
+			'Cache-Control': 'public, max-age=3600',
+		},
 	});
 };

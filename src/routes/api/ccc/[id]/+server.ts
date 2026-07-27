@@ -48,12 +48,12 @@ export const GET: RequestHandler = async ({ params }) => {
 		orderByFields: 'CREATE_DATE DESC',
 		resultRecordCount: '5',
 		returnGeometry: 'false',
-		f: 'json'
+		f: 'json',
 	});
 
 	try {
 		const res = await fetch(`${CCC_URL}?${params2}`, {
-			signal: AbortSignal.timeout(5000)
+			signal: AbortSignal.timeout(5000),
 		});
 		if (!res.ok) return json([]);
 		const body = await res.json();

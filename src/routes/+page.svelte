@@ -107,8 +107,8 @@
 				for (const p of updated) {
 					const existing = markersById[p.id];
 					if (existing) {
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						const oldStatus =
+							// eslint-disable-next-line @typescript-eslint/no-explicit-any
 							((existing as any)._status as string | undefined) ?? 'reported';
 						if (oldStatus !== p.status) {
 							const layerKey = p.status in clusterGroups ? p.status : 'reported';

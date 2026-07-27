@@ -51,7 +51,7 @@ export const SESSION_CONFIG = {
 	/** Idle timeout for admin role: 15 minutes */
 	adminIdleTimeout: 15 * 60 * 1000,
 	/** Absolute timeout for admin role: 4 hours */
-	adminAbsoluteTimeout: 4 * 60 * 60 * 1000
+	adminAbsoluteTimeout: 4 * 60 * 60 * 1000,
 } as const;
 
 const SESSION_EXPIRY_DAYS = 1; // hard DB expiry — soft timeouts enforced above
@@ -64,7 +64,7 @@ export async function createAdminSession(
 	userId: string,
 	// ip_address column stores an HMAC-SHA-256 hash — never a raw IP.
 	ipHash: string,
-	userAgent: string
+	userAgent: string,
 ): Promise<string> {
 	const sessionId = crypto.randomUUID();
 	const expiresAt = new Date(Date.now() + SESSION_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
@@ -74,7 +74,7 @@ export async function createAdminSession(
 		user_id: userId,
 		expires_at: expiresAt.toISOString(),
 		ip_address: ipHash,
-		user_agent: userAgent
+		user_agent: userAgent,
 	});
 
 	if (insertError) throw new Error(`Failed to create session: ${insertError.message}`);
@@ -90,13 +90,17 @@ const E2E_FIXTURE_USER: AdminUser = {
 	lastName: 'Admin',
 	role: 'admin',
 	isActive: true,
-	totpEnabled: true
+	totpEnabled: true,
 };
 
 export async function validateAdminSession(
-	sessionId: string
+	sessionId: string,
 ): Promise<{ user: AdminUser; session: AdminSession } | null> {
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true' && sessionId === E2E_FIXTURE_SESSION_ID) {
+	if (
+		process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' &&
+		process.env.CI === 'true' &&
+		sessionId === E2E_FIXTURE_SESSION_ID
+	) {
 		const now = new Date();
 		return {
 			user: E2E_FIXTURE_USER,
@@ -105,8 +109,8 @@ export async function validateAdminSession(
 				userId: E2E_FIXTURE_USER.id,
 				expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
 				createdAt: now,
-				lastActivityAt: now
-			}
+				lastActivityAt: now,
+			},
 		};
 	}
 	const { data, error: queryError } = await getAdminClient()
@@ -117,7 +121,7 @@ export async function validateAdminSession(
       admin_users!inner (
         id, email, first_name, last_name, role, is_active, totp_enabled
       )
-    `
+    `,
 		)
 		.eq('id', sessionId)
 		.gt('expires_at', new Date().toISOString())
@@ -135,7 +139,7 @@ export async function validateAdminSession(
 		lastName: dbUser['last_name'] as string,
 		role: dbUser['role'] as AdminRole,
 		isActive: dbUser['is_active'] as boolean,
-		totpEnabled: dbUser['totp_enabled'] as boolean
+		totpEnabled: dbUser['totp_enabled'] as boolean,
 	};
 
 	const session: AdminSession = {
@@ -143,7 +147,7 @@ export async function validateAdminSession(
 		userId: data.user_id as string,
 		expiresAt: new Date(data.expires_at as string),
 		createdAt: new Date(data.created_at as string),
-		lastActivityAt: new Date(data.last_activity_at as string)
+		lastActivityAt: new Date(data.last_activity_at as string),
 	};
 
 	return { user, session };
@@ -154,7 +158,8 @@ export async function touchSession(sessionId: string): Promise<void> {
 		.from('admin_sessions')
 		.update({ last_activity_at: new Date().toISOString() })
 		.eq('id', sessionId);
-	if (touchError) logError('admin-auth/touch-session', 'Failed to update session activity', touchError);
+	if (touchError)
+		logError('admin-auth/touch-session', 'Failed to update session activity', touchError);
 }
 
 export async function invalidateSession(sessionId: string): Promise<void> {
@@ -162,17 +167,24 @@ export async function invalidateSession(sessionId: string): Promise<void> {
 		.from('admin_sessions')
 		.delete()
 		.eq('id', sessionId);
-	if (deleteError) logError('admin-auth/invalidate-session', 'Failed to invalidate session', deleteError);
+	if (deleteError)
+		logError('admin-auth/invalidate-session', 'Failed to invalidate session', deleteError);
 }
 
 export async function invalidateAllSessionsForUser(
 	userId: string,
-	exceptSessionId?: string
+	exceptSessionId?: string,
 ): Promise<void> {
 	let query = getAdminClient().from('admin_sessions').delete().eq('user_id', userId);
 	if (exceptSessionId) query = query.neq('id', exceptSessionId);
 	const { error: deleteError } = await query;
-	if (deleteError) logError('admin-auth/invalidate-all-sessions', 'Failed to invalidate all sessions for user', deleteError, { userId });
+	if (deleteError)
+		logError(
+			'admin-auth/invalidate-all-sessions',
+			'Failed to invalidate all sessions for user',
+			deleteError,
+			{ userId },
+		);
 }
 
 // ---------------------------------------------------------------------------
@@ -182,7 +194,7 @@ export async function invalidateAllSessionsForUser(
 
 export function checkSessionExpiry(
 	session: AdminSession,
-	userRole: AdminRole
+	userRole: AdminRole,
 ): 'idle' | 'absolute' | null {
 	const now = Date.now();
 	const idleTimeout =
@@ -206,17 +218,19 @@ export async function writeAuditLog(
 	resourceId: string | null,
 	details: object | null,
 	// ip_address column stores an HMAC-SHA-256 hash — never a raw IP.
-	ipHash: string
+	ipHash: string,
 ): Promise<void> {
 	try {
-		const { error: auditError } = await getAdminClient().from('admin_audit_log').insert({
-			user_id: userId,
-			action,
-			resource_type: resourceType,
-			resource_id: resourceId,
-			details: details ?? null,
-			ip_address: ipHash
-		});
+		const { error: auditError } = await getAdminClient()
+			.from('admin_audit_log')
+			.insert({
+				user_id: userId,
+				action,
+				resource_type: resourceType,
+				resource_id: resourceId,
+				details: details ?? null,
+				ip_address: ipHash,
+			});
 		// Supabase returns errors in the result, not as thrown exceptions.
 		if (auditError) logError('audit', 'Failed to write audit log', auditError);
 	} catch (e) {
@@ -233,7 +247,7 @@ export async function checkAuthRateLimit(
 	email: string,
 	// ipHash must be an HMAC-SHA-256 hash — never a raw IP.
 	ipHash: string,
-	attemptType: 'login' | 'mfa' | 'signup'
+	attemptType: 'login' | 'mfa' | 'signup',
 ): Promise<{ allowed: boolean; remainingMinutes?: number; justBlocked?: boolean }> {
 	const windowMs = 10 * 60 * 1000; // 10 minutes
 	// M6: Do NOT count failures by email alone — that lets an attacker lock
@@ -263,13 +277,17 @@ export async function checkAuthRateLimit(
 			.eq('ip_address', ipHash)
 			.eq('attempt_type', attemptType)
 			.eq('success', false)
-			.gte('created_at', windowStart)
+			.gte('created_at', windowStart),
 	]);
 
 	// Fail CLOSED on DB error — a broken rate-limit query must not silently
 	// allow unlimited login attempts. Log the error for observability.
 	if (emailIpResult.error || ipResult.error) {
-		logError('admin-auth/rate-limit', 'Rate-limit query failed', emailIpResult.error ?? ipResult.error);
+		logError(
+			'admin-auth/rate-limit',
+			'Rate-limit query failed',
+			emailIpResult.error ?? ipResult.error,
+		);
 		return { allowed: false, remainingMinutes: Math.ceil(windowMs / 60_000) };
 	}
 
@@ -298,20 +316,27 @@ export async function recordAuthAttempt(params: {
 	failureReason?: string;
 }): Promise<void> {
 	try {
-		const { error: insertError } = await getAdminClient().from('admin_auth_attempts').insert({
-			user_id: params.userId ?? null,
-			email: params.email,
-			ip_address: params.ipHash,
-			user_agent: params.userAgent,
-			attempt_type: params.attemptType,
-			success: params.success,
-			failure_reason: params.failureReason ?? null
-		});
-		if (insertError) {
-			logError('admin-auth/record-attempt', 'Failed to record auth attempt — audit trail entry lost', insertError, {
-				attemptType: params.attemptType,
-				success: params.success
+		const { error: insertError } = await getAdminClient()
+			.from('admin_auth_attempts')
+			.insert({
+				user_id: params.userId ?? null,
+				email: params.email,
+				ip_address: params.ipHash,
+				user_agent: params.userAgent,
+				attempt_type: params.attemptType,
+				success: params.success,
+				failure_reason: params.failureReason ?? null,
 			});
+		if (insertError) {
+			logError(
+				'admin-auth/record-attempt',
+				'Failed to record auth attempt — audit trail entry lost',
+				insertError,
+				{
+					attemptType: params.attemptType,
+					success: params.success,
+				},
+			);
 		}
 	} catch (e) {
 		logError('admin-auth/record-attempt', 'Unexpected error recording auth attempt', e);
@@ -327,12 +352,7 @@ export const TRUSTED_DEVICE_COOKIE = 'admin_trusted_device';
 
 /** Build a secure session cookie string. */
 export function buildSessionCookie(sessionId: string): string {
-	const parts = [
-		`${SESSION_COOKIE}=${sessionId}`,
-		'HttpOnly',
-		'SameSite=Strict',
-		'Path=/'
-	];
+	const parts = [`${SESSION_COOKIE}=${sessionId}`, 'HttpOnly', 'SameSite=Strict', 'Path=/'];
 	// M1: Use import.meta.env.PROD instead of URL heuristic — the URL is
 	// attacker-controlled on some deployments (e.g. reverse proxies) and
 	// can be spoofed to strip the Secure flag on production cookies.

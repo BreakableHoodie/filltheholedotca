@@ -1,9 +1,5 @@
 import type { RequestHandler } from './$types';
-import {
-	invalidateSession,
-	SESSION_COOKIE,
-	clearSessionCookie
-} from '$lib/server/admin-auth';
+import { invalidateSession, SESSION_COOKIE, clearSessionCookie } from '$lib/server/admin-auth';
 import { clearCsrfCookie } from '$lib/server/admin-csrf';
 
 // Logout is a POST to prevent CSRF-based forced logout via GET.

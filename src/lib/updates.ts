@@ -13,8 +13,8 @@ export const UPDATES: UpdateEntry[] = [
 		date: '2026-06-11',
 		title: 'Pothole season, visualized',
 		items: [
-			'The stats page now overlays freeze–thaw cycles — the winter weather pattern that actually creates potholes — so you can see reports rise and fall with the thaw.'
-		]
+			'The stats page now overlays freeze–thaw cycles — the winter weather pattern that actually creates potholes — so you can see reports rise and fall with the thaw.',
+		],
 	},
 	{
 		date: '2026-06-11',
@@ -24,14 +24,14 @@ export const UPDATES: UpdateEntry[] = [
 			'Stronger privacy: reports that have not yet been confirmed by a second person are no longer publicly listable.',
 			'Accessibility pass — better colour contrast, visible keyboard focus, and improved screen-reader support across the site.',
 			'Link previews (the cards shown when you share a pothole on social media) work again, and sharing is more reliable.',
-			'Clearer instructions on the how-to page, and better search-engine and feed discoverability.'
-		]
+			'Clearer instructions on the how-to page, and better search-engine and feed discoverability.',
+		],
 	},
 	{
 		date: '2026-06-09',
 		title: 'A fresh look',
 		items: [
-			'A new civic-data-portal design in warm stone and amber, with automatic dark mode that follows your device.'
-		]
-	}
+			'A new civic-data-portal design in warm stone and amber, with automatic dark mode that follows your device.',
+		],
+	},
 ];

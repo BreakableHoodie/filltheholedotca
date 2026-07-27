@@ -13,38 +13,41 @@
 
 	const WINDOWS: { label: string; value: WindowDays }[] = [
 		{ label: 'All time', value: null },
-		{ label: '1 year',   value: 365 },
-		{ label: '90 days',  value: 90 },
-		{ label: '30 days',  value: 30 }
+		{ label: '1 year', value: 365 },
+		{ label: '90 days', value: 90 },
+		{ label: '30 days', value: 30 },
 	];
 
 	let filtered = $derived(
 		windowDays === null
 			? allPotholes
-			: allPotholes.filter(p => {
+			: allPotholes.filter((p) => {
 					const ms = Date.now() - new Date(p.created_at).getTime();
 					return ms <= windowDays! * 86_400_000;
-				})
+				}),
 	);
 
 	// ── Summary stats ──────────────────────────────────────────────────────────
 	let totalConfirmed = $derived(filtered.length);
-	let totalFilled    = $derived(filtered.filter(p => p.status === 'filled').length);
-	let totalOpen      = $derived(filtered.filter(p => p.status === 'reported' || p.status === 'expired').length);
-	let fillRate       = $derived(totalConfirmed === 0 ? null : (totalFilled / totalConfirmed) * 100);
+	let totalFilled = $derived(filtered.filter((p) => p.status === 'filled').length);
+	let totalOpen = $derived(
+		filtered.filter((p) => p.status === 'reported' || p.status === 'expired').length,
+	);
+	let fillRate = $derived(totalConfirmed === 0 ? null : (totalFilled / totalConfirmed) * 100);
 
 	// True when potholes exist in the window but none could be assigned a ward —
 	// indicates an ArcGIS/ward-boundary fetch failure rather than "no data".
 	let wardLookupFailed = $derived(
-		filtered.length > 0 && filtered.every((p) => (p as { ward_key: string | null }).ward_key === null)
+		filtered.length > 0 &&
+			filtered.every((p) => (p as { ward_key: string | null }).ward_key === null),
 	);
 
 	let avgDaysToFill = $derived.by(() => {
-		const done = filtered.filter(p => p.status === 'filled' && p.filled_at);
+		const done = filtered.filter((p) => p.status === 'filled' && p.filled_at);
 		if (!done.length) return null;
 		const ms = done.reduce(
 			(s, p) => s + new Date(p.filled_at!).getTime() - new Date(p.created_at).getTime(),
-			0
+			0,
 		);
 		return ms / done.length / 86_400_000;
 	});
@@ -68,29 +71,35 @@
 				if (fk in months) months[fk].filled++;
 			}
 		}
-		return monthKeys.map(k => ({
+		return monthKeys.map((k) => ({
 			key: k,
 			...months[k],
-			freezeThaw: data.freezeThawByMonth?.[k] ?? 0
+			freezeThaw: data.freezeThawByMonth?.[k] ?? 0,
 		}));
 	});
 
 	let monthlyMax = $derived(
-		Math.max(...monthlyData.map(m => Math.max(m.reported, m.filled)), 1)
+		Math.max(...monthlyData.map((m) => Math.max(m.reported, m.filled)), 1),
 	);
 
 	// Freeze–thaw days ride their own axis (a different unit from report counts),
 	// so the overlay line is scaled independently of the bars.
-	let freezeThawMax = $derived(Math.max(...monthlyData.map(m => m.freezeThaw), 1));
-	let hasFreezeThaw = $derived(monthlyData.some(m => m.freezeThaw > 0));
+	let freezeThawMax = $derived(Math.max(...monthlyData.map((m) => m.freezeThaw), 1));
+	let hasFreezeThaw = $derived(monthlyData.some((m) => m.freezeThaw > 0));
 
 	// ── Ward leaderboard ───────────────────────────────────────────────────────
 
 	interface WardRow {
-		city: string; ward: number; key: string;
-		councillorName: string; councillorUrl: string;
-		open: number; filled: number; total: number;
-		fillRate: number; avgDays: number | null;
+		city: string;
+		ward: number;
+		key: string;
+		councillorName: string;
+		councillorUrl: string;
+		open: number;
+		filled: number;
+		total: number;
+		fillRate: number;
+		avgDays: number | null;
 	}
 
 	type SortCol = 'open' | 'total' | 'fillRate' | 'avgDays';
@@ -98,7 +107,12 @@
 	let sortAsc = $state(false);
 
 	function setSort(col: SortCol) {
-		if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = false; }
+		if (sortCol === col) {
+			sortAsc = !sortAsc;
+		} else {
+			sortCol = col;
+			sortAsc = false;
+		}
 	}
 
 	// Ward keys were assigned server-side via point-in-polygon on load.
@@ -109,9 +123,16 @@
 
 		for (const w of data.wards) {
 			stats[w.key] = {
-				city: w.city, ward: w.ward, key: w.key,
-				councillorName: w.councillorName, councillorUrl: w.councillorUrl,
-				open: 0, filled: 0, total: 0, fillRate: 0, avgDays: null
+				city: w.city,
+				ward: w.ward,
+				key: w.key,
+				councillorName: w.councillorName,
+				councillorUrl: w.councillorUrl,
+				open: 0,
+				filled: 0,
+				total: 0,
+				fillRate: 0,
+				avgDays: null,
 			};
 		}
 
@@ -122,7 +143,9 @@
 			if (p.status === 'filled') {
 				stats[key].filled++;
 				if (p.filled_at) {
-					const days = (new Date(p.filled_at).getTime() - new Date(p.created_at).getTime()) / 86_400_000;
+					const days =
+						(new Date(p.filled_at).getTime() - new Date(p.created_at).getTime()) /
+						86_400_000;
 					(filledTimes[key] ??= []).push(days);
 				}
 			} else if (p.status === 'reported' || p.status === 'expired') {
@@ -131,14 +154,14 @@
 		}
 
 		return Object.values(stats)
-			.map(s => ({
+			.map((s) => ({
 				...s,
 				fillRate: s.total === 0 ? 0 : (s.filled / s.total) * 100,
-				avgDays:  filledTimes[s.key]?.length
+				avgDays: filledTimes[s.key]?.length
 					? filledTimes[s.key].reduce((a, b) => a + b, 0) / filledTimes[s.key].length
-					: null
+					: null,
 			}))
-			.filter(s => s.total > 0)
+			.filter((s) => s.total > 0)
 			.sort((a, b) => {
 				// Null values always sort to the end regardless of direction
 				const nullFill = sortAsc ? Infinity : -Infinity;
@@ -150,30 +173,44 @@
 
 	// City-level aggregation derived from ward rows
 	let cityRows = $derived.by(() => {
-		const cities: Record<string, {
-			city: string; total: number; open: number; filled: number;
-			filledDaySum: number; filledCount: number;
-		}> = {};
+		const cities: Record<
+			string,
+			{
+				city: string;
+				total: number;
+				open: number;
+				filled: number;
+				filledDaySum: number;
+				filledCount: number;
+			}
+		> = {};
 		for (const r of wardRows) {
 			if (!(r.city in cities)) {
-				cities[r.city] = { city: r.city, total: 0, open: 0, filled: 0, filledDaySum: 0, filledCount: 0 };
+				cities[r.city] = {
+					city: r.city,
+					total: 0,
+					open: 0,
+					filled: 0,
+					filledDaySum: 0,
+					filledCount: 0,
+				};
 			}
-			cities[r.city].total  += r.total;
-			cities[r.city].open   += r.open;
+			cities[r.city].total += r.total;
+			cities[r.city].open += r.open;
 			cities[r.city].filled += r.filled;
 			if (r.avgDays !== null) {
-				cities[r.city].filledDaySum  += r.avgDays * r.filled;
-				cities[r.city].filledCount   += r.filled;
+				cities[r.city].filledDaySum += r.avgDays * r.filled;
+				cities[r.city].filledCount += r.filled;
 			}
 		}
 		return Object.values(cities)
-			.map(c => ({
-				city:     c.city.charAt(0).toUpperCase() + c.city.slice(1),
-				total:    c.total,
-				open:     c.open,
-				filled:   c.filled,
+			.map((c) => ({
+				city: c.city.charAt(0).toUpperCase() + c.city.slice(1),
+				total: c.total,
+				open: c.open,
+				filled: c.filled,
 				fillRate: c.total === 0 ? null : (c.filled / c.total) * 100,
-				avgDays:  c.filledCount > 0 ? c.filledDaySum / c.filledCount : null
+				avgDays: c.filledCount > 0 ? c.filledDaySum / c.filledCount : null,
 			}))
 			.sort((a, b) => b.open - a.open);
 	});
@@ -181,10 +218,13 @@
 	// Worst offenders: longest-open unfilled potholes
 	let offenders = $derived(
 		filtered
-			.filter(p => p.status === 'reported')
-			.map(p => ({ ...p, days: Math.floor((Date.now() - new Date(p.created_at).getTime()) / 86_400_000) }))
+			.filter((p) => p.status === 'reported')
+			.map((p) => ({
+				...p,
+				days: Math.floor((Date.now() - new Date(p.created_at).getTime()) / 86_400_000),
+			}))
 			.sort((a, b) => b.days - a.days)
-			.slice(0, 10)
+			.slice(0, 10),
 	);
 
 	// ── Street hotspots ────────────────────────────────────────────────────────
@@ -197,7 +237,12 @@
 		return segment.replace(/^\d+\s+/, '').trim() || segment;
 	}
 
-	interface StreetRow { street: string; total: number; open: number; filled: number }
+	interface StreetRow {
+		street: string;
+		total: number;
+		open: number;
+		filled: number;
+	}
 
 	let streetHotspots = $derived.by((): StreetRow[] => {
 		const counts: Record<string, StreetRow> = {};
@@ -225,19 +270,25 @@
 
 <svelte:head>
 	<title>Stats — FillTheHole.ca</title>
-	<meta name="description" content="Pothole statistics for Waterloo Region — fill rates, resolution times, ward breakdowns, and trends over time." />
+	<meta
+		name="description"
+		content="Pothole statistics for Waterloo Region — fill rates, resolution times, ward breakdowns, and trends over time."
+	/>
 </svelte:head>
 
 <div class="max-w-4xl mx-auto px-4 py-10 space-y-10">
-
 	<!-- Page header + time filter -->
 	<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
 		<div>
-			<h1 class="page-title text-3xl sm:text-4xl text-stone-900 dark:text-white flex items-center gap-2.5">
+			<h1
+				class="page-title text-3xl sm:text-4xl text-stone-900 dark:text-white flex items-center gap-2.5"
+			>
 				<Icon name="bar-chart-2" size={26} class="text-amber-500 shrink-0" />
 				By the numbers
 			</h1>
-			<p class="page-intro text-stone-500 dark:text-stone-400 mt-1">Pothole accountability data for Waterloo Region.</p>
+			<p class="page-intro text-stone-500 dark:text-stone-400 mt-1">
+				Pothole accountability data for Waterloo Region.
+			</p>
 		</div>
 
 		<div
@@ -251,8 +302,8 @@
 					aria-pressed={windowDays === w.value}
 					class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-stone-900
 						{windowDays === w.value
-							? 'bg-amber-500 text-white'
-							: 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'}"
+						? 'bg-amber-500 text-white'
+						: 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'}"
 				>
 					{w.label}
 				</button>
@@ -264,26 +315,58 @@
 	<section aria-labelledby="summary-heading">
 		<h2 id="summary-heading" class="sr-only">Summary statistics</h2>
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1">
-				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">Total reported</p>
-				<p class="text-3xl font-bold text-stone-900 dark:text-white" role="status" aria-live="polite">{totalConfirmed}</p>
+			<div
+				class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1"
+			>
+				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">
+					Total reported
+				</p>
+				<p
+					class="text-3xl font-bold text-stone-900 dark:text-white"
+					role="status"
+					aria-live="polite"
+				>
+					{totalConfirmed}
+				</p>
 				<p class="text-xs text-stone-500 dark:text-stone-400">confirmed potholes</p>
 			</div>
-			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1">
-				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">Currently open</p>
-				<p class="text-3xl font-bold text-orange-400" role="status" aria-live="polite">{totalOpen}</p>
+			<div
+				class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1"
+			>
+				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">
+					Currently open
+				</p>
+				<p class="text-3xl font-bold text-orange-400" role="status" aria-live="polite">
+					{totalOpen}
+				</p>
 				<p class="text-xs text-stone-500 dark:text-stone-400">unfilled, on the map</p>
 			</div>
-			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1">
-				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">Fill rate</p>
+			<div
+				class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1"
+			>
+				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">
+					Fill rate
+				</p>
 				<p class="text-3xl font-bold text-amber-500" role="status" aria-live="polite">
 					{fillRate === null ? '—' : `${fmt(fillRate, 0)}%`}
 				</p>
-				<p class="text-xs text-stone-500 dark:text-stone-400">{totalFilled} of {totalConfirmed} filled</p>
+				<p class="text-xs text-stone-500 dark:text-stone-400">
+					{totalFilled} of {totalConfirmed} filled
+				</p>
 			</div>
-			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1">
-				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">Avg days to fill</p>
-				<p class="text-3xl font-bold {avgDaysToFill === null ? 'text-stone-500 dark:text-stone-400' : 'text-green-400'}" role="status" aria-live="polite">
+			<div
+				class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-1"
+			>
+				<p class="text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide">
+					Avg days to fill
+				</p>
+				<p
+					class="text-3xl font-bold {avgDaysToFill === null
+						? 'text-stone-500 dark:text-stone-400'
+						: 'text-green-400'}"
+					role="status"
+					aria-live="polite"
+				>
 					{avgDaysToFill === null ? '—' : fmt(avgDaysToFill, 1)}
 				</p>
 				<p class="text-xs text-stone-500 dark:text-stone-400">from report to fixed</p>
@@ -296,9 +379,14 @@
 		<div class="flex items-center justify-between mb-4 flex-wrap gap-3">
 			<h2 id="trend-heading" class="section-title text-lg text-stone-900 dark:text-white">
 				Monthly activity
-				<span class="text-stone-500 dark:text-stone-400 font-normal text-sm">(last 18 months, full dataset)</span>
+				<span class="text-stone-500 dark:text-stone-400 font-normal text-sm"
+					>(last 18 months, full dataset)</span
+				>
 			</h2>
-			<div class="flex items-center gap-4 text-xs text-stone-500 dark:text-stone-400" aria-hidden="true">
+			<div
+				class="flex items-center gap-4 text-xs text-stone-500 dark:text-stone-400"
+				aria-hidden="true"
+			>
 				<span class="flex items-center gap-1.5">
 					<span class="w-3 h-3 rounded-sm bg-orange-500/70 inline-block"></span> Reported
 				</span>
@@ -307,20 +395,24 @@
 				</span>
 				{#if hasFreezeThaw}
 					<span class="flex items-center gap-1.5">
-						<span class="w-3.5 h-0.5 rounded-full bg-sky-600 dark:bg-sky-400 inline-block"></span> Freeze–thaw days
+						<span
+							class="w-3.5 h-0.5 rounded-full bg-sky-600 dark:bg-sky-400 inline-block"
+						></span> Freeze–thaw days
 					</span>
 				{/if}
 			</div>
 		</div>
 
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-5">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-5"
+		>
 			<div class="relative">
 				<div
 					class="flex items-end gap-px h-28"
 					role="img"
 					aria-label="Monthly pothole reports and fills (bars) with freeze–thaw day counts (line) over the last 18 months"
 				>
-				{#each monthlyData as m (m.key)}
+					{#each monthlyData as m (m.key)}
 						<div class="flex-1 flex flex-col items-stretch gap-px">
 							<div class="flex items-end gap-px flex-1">
 								<div
@@ -349,7 +441,10 @@
 					>
 						<polyline
 							points={monthlyData
-								.map((m, i) => `${i + 0.5},${100 - (m.freezeThaw / freezeThawMax) * 100}`)
+								.map(
+									(m, i) =>
+										`${i + 0.5},${100 - (m.freezeThaw / freezeThawMax) * 100}`,
+								)
 								.join(' ')}
 							fill="none"
 							stroke="currentColor"
@@ -363,10 +458,12 @@
 			</div>
 			<!-- Month labels: every 3rd to avoid crowding on small screens -->
 			<div class="flex gap-px mt-2" aria-hidden="true">
-			{#each monthlyData as m, i (m.key)}
+				{#each monthlyData as m, i (m.key)}
 					<div class="flex-1 text-center min-w-0 overflow-hidden">
 						{#if i % 3 === 0 || i === monthlyData.length - 1}
-							<span class="text-stone-400 dark:text-stone-600 text-[10px]">{m.label}</span>
+							<span class="text-stone-400 dark:text-stone-600 text-[10px]"
+								>{m.label}</span
+							>
 						{/if}
 					</div>
 				{/each}
@@ -403,28 +500,71 @@
 	<!-- ── City breakdown ─────────────────────────────────────────────────────── -->
 	{#if cityRows.length > 0}
 		<section aria-labelledby="city-heading">
-			<h2 id="city-heading" class="section-title text-lg text-stone-900 dark:text-white mb-4">By city</h2>
-			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden overflow-x-auto">
+			<h2 id="city-heading" class="section-title text-lg text-stone-900 dark:text-white mb-4">
+				By city
+			</h2>
+			<div
+				class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden overflow-x-auto"
+			>
 				<table class="w-full text-sm">
 					<thead>
 						<tr class="border-b border-stone-200 dark:border-stone-700">
-							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">City</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Total</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Open</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Filled</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Fill rate</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium hidden sm:table-cell">Avg days</th>
+							<th
+								scope="col"
+								class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>City</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Total</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Open</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Filled</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Fill rate</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium hidden sm:table-cell"
+								>Avg days</th
+							>
 						</tr>
 					</thead>
 					<tbody>
-					{#each cityRows as c (c.city)}
-							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors">
-								<td class="px-4 py-3 font-medium text-stone-900 dark:text-white">{c.city}</td>
-								<td class="px-4 py-3 text-right text-stone-600 dark:text-stone-300">{c.total}</td>
-								<td class="px-4 py-3 text-right font-semibold {c.open > 0 ? 'text-orange-400' : 'text-stone-500 dark:text-stone-400'}">{c.open}</td>
+						{#each cityRows as c (c.city)}
+							<tr
+								class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors"
+							>
+								<td class="px-4 py-3 font-medium text-stone-900 dark:text-white"
+									>{c.city}</td
+								>
+								<td class="px-4 py-3 text-right text-stone-600 dark:text-stone-300"
+									>{c.total}</td
+								>
+								<td
+									class="px-4 py-3 text-right font-semibold {c.open > 0
+										? 'text-orange-400'
+										: 'text-stone-500 dark:text-stone-400'}">{c.open}</td
+								>
 								<td class="px-4 py-3 text-right text-green-400">{c.filled}</td>
-								<td class="px-4 py-3 text-right text-amber-500">{c.fillRate === null ? '—' : `${fmt(c.fillRate, 0)}%`}</td>
-								<td class="px-4 py-3 text-right text-stone-500 dark:text-stone-400 hidden sm:table-cell">{fmt(c.avgDays, 1)}</td>
+								<td class="px-4 py-3 text-right text-amber-500"
+									>{c.fillRate === null ? '—' : `${fmt(c.fillRate, 0)}%`}</td
+								>
+								<td
+									class="px-4 py-3 text-right text-stone-500 dark:text-stone-400 hidden sm:table-cell"
+									>{fmt(c.avgDays, 1)}</td
+								>
 							</tr>
 						{/each}
 					</tbody>
@@ -436,48 +576,86 @@
 	<!-- ── Ward leaderboard ───────────────────────────────────────────────────── -->
 	<section aria-labelledby="ward-heading">
 		<div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-			<h2 id="ward-heading" class="section-title text-lg text-stone-900 dark:text-white">By ward</h2>
+			<h2 id="ward-heading" class="section-title text-lg text-stone-900 dark:text-white">
+				By ward
+			</h2>
 		</div>
 
 		{#if wardLookupFailed}
-			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-6 text-center text-stone-500 dark:text-stone-400 text-sm" role="status">
-				Ward boundary data is temporarily unavailable. City-level totals above are unaffected.
+			<div
+				class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-6 text-center text-stone-500 dark:text-stone-400 text-sm"
+				role="status"
+			>
+				Ward boundary data is temporarily unavailable. City-level totals above are
+				unaffected.
 			</div>
 		{:else if wardRows.length === 0}
-			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-6 text-center text-stone-500 dark:text-stone-400 text-sm">
+			<div
+				class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-6 text-center text-stone-500 dark:text-stone-400 text-sm"
+			>
 				No ward data available for the selected window.
 			</div>
 		{:else}
-			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden overflow-x-auto">
+			<div
+				class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden overflow-x-auto"
+			>
 				<table class="w-full text-sm min-w-[600px]">
 					<thead>
 						<tr class="border-b border-stone-200 dark:border-stone-700">
-							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">City</th>
-							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Ward</th>
-							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium hidden md:table-cell">Councillor</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400">
+							<th
+								scope="col"
+								class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>City</th
+							>
+							<th
+								scope="col"
+								class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Ward</th
+							>
+							<th
+								scope="col"
+								class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium hidden md:table-cell"
+								>Councillor</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400"
+							>
 								<button
 									onclick={() => setSort('open')}
 									class="text-stone-600 dark:text-stone-400 font-medium hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
-									aria-label="Sort by open holes{sortCol === 'open' ? `, currently ${sortAsc ? 'ascending' : 'descending'}` : ''}"
+									aria-label="Sort by open holes{sortCol === 'open'
+										? `, currently ${sortAsc ? 'ascending' : 'descending'}`
+										: ''}"
 								>
 									Open <span aria-hidden="true">{sortLabel('open')}</span>
 								</button>
 							</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400">
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400"
+							>
 								<button
 									onclick={() => setSort('fillRate')}
 									class="text-stone-600 dark:text-stone-400 font-medium hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
-									aria-label="Sort by fill rate{sortCol === 'fillRate' ? `, currently ${sortAsc ? 'ascending' : 'descending'}` : ''}"
+									aria-label="Sort by fill rate{sortCol === 'fillRate'
+										? `, currently ${sortAsc ? 'ascending' : 'descending'}`
+										: ''}"
 								>
-									Fill rate <span aria-hidden="true">{sortLabel('fillRate')}</span>
+									Fill rate <span aria-hidden="true">{sortLabel('fillRate')}</span
+									>
 								</button>
 							</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400">
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400"
+							>
 								<button
 									onclick={() => setSort('avgDays')}
 									class="text-stone-600 dark:text-stone-400 font-medium hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
-									aria-label="Sort by average days to fill{sortCol === 'avgDays' ? `, currently ${sortAsc ? 'ascending' : 'descending'}` : ''}"
+									aria-label="Sort by average days to fill{sortCol === 'avgDays'
+										? `, currently ${sortAsc ? 'ascending' : 'descending'}`
+										: ''}"
 								>
 									Avg days <span aria-hidden="true">{sortLabel('avgDays')}</span>
 								</button>
@@ -492,14 +670,24 @@
 						</tr>
 					</thead>
 					<tbody>
-					{#each wardRows as row (row.key)}
-						{@const g = wardGrade(row.fillRate, row.avgDays, row.total)}
-						<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-50 dark:hover:bg-stone-800/30 transition-colors">
-							<td class="px-4 py-3 text-stone-600 dark:text-stone-300 capitalize">
-									<a href="/stats/ward/{row.city}/{row.ward}" class="hover:text-amber-500 transition-colors">{row.city}</a>
+						{#each wardRows as row (row.key)}
+							{@const g = wardGrade(row.fillRate, row.avgDays, row.total)}
+							<tr
+								class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-50 dark:hover:bg-stone-800/30 transition-colors"
+							>
+								<td class="px-4 py-3 text-stone-600 dark:text-stone-300 capitalize">
+									<a
+										href="/stats/ward/{row.city}/{row.ward}"
+										class="hover:text-amber-500 transition-colors">{row.city}</a
+									>
 								</td>
 								<td class="px-4 py-3 text-stone-600 dark:text-stone-300">
-									<a href="/stats/ward/{row.city}/{row.ward}" aria-label="{row.city} Ward {row.ward}" class="hover:text-amber-500 transition-colors">Ward {row.ward}</a>
+									<a
+										href="/stats/ward/{row.city}/{row.ward}"
+										aria-label="{row.city} Ward {row.ward}"
+										class="hover:text-amber-500 transition-colors"
+										>Ward {row.ward}</a
+									>
 								</td>
 								<td class="px-4 py-3 hidden md:table-cell">
 									{#if row.councillorUrl}
@@ -512,25 +700,36 @@
 											{row.councillorName}
 										</a>
 									{:else}
-										<span class="text-stone-500 dark:text-stone-400">{row.councillorName}</span>
+										<span class="text-stone-500 dark:text-stone-400"
+											>{row.councillorName}</span
+										>
 									{/if}
 								</td>
-								<td class="px-4 py-3 text-right font-semibold {row.open > 0 ? 'text-orange-400' : 'text-stone-500 dark:text-stone-400'}">
+								<td
+									class="px-4 py-3 text-right font-semibold {row.open > 0
+										? 'text-orange-400'
+										: 'text-stone-500 dark:text-stone-400'}"
+								>
 									{row.open}
 								</td>
 								<td class="px-4 py-3 text-right text-sky-400">
 									{row.total === 0 ? '—' : `${fmt(row.fillRate, 0)}%`}
 								</td>
-								<td class="px-4 py-3 text-right text-stone-500 dark:text-stone-400">{fmt(row.avgDays, 1)}</td>
-								<td class="px-4 py-3 text-right font-bold tabular-nums {g.color}" title="Grade: {g.grade}">{g.grade}</td>
+								<td class="px-4 py-3 text-right text-stone-500 dark:text-stone-400"
+									>{fmt(row.avgDays, 1)}</td
+								>
+								<td
+									class="px-4 py-3 text-right font-bold tabular-nums {g.color}"
+									title="Grade: {g.grade}">{g.grade}</td
+								>
 							</tr>
 						{/each}
 					</tbody>
 				</table>
 			</div>
 			<p class="text-xs text-stone-500 dark:text-stone-600 mt-2">
-				Click column headers to sort. Potholes outside mapped ward boundaries may be excluded.
-				Grade = fill rate (70%) + response speed (30%); requires ≥5 potholes.
+				Click column headers to sort. Potholes outside mapped ward boundaries may be
+				excluded. Grade = fill rate (70%) + response speed (30%); requires ≥5 potholes.
 			</p>
 		{/if}
 	</section>
@@ -538,64 +737,132 @@
 	<!-- ── Street hotspots ───────────────────────────────────────────────────── -->
 	{#if streetHotspots.length > 0}
 		<section aria-labelledby="hotspots-heading">
-			<h2 id="hotspots-heading" class="flex items-center gap-2 text-lg font-semibold text-stone-900 dark:text-white mb-4">
+			<h2
+				id="hotspots-heading"
+				class="flex items-center gap-2 text-lg font-semibold text-stone-900 dark:text-white mb-4"
+			>
 				<Icon name="flame" size={18} class="text-orange-400 shrink-0" />
 				Top streets
 			</h2>
-			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden">
+			<div
+				class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden"
+			>
 				<table class="w-full text-sm">
 					<thead>
 						<tr class="border-b border-stone-200 dark:border-stone-700">
-							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">#</th>
-							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Street</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Total</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Open</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Filled</th>
+							<th
+								scope="col"
+								class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>#</th
+							>
+							<th
+								scope="col"
+								class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Street</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Total</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Open</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Filled</th
+							>
 						</tr>
 					</thead>
 					<tbody>
 						{#each streetHotspots as row, i (row.street)}
-							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors">
-								<td class="px-4 py-3 text-stone-500 dark:text-stone-400 tabular-nums">{i + 1}</td>
-								<td class="px-4 py-3 font-medium text-stone-900 dark:text-white">{row.street}</td>
-								<td class="px-4 py-3 text-right font-semibold tabular-nums text-stone-700 dark:text-stone-300">{row.total}</td>
-								<td class="px-4 py-3 text-right tabular-nums {row.open > 0 ? 'text-orange-400 font-semibold' : 'text-stone-500 dark:text-stone-400'}">{row.open}</td>
-								<td class="px-4 py-3 text-right tabular-nums text-green-400">{row.filled}</td>
+							<tr
+								class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors"
+							>
+								<td
+									class="px-4 py-3 text-stone-500 dark:text-stone-400 tabular-nums"
+									>{i + 1}</td
+								>
+								<td class="px-4 py-3 font-medium text-stone-900 dark:text-white"
+									>{row.street}</td
+								>
+								<td
+									class="px-4 py-3 text-right font-semibold tabular-nums text-stone-700 dark:text-stone-300"
+									>{row.total}</td
+								>
+								<td
+									class="px-4 py-3 text-right tabular-nums {row.open > 0
+										? 'text-orange-400 font-semibold'
+										: 'text-stone-500 dark:text-stone-400'}">{row.open}</td
+								>
+								<td class="px-4 py-3 text-right tabular-nums text-green-400"
+									>{row.filled}</td
+								>
 							</tr>
 						{/each}
 					</tbody>
 				</table>
 			</div>
-			<p class="text-xs text-stone-500 dark:text-stone-600 mt-2">Street names extracted from geocoded addresses. Obeys the active time filter.</p>
+			<p class="text-xs text-stone-500 dark:text-stone-600 mt-2">
+				Street names extracted from geocoded addresses. Obeys the active time filter.
+			</p>
 		</section>
 	{/if}
 
 	<!-- ── Worst offenders ────────────────────────────────────────────────────── -->
 	<section aria-labelledby="offenders-heading">
-		<h2 id="offenders-heading" class="section-title flex items-center gap-2 text-lg text-stone-900 dark:text-white mb-4">
+		<h2
+			id="offenders-heading"
+			class="section-title flex items-center gap-2 text-lg text-stone-900 dark:text-white mb-4"
+		>
 			<Icon name="alert-triangle" size={18} class="text-red-400 shrink-0" />
 			Longest-open unfilled holes
 		</h2>
 
 		{#if offenders.length === 0}
-			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-6 text-center text-green-400 text-sm font-semibold flex items-center justify-center gap-2">
+			<div
+				class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-6 text-center text-green-400 text-sm font-semibold flex items-center justify-center gap-2"
+			>
 				<Icon name="check-circle" size={16} class="shrink-0" />
 				No open potholes in this time window!
 			</div>
 		{:else}
-			<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden overflow-x-auto">
+			<div
+				class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden overflow-x-auto"
+			>
 				<table class="w-full text-sm min-w-[520px]">
 					<thead>
 						<tr class="border-b border-stone-200 dark:border-stone-700">
-							<th scope="col" class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Location</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium hidden sm:table-cell">Reported</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Confirmations</th>
-							<th scope="col" class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium">Days open</th>
+							<th
+								scope="col"
+								class="text-left px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Location</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium hidden sm:table-cell"
+								>Reported</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Confirmations</th
+							>
+							<th
+								scope="col"
+								class="text-right px-4 py-3 text-stone-600 dark:text-stone-400 font-medium"
+								>Days open</th
+							>
 						</tr>
 					</thead>
 					<tbody>
-				{#each offenders as p (p.id)}
-							<tr class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors">
+						{#each offenders as p (p.id)}
+							<tr
+								class="border-b border-stone-200 dark:border-stone-700/50 last:border-0 hover:bg-stone-100 dark:hover:bg-stone-800/30 transition-colors"
+							>
 								<td class="px-4 py-3">
 									<a
 										href="/hole/{p.id}"
@@ -604,15 +871,23 @@
 										{p.address ?? `${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`}
 									</a>
 								</td>
-								<td class="px-4 py-3 text-right text-stone-500 dark:text-stone-400 hidden sm:table-cell">
+								<td
+									class="px-4 py-3 text-right text-stone-500 dark:text-stone-400 hidden sm:table-cell"
+								>
 									{format(new Date(p.created_at), 'MMM d, yyyy')}
 								</td>
-								<td class="px-4 py-3 text-right text-stone-600 dark:text-stone-300 tabular-nums">
+								<td
+									class="px-4 py-3 text-right text-stone-600 dark:text-stone-300 tabular-nums"
+								>
 									{p.confirmed_count ?? 1}
 								</td>
 								<td
 									class="px-4 py-3 text-right font-bold tabular-nums
-										{p.days > 90 ? 'text-red-400' : p.days > 30 ? 'text-orange-400' : 'text-stone-600 dark:text-stone-300'}"
+										{p.days > 90
+										? 'text-red-400'
+										: p.days > 30
+											? 'text-orange-400'
+											: 'text-stone-600 dark:text-stone-300'}"
 									aria-label="{p.days} days open"
 								>
 									{p.days}
@@ -626,6 +901,7 @@
 	</section>
 
 	<p class="text-center text-xs text-stone-600 dark:text-stone-700 pb-4">
-		Data refreshes on each page load. Ward assignment computes client-side and may miss potholes near boundaries.
+		Data refreshes on each page load. Ward assignment computes client-side and may miss potholes
+		near boundaries.
 	</p>
 </div>

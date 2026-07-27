@@ -130,8 +130,8 @@ You **MUST** follow this exact structure for the output:
 
 - **Story**: As a developer, I want to ask natural language questions so I don't have to guess keywords.
 - **AC**:
-  - Supports multi-turn clarification.
-  - Returns code blocks with "Copy" button.
+    - Supports multi-turn clarification.
+    - Returns code blocks with "Copy" button.
 
 ### 3. AI System Architecture
 

@@ -6,7 +6,7 @@ import {
 	checkAuthRateLimit,
 	recordAuthAttempt,
 	createAdminSession,
-	buildSessionCookie
+	buildSessionCookie,
 } from '$lib/server/admin-auth';
 import { decryptTotpSecret, verifyBackupCode, hashToken } from '$lib/server/admin-crypto';
 import { generateCsrfToken, buildCsrfCookie } from '$lib/server/admin-csrf';
@@ -17,7 +17,7 @@ import { getAdminClient } from '$lib/server/supabase';
 const verifySchema = z.object({
 	mfaToken: z.string().uuid(),
 	code: z.string().min(1).max(20),
-	rememberDevice: z.boolean().optional().default(false)
+	rememberDevice: z.boolean().optional().default(false),
 });
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
@@ -32,13 +32,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	// Look up challenge (joins to admin_users for account status + TOTP secret)
 	const { data: challenge } = await getAdminClient()
 		.from('admin_mfa_challenges')
-		.select(`
+		.select(
+			`
       id, user_id, ip_address, user_agent,
       admin_users!inner (
         id, email, first_name, last_name, role, is_active, totp_enabled, totp_secret, backup_codes,
         last_used_totp_code, last_used_totp_at
       )
-    `)
+    `,
+		)
 		.eq('token', mfaToken)
 		.eq('used', false)
 		.gt('expires_at', new Date().toISOString())
@@ -51,7 +53,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			userAgent,
 			attemptType: 'mfa',
 			success: false,
-			failureReason: 'invalid_or_expired_token'
+			failureReason: 'invalid_or_expired_token',
 		});
 		throw error(401, 'Invalid or expired MFA token');
 	}
@@ -60,7 +62,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	// Verify IP/UA match (prevents token reuse from a different device)
 	const ipMismatch =
-		challenge.ip_address && challenge.ip_address !== 'unknown' && challenge.ip_address !== ipHash;
+		challenge.ip_address &&
+		challenge.ip_address !== 'unknown' &&
+		challenge.ip_address !== ipHash;
 	const uaMismatch =
 		challenge.user_agent &&
 		challenge.user_agent !== 'unknown' &&
@@ -74,7 +78,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			userAgent,
 			attemptType: 'mfa',
 			success: false,
-			failureReason: 'challenge_mismatch'
+			failureReason: 'challenge_mismatch',
 		});
 		throw error(401, 'MFA session mismatch');
 	}
@@ -88,7 +92,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!rateCheck.allowed) {
 		throw error(
 			429,
-			`Too many failed MFA attempts. Try again in ${rateCheck.remainingMinutes} minutes.`
+			`Too many failed MFA attempts. Try again in ${rateCheck.remainingMinutes} minutes.`,
 		);
 	}
 
@@ -117,7 +121,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 						userAgent,
 						attemptType: 'mfa',
 						success: false,
-						failureReason: 'totp_replay'
+						failureReason: 'totp_replay',
 					});
 					throw error(401, 'Invalid authentication code');
 				}
@@ -152,7 +156,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			userAgent,
 			attemptType: 'mfa',
 			success: false,
-			failureReason: 'invalid_code'
+			failureReason: 'invalid_code',
 		});
 		throw error(401, 'Invalid authentication code');
 	}
@@ -183,7 +187,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			.from('admin_users')
 			.update({
 				backup_codes:
-					remainingBackupCodes.length > 0 ? JSON.stringify(remainingBackupCodes) : null
+					remainingBackupCodes.length > 0 ? JSON.stringify(remainingBackupCodes) : null,
 			})
 			.eq('id', challenge.user_id);
 	}
@@ -203,7 +207,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		ipHash,
 		userAgent,
 		attemptType: 'mfa',
-		success: true
+		success: true,
 	});
 
 	// Fire-and-forget — do not block the auth response on Pushover latency.
@@ -211,7 +215,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	void notify('security', {
 		title: '🔐 Admin login (MFA)',
 		message: `Successful MFA login${usedBackupCode ? ' — backup code used' : ''}`,
-		priority: usedBackupCode ? 0 : -1
+		priority: usedBackupCode ? 0 : -1,
 	});
 
 	const headers = new Headers({ 'Content-Type': 'application/json' });
@@ -231,14 +235,14 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				user_id: challenge.user_id,
 				ip_address: ipHash,
 				user_agent: userAgent,
-				expires_at: expiresAt
+				expires_at: expiresAt,
 			});
 			const deviceCookieParts = [
 				`admin_trusted_device=${rawToken}`, // raw value goes to the cookie
 				'HttpOnly',
 				'SameSite=Strict',
 				'Path=/',
-				`Expires=${new Date(expiresAt).toUTCString()}`
+				`Expires=${new Date(expiresAt).toUTCString()}`,
 			];
 			if (import.meta.env.PROD) deviceCookieParts.push('Secure');
 			headers.append('Set-Cookie', deviceCookieParts.join('; '));
@@ -256,10 +260,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				email: dbUser['email'],
 				firstName: dbUser['first_name'],
 				lastName: dbUser['last_name'],
-				role: dbUser['role']
+				role: dbUser['role'],
 			},
-			usedBackupCode
+			usedBackupCode,
 		}),
-		{ status: 200, headers }
+		{ status: 200, headers },
 	);
 };
