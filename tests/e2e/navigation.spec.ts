@@ -96,120 +96,31 @@ test.describe('Navigation — core routes load', () => {
 });
 
 test.describe('Feed API', () => {
+	// /api/feed.json queries Supabase directly (no fixture branch). In this test
+	// environment PUBLIC_SUPABASE_URL defaults to a closed port (see
+	// playwright.config.ts), so the query fails and the route deterministically
+	// returns 500 (see src/routes/api/feed.json/+server.ts) — asserting on that
+	// wouldn't verify anything about the real feed shape this test exists to
+	// check. SUPABASE_CONFIGURED (also set in playwright.config.ts) tells us
+	// honestly whether a real connection was supplied for this run.
+	const supabaseConfigured = process.env.SUPABASE_CONFIGURED === 'true';
+
 	test('GET /api/feed.json returns valid JSON array', async ({ request }) => {
-		// Test if API is properly configured by making a quick request
-		let testResponse;
-		try {
-			testResponse = await request.get('/api/feed.json');
-		} catch {
-			test.skip(
-				true,
-				'API connection failed - test environment may lack proper configuration',
-			);
-			return;
-		}
+		test.skip(!supabaseConfigured, 'Requires a live Supabase connection (SUPABASE_CONFIGURED)');
 
-		// Skip if clear indicators of misconfiguration
-		if (testResponse.status() >= 500) {
-			test.skip(
-				true,
-				'API returns server error - test environment lacks Supabase connection',
-			);
-			return;
-		}
-
-		// Add retry logic for flaky API calls
-		let response = testResponse;
-		let attempts = 1; // We already made one attempt above
-		const maxAttempts = 3;
-
-		while (attempts < maxAttempts && response.status() !== 200) {
-			try {
-				if (response.status() === 429) {
-					// Skip on persistent rate limiting
-					if (attempts === maxAttempts - 1) {
-						test.skip(true, 'API rate limited - skipping to avoid test flakiness');
-						return;
-					}
-					// Wait before retry on rate limit
-					await new Promise((resolve) => setTimeout(resolve, 2000 * attempts));
-				} else {
-					await new Promise((resolve) => setTimeout(resolve, 1000 * attempts));
-				}
-
-				response = await request.get('/api/feed.json');
-			} catch {
-				if (attempts === maxAttempts - 1) {
-					test.skip(
-						true,
-						'API connection failed - test environment may lack proper configuration',
-					);
-					return;
-				}
-			}
-			attempts++;
-		}
-
+		const response = await request.get('/api/feed.json');
 		expect(response.status()).toBe(200);
 		expect(response.headers()['content-type']).toMatch(/json/);
 		const body = await response.json();
-		expect(Array.isArray(body)).toBe(true);
+		expect(Array.isArray(body.potholes)).toBe(true);
 	});
 
 	test('GET /api/wards.geojson returns valid GeoJSON', async ({ request }) => {
-		// Test if API is properly configured by making a quick request
-		let testResponse;
-		try {
-			testResponse = await request.get('/api/wards.geojson');
-		} catch {
-			test.skip(true, 'GeoJSON API connection failed - external service may be unavailable');
-			return;
-		}
-
-		// Skip if clear indicators of service issues
-		if (testResponse.status() >= 500) {
-			test.skip(true, 'External GeoJSON API unavailable (server error)');
-			return;
-		}
-
-		// Add retry logic for rate-limited external APIs
-		let response = testResponse;
-		let attempts = 1; // We already made one attempt above
-		const maxAttempts = 3;
-
-		while (attempts < maxAttempts && response.status() !== 200) {
-			try {
-				if (response.status() === 429) {
-					// Skip on persistent rate limiting
-					if (attempts === maxAttempts - 1) {
-						test.skip(
-							true,
-							'External GeoJSON API rate limited - skipping to avoid test flakiness',
-						);
-						return;
-					}
-					// Wait longer for external API rate limits
-					await new Promise((resolve) => setTimeout(resolve, 5000 * attempts));
-				} else {
-					await new Promise((resolve) => setTimeout(resolve, 2000 * attempts));
-				}
-
-				response = await request.get('/api/wards.geojson');
-			} catch {
-				if (attempts === maxAttempts - 1) {
-					test.skip(true, 'External API services unavailable');
-					return;
-				}
-			}
-			attempts++;
-		}
-
-		// Handle case where external APIs are rate limiting
-		if (response.status() === 429) {
-			test.skip(true, 'External API rate limited - skipping test');
-			return;
-		}
-
+		// /api/wards.geojson proxies real, reachable ArcGIS services and has no
+		// Supabase dependency at all — DISABLE_API_RATE_LIMIT is set for every
+		// Playwright run (see playwright.config.ts), so a 429 here would
+		// indicate a real regression, not test-environment noise.
+		const response = await request.get('/api/wards.geojson');
 		expect(response.status()).toBe(200);
 		const body = await response.json();
 		expect(body.type).toBe('FeatureCollection');

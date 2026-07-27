@@ -3,29 +3,32 @@ import { test, expect } from '@playwright/test';
 /**
  * Open data endpoint tests.
  *
- * These tests hit the actual HTTP endpoints but only assert on response shape —
- * content-type, status, and structural invariants that hold even with an empty
- * or placeholder Supabase connection (e.g. the CSV header row, the RSS envelope,
- * a valid JSON array). They do not assert on specific pothole data.
+ * CSV export, RSS feed, and JSON feed all query Supabase directly (no fixture
+ * branch — see src/routes/api/export.csv, /api/feed.xml, /api/feed.json). In
+ * this test environment PUBLIC_SUPABASE_URL defaults to a closed port (see
+ * playwright.config.ts), so those queries fail and every one of these routes
+ * deterministically returns 500 — asserting that 500 would not tell us
+ * anything about the real "open data" contract these tests exist to check
+ * (correct CSV columns, a well-formed RSS envelope, a `potholes` array).
+ *
+ * SUPABASE_CONFIGURED (also set in playwright.config.ts) tells us honestly
+ * whether a real PUBLIC_SUPABASE_URL was supplied for this run. When it
+ * wasn't, skip the whole block rather than accepting whatever status code the
+ * closed-port fallback happens to produce.
  */
+const supabaseConfigured = process.env.SUPABASE_CONFIGURED === 'true';
 
 test.describe('CSV export (/api/export.csv)', () => {
+	test.skip(!supabaseConfigured, 'Requires a live Supabase connection (SUPABASE_CONFIGURED)');
+
 	test('returns 200 with text/csv content-type', async ({ request }) => {
 		const response = await request.get('/api/export.csv');
-		if (response.status() === 500) {
-			test.skip(true, 'Supabase unavailable in test environment');
-			return;
-		}
 		expect(response.status()).toBe(200);
 		expect(response.headers()['content-type']).toContain('text/csv');
 	});
 
 	test('response includes CSV header row', async ({ request }) => {
 		const response = await request.get('/api/export.csv');
-		if (response.status() === 500) {
-			test.skip(true, 'Supabase unavailable in test environment');
-			return;
-		}
 		const text = await response.text();
 		// Must include the canonical column names regardless of data
 		expect(text).toContain('id');
@@ -36,22 +39,16 @@ test.describe('CSV export (/api/export.csv)', () => {
 
 	test('Content-Disposition suggests a filename', async ({ request }) => {
 		const response = await request.get('/api/export.csv');
-		if (response.status() === 500) {
-			test.skip(true, 'Supabase unavailable in test environment');
-			return;
-		}
 		const disposition = response.headers()['content-disposition'] ?? '';
 		expect(disposition).toContain('attachment');
 	});
 });
 
 test.describe('RSS feed (/api/feed.xml)', () => {
+	test.skip(!supabaseConfigured, 'Requires a live Supabase connection (SUPABASE_CONFIGURED)');
+
 	test('returns 200 with RSS content-type', async ({ request }) => {
 		const response = await request.get('/api/feed.xml');
-		if (response.status() === 500) {
-			test.skip(true, 'Supabase unavailable in test environment');
-			return;
-		}
 		expect(response.status()).toBe(200);
 		const contentType = response.headers()['content-type'] ?? '';
 		expect(contentType).toMatch(/application\/rss\+xml|application\/xml|text\/xml/);
@@ -59,10 +56,6 @@ test.describe('RSS feed (/api/feed.xml)', () => {
 
 	test('response is valid RSS 2.0 envelope', async ({ request }) => {
 		const response = await request.get('/api/feed.xml');
-		if (response.status() === 500) {
-			test.skip(true, 'Supabase unavailable in test environment');
-			return;
-		}
 		const text = await response.text();
 		expect(text).toContain('<rss');
 		expect(text).toContain('<channel>');
@@ -72,24 +65,16 @@ test.describe('RSS feed (/api/feed.xml)', () => {
 });
 
 test.describe('JSON feed (/api/feed.json)', () => {
+	test.skip(!supabaseConfigured, 'Requires a live Supabase connection (SUPABASE_CONFIGURED)');
+
 	test('returns 200 with application/json content-type', async ({ request }) => {
 		const response = await request.get('/api/feed.json');
-		const status = response.status();
-		// Accept 500 only if Supabase is unreachable in the test environment
-		if (status === 500) {
-			test.skip(true, 'Supabase unavailable in test environment');
-			return;
-		}
-		expect(status).toBe(200);
+		expect(response.status()).toBe(200);
 		expect(response.headers()['content-type']).toContain('application/json');
 	});
 
 	test('response body contains a potholes array', async ({ request }) => {
 		const response = await request.get('/api/feed.json');
-		if (response.status() === 500) {
-			test.skip(true, 'Supabase unavailable in test environment');
-			return;
-		}
 		const body = await response.json();
 		expect(Array.isArray(body.potholes)).toBe(true);
 	});

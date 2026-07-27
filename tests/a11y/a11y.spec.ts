@@ -80,6 +80,9 @@ test.describe('Accessibility — Report form', () => {
 		// Every input/textarea/select must have an accessible label
 		const inputs = page.locator('input, textarea, select');
 		const count = await inputs.count();
+		// If every form control were removed, the loop below would never run and
+		// this test would pass vacuously — fail loudly on that instead.
+		expect(count).toBeGreaterThan(0);
 
 		for (let i = 0; i < count; i++) {
 			const input = inputs.nth(i);
@@ -137,6 +140,9 @@ test.describe('Accessibility — About page', () => {
 	test('all links have accessible names', async ({ page }) => {
 		const links = page.getByRole('link');
 		const count = await links.count();
+		// If every link were removed, the loop below would never run and this
+		// test would pass vacuously — fail loudly on that instead.
+		expect(count).toBeGreaterThan(0);
 
 		for (let i = 0; i < count; i++) {
 			const link = links.nth(i);

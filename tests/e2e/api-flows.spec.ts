@@ -1,9 +1,17 @@
 import { expect, test } from '@playwright/test';
 
 // Schema validation tests — these verify the zod layer rejects bad input before
-// any DB interaction, so they work with placeholder Supabase credentials.
-// The "valid UUID" tests confirm schema acceptance; downstream DB behaviour
-// (409 wrong status, 500 no connection) is intentionally outside scope here.
+// any DB interaction, so the "rejects" tests work with placeholder Supabase
+// credentials and assert an exact 400.
+//
+// The "valid input" tests confirm schema acceptance, but several of these
+// routes touch the DB on their very first operation after validation passes
+// (a persistent rate-limit check, or a direct read) — see the route handlers
+// under src/routes/api/. In this test environment PUBLIC_SUPABASE_URL defaults
+// to a closed port (see playwright.config.ts), so that DB call fails and the
+// route deterministically returns 500. Asserting that exact 500 (rather than
+// merely "not 400") still catches a real regression — e.g. the DB call
+// silently swallowing its error and falling through to a 200/404.
 
 test.describe('Polling API (/api/potholes/recent)', () => {
 	test('returns empty array when since param is missing', async ({ request }) => {
@@ -50,21 +58,24 @@ test.describe('Watchlist API (/api/watchlist)', () => {
 		expect(response.status()).toBe(400);
 	});
 
-	test('accepts valid UUIDs — zod passes, returns array for unknown ids', async ({ request }) => {
+	test('accepts valid UUIDs — zod passes; the DB read fails without a live Supabase connection', async ({
+		request,
+	}) => {
 		const response = await request.get(
 			'/api/watchlist?ids=550e8400-e29b-41d4-a716-446655440000,550e8400-e29b-41d4-a716-446655440001',
 		);
-		expect(response.status()).not.toBe(400);
+		expect(response.status()).toBe(500);
 	});
 });
 
 test.describe('Filled API — status guard', () => {
-	test('accepts a valid UUID for filled endpoint', async ({ request }) => {
+	test('accepts a valid UUID — zod passes; the fill-rate-limit DB check fails without a live connection', async ({
+		request,
+	}) => {
 		const response = await request.post('/api/filled', {
 			data: { id: '550e8400-e29b-41d4-a716-446655440002' },
 		});
-		// Schema accepted — not a 400
-		expect(response.status()).not.toBe(400);
+		expect(response.status()).toBe(500);
 	});
 });
 
@@ -74,20 +85,11 @@ test.describe('OG image API (/api/og/[id])', () => {
 		expect(response.status()).toBe(400);
 	});
 
-	test('accepts a valid UUID format — zod passes, returns 404 for unknown id', async ({
+	test('accepts a valid UUID format — zod passes; the DB read fails without a live Supabase connection', async ({
 		request,
 	}) => {
 		const response = await request.get('/api/og/550e8400-e29b-41d4-a716-446655440000');
-
-		// Skip if Supabase unavailable (500 error)
-		if (response.status() === 500) {
-			test.skip(true, 'OG API returns 500 - test environment lacks Supabase connection');
-			return;
-		}
-
-		// Schema accepted (not 400); DB returns not-found for unknown UUID
-		expect(response.status()).not.toBe(400);
-		expect(response.status()).toBe(404);
+		expect(response.status()).toBe(500);
 	});
 });
 
@@ -103,7 +105,9 @@ test.describe('Ward notify API (/api/notify/ward)', () => {
 		expect(response.status()).toBe(400);
 	});
 
-	test('ward subscribe accepts a known ward_key (validation passes)', async ({ request }) => {
+	test('ward subscribe accepts a known ward_key — validation passes; the rate-limit DB check fails without a live connection', async ({
+		request,
+	}) => {
 		const response = await request.post('/api/notify/ward', {
 			data: {
 				ward_key: 'kitchener-6',
@@ -111,18 +115,18 @@ test.describe('Ward notify API (/api/notify/ward)', () => {
 				keys: { p256dh: 'a', auth: 'b' },
 			},
 		});
-		// No real DB in fixture mode, so a 500 is acceptable — the point is validation did NOT reject it.
-		expect(response.status()).not.toBe(400);
+		expect(response.status()).toBe(500);
 	});
 });
 
 test.describe('Vote API (/api/vote)', () => {
-	test('accepts a valid UUID with an upvote direction', async ({ request }) => {
+	test('accepts a valid UUID with an upvote direction — zod passes; the rate-limit DB check fails without a live connection', async ({
+		request,
+	}) => {
 		const response = await request.post('/api/vote', {
 			data: { id: '550e8400-e29b-41d4-a716-446655440003', direction: 1 },
 		});
-		// Schema accepted — not a 400
-		expect(response.status()).not.toBe(400);
+		expect(response.status()).toBe(500);
 	});
 
 	test('rejects an invalid direction', async ({ request }) => {
@@ -157,12 +161,12 @@ test.describe('Filled API (/api/filled)', () => {
 		expect(body.message).toMatch(/Invalid request/i);
 	});
 
-	test('accepts a valid UUID — zod validation passes, DB is not exercised', async ({
+	test('accepts a valid UUID — zod validation passes; the fill-rate-limit DB check fails without a live connection', async ({
 		request,
 	}) => {
 		const response = await request.post('/api/filled', {
 			data: { id: '550e8400-e29b-41d4-a716-446655440001' },
 		});
-		expect(response.status()).not.toBe(400);
+		expect(response.status()).toBe(500);
 	});
 });
