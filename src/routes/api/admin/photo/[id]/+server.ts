@@ -24,6 +24,20 @@ export const PATCH: RequestHandler = async ({ request, params, locals, getClient
 		return json({ ok: true, moderation_status });
 	}
 
+	// Look up the storage path before the update so a reject can also pull the object.
+	const { data: photo, error: fetchError } = await getAdminClient()
+		.from('pothole_photos')
+		.select('storage_path')
+		.eq('id', id)
+		.single();
+
+	if (fetchError) {
+		logError('admin/photo', 'Failed to load photo before moderation', fetchError, {
+			photoId: id,
+		});
+		throw error(500, 'Failed to update photo status');
+	}
+
 	const { error: updateError } = await getAdminClient()
 		.from('pothole_photos')
 		.update({ moderation_status })
@@ -34,13 +48,27 @@ export const PATCH: RequestHandler = async ({ request, params, locals, getClient
 		throw error(500, 'Failed to update photo status');
 	}
 
+	// The bucket is public, so flipping the flag alone leaves a rejected image
+	// serving from its object URL forever. Best-effort: never fail the reject if
+	// only the storage delete fails — the moderation flag is the load-bearing part.
+	if (moderation_status === 'rejected' && photo?.storage_path) {
+		const { error: storageError } = await getAdminClient()
+			.storage.from('pothole-photos')
+			.remove([photo.storage_path]);
+		if (storageError)
+			logError('admin/photo', 'Storage cleanup failed after photo reject', storageError, {
+				storagePath: photo.storage_path,
+				photoId: id,
+			});
+	}
+
 	await writeAuditLog(
 		locals.adminUser.id,
 		`photo.${bodyParsed.data.action}`,
 		'photo',
 		id,
 		{ moderation_status },
-		await hashIp(getClientAddress())
+		await hashIp(getClientAddress()),
 	);
 
 	return json({ ok: true, moderation_status });
@@ -66,7 +94,10 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 		.eq('id', id)
 		.single();
 
-	const { error: deleteError } = await getAdminClient().from('pothole_photos').delete().eq('id', id);
+	const { error: deleteError } = await getAdminClient()
+		.from('pothole_photos')
+		.delete()
+		.eq('id', id);
 	if (deleteError) {
 		logError('admin/photo', 'Failed to delete photo record', deleteError, { photoId: id });
 		throw error(500, 'Failed to delete photo record');
@@ -75,10 +106,15 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 	// Best-effort storage cleanup
 	if (photo?.storage_path) {
 		const { error: storageError } = await getAdminClient()
-			.storage
-			.from('pothole-photos')
+			.storage.from('pothole-photos')
 			.remove([photo.storage_path]);
-		if (storageError) logError('photos/admin-delete', 'Storage cleanup failed after photo delete', storageError, { storagePath: photo.storage_path, photoId: id });
+		if (storageError)
+			logError(
+				'photos/admin-delete',
+				'Storage cleanup failed after photo delete',
+				storageError,
+				{ storagePath: photo.storage_path, photoId: id },
+			);
 	}
 
 	await writeAuditLog(
@@ -87,7 +123,7 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 		'photo',
 		id,
 		{ storage_path: photo?.storage_path ?? null },
-		await hashIp(getClientAddress())
+		await hashIp(getClientAddress()),
 	);
 
 	return json({ ok: true });

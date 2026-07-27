@@ -96,26 +96,67 @@ test.describe('JSON feed (/api/feed.json)', () => {
 });
 
 test.describe('Ward boundaries (/api/wards.geojson)', () => {
-	test('returns 200 with JSON content-type', async ({ request }) => {
-		const response = await request.get('/api/wards.geojson');
-		expect(response.status()).toBe(200);
-		expect(response.headers()['content-type']).toContain('application/json');
+	// /api/wards.geojson proxies three real ArcGIS services (Kitchener,
+	// Waterloo, Cambridge) — a live outage in any of them would red-fail CI
+	// for a test that isn't actually exercising our own code. Mock the route
+	// so this suite never touches external services, same approach as the
+	// "stats page ward rows link to ward profile pages" test in
+	// tests/e2e/ward-profile.spec.ts.
+	const mockWardsGeojson = {
+		type: 'FeatureCollection',
+		features: [
+			{
+				type: 'Feature',
+				geometry: {
+					type: 'Polygon',
+					coordinates: [
+						[
+							[-80.55, 43.45],
+							[-80.5, 43.45],
+							[-80.5, 43.4],
+							[-80.55, 43.4],
+							[-80.55, 43.45],
+						],
+					],
+				},
+				properties: { CITY: 'kitchener', WARDID_NORM: 9 },
+			},
+		],
+	};
+
+	test.beforeEach(async ({ page }) => {
+		await page.route('**/api/wards.geojson', (route) =>
+			route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify(mockWardsGeojson),
+			}),
+		);
 	});
 
-	test('response is a GeoJSON FeatureCollection', async ({ request }) => {
-		const response = await request.get('/api/wards.geojson');
-		const body = await response.json();
+	test('returns 200 with JSON content-type', async ({ page }) => {
+		const response = await page.goto('/api/wards.geojson');
+		expect(response?.status()).toBe(200);
+		expect(response?.headers()['content-type']).toContain('application/json');
+	});
+
+	test('response is a GeoJSON FeatureCollection', async ({ page }) => {
+		const response = await page.goto('/api/wards.geojson');
+		const body = await response!.json();
 		expect(body.type).toBe('FeatureCollection');
 		expect(Array.isArray(body.features)).toBe(true);
 		expect(body.features.length).toBeGreaterThan(0);
 	});
 
-	test('each feature has geometry and ward properties', async ({ request }) => {
-		const response = await request.get('/api/wards.geojson');
-		const body = await response.json();
+	test('each feature has geometry and ward identifier properties', async ({ page }) => {
+		const response = await page.goto('/api/wards.geojson');
+		const body = await response!.json();
 		const first = body.features[0];
 		expect(first.type).toBe('Feature');
-		expect(first.geometry).toBeTruthy();
-		expect(first.properties).toBeTruthy();
+		expect(first.geometry.type).toBe('Polygon');
+		expect(Array.isArray(first.geometry.coordinates[0])).toBe(true);
+		expect(first.geometry.coordinates[0].length).toBeGreaterThan(0);
+		expect(first.properties.CITY).toBe('kitchener');
+		expect(first.properties.WARDID_NORM).toBe(9);
 	});
 });

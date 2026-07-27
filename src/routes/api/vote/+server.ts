@@ -52,7 +52,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		VOTE_RATE_LIMIT,
 		VOTE_RATE_WINDOW_MS,
 		'Too many requests. Please wait before trying again.',
-		'api/vote'
+		'api/vote',
 	);
 
 	// Per-pothole rate limit
@@ -62,7 +62,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.eq('pothole_id', parsed.data.id)
 		.gte('created_at', windowStart);
 
-	if (potholeRateError) throw error(500, 'Failed to check rate limit');
+	if (potholeRateError) {
+		logError('vote/pothole-rate', 'Failed to check rate limit', potholeRateError);
+		throw error(500, 'Failed to check rate limit');
+	}
 	if ((potholeVotes ?? 0) >= VOTE_PER_POTHOLE_LIMIT) {
 		throw error(429, 'Too many requests. Please wait before trying again.');
 	}
@@ -86,7 +89,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.select('vote_direction')
 		.eq('pothole_id', parsed.data.id);
 
-	if (fetchError) throw error(500, 'Failed to fetch vote counts');
+	if (fetchError) {
+		logError('vote/fetch-counts', 'Failed to fetch vote counts', fetchError);
+		throw error(500, 'Failed to fetch vote counts');
+	}
 
 	return json({ ok: true, ...computeScore(voteRows ?? []) });
 };
@@ -116,7 +122,10 @@ export const DELETE: RequestHandler = async ({ request, getClientAddress }) => {
 		.select('vote_direction')
 		.eq('pothole_id', parsed.data.id);
 
-	if (fetchError) throw error(500, 'Failed to fetch vote counts');
+	if (fetchError) {
+		logError('vote/fetch-counts', 'Failed to fetch vote counts', fetchError);
+		throw error(500, 'Failed to fetch vote counts');
+	}
 
 	return json({ ok: true, ...computeScore(voteRows ?? []) });
 };

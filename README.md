@@ -54,30 +54,7 @@ cp .env.example .env
 
 ### Database
 
-Run the migration files against your Supabase project in order:
-
-1. `schema.sql` — initial tables
-2. `schema_update.sql` — confirmation system
-3. `schema_actions.sql` — pothole_actions table + increment_confirmation RPC
-4. `schema_admin.sql` — admin users, sessions, trusted devices
-5. `schema_photos.sql` — photo uploads
-6. `schema_photo_publishing.sql` — per-pothole photo publishing toggle
-7. `schema_site_settings.sql` — site settings table + 3-param increment_confirmation RPC
-8. `schema_pr61_fixes.sql` — RLS hardening
-9. `schema_security_hardening.sql` — revoke public RPC access, deferred photo status
-10. `schema_sprint3.sql` — pothole expiry pg_cron jobs, drop public pothole_actions SELECT
-11. `schema_pushover_settings.sql` — Pushover notification toggles (default: all enabled)
-12. `schema_hits.sql` — "I Hit This" signal table
-13. `schema_push.sql` — web push subscription storage
-14. `schema_push_unsubscribe_ratelimit.sql` — push unsubscribe rate limit scope
-15. `schema_review_fixes.sql` — RLS hardening; drops public read on `pothole_confirmations`
-16. `schema_pothole_reported_at.sql` — adds `reported_at` column + redefines `increment_confirmation` to stamp it, so polling can detect `pending → reported` transitions
-17. `schema_grants.sql` — explicit Data API `GRANT` statements for `anon`/`service_role` on every public-schema table
-18. `schema_votes.sql` — `pothole_votes` table for community upvote/downvote signal
-19. `schema_vote_ratelimit.sql` — adds `vote_submit` scope to `api_rate_limit_events` constraint
-20. `schema_votes_ttl.sql` — pg_cron purge job for `pothole_votes` older than 90 days
-21. `schema_polling_indexes.sql` — partial indexes on `filled_at`/`expired_at` for the `/api/potholes/recent` poll filter (#205)
-22. `schema_revoke_public_writes.sql` — security: drop leftover public write RLS policies + revoke anon/authenticated write grants (writes are service-role only) (#200)
+Run the migration files against your Supabase project **in the order documented in [`CLAUDE.md`](CLAUDE.md#database-schema)** — that numbered list (currently 31 files) is the single source of truth for migration order, kept there so it can't drift out of sync with a second copy here.
 
 ### Run
 
@@ -91,27 +68,27 @@ App runs at `http://localhost:5173`.
 
 ## Environment variables
 
-| Variable                    | Description                                                               |
-| --------------------------- | ------------------------------------------------------------------------- |
-| `PUBLIC_SUPABASE_URL`       | Supabase project URL                                                      |
-| `PUBLIC_SUPABASE_ANON_KEY`  | Supabase anon key (public)                                                |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key for admin/moderation routes                      |
-| `SIGHTENGINE_API_USER`      | Image moderation — optional                                               |
-| `SIGHTENGINE_API_SECRET`    | Image moderation — optional                                               |
-| `SIGHTENGINE_WORKFLOW_ID`   | SightEngine workflow ID for automated moderation rules — optional         |
-| `IP_HASH_SECRET`            | Server-only HMAC key for immediate IP hashing on ingestion                |
-| `ADMIN_SESSION_SECRET`      | 32-byte hex key for signing admin CSRF tokens                             |
-| `TOTP_ENCRYPTION_KEY`       | 32-byte hex AES-GCM key for encrypting TOTP secrets at rest               |
-| `ADMIN_BOOTSTRAP_SECRET`    | One-time secret for creating the first admin account — see section below  |
-| `PUSHOVER_APP_TOKEN`        | Pushover app token — optional, disables push notifications if absent      |
-| `PUSHOVER_USER_KEY`         | Pushover user/group key — required alongside `PUSHOVER_APP_TOKEN`         |
-| `PUBLIC_SENTRY_DSN`         | Sentry project DSN — optional, omit to disable error tracking             |
+| Variable                    | Description                                                                      |
+| --------------------------- | -------------------------------------------------------------------------------- |
+| `PUBLIC_SUPABASE_URL`       | Supabase project URL                                                             |
+| `PUBLIC_SUPABASE_ANON_KEY`  | Supabase anon key (public)                                                       |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key for admin/moderation routes                             |
+| `SIGHTENGINE_API_USER`      | Image moderation — optional                                                      |
+| `SIGHTENGINE_API_SECRET`    | Image moderation — optional                                                      |
+| `SIGHTENGINE_WORKFLOW_ID`   | SightEngine workflow ID for automated moderation rules — optional                |
+| `IP_HASH_SECRET`            | Server-only HMAC key for immediate IP hashing on ingestion                       |
+| `ADMIN_SESSION_SECRET`      | 32-byte hex key for signing admin CSRF tokens                                    |
+| `TOTP_ENCRYPTION_KEY`       | 32-byte hex AES-GCM key for encrypting TOTP secrets at rest                      |
+| `ADMIN_BOOTSTRAP_SECRET`    | One-time secret for creating the first admin account — see section below         |
+| `PUSHOVER_APP_TOKEN`        | Pushover app token — optional, disables push notifications if absent             |
+| `PUSHOVER_USER_KEY`         | Pushover user/group key — required alongside `PUSHOVER_APP_TOKEN`                |
+| `PUBLIC_SENTRY_DSN`         | Sentry project DSN — optional, omit to disable error tracking                    |
 | `VAPID_PUBLIC_KEY`          | VAPID public key for web push — generate with `npx web-push generate-vapid-keys` |
-| `VAPID_PRIVATE_KEY`         | VAPID private key for web push — server-only                              |
-| `PUBLIC_VAPID_PUBLIC_KEY`   | Same as `VAPID_PUBLIC_KEY`, exposed to the browser for subscription UI    |
-| `BLUESKY_HANDLE`            | Bluesky account handle for the bot — optional (e.g. `fillthehole.bsky.social`) |
-| `BLUESKY_APP_PASSWORD`      | Bluesky app password — generate in Settings → Privacy → App Passwords     |
-| `DISABLE_API_RATE_LIMIT`    | Set to any value to disable rate limiting in dev/test (never in production) |
+| `VAPID_PRIVATE_KEY`         | VAPID private key for web push — server-only                                     |
+| `PUBLIC_VAPID_PUBLIC_KEY`   | Same as `VAPID_PUBLIC_KEY`, exposed to the browser for subscription UI           |
+| `BLUESKY_HANDLE`            | Bluesky account handle for the bot — optional (e.g. `fillthehole.bsky.social`)   |
+| `BLUESKY_APP_PASSWORD`      | Bluesky app password — generate in Settings → Privacy → App Passwords            |
+| `DISABLE_API_RATE_LIMIT`    | Set to any value to disable rate limiting in dev/test (never in production)      |
 
 See `.env.example` for the full list with generation instructions. Pushover notification categories (photos, community events, security alerts) can be toggled on/off per-category from **Admin → Settings → Site** without a deployment.
 
@@ -122,13 +99,13 @@ See `.env.example` for the full list with generation instructions. Pushover noti
 Before any admin users exist, `/admin/signup` enters **bootstrap mode**, allowing you to create the first admin account without a manual database invite.
 
 1. Generate a strong random secret:
-   ```bash
-   openssl rand -hex 32
-   ```
+    ```bash
+    openssl rand -hex 32
+    ```
 2. Add it to your `.env`:
-   ```
-   ADMIN_BOOTSTRAP_SECRET=<the generated value>
-   ```
+    ```
+    ADMIN_BOOTSTRAP_SECRET=<the generated value>
+    ```
 3. Visit `/admin/signup` — you will see the bootstrap form.
 4. Enter your details and the bootstrap secret to create the first admin account (active immediately, no activation step required).
 5. Once the first admin exists, `/admin/signup` automatically switches to invite-only mode. The bootstrap secret is ignored from that point on.
@@ -219,7 +196,7 @@ See [fillthehole.ca/about#privacy](https://fillthehole.ca/about#privacy) for the
 ```bash
 npm run check    # svelte-check type checking
 npm run lint     # ESLint
-npm run test     # Playwright E2E (tests/e2e/)
+npm run test     # Playwright — runs every spec under tests/ (e2e/, unit/, a11y/), per playwright.config.ts's testDir: "./tests"
 npm run test:a11y # axe-core accessibility checks
 ```
 

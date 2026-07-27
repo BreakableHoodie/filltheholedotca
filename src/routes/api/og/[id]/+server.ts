@@ -12,9 +12,8 @@ import { el } from '$lib/server/og-helpers';
 
 const paramsSchema = z.object({ id: z.string().uuid() });
 const require = createRequire(import.meta.url);
-const OG_FONT_PATH = require.resolve(
-	'@fontsource/barlow-condensed/files/barlow-condensed-latin-700-normal.woff'
-);
+const OG_FONT_PATH =
+	require.resolve('@fontsource/barlow-condensed/files/barlow-condensed-latin-700-normal.woff');
 
 // Cache font at module level — reused across warm Lambda invocations
 let fontCache: ArrayBuffer | null = null;
@@ -25,7 +24,7 @@ async function loadFont(): Promise<ArrayBuffer> {
 		const fontFile = await readFile(OG_FONT_PATH);
 		fontCache = fontFile.buffer.slice(
 			fontFile.byteOffset,
-			fontFile.byteOffset + fontFile.byteLength
+			fontFile.byteOffset + fontFile.byteLength,
 		);
 		return fontCache;
 	} catch (e) {
@@ -36,11 +35,32 @@ async function loadFont(): Promise<ArrayBuffer> {
 }
 
 // Colours kept in sync with STATUS_CONFIG hex values in src/lib/constants.ts
+// prettier-ignore — alignment is deliberate so a drifted colour is visible in review.
 const STATUS_STYLES = {
-	reported: { label: 'Unfilled', dot: '#f97316', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)' },
-	filled:   { label: 'Filled',   dot: '#22c55e', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.3)'  },
-	pending:  { label: 'Pending',  dot: '#a1a1aa', bg: 'rgba(161,161,170,0.12)', border: 'rgba(161,161,170,0.3)' },
-	expired:  { label: 'Expired',  dot: '#71717a', bg: 'rgba(113,113,122,0.12)', border: 'rgba(113,113,122,0.3)' },
+	reported: {
+		label: 'Unfilled',
+		dot: '#f97316',
+		bg: 'rgba(249,115,22,0.12)',
+		border: 'rgba(249,115,22,0.3)',
+	},
+	filled: {
+		label: 'Filled',
+		dot: '#22c55e',
+		bg: 'rgba(34,197,94,0.12)',
+		border: 'rgba(34,197,94,0.3)',
+	},
+	pending: {
+		label: 'Pending',
+		dot: '#a1a1aa',
+		bg: 'rgba(161,161,170,0.12)',
+		border: 'rgba(161,161,170,0.3)',
+	},
+	expired: {
+		label: 'Expired',
+		dot: '#71717a',
+		bg: 'rgba(113,113,122,0.12)',
+		border: 'rgba(113,113,122,0.3)',
+	},
 } as const;
 
 export const GET: RequestHandler = async ({ params }) => {
@@ -54,7 +74,9 @@ export const GET: RequestHandler = async ({ params }) => {
 		.single();
 
 	if (dbError && dbError.code !== 'PGRST116') {
-		logError('og/pothole', 'Failed to load pothole for OG image', dbError, { potholeId: parsed.data.id });
+		logError('og/pothole', 'Failed to load pothole for OG image', dbError, {
+			potholeId: parsed.data.id,
+		});
 		throw error(500, 'Database error');
 	}
 	if (!pothole) throw error(404, 'Hole not found');
@@ -72,7 +94,8 @@ export const GET: RequestHandler = async ({ params }) => {
 	const addrLen = rawAddress.length;
 	const fontSize = addrLen <= 28 ? 68 : addrLen <= 42 ? 54 : 42;
 
-	const st = STATUS_STYLES[pothole.status as keyof typeof STATUS_STYLES] ?? STATUS_STYLES.reported;
+	const st =
+		STATUS_STYLES[pothole.status as keyof typeof STATUS_STYLES] ?? STATUS_STYLES.reported;
 
 	const reportedMs = Date.now() - new Date(pothole.created_at as string).getTime();
 	const reportedDays = Math.floor(reportedMs / 86_400_000);
@@ -80,7 +103,7 @@ export const GET: RequestHandler = async ({ params }) => {
 		? Math.floor(
 				(new Date(pothole.filled_at as string).getTime() -
 					new Date(pothole.created_at as string).getTime()) /
-					86_400_000
+					86_400_000,
 			)
 		: null;
 
@@ -128,22 +151,29 @@ export const GET: RequestHandler = async ({ params }) => {
 					},
 					el('div', {
 						style: { width: 27, height: 27, borderRadius: 14, background: '#09090b' },
-					})
+					}),
 				),
 				el(
 					'div',
 					{ style: { display: 'flex', alignItems: 'baseline' } },
 					el(
 						'span',
-						{ style: { fontSize: 26, fontWeight: 700, color: '#fff', letterSpacing: '0.02em' } },
-						'FillTheHole'
+						{
+							style: {
+								fontSize: 26,
+								fontWeight: 700,
+								color: '#fff',
+								letterSpacing: '0.02em',
+							},
+						},
+						'FillTheHole',
 					),
 					el(
 						'span',
 						{ style: { fontSize: 26, fontWeight: 700, color: '#38bdf8' } },
-						'.ca'
-					)
-				)
+						'.ca',
+					),
+				),
 			),
 			// Body: address + region
 			el(
@@ -160,18 +190,24 @@ export const GET: RequestHandler = async ({ params }) => {
 							letterSpacing: '-0.01em',
 						},
 					},
-					rawAddress
+					rawAddress,
 				),
 				el(
 					'div',
 					{ style: { fontSize: 24, color: '#71717a', letterSpacing: '0.02em' } },
-					'Waterloo Region, Ontario'
-				)
+					'Waterloo Region, Ontario',
+				),
 			),
 			// Footer: status badge + days label
 			el(
 				'div',
-				{ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+				{
+					style: {
+						display: 'flex',
+						justifyContent: 'space-between',
+						alignItems: 'center',
+					},
+				},
 				el(
 					'div',
 					{
@@ -198,21 +234,21 @@ export const GET: RequestHandler = async ({ params }) => {
 								letterSpacing: '0.04em',
 							},
 						},
-						st.label
-					)
+						st.label,
+					),
 				),
 				el(
 					'div',
 					{ style: { fontSize: 24, color: '#71717a', fontWeight: 700 } },
-					daysLabel
-				)
-			)
+					daysLabel,
+				),
+			),
 		),
 		{
 			width: 1200,
 			height: 630,
 			fonts: [{ name: 'Barlow Condensed', data: font, weight: 700, style: 'normal' }],
-		}
+		},
 	);
 
 	const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: 1200 } });

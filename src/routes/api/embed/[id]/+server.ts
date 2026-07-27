@@ -1,26 +1,23 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { z } from 'zod';
 import { supabase } from '$lib/supabase';
-import { decodeHtmlEntities } from '$lib/escape';
+import { decodeHtmlEntities, escapeHtml } from '$lib/escape';
 import { PUBLIC_COORD_DECIMALS, roundPublicCoord } from '$lib/geo';
 
 const STATUS_LABEL: Record<string, string> = {
 	reported: 'Open — awaiting fix',
 	filled: 'Filled ✓',
 	pending: 'Awaiting confirmation',
-	expired: 'Expired'
+	expired: 'Expired',
 };
 
 const STATUS_COLOR: Record<string, string> = {
 	reported: '#fb923c', // orange-400
-	filled: '#4ade80',   // green-400
-	pending: '#71717a',  // zinc-500
-	expired: '#52525b'   // zinc-600
+	filled: '#4ade80', // green-400
+	pending: '#71717a', // zinc-500
+	expired: '#52525b', // zinc-600
 };
-
-function escHtml(s: string): string {
-	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 
 function daysBetween(from: string, to: number | string = Date.now()): number {
 	return Math.floor((new Date(to as string).getTime() - new Date(from).getTime()) / 86_400_000);
@@ -28,19 +25,22 @@ function daysBetween(from: string, to: number | string = Date.now()): number {
 
 /** Embeddable card widget — returns a full self-contained HTML document. */
 export const GET: RequestHandler = async ({ params, url }) => {
+	const parsedParams = z.object({ id: z.string().uuid() }).safeParse(params);
+	if (!parsedParams.success) throw error(400, 'Invalid ID');
+
 	const { data } = await supabase
 		.from('potholes')
 		.select('id, created_at, lat, lng, address, description, status, filled_at')
-		.eq('id', params.id)
+		.eq('id', parsedParams.data.id)
 		.single();
 
 	if (!data) throw error(404, 'Not found');
 
 	const address = data.address
-		? escHtml(decodeHtmlEntities(data.address))
+		? escapeHtml(decodeHtmlEntities(data.address))
 		: `${roundPublicCoord(data.lat).toFixed(PUBLIC_COORD_DECIMALS)}, ${roundPublicCoord(data.lng).toFixed(PUBLIC_COORD_DECIMALS)}`;
 	const status = data.status as string;
-	const statusLabel = escHtml(STATUS_LABEL[status] ?? status);
+	const statusLabel = escapeHtml(STATUS_LABEL[status] ?? status);
 	const color = STATUS_COLOR[status] ?? '#71717a';
 	// For filled potholes show how long it took to fix; for open ones show age.
 	const days = data.filled_at
@@ -78,7 +78,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="meta">
     ${status === 'filled' ? `Filled after <span>${days}</span> day${days === 1 ? '' : 's'}` : `<span>${days}</span> day${days === 1 ? '' : 's'} open — unfilled`}
   </div>
-  <a class="cta" href="${escHtml(detailUrl)}" target="_blank" rel="noopener noreferrer">View on FillTheHole.ca →</a>
+  <a class="cta" href="${escapeHtml(detailUrl)}" target="_blank" rel="noopener noreferrer">View on FillTheHole.ca →</a>
   <p class="powered"><a href="https://fillthehole.ca" target="_blank" rel="noopener noreferrer">fillthehole.ca</a> — Waterloo Region pothole tracker</p>
 </div>
 </body>
@@ -88,8 +88,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 		headers: {
 			'Content-Type': 'text/html; charset=utf-8',
 			// Allow cross-origin embedding — this endpoint is intentionally public
-			'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors *",
-			'Cache-Control': 'public, max-age=60, s-maxage=300'
-		}
+			'Content-Security-Policy':
+				"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors *",
+			'Cache-Control': 'public, max-age=60, s-maxage=300',
+		},
 	});
 };

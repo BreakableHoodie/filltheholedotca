@@ -54,7 +54,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		if (actionError.code === '23505') {
 			return json({ ok: false, message: "You've already marked this one as filled." });
 		}
-		logError('api/filled', 'Failed to record fill action', actionError, { potholeId: parsed.data.id });
+		logError('api/filled', 'Failed to record fill action', actionError, {
+			potholeId: parsed.data.id,
+		});
 		throw error(500, 'Failed to record action');
 	}
 
@@ -69,7 +71,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.select('id, address');
 
 	if (updateError) {
-		logError('api/filled', 'Failed to update pothole status to filled', updateError, { potholeId: parsed.data.id });
+		logError('api/filled', 'Failed to update pothole status to filled', updateError, {
+			potholeId: parsed.data.id,
+		});
 		throw error(500, 'Failed to update status');
 	}
 	if (!updated || updated.length === 0) throw error(409, 'Pothole is not in a fillable state');
@@ -82,14 +86,28 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		message: 'A community member marked a pothole as filled.',
 		url: `https://fillthehole.ca/hole/${parsed.data.id}`,
 		urlTitle: 'View pothole',
-		priority: -1
+		priority: -1,
 	});
-	void broadcastPush({
-		title: '🕳️ Pothole filled!',
-		body: 'A pothole in Waterloo Region was just marked as fixed.',
-		url: `https://fillthehole.ca/hole/${parsed.data.id}`
-	});
-	void notifyFillSubscribers(filledPothole.id, filledPothole.address);
+	void (async () => {
+		try {
+			await broadcastPush({
+				title: '🕳️ Pothole filled!',
+				body: 'A pothole in Waterloo Region was just marked as fixed.',
+				url: `https://fillthehole.ca/hole/${parsed.data.id}`,
+			});
+		} catch (err) {
+			logError('api/filled', 'Push broadcast failed', err, { potholeId: parsed.data.id });
+		}
+	})();
+	void (async () => {
+		try {
+			await notifyFillSubscribers(filledPothole.id, filledPothole.address);
+		} catch (err) {
+			logError('api/filled', 'Fill subscriber notification failed', err, {
+				potholeId: filledPothole.id,
+			});
+		}
+	})();
 	void postFilled(filledPothole.id, filledPothole.address);
 
 	return json({ ok: true });

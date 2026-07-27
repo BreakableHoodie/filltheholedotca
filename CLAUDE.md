@@ -33,6 +33,7 @@ Documentation that's wrong is worse than no documentation. Update it in the same
 If a PR touches infrastructure, routes, or the DB schema without updating the relevant docs, treat it as incomplete.
 
 ### Roadmap & Planning Docs
+
 - **`ROADMAP.md`** — canonical project roadmap. Check this first when asked what remains, what's planned, or whether a phase is complete.
 - **`docs/superpowers/specs/`** — feature/design specs. Some older specs may already be implemented; verify against the code before treating them as open work.
 - **`docs/superpowers/plans/`** — implementation plans/checklists. These can be stale after a PR lands; use them for context, not as the source of truth unless the current code and `ROADMAP.md` agree.
@@ -54,6 +55,7 @@ When in doubt about whether something belongs in the repo, leave it out.
 ## Workflow
 
 - **Create PRs proactively** — when a logical chunk of work is complete on a branch, open a PR without waiting to be asked. Use judgment: a multi-file feature, a security fix, or anything that should go through CI before merging warrants a PR. Trivial one-liner fixes on `main` may not.
+- **File GitHub issues for discovered problems and deferred work** — when investigation turns up a bug, vulnerability, or follow-up task that isn't being fixed in the current PR, run `gh issue create` for it instead of only noting it in chat. Chat context doesn't persist across sessions; an issue does. Reference issues from PRs (`Closes #N`), and check `gh issue list` first so you don't file a duplicate of something already tracked or in flight.
 - **Security incidents** — follow `INCIDENT_RESPONSE.md` in the repo root. It covers PIPEDA breach notification obligations, per-secret rotation procedures, OPC reporting timelines, and post-incident review.
 
 ## Stack
@@ -62,7 +64,11 @@ When in doubt about whether something belongs in the repo, leave it out.
 - **Tailwind CSS v4** (no config file — uses `@tailwindcss/vite` plugin, not PostCSS)
 - **Supabase** — Postgres + RLS + storage bucket `pothole-photos`
 - **Leaflet** + `leaflet.markercluster` — always client-only, dynamically imported in `onMount`
-- **@fontsource/barlow-condensed** — local OG image font asset (no runtime CDN dependency)
+- **@fontsource/barlow-condensed** — brand/heading font (`--font-brand` in `src/app.css`, used by nav/error/headings) and satori OG image rendering; no runtime CDN dependency
+- **@fontsource/public-sans** — the actual site body font (`--font-sans` in `src/app.css`)
+- **satori** + **@resvg/resvg-js** — render OG share images to SVG then rasterize to PNG (`src/routes/api/og/*`)
+- **otplib** — TOTP generation/verification for admin MFA (`src/lib/server/admin-totp.ts`)
+- **web-push** — sends browser push notifications (fill/ward alerts) via VAPID keys
 - **svelte-sonner** for toasts, **date-fns** for formatting, **zod** for API validation
 - **@sentry/sveltekit** — error tracking (server + client); disabled when `PUBLIC_SENTRY_DSN` is absent
 - Deployed to **Netlify** (`@sveltejs/adapter-netlify`)
@@ -76,22 +82,32 @@ npm run dev          # http://localhost:5173
 
 ## Tooling
 
-| Script | Purpose |
-|---|---|
-| `npm run dev` | Development server |
-| `npm run build` | Production build |
-| `npm run check` | Type checking (svelte-check) |
-| `npm run lint` | ESLint (TS + Svelte files) |
-| `npm run test` | Playwright E2E tests |
-| `npm run test:a11y` | axe-core a11y tests (Playwright) |
+| Script                | Purpose                                                                                                               |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`         | Development server                                                                                                    |
+| `npm run build`       | Production build                                                                                                      |
+| `npm run preview`     | Preview the production build                                                                                          |
+| `npm run check`       | Type checking (svelte-check)                                                                                          |
+| `npm run check:watch` | Type checking in watch mode                                                                                           |
+| `npm run lint`        | ESLint (TS + Svelte files)                                                                                            |
+| `npm run lint:a11y`   | svelte-check at warning threshold — a CI gate, not just local a11y hygiene (see `.github/workflows/ci.yml`)           |
+| `npm run test`        | Playwright — runs every `.spec.ts` under `tests/` (E2E, unit, a11y; `playwright.config.ts` sets `testDir: "./tests"`) |
+| `npm run test:a11y`   | axe-core a11y tests (Playwright, scoped to `tests/a11y`)                                                              |
+| `npm run prepare`     | Husky install (`husky && (svelte-kit sync \|\| echo '')`) — runs automatically after `npm install`                    |
+
+### Makefile
+
+A root `Makefile` wraps the npm scripts above as `make` targets for contributors who prefer `make`: `install`, `dev`, `build`, `preview`, `check`, `check-watch`, `lint`, `lint-a11y`, `test`, `test-a11y`. Each target is a thin `npm run` passthrough (e.g. `make lint-a11y` runs `npm run lint:a11y`); `make help` lists them. Keep it in sync with `package.json` scripts.
 
 ### Pre-commit hooks (Husky + lint-staged)
+
 - **`.husky/pre-commit`** runs `lint-staged` on every commit
 - Staged `.ts`/`.svelte` files: ESLint fix + Prettier write
 - Staged `.css`/`.json`/`.md` files: Prettier write only
 - CI will catch what hooks miss — this is a safety net, not a gatekeeper
 
 ### Formatting (Prettier)
+
 - **`.prettierrc`** at project root — tabs, single quotes, trailing commas, 100-char print width
 - **`.prettierignore`** mirrors `.gitignore` for build/test artifacts
 - Formatted files: `src/**/*.ts`, `src/**/*.svelte`, `src/**/*.css`, plus root config files
@@ -99,27 +115,32 @@ npm run dev          # http://localhost:5173
 - **eslint-config-prettier** disables ESLint rules that conflict with Prettier
 
 ### Unit tests
+
 - Unit-style tests live under `tests/unit/` and currently run through Playwright (`npx playwright test tests/unit/`).
 - There is no Vitest configuration or `npm run test:unit` script in the current project.
 - E2E and API-level tests also use Playwright under `tests/e2e/`; axe checks use `npm run test:a11y`.
 
 ### EditorConfig
+
 - **`.editorconfig`** enforces consistent indentation across editors
 - Tabs for Svelte/TS/JS, 2-space for SQL/YAML/JSON
 
 ### Opencode plugins
+
 - **`.opencode/opencode.json`** — project-level opencode configuration
 - **`.opencode/plugins/env-protection.js`** — prevents LLM from reading/writing `.env` files (defense-in-depth)
 - **`.opencode/plugins/command-inject.js`** — exposes `npm run` scripts as `/` slash commands
 - Plugins listed in `opencode.json` are auto-installed from npm at startup
 
 ### MCP servers
+
 - **GitHub** (`@modelcontextprotocol/server-github`) — issues, PRs, code review, search. Needs `GITHUB_TOKEN` env var.
 - **Sentry** (`https://mcp.sentry.dev/mcp`) — error tracking, issue analysis. Uses OAuth (run `opencode mcp auth sentry` to authenticate).
 - **Supabase** (`.mcp.json`) — database inspection, schema management.
 - **Playwright** (`.mcp.json`) — browser automation for E2E testing.
 
 ### Dependency updates (Dependabot) — recurring lockfile bug
+
 Dependabot's targeted (partial) `package-lock.json` updates repeatedly drop a
 nested, valid entry: `node_modules/@sentry/node/node_modules/vite@6.4.3`, an
 optional peer dependency `@sentry/node` needs because the root `vite` version
@@ -133,20 +154,23 @@ Dependabot tooling noise, not a real incompatibility, unless proven otherwise.
 
 **Fix**: regenerate `package-lock.json` — but not with a bare local
 `npm install`. Two platform traps stack on top of each other:
+
 1. **macOS produces a platform-pruned lockfile** — missing the Linux-only
    optional binaries (`@rollup/rollup-linux-*`, `@esbuild/linux-*`) CI needs.
    This bit a real cleanup PR once already (see the `revert:` commit in
    `e2c2068`) and was deferred at the time.
 2. **A newer local npm (11.x+) resolves peer deps more leniently** than CI's
-   npm 10.9.8 and will *not* re-add the nested `@sentry/node` vite entry, so
+   npm 10.9.8 and will _not_ re-add the nested `@sentry/node` vite entry, so
    the regenerated lockfile still fails in CI even though it looks clean
    locally.
 
 Regenerate inside a container matching CI's exact runtime instead:
+
 ```bash
 container run --rm -v "$(pwd)":/work -w /work node:22 sh -c "npm install --package-lock-only"
 container run --rm -v "$(pwd)":/work -w /work node:22 sh -c "npm ci"   # verify
 ```
+
 (`container` is Apple's runtime — see the global operating doctrine. `docker`/
 `podman` work identically if available.) Verify `npm run check`/`lint`/`build`
 too before pushing — `webServer`/build steps need real `PUBLIC_SUPABASE_*`
@@ -175,32 +199,63 @@ Copy `.env.example` → `.env` with real values:
 - `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `PUBLIC_VAPID_PUBLIC_KEY` — web push VAPID keys (optional)
 - `PUBLIC_SENTRY_DSN` — Sentry project DSN (optional; omit to disable error tracking in dev)
 - `BLUESKY_HANDLE` / `BLUESKY_APP_PASSWORD` — Bluesky bot credentials (optional; omit both to disable auto-posting)
-- `DISABLE_API_RATE_LIMIT` — set to any value to disable rate limiting in dev/test (never in production)
+- `DISABLE_API_RATE_LIMIT` — set to the literal string `'true'` to disable rate limiting in dev/test (never in production); any other value is ignored (`src/hooks.server.ts:33`)
+
+### Test/dev-only env vars — never set in production
+
+Not part of the `.env.example` contract (they configure the local/CI harness, not the app):
+
+- `PLAYWRIGHT_E2E_FIXTURES` — set to `'true'` to route requests through the in-memory fixture store (`$lib/server/fixture-store`) instead of Supabase; read at ~16 call sites across `src/`. **Security-relevant**: when combined with `CI === 'true'`, it also disables SvelteKit's built-in Origin/CSRF check (`svelte.config.js:15-18`) so Playwright's `APIRequestContext` can POST `multipart/form-data` without a framework-level 403. Custom admin CSRF protection in `hooks.server.ts` is unaffected and still enforced.
+- `HTTPS_CERT` / `HTTPS_KEY` — paths to a local mkcert-issued cert/key pair; when both are set, `vite.config.ts:6-7` serves the dev server over HTTPS (useful for testing service worker / push notification flows that require a secure context).
 
 ## Project Structure
 
 ```text
 src/
+  app.html                   # HTML shell — OG/theme-color meta, JSON-LD WebSite schema, iOS Safari hydration-safety polyfill
+  app.css                    # Global styles — font imports (Barlow Condensed brand font, Public Sans body font), Tailwind import, focus ring, dark mode
+  app.d.ts                   # Ambient types — App.Locals.adminUser/adminSession
+  hooks.server.ts            # Sentry init, security headers, per-IP rate limit, admin session/CSRF enforcement, www redirect
+  hooks.client.ts            # Sentry init (client), replay masking disabled on /admin routes
   routes/
     +page.svelte              # Map (Leaflet, clustering, ward heatmap, mobile tool tray, homepage intro card, real-time polling)
     +layout.svelte            # Nav with live counts, Toaster, Map nav link
     +layout.server.ts         # Server layout loader
     +page.server.ts           # Loads potholes for map
+    +error.svelte             # Error page (status code, Icon)
     about/+page.svelte        # About page
     privacy/+page.svelte      # Privacy policy (PIPEDA-grade; retention, third parties, rights)
     terms/+page.svelte        # Terms of use (acceptable use, UGC licence, no-warranty, Ontario law)
     how-to/+page.svelte       # User-facing how-to / help guide
+    updates/+page.svelte      # Public changelog (/updates), sourced from $lib/updates
+    sitemap.xml/+server.ts    # GET — sitemap.xml for search engines
     stats/
       +page.server.ts         # SSR load — potholes for metrics
       +page.svelte            # Metrics dashboard (resolution time, ward leaderboards, trends, fill rate)
-    report/+page.svelte       # GPS report form with severity selector
-    admin/
-      map/
-        +page.svelte          # Admin map view (Leaflet, markercluster, status filter toggles, click-to-manage)
-        +page.server.ts       # Loads all potholes for admin map (admin-auth required)
-      potholes/[id]/
-        +page.svelte          # Admin pothole detail (description editing, before/after photo split)
-        +page.server.ts       # Loads single pothole + photos; form actions for updateDescription
+      ward/[city]/[ward]/
+        +page.server.ts       # SSR load — single-ward potholes + grade
+        +page.svelte          # Ward accountability profile page
+    report/
+      +page.svelte            # GPS report form with severity selector
+      +page.server.ts         # Loads confirmation threshold for the form copy
+    admin/                    # Admin-auth-gated (enforced in hooks.server.ts). Each route pairs +page.server.ts (load/actions) with +page.svelte unless noted.
+      +layout.server.ts / +layout.svelte              # Admin shell — passes adminUser to nav
+      +page.server.ts / +page.svelte                  # Dashboard — recent activity feed
+      audit/+page.server.ts / +page.svelte             # Paginated admin audit log viewer
+      login/+page.server.ts / +page.svelte             # Admin login (email/password)
+      login/mfa/+page.server.ts / +page.svelte         # TOTP MFA challenge step
+      logout/+page.server.ts                            # Session + CSRF cookie teardown (no +page.svelte)
+      map/+page.server.ts / +page.svelte                # Admin map (Leaflet, markercluster, status filters, click-to-manage)
+      photos/+page.server.ts / +page.svelte             # Photo moderation queue
+      potholes/+page.server.ts / +page.svelte           # Pothole moderation list
+      potholes/[id]/+page.server.ts / +page.svelte      # Admin pothole detail (description editing, before/after photo split)
+      settings/mfa/+page.server.ts / +page.svelte       # Enable/rotate TOTP + backup codes
+      settings/password/+page.server.ts / +page.svelte  # Change admin password
+      settings/sessions/+page.server.ts / +page.svelte  # View/revoke active admin sessions
+      settings/site/+page.server.ts / +page.svelte      # Site settings (confirmation threshold, Pushover toggles, photos_published default)
+      signup/+page.server.ts / +page.svelte             # Bootstrap-mode first-admin signup, then invite-only
+      users/+page.server.ts / +page.svelte              # Admin user management (RBAC)
+      users/invites/+page.server.ts / +page.svelte      # Admin invite code issuance
     hole/[id]/
       +page.svelte            # Pothole detail (status, councillor contact, share, before/after photo galleries)
       +page.server.ts         # Loads single pothole + councillor
@@ -213,27 +268,71 @@ src/
       feed.json/+server.ts    # GET — JSON feed of recent potholes
       export.csv/+server.ts   # GET — CSV export of all reported/filled potholes (open data)
       feed.xml/+server.ts     # GET — RSS 2.0 feed of recent confirmations/fills (open data)
+      embed/[id]/+server.ts    # GET — embeddable iframe card for a pothole (open data)
       hit/+server.ts           # POST — "I hit this" signal (community prioritization)
       vote/+server.ts          # POST/DELETE — upvote/downvote (community prioritization)
       ccc/[id]/+server.ts           # GET — ArcGIS CCC repair data proxy (off SSR path)
       notify/[id]/+server.ts        # POST/DELETE — per-pothole fill notification subscription
       notify/ward/+server.ts        # POST/DELETE — ward-level "new pothole" alert subscription
+      subscribe/+server.ts          # POST/DELETE — generic browser push subscription (SSRF-checked endpoint)
       geocode/search/+server.ts     # GET — Nominatim search proxy (sets User-Agent server-side)
       geocode/reverse/+server.ts    # GET — Nominatim reverse geocode proxy
+      watchlist/+server.ts          # GET — resolves watchlist UUIDs to pothole summaries (service-role; includes pending rows)
+      og/[id]/+server.ts              # GET — satori/resvg OG share image for a pothole
+      og/default/+server.ts          # GET — satori/resvg default site OG image
+      og/ward/[city]/[ward]/+server.ts # GET — satori/resvg OG image for a ward profile
       admin/pothole/[id]/+server.ts  # DELETE — admin moderation
       admin/photo/[id]/+server.ts    # PATCH/DELETE — photo moderation
+      admin/photos/bulk/+server.ts    # PATCH — bulk photo moderation actions
+      admin/potholes/export/+server.ts # GET — admin CSV export (all statuses, unlike public export.csv)
+      admin/auth/login/+server.ts     # POST — admin login API (called by the login form)
+      admin/auth/logout/+server.ts    # POST — admin logout API
+      admin/auth/signup/+server.ts    # POST — bootstrap/invite admin signup API
+      admin/auth/mfa/verify/+server.ts # POST — TOTP verification API
   lib/
     types.ts                  # Pothole, PotholeStatus types
     geo.ts                    # Shared geo utilities (pipRing, inWardFeature, roundPublicCoord)
-    wards.ts                  # COUNCILLORS array (ward/name/email/url)
+    wards.ts                  # COUNCILLORS array (ward/name/email/url), isKnownWardKey
+    constants.ts              # GEOFENCE bounds, STATUS_CONFIG, and other shared UI constants
     supabase.ts               # Supabase client (public anon)
+    escape.ts                 # escapeHtml()/decodeHtmlEntities() — HTML-safe interpolation for Leaflet popups
+    hash.ts                   # hashIp() — HMAC-SHA-256 IP hashing with IP_HASH_SECRET
+    email.ts                  # Builds ward-level councillor mailto: URLs
+    freeze-thaw.ts             # Pure freeze-thaw day calculator — no framework/server imports, unit-testable
+    icons.ts                   # Lucide-compatible inline SVG path data, used by Icon.svelte
+    image.ts                   # resizeImage() — client-side photo compression before upload
+    official-reporting.ts       # City/region/province official pothole-reporting links
+    photo-split.ts              # splitByFill() — before/after photo classification by filled_at
+    push.ts                     # urlBase64ToUint8Array() — VAPID key conversion for pushManager.subscribe()
+    toast.ts                    # toastError/toastErrorFromResponse — svelte-sonner error toast helpers
+    updates.ts                  # UPDATES changelog data shown on /updates
+    ward-grade.ts                # wardGrade() — A-F accountability letter grade from fill rate + response time
+    watchlist.ts                 # localStorage watchlist read/write with UUID re-validation
     server/
       observability.ts        # logError() — console + Sentry with area tags
-      exif-strip.ts           # stripJpegMetadata() — lossless APP-segment stripper
+      exif-strip.ts           # stripJpegMetadata()/stripPngMetadata()/stripWebpMetadata() — lossless metadata stripper
       og-helpers.ts           # Shared satori el() helper for OG image routes
       wards.ts                # fetchWards/lookupWard wrapped with logError (server callers import from here)
+      supabase.ts              # getAdminClient() — service-role Supabase client
+      admin-auth.ts             # Admin sessions, RBAC, timeouts, audit log (~349 lines)
+      admin-crypto.ts           # PBKDF2 password hashing, TOTP secret AES-GCM encryption, backup codes
+      admin-csrf.ts             # Double-submit-cookie CSRF token generation/validation for admin API routes
+      admin-totp.ts             # TOTP secret generation and code verification (otplib)
+      bluesky.ts                # Bluesky bot auto-posting (confirmations/fills)
+      fixture-store.ts           # In-process fixture store shared by /api/report and /api/photos under PLAYWRIGHT_E2E_FIXTURES
+      pushover.ts                # Pushover push notifications, gated by per-category site settings
+      rate-limit.ts               # checkAndRecordRateLimit() — shared DB-backed api_rate_limit_events throttle
+      settings.ts                 # getSetting()/getConfirmationThreshold() — site_settings reads
+      ssrf.ts                      # isSafePushEndpoint() — blocks loopback/link-local/private push endpoint URLs
+      ward-query.ts                 # wardSubscribersQuery() — pure, unit-testable ward_subscriptions query builder
+      weather.ts                    # getFreezeThawByMonth() — Open-Meteo freeze-thaw fetch for the stats page
+      webpush.ts                    # notifyWardSubscribers() and per-pothole fill push dispatch (web-push)
     components/
       HomeIntroCard.svelte    # Homepage-only intro card shown on first visit
+      Icon.svelte              # Wraps $lib/icons paths in a stroke-based <svg>
+      PushNotifications.svelte  # Push subscribe/unsubscribe UI + permission state
+      SocialShare.svelte        # Share buttons (Reddit, Facebook, Bluesky, Threads, LinkedIn, Web Share API, copy link)
+      WatchlistPanel.svelte     # Renders the localStorage watchlist with live status
 ```
 
 ## Database Schema
@@ -297,14 +396,15 @@ Run migrations in this order:
 20. `schema_pothole_confirmations_ttl.sql` — pg_cron purge job for `pothole_confirmations` on resolved potholes older than 90 days (PIPEDA data minimization)
 21. `schema_fill_notifications.sql` — `pothole_fill_subscriptions` table; pg_cron cleanup for subscriptions on potholes expired > 7 days
 22. `schema_fill_notify_ratelimit.sql` — extends `api_rate_limit_events_scope_check` to include `fill_notify_subscribe` and `push_unsubscribe`
-23. `schema_grants.sql` — explicit `GRANT` statements for `anon` (SSR reads) and `service_role` (all server-side writes) on every public-schema table; required for Supabase's new default-deny Data API behaviour enforced on existing projects from October 30, 2026
-24. `schema_votes.sql` — `pothole_votes` table for upvote/downvote (community prioritization)
-25. `schema_vote_ratelimit.sql` — extends `api_rate_limit_events_scope_check` to include `vote_submit`
-26. `schema_votes_ttl.sql` — pg_cron purge job for `pothole_votes` older than 90 days (PIPEDA data minimization)
-27. `schema_ward_subscriptions.sql` — adds `ward_subscriptions` table (ward-level push alert subscriptions) and extends `api_rate_limit_events_scope_check` to include `ward_notify_subscribe`
-28. `schema_pothole_reported_at.sql` — adds `reported_at` timestamptz column (backfilled for existing non-pending rows) and redefines `increment_confirmation` to stamp it on the `pending → reported` flip, so the polling endpoint can detect that transition
-29. `schema_polling_indexes.sql` — partial indexes on `filled_at`/`expired_at` (where not null) so the `/api/potholes/recent` poll's `.or(...)` filter can use a BitmapOr instead of scanning all non-pending rows (#205)
-30. `schema_revoke_public_writes.sql` — **security (critical):** drops the leftover public write RLS policies (`"Public insert"`/`"Public update"` on potholes, `"Public insert"` on confirmations/actions) and `REVOKE`s the legacy broad write grants from `anon`/`authenticated` (keeps SELECT). All writes go through the service-role client; without this the shipped anon key could INSERT/UPDATE potholes directly via PostgREST. Supersedes the (grant-only, no-revoke) `schema_grants.sql` for the write-lockdown. (#200)
+23. `schema_pending_rls.sql` — **security:** replaces the blanket `"Public read"` policy on `potholes` (`using (true)`) with `"Public read non-pending"` (`using (status <> 'pending')`), closing anon-key enumeration of unconfirmed single-reporter submissions via `GET /rest/v1/potholes?status=eq.pending` (#170)
+24. `schema_grants.sql` — explicit `GRANT` statements for `anon` (SSR reads) and `service_role` (all server-side writes) on every public-schema table; required for Supabase's new default-deny Data API behaviour enforced on existing projects from October 30, 2026
+25. `schema_votes.sql` — `pothole_votes` table for upvote/downvote (community prioritization)
+26. `schema_vote_ratelimit.sql` — extends `api_rate_limit_events_scope_check` to include `vote_submit`
+27. `schema_votes_ttl.sql` — pg_cron purge job for `pothole_votes` older than 90 days (PIPEDA data minimization)
+28. `schema_ward_subscriptions.sql` — adds `ward_subscriptions` table (ward-level push alert subscriptions) and extends `api_rate_limit_events_scope_check` to include `ward_notify_subscribe`
+29. `schema_pothole_reported_at.sql` — adds `reported_at` timestamptz column (backfilled for existing non-pending rows) and redefines `increment_confirmation` to stamp it on the `pending → reported` flip, so the polling endpoint can detect that transition
+30. `schema_polling_indexes.sql` — partial indexes on `filled_at`/`expired_at` (where not null) so the `/api/potholes/recent` poll's `.or(...)` filter can use a BitmapOr instead of scanning all non-pending rows (#205)
+31. `schema_revoke_public_writes.sql` — **security (critical):** drops the leftover public write RLS policies (`"Public insert"`/`"Public update"` on potholes, `"Public insert"` on confirmations/actions) and `REVOKE`s the legacy broad write grants from `anon`/`authenticated` (keeps SELECT). All writes go through the service-role client; without this the shipped anon key could INSERT/UPDATE potholes directly via PostgREST. Supersedes the (grant-only, no-revoke) `schema_grants.sql` for the write-lockdown. (#200)
 
 Eleven `pg_cron` jobs run nightly:
 
@@ -336,7 +436,7 @@ pending → reported → filled
 - **2 confirmations** from distinct IPs required to go live on the public map
 - **photos_published**: admin-only toggle per pothole; a live pothole does NOT mean its photos are shown — admin must explicitly publish them
 - **IP hashing**: HMAC-SHA-256 with `IP_HASH_SECRET`, never store raw IPs
-- **Coord privacy**: reporter lat/lng is rounded to 4 decimal places (≈11m at Waterloo latitude) at write-time via `roundPublicCoord()` in `$lib/geo` — the precision is a hard-coded constant, not an env var. Geofence + merge-radius logic runs on the raw input so decisions aren't shifted by rounding. All public read/serialization paths (feed.json, feed.xml, export.csv, embed, OG, `/api/watchlist`, `/api/potholes/recent`, the homepage `+page.server.ts` load, and the `hole/[id]` JSON-LD `geo` block) re-apply `roundPublicCoord` as defense-in-depth for any historical rows stored at full precision.
+- **Coord privacy**: reporter lat/lng is rounded to 4 decimal places (≈11m at Waterloo latitude) at write-time via `roundPublicCoord()` in `$lib/geo` — the precision is a hard-coded constant, not an env var. All public read/serialization paths (feed.json, feed.xml, export.csv, embed, OG, `/api/watchlist`, `/api/potholes/recent`, the homepage `+page.server.ts` load, the `stats` and `stats/ward/[city]/[ward]` loads, and the `hole/[id]` JSON-LD `geo` block) re-apply `roundPublicCoord` as defense-in-depth for any historical rows stored at full precision. **Rounding is a serialization-boundary concern only** — never apply it upstream of a boundary decision. Geofence and merge-radius checks in `src/routes/api/report/+server.ts` run on the raw, unrounded input specifically so a rounding step can't shift which side of the boundary a report falls on; the same reasoning applies to `lookupWard` (ward point-in-polygon attribution) — round only after the geo decision is made, never before.
 - **Photo EXIF**: server-side strip in `$lib/server/exif-strip` runs before SightEngine moderation and storage upload. `stripJpegMetadata` drops APP1–APP15 and COM segments from JPEGs. `stripPngMetadata` drops the `eXIf` chunk from PNGs. `stripWebpMetadata` drops EXIF/XMP chunks from VP8X-extended WebPs (simple VP8/VP8L files carry no metadata by spec). All three return the input unchanged on malformed input.
 - **Auto-expiry**: `reported` potholes expire after 90 days; `pending` potholes expire after 14 days (both via pg_cron)
 - **Real-time polling**: homepage polls `/api/potholes/recent?since=` every 60s for new/changed potholes without requiring page reload. The query filters on `created_at`, `reported_at`, `filled_at`, or `expired_at` being after `since`, so a `pending → reported` transition (which stamps `reported_at` via `increment_confirmation`) is surfaced even though it doesn't touch `created_at`. Polling starts after map loads, pauses on disconnect.
@@ -360,7 +460,7 @@ $effect(() => { ... })             // NOT: $: { ... } for side effects
 - Stone palette (light + dark), amber accent colour (the 2026-05 redesign; `--color-asphalt` dark bg, amber `#f59e0b` focus ring)
 - Tailwind v4 utility classes (not v3 — no `@apply` in components)
 - API routes validate with zod, return `json()` or throw `error()`
-- No auth system — all actions are public with IP-based deduplication
+- Public reporting actions (report, confirm, hit, vote, notify/subscribe) require no user account and are deduplicated by hashed IP. Admin routes under `/admin` and `/api/admin` require an authenticated session with TOTP MFA support — see `src/lib/server/admin-auth.ts` (~349 lines: sessions, RBAC, trusted devices, audit log)
 - Leaflet imports must be inside `onMount` (SSR will break otherwise)
 - Server-side error logging: use `logError(area, message, err, context?)` from `$lib/server/observability` instead of bare `console.error`. It writes to the console AND forwards to Sentry with an `area` tag so issues surface in production. Bare `console.error` on a server route is a silent failure — nobody sees it.
-- Any `error(500)`/`fail(500)` (or `502`/`503`) that swallows a captured Supabase/DB/RPC/fetch error must be preceded by a `logError` call passing that error. SvelteKit treats errors thrown via `error()`/`fail()` as *expected* HttpErrors, so they never reach Sentry on their own — without the `logError` the underlying failure is invisible to the operator.
+- Any `error(500)`/`fail(500)` (or `502`/`503`) that swallows a captured Supabase/DB/RPC/fetch error must be preceded by a `logError` call passing that error. SvelteKit treats errors thrown via `error()`/`fail()` as _expected_ HttpErrors, so they never reach Sentry on their own — without the `logError` the underlying failure is invisible to the operator.

@@ -1,4 +1,4 @@
--- schema_grants.sql — Migration #23
+-- schema_grants.sql — Migration #24
 -- Explicit Data API table grants.
 --
 -- Supabase's legacy default auto-granted anon/service_role access to all

@@ -33,8 +33,13 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const filterPhotosPublished =
 		photosPublishedParam === 'true' ? true : photosPublishedParam === 'false' ? false : null;
 
-	const dateFrom = url.searchParams.get('dateFrom') || null;
-	const dateTo = url.searchParams.get('dateTo') || null;
+	// Validate date params as strict YYYY-MM-DD before use.
+	// Without this, new Date(dateTo) throws a RangeError on garbage input.
+	const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+	const rawDateFrom = url.searchParams.get('dateFrom') || null;
+	const rawDateTo = url.searchParams.get('dateTo') || null;
+	const dateFrom = rawDateFrom && ISO_DATE_RE.test(rawDateFrom) ? rawDateFrom : null;
+	const dateTo = rawDateTo && ISO_DATE_RE.test(rawDateTo) ? rawDateTo : null;
 
 	const sortParam = url.searchParams.get('sort') as SortCol | null;
 	const sort: SortCol = VALID_SORT_COLS.includes(sortParam as SortCol)
@@ -43,9 +48,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const dir = url.searchParams.get('dir') === 'asc' ? 'asc' : 'desc';
 
 	const pageSizeRaw = parsePositiveInt(url.searchParams.get('pageSize'), 25);
-	const pageSize = (VALID_PAGE_SIZES.includes(pageSizeRaw as (typeof VALID_PAGE_SIZES)[number])
-		? pageSizeRaw
-		: 25) as (typeof VALID_PAGE_SIZES)[number];
+	const pageSize = (
+		VALID_PAGE_SIZES.includes(pageSizeRaw as (typeof VALID_PAGE_SIZES)[number])
+			? pageSizeRaw
+			: 25
+	) as (typeof VALID_PAGE_SIZES)[number];
 
 	const page = parsePositiveInt(url.searchParams.get('page'), 1);
 	const from = (page - 1) * pageSize;
@@ -56,7 +63,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		.from('potholes')
 		.select(
 			'id, created_at, address, status, confirmed_count, lat, lng, filled_at, expired_at, photos_published, pothole_photos(id)',
-			{ count: 'exact' }
+			{ count: 'exact' },
 		)
 		.order(sort, { ascending: dir === 'asc' })
 		.range(from, to);
@@ -90,7 +97,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		filterPhotosPublished,
 		dateFrom,
 		dateTo,
-		adminRole: locals.adminUser.role
+		adminRole: locals.adminUser.role,
 	};
 };
 
@@ -114,7 +121,9 @@ export const actions: Actions = {
 		await getAdminClient().from('pothole_confirmations').delete().in('pothole_id', ids);
 		const { error: dbErr } = await getAdminClient().from('potholes').delete().in('id', ids);
 		if (dbErr) {
-			logError('admin/potholes', 'Failed to bulk delete potholes', dbErr, { count: ids.length });
+			logError('admin/potholes', 'Failed to bulk delete potholes', dbErr, {
+				count: ids.length,
+			});
 			return fail(500, { error: 'Failed to delete potholes' });
 		}
 
@@ -137,19 +146,27 @@ export const actions: Actions = {
 		const ids = parsed.data;
 
 		const statusRaw = fd.get('status')?.toString() ?? '';
-		const statusParsed = z.enum(['pending', 'reported', 'filled', 'expired']).safeParse(statusRaw);
+		const statusParsed = z
+			.enum(['pending', 'reported', 'filled', 'expired'])
+			.safeParse(statusRaw);
 		if (!statusParsed.success) return fail(400, { error: 'Invalid status' });
 		const s = statusParsed.data;
 
 		const updates = {
 			status: s,
 			filled_at: s === 'filled' ? new Date().toISOString() : null,
-			expired_at: s === 'expired' ? new Date().toISOString() : null
+			expired_at: s === 'expired' ? new Date().toISOString() : null,
 		};
 
-		const { error: dbErr } = await getAdminClient().from('potholes').update(updates).in('id', ids);
+		const { error: dbErr } = await getAdminClient()
+			.from('potholes')
+			.update(updates)
+			.in('id', ids);
 		if (dbErr) {
-			logError('admin/potholes', 'Failed to bulk update pothole status', dbErr, { count: ids.length, status: s });
+			logError('admin/potholes', 'Failed to bulk update pothole status', dbErr, {
+				count: ids.length,
+				status: s,
+			});
 			return fail(500, { error: 'Failed to update status' });
 		}
 
@@ -161,7 +178,7 @@ export const actions: Actions = {
 				'pothole',
 				id,
 				{ status: s },
-				ipHash
+				ipHash,
 			);
 		}
 
@@ -185,7 +202,9 @@ export const actions: Actions = {
 			.update({ photos_published: value })
 			.in('id', ids);
 		if (dbErr) {
-			logError('admin/potholes', 'Failed to bulk toggle photo visibility', dbErr, { count: ids.length });
+			logError('admin/potholes', 'Failed to bulk toggle photo visibility', dbErr, {
+				count: ids.length,
+			});
 			return fail(500, { error: 'Failed to update photo visibility' });
 		}
 
@@ -197,10 +216,10 @@ export const actions: Actions = {
 				'pothole',
 				id,
 				{ photos_published: value },
-				ipHash
+				ipHash,
 			);
 		}
 
 		return { success: true, action: 'photos', count: ids.length, published: value };
-	}
+	},
 };
