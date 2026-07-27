@@ -8,6 +8,7 @@
 	import { escapeHtml } from '$lib/escape';
 	import { inWardFeature, roundPublicCoord } from '$lib/geo';
 	import { ICONS } from '$lib/icons';
+	import { buildPotholePopupHtml } from '$lib/map/popup';
 	import { toastError } from '$lib/toast';
 	import type { Pothole } from '$lib/types';
 	import { COUNCILLORS } from '$lib/wards';
@@ -127,36 +128,7 @@
 							// eslint-disable-next-line @typescript-eslint/no-explicit-any
 							(existing as any)._status = p.status;
 						}
-						const info =
-							STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG] ??
-							STATUS_CONFIG.reported;
-						const address = escapeHtml(
-							p.address || `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`,
-						);
-						const desc = p.description ? escapeHtml(p.description) : null;
-						const detailHref = `/hole/${p.id}`;
-						const statusNote =
-							p.status === 'reported'
-								? 'Seen this too? Open details to watch it, share it, or report it officially.'
-								: p.status === 'filled'
-									? 'Marked filled by the community. Open details to review the timeline.'
-									: 'Archived after no action. Open details if you need the full history.';
-						const fixedBtn =
-							p.status === 'reported'
-								? `<button class="popup-fix-btn" data-action="mark-filled" data-pothole-id="${p.id}">✓ It's fixed!</button>`
-								: '';
-						existing.setPopupContent(
-							`<div class="popup-content">
-								<div class="popup-header"><strong>${address}</strong><span class="popup-status popup-status--${p.status}">${info.label}</span></div>
-								${desc ? `<em class="popup-desc">${desc}</em>` : ''}
-								<p class="popup-note">${statusNote}</p>
-								<div class="popup-actions">
-									<a href="${detailHref}" class="popup-primary-link">Open details</a>
-									<button class="popup-secondary-btn" data-action="share-link" data-pothole-id="${p.id}">Share or copy link</button>
-									${fixedBtn}
-								</div>
-							</div>`,
-						);
+						existing.setPopupContent(buildPotholePopupHtml(p));
 					} else {
 						// New pothole — create a marker on the fly
 						const layerKey = p.status in clusterGroups ? p.status : 'reported';
@@ -177,34 +149,7 @@
 						markersById[p.id] = marker;
 						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						(marker as any)._status = p.status;
-						const address = escapeHtml(
-							p.address || `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`,
-						);
-						const desc = p.description ? escapeHtml(p.description) : null;
-						const detailHref = `/hole/${p.id}`;
-						const statusNote =
-							p.status === 'reported'
-								? 'Seen this too? Open details to watch it, share it, or report it officially.'
-								: p.status === 'filled'
-									? 'Marked filled by the community. Open details to review the timeline.'
-									: 'Archived after no action. Open details if you need the full history.';
-						const fixedBtn =
-							p.status === 'reported'
-								? `<button class="popup-fix-btn" data-action="mark-filled" data-pothole-id="${p.id}">✓ It's fixed!</button>`
-								: '';
-						marker.bindPopup(
-							`<div class="popup-content">
-								<div class="popup-header"><strong>${address}</strong><span class="popup-status popup-status--${p.status}">${info.label}</span></div>
-								${desc ? `<em class="popup-desc">${desc}</em>` : ''}
-								<p class="popup-note">${statusNote}</p>
-								<div class="popup-actions">
-									<a href="${detailHref}" class="popup-primary-link">Open details</a>
-									<button class="popup-secondary-btn" data-action="share-link" data-pothole-id="${p.id}">Share or copy link</button>
-									${fixedBtn}
-								</div>
-							</div>`,
-							{ maxWidth: 240 },
-						);
+						marker.bindPopup(buildPotholePopupHtml(p), { maxWidth: 240 });
 						group.addLayer(marker);
 						clientPotholes = [...clientPotholes, p];
 					}
@@ -702,49 +647,13 @@
 			const layerKey = pothole.status in clusterGroups ? pothole.status : 'reported';
 			if (!(layerKey in clusterGroups)) continue;
 
-			const info =
-				STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ??
-				STATUS_CONFIG.reported;
 			const icon = markerIcons[pothole.status] ?? markerIcons['reported'];
 			const marker = L.marker([pothole.lat, pothole.lng], { icon });
 			markersById[pothole.id] = marker;
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			(marker as any)._status = pothole.status;
 
-			const address = escapeHtml(
-				pothole.address || `${pothole.lat.toFixed(5)}, ${pothole.lng.toFixed(5)}`,
-			);
-			const description = pothole.description ? escapeHtml(pothole.description) : null;
-			const detailHref = `/hole/${pothole.id}`;
-			const statusNote =
-				pothole.status === 'reported'
-					? 'Seen this too? Open details to watch it, share it, or report it officially.'
-					: pothole.status === 'filled'
-						? 'Marked filled by the community. Open details to review the timeline.'
-						: 'Archived after no action. Open details if you need the full history.';
-
-			// "It's fixed!" button only for reported potholes
-			const fixedBtn =
-				pothole.status === 'reported'
-					? `<button class="popup-fix-btn" data-action="mark-filled" data-pothole-id="${pothole.id}">✓ It's fixed!</button>`
-					: '';
-
-			marker.bindPopup(
-				`<div class="popup-content">
-					<div class="popup-header">
-						<strong>${address}</strong>
-						<span class="popup-status popup-status--${pothole.status}">${info.label}</span>
-					</div>
-					${description ? `<em class="popup-desc">${description}</em>` : ''}
-					<p class="popup-note">${statusNote}</p>
-					<div class="popup-actions">
-						<a href="${detailHref}" class="popup-primary-link">Open details</a>
-						<button class="popup-secondary-btn" data-action="share-link" data-pothole-id="${pothole.id}">Share or copy link</button>
-						${fixedBtn}
-					</div>
-				</div>`,
-				{ maxWidth: 240 },
-			);
+			marker.bindPopup(buildPotholePopupHtml(pothole), { maxWidth: 240 });
 
 			layerBatches[layerKey as (typeof statuses)[number]].push(marker);
 		}
