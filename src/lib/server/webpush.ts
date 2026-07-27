@@ -23,11 +23,29 @@ export interface PushPayload {
 }
 
 /**
+ * Guarantees a fire-and-forget push task never throws.
+ *
+ * Every function below documents itself as "does not throw", but that was only
+ * true of the per-subscription sends — the surrounding work could still reject:
+ * `init()` throws on a malformed VAPID key, and the Supabase reads/deletes can
+ * reject on a network fault. Callers use `void notify...()`, so an escaping
+ * rejection became an unhandled rejection rather than a logged error.
+ * This wrapper is where the documented contract is actually enforced.
+ */
+async function neverThrows(area: string, run: () => Promise<void>): Promise<void> {
+	try {
+		await run();
+	} catch (err) {
+		logError('webpush', `${area} failed`, err);
+	}
+}
+
+/**
  * Broadcast a push notification to all active subscribers.
  * Fire-and-forget safe: logs errors but does not throw.
  * Automatically removes expired subscriptions (HTTP 410 from push service).
  */
-export async function broadcastPush(payload: PushPayload): Promise<void> {
+async function broadcastPushImpl(payload: PushPayload): Promise<void> {
 	init();
 	if (!initialized) return; // VAPID keys not configured — skip silently
 
@@ -90,10 +108,7 @@ export async function broadcastPush(payload: PushPayload): Promise<void> {
  * One-shot: subscriptions are consumed on send regardless of delivery outcome.
  * Fire-and-forget safe: logs errors but does not throw.
  */
-export async function notifyFillSubscribers(
-	potholeId: string,
-	address: string | null,
-): Promise<void> {
+async function notifyFillSubscribersImpl(potholeId: string, address: string | null): Promise<void> {
 	init();
 	if (!initialized) return;
 
@@ -164,7 +179,7 @@ export async function notifyFillSubscribers(
  * gone (410/404) are pruned, scoped to this ward (mirrors `broadcastPush`).
  * Fire-and-forget safe: logs errors but does not throw.
  */
-export async function notifyWardSubscribers(
+async function notifyWardSubscribersImpl(
 	wardKey: string,
 	potholeId: string,
 	address: string | null,
@@ -235,3 +250,21 @@ export async function notifyWardSubscribers(
 		}
 	}
 }
+
+// Public API — the Impl functions above are wrapped so a rejection can never
+// escape into a caller's `void notify...()`. Signatures are unchanged.
+
+export const broadcastPush = (payload: PushPayload): Promise<void> =>
+	neverThrows('broadcastPush', () => broadcastPushImpl(payload));
+
+export const notifyFillSubscribers = (potholeId: string, address: string | null): Promise<void> =>
+	neverThrows('notifyFillSubscribers', () => notifyFillSubscribersImpl(potholeId, address));
+
+export const notifyWardSubscribers = (
+	wardKey: string,
+	potholeId: string,
+	address: string | null,
+): Promise<void> =>
+	neverThrows('notifyWardSubscribers', () =>
+		notifyWardSubscribersImpl(wardKey, potholeId, address),
+	);
