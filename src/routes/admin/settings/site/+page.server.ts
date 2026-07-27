@@ -12,7 +12,7 @@ const SETTING_SCHEMAS: Record<string, z.ZodTypeAny> = {
 	pushover_enabled: BOOLEAN_SETTING,
 	pushover_notify_photos: BOOLEAN_SETTING,
 	pushover_notify_community: BOOLEAN_SETTING,
-	pushover_notify_security: BOOLEAN_SETTING
+	pushover_notify_security: BOOLEAN_SETTING,
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	return {
-		settings: Object.fromEntries((data ?? []).map((s) => [s.key, s]))
+		settings: Object.fromEntries((data ?? []).map((s) => [s.key, s])),
 	};
 };
 
@@ -43,18 +43,23 @@ export const actions: Actions = {
 		const key = fd.get('key')?.toString() ?? '';
 		const value = fd.get('value')?.toString() ?? '';
 
+		if (!Object.prototype.hasOwnProperty.call(SETTING_SCHEMAS, key)) {
+			return fail(400, { error: `Unknown setting: ${key}` });
+		}
 		const schema = SETTING_SCHEMAS[key];
-		if (!schema) return fail(400, { error: `Unknown setting: ${key}` });
 
 		const parsed = schema.safeParse(value);
-		if (!parsed.success) return fail(400, { error: parsed.error.issues[0]?.message ?? 'Invalid value' });
+		if (!parsed.success)
+			return fail(400, { error: parsed.error.issues[0]?.message ?? 'Invalid value' });
 
 		const { error: dbErr } = await getAdminClient()
 			.from('site_settings')
 			.upsert({ key, value: String(parsed.data), updated_at: new Date().toISOString() });
 
 		if (dbErr) {
-			logError('admin/settings/site', 'Failed to save site setting', dbErr, { settingKey: key });
+			logError('admin/settings/site', 'Failed to save site setting', dbErr, {
+				settingKey: key,
+			});
 			return fail(500, { error: 'Failed to save setting' });
 		}
 
@@ -64,9 +69,9 @@ export const actions: Actions = {
 			'site_settings',
 			key,
 			{ value: String(parsed.data) },
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 
 		return { success: true, key };
-	}
+	},
 };

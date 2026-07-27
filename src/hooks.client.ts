@@ -19,7 +19,7 @@ Sentry.init({
 	// Capture session replays only when an error occurs, not every session.
 	replaysSessionSampleRate: 0,
 	replaysOnErrorSampleRate: isAdminRoute ? 0 : 0.5,
-	integrations: [Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true })]
+	integrations: [Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true })],
 });
 
 export const handleError = handleErrorWithSentry();

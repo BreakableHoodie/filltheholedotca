@@ -22,7 +22,7 @@ const COLUMNS = [
 	'status',
 	'confirmed_count',
 	'filled_at',
-	'expired_at'
+	'expired_at',
 ] as const;
 
 type Row = Record<(typeof COLUMNS)[number], string | number | null>;
@@ -71,7 +71,9 @@ export const GET: RequestHandler = async ({ request }) => {
 	// so we filter status explicitly to match the public intent.
 	const { data, error: dbError } = await supabase
 		.from('potholes')
-		.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at, expired_at')
+		.select(
+			'id, created_at, lat, lng, address, description, status, confirmed_count, filled_at, expired_at',
+		)
 		.in('status', ['reported', 'filled', 'expired'])
 		.order('created_at', { ascending: false })
 		.limit(ROW_LIMIT);
@@ -88,7 +90,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		const t = Math.max(
 			new Date(p.created_at).getTime(),
 			p.filled_at ? new Date(p.filled_at).getTime() : 0,
-			p.expired_at ? new Date(p.expired_at).getTime() : 0
+			p.expired_at ? new Date(p.expired_at).getTime() : 0,
 		);
 		return t > max ? t : max;
 	}, 0);
@@ -104,8 +106,8 @@ export const GET: RequestHandler = async ({ request }) => {
 				'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600',
 				'Last-Modified': lastModified,
 				'Access-Control-Allow-Origin': '*',
-				'Cross-Origin-Resource-Policy': 'cross-origin'
-			}
+				'Cross-Origin-Resource-Policy': 'cross-origin',
+			},
 		});
 	}
 
@@ -121,7 +123,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			'Access-Control-Allow-Origin': '*',
 			'Cross-Origin-Resource-Policy': 'cross-origin',
 			'X-Row-Limit': String(ROW_LIMIT),
-			'X-Row-Count': String(rows.length)
-		}
+			'X-Row-Count': String(rows.length),
+		},
 	});
 };

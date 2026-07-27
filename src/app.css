@@ -1,10 +1,10 @@
-@import "@fontsource/barlow-condensed/700.css";
-@import "@fontsource/barlow-condensed/800.css";
-@import "@fontsource/public-sans/400.css";
-@import "@fontsource/public-sans/500.css";
-@import "@fontsource/public-sans/600.css";
-@import "@fontsource/public-sans/700.css";
-@import "tailwindcss";
+@import '@fontsource/barlow-condensed/700.css';
+@import '@fontsource/barlow-condensed/800.css';
+@import '@fontsource/public-sans/400.css';
+@import '@fontsource/public-sans/500.css';
+@import '@fontsource/public-sans/600.css';
+@import '@fontsource/public-sans/700.css';
+@import 'tailwindcss';
 
 /**
  * Global keyboard focus ring — WCAG 2.4.7 Focus Visible / 2.4.11 Focus Appearance.
@@ -12,80 +12,80 @@
  * Use focus:outline-none on elements that define their own focus treatment.
  */
 :focus-visible {
-  outline: 2px solid #f59e0b; /* amber-500 */
-  outline-offset: 2px;
+	outline: 2px solid #f59e0b; /* amber-500 */
+	outline-offset: 2px;
 }
 
 /* Hard reset for elements with custom focus treatment (stats sort buttons, skip link, etc.) */
 :focus:not(:focus-visible) {
-  outline: none;
+	outline: none;
 }
 
 @theme {
-  --font-sans: "Public Sans", system-ui, sans-serif;
-  --font-brand: "Barlow Condensed", system-ui, sans-serif;
-  --color-asphalt: #191714;
+	--font-sans: 'Public Sans', system-ui, sans-serif;
+	--font-brand: 'Barlow Condensed', system-ui, sans-serif;
+	--color-asphalt: #191714;
 }
 
 body {
-  font-family: var(--font-sans);
-  /* Opt into system dark mode so native controls, scrollbars, and the
+	font-family: var(--font-sans);
+	/* Opt into system dark mode so native controls, scrollbars, and the
      pre-hydration canvas (visible in mobile overscroll/address-bar gaps)
      follow the user's preference. Mirrors the layout's bg-stone-50/asphalt. */
-  color-scheme: light dark;
-  background-color: light-dark(#fafaf9, #191714);
+	color-scheme: light dark;
+	background-color: light-dark(#fafaf9, #191714);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-spin,
-  .animate-pulse {
-    animation: none;
-  }
+	.animate-spin,
+	.animate-pulse {
+		animation: none;
+	}
 }
 
 .page-title {
-  font-family: var(--font-brand);
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  line-height: 1;
-  text-wrap: balance;
+	font-family: var(--font-brand);
+	font-weight: 800;
+	letter-spacing: -0.01em;
+	line-height: 1;
+	text-wrap: balance;
 }
 
 .section-title {
-  font-family: var(--font-brand);
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1.1;
-  text-wrap: balance;
+	font-family: var(--font-brand);
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 1.1;
+	text-wrap: balance;
 }
 
 .page-intro {
-  max-width: 42rem;
-  text-wrap: pretty;
+	max-width: 42rem;
+	text-wrap: pretty;
 }
 
 /* iOS safe area support — accounts for notch/Dynamic Island and home indicator */
 .safe-header {
-  padding-top: env(safe-area-inset-top);
+	padding-top: env(safe-area-inset-top);
 }
 .safe-header-inner {
-  padding-left: max(1rem, env(safe-area-inset-left));
-  padding-right: max(1rem, env(safe-area-inset-right));
+	padding-left: max(1rem, env(safe-area-inset-left));
+	padding-right: max(1rem, env(safe-area-inset-right));
 }
 .safe-bottom {
-  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+	bottom: calc(1.5rem + env(safe-area-inset-bottom));
 }
 
 .safe-bottom-mobile-tray {
-  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+	bottom: calc(0.75rem + env(safe-area-inset-bottom));
 }
 
 .safe-bottom-watchlist {
-  bottom: calc(6.5rem + env(safe-area-inset-bottom));
+	bottom: calc(6.5rem + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 640px) {
-  .safe-bottom-watchlist {
-    bottom: 1rem;
-  }
+	.safe-bottom-watchlist {
+		bottom: 1rem;
+	}
 }

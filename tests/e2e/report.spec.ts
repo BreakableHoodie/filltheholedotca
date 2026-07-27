@@ -5,9 +5,9 @@ const STORAGE_STATE = {
 	origins: [
 		{
 			origin: 'http://localhost:4173',
-			localStorage: [{ name: 'fth-home-intro-dismissed', value: '1' }]
-		}
-	]
+			localStorage: [{ name: 'fth-home-intro-dismissed', value: '1' }],
+		},
+	],
 };
 
 test.describe('Report page readiness summary', () => {
@@ -17,7 +17,9 @@ test.describe('Report page readiness summary', () => {
 		await page.goto('/report');
 
 		await expect(page.getByText('Ready to submit')).toBeVisible();
-		await expect(page.getByText('Choose a location above to unlock the report button.')).toBeVisible();
+		await expect(
+			page.getByText('Choose a location above to unlock the report button.'),
+		).toBeVisible();
 		await expect(page.getByRole('button', { name: /Submit report/i })).toBeDisabled();
 	});
 
@@ -26,7 +28,9 @@ test.describe('Report page readiness summary', () => {
 
 		await expect(page.getByText('Location locked in')).toBeVisible();
 		await expect(page.getByText('Optional — not added yet')).toHaveCount(2);
-		await expect(page.getByText(/After you submit, a pothole page is created right away./i)).toBeVisible();
+		await expect(
+			page.getByText(/After you submit, a pothole page is created right away./i),
+		).toBeVisible();
 		await expect(page.getByRole('button', { name: /Submit report/i })).toBeEnabled();
 	});
 });
@@ -42,12 +46,18 @@ test.describe('GPS denial auto-redirect', () => {
 				value: {
 					getCurrentPosition: (
 						_success: PositionCallback,
-						error: PositionErrorCallback
+						error: PositionErrorCallback,
 					) => {
-						error({ code: 1, message: 'Permission denied', PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 } as GeolocationPositionError);
-					}
+						error({
+							code: 1,
+							message: 'Permission denied',
+							PERMISSION_DENIED: 1,
+							POSITION_UNAVAILABLE: 2,
+							TIMEOUT: 3,
+						} as GeolocationPositionError);
+					},
 				},
-				configurable: true
+				configurable: true,
 			});
 		});
 
@@ -64,7 +74,7 @@ test.describe('GPS denial auto-redirect', () => {
 		await page.addInitScript(() => {
 			Object.defineProperty(navigator, 'geolocation', {
 				value: undefined,
-				configurable: true
+				configurable: true,
 			});
 		});
 
@@ -76,4 +86,3 @@ test.describe('GPS denial auto-redirect', () => {
 		await expect(page.getByRole('tabpanel', { name: 'Address' })).toBeVisible();
 	});
 });
-

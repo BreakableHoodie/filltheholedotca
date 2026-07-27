@@ -1,7 +1,7 @@
 import { fail, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { z } from 'zod';
-import { writeAuditLog } from '$lib/server/admin-auth';
+import { writeAuditLog, invalidateAllSessionsForUser } from '$lib/server/admin-auth';
 import { hashPassword, verifyPassword } from '$lib/server/admin-crypto';
 import { hashIp } from '$lib/hash';
 import { getAdminClient } from '$lib/server/supabase';
@@ -36,12 +36,17 @@ export const actions: Actions = {
 			return fail(400, { error: nextParsed.error.issues[0]?.message ?? 'Invalid password' });
 
 		// Fetch stored hash
-		const { data: user } = await getAdminClient()
+		const { data: user, error: fetchErr } = await getAdminClient()
 			.from('admin_users')
 			.select('password_hash')
 			.eq('id', locals.adminUser.id)
 			.single();
 
+		if (fetchErr) {
+			logError('admin/settings/password', 'Failed to fetch password hash', fetchErr, {
+				userId: locals.adminUser.id,
+			});
+		}
 		if (!user?.password_hash) return fail(500, { error: 'Unable to verify current password' });
 
 		const ok = await verifyPassword(current, user.password_hash);
@@ -54,9 +59,15 @@ export const actions: Actions = {
 			.eq('id', locals.adminUser.id);
 
 		if (dbErr) {
-			logError('admin/settings/password', 'Failed to update password', dbErr, { userId: locals.adminUser.id });
+			logError('admin/settings/password', 'Failed to update password', dbErr, {
+				userId: locals.adminUser.id,
+			});
 			return fail(500, { error: 'Failed to update password' });
 		}
+
+		// Invalidate all other sessions so a stolen session token cannot continue
+		// to use the old password's session after it has been changed.
+		await invalidateAllSessionsForUser(locals.adminUser.id, locals.adminSession?.id);
 
 		await writeAuditLog(
 			locals.adminUser.id,
@@ -64,9 +75,9 @@ export const actions: Actions = {
 			'user',
 			locals.adminUser.id,
 			null,
-			await hashIp(getClientAddress())
+			await hashIp(getClientAddress()),
 		);
 
 		return { success: true };
-	}
+	},
 };

@@ -9,11 +9,15 @@ const patchSchema = z
 	.object({
 		status: z.enum(['pending', 'reported', 'filled', 'expired']).optional(),
 		address: z.string().min(1).max(500).optional(),
-		photos_published: z.boolean().optional()
+		photos_published: z.boolean().optional(),
 	})
-	.refine((d) => d.status !== undefined || d.address !== undefined || d.photos_published !== undefined, {
-		message: 'At least one field required'
-	});
+	.refine(
+		(d) =>
+			d.status !== undefined || d.address !== undefined || d.photos_published !== undefined,
+		{
+			message: 'At least one field required',
+		},
+	);
 
 // M3: Valid status transitions — prevents arbitrary state manipulation.
 // Same-status transitions are rejected; all listed transitions are intentional admin overrides.
@@ -21,7 +25,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
 	pending: ['reported', 'filled', 'expired'],
 	reported: ['filled', 'expired', 'pending'],
 	filled: ['pending', 'reported'],
-	expired: ['pending', 'reported']
+	expired: ['pending', 'reported'],
 };
 
 // PATCH — status override or address correction (editor+)
@@ -35,11 +39,13 @@ export const PATCH: RequestHandler = async ({ params, request, locals, getClient
 
 	const body = await request.json();
 	const bodyParsed = patchSchema.safeParse(body);
-	if (!bodyParsed.success) throw error(400, bodyParsed.error.issues[0]?.message ?? 'Invalid request body');
+	if (!bodyParsed.success)
+		throw error(400, bodyParsed.error.issues[0]?.message ?? 'Invalid request body');
 
 	const updates: Record<string, unknown> = {};
 	if (bodyParsed.data.address !== undefined) updates.address = bodyParsed.data.address;
-	if (bodyParsed.data.photos_published !== undefined) updates.photos_published = bodyParsed.data.photos_published;
+	if (bodyParsed.data.photos_published !== undefined)
+		updates.photos_published = bodyParsed.data.photos_published;
 	if (bodyParsed.data.status !== undefined) {
 		// M3: Enforce state machine — fetch current status and validate the transition.
 		const { data: current, error: fetchErr } = await getAdminClient()
@@ -76,7 +82,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, getClient
 		'pothole',
 		id,
 		{ fields: Object.keys(updates) },
-		await hashIp(getClientAddress())
+		await hashIp(getClientAddress()),
 	);
 
 	return json({ ok: true });
@@ -98,17 +104,31 @@ export const DELETE: RequestHandler = async ({ params, locals, getClientAddress 
 		.delete()
 		.eq('pothole_id', id);
 	if (confirmDeleteError) {
-		logError('admin/pothole-delete', 'Failed to delete confirmations — aborting pothole delete to avoid orphaned records', confirmDeleteError, { potholeId: id });
+		logError(
+			'admin/pothole-delete',
+			'Failed to delete confirmations — aborting pothole delete to avoid orphaned records',
+			confirmDeleteError,
+			{ potholeId: id },
+		);
 		throw error(500, 'Failed to delete');
 	}
 
 	const { error: deleteError } = await getAdminClient().from('potholes').delete().eq('id', id);
 	if (deleteError) {
-		logError('admin/pothole-delete', 'Failed to delete pothole', deleteError, { potholeId: id });
+		logError('admin/pothole-delete', 'Failed to delete pothole', deleteError, {
+			potholeId: id,
+		});
 		throw error(500, 'Failed to delete');
 	}
 
-	await writeAuditLog(locals.adminUser.id, 'pothole.delete', 'pothole', id, null, await hashIp(getClientAddress()));
+	await writeAuditLog(
+		locals.adminUser.id,
+		'pothole.delete',
+		'pothole',
+		id,
+		null,
+		await hashIp(getClientAddress()),
+	);
 
 	return json({ ok: true });
 };

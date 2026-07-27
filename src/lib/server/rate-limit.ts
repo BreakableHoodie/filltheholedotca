@@ -25,7 +25,7 @@ export async function checkAndRecordRateLimit(
 	rateLimitedMessage: string,
 	area: string,
 	checkFailedMessage = 'Failed to check rate limit',
-	context?: Record<string, unknown>
+	context?: Record<string, unknown>,
 ): Promise<void> {
 	const windowStart = new Date(Date.now() - windowMs).toISOString();
 	const { count, error: countError } = await db
@@ -43,7 +43,9 @@ export async function checkAndRecordRateLimit(
 		throw error(429, rateLimitedMessage);
 	}
 
-	const { error: insertError } = await db.from('api_rate_limit_events').insert({ ip_hash: ipHash, scope });
+	const { error: insertError } = await db
+		.from('api_rate_limit_events')
+		.insert({ ip_hash: ipHash, scope });
 	if (insertError) {
 		logError(`${area}/ratelimit`, 'Failed to record rate limit event', insertError);
 	}

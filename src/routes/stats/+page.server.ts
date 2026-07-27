@@ -4,18 +4,25 @@ import type { PageServerLoad } from './$types';
 import type { Pothole } from '$lib/types';
 import { COUNCILLORS } from '$lib/wards';
 import { lookupWard, fetchWards } from '$lib/server/wards';
+import { roundPublicCoord } from '$lib/geo';
 import { logError } from '$lib/server/observability';
 import { getFreezeThawByMonth } from '$lib/server/weather';
 
 // Stable ward definitions derived from the councillors list — no network call needed.
 export type WardDef = {
-	city: string; ward: number; key: string;
-	councillorName: string; councillorUrl: string;
+	city: string;
+	ward: number;
+	key: string;
+	councillorName: string;
+	councillorUrl: string;
 };
 
-const ALL_WARDS: WardDef[] = COUNCILLORS.map(c => ({
-	city: c.city, ward: c.ward, key: `${c.city}-${c.ward}`,
-	councillorName: c.name, councillorUrl: c.url
+const ALL_WARDS: WardDef[] = COUNCILLORS.map((c) => ({
+	city: c.city,
+	ward: c.ward,
+	key: `${c.city}-${c.ward}`,
+	councillorName: c.name,
+	councillorUrl: c.url,
 }));
 
 // Fixture pothole for E2E tests. Coordinates fall inside Kitchener Ward 6;
@@ -33,14 +40,18 @@ const E2E_STATS_FIXTURE: Array<Pothole & { ward_key: string | null }> = [
 		filled_at: null,
 		expired_at: null,
 		photos_published: false,
-		ward_key: 'kitchener-6'
-	}
+		ward_key: 'kitchener-6',
+	},
 ];
 
 export const load: PageServerLoad = async ({ url, setHeaders }) => {
 	if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true') {
 		const fixture = url.searchParams.get('__fixture') === '1' ? E2E_STATS_FIXTURE : [];
-		return { potholes: fixture, wards: ALL_WARDS, freezeThawByMonth: {} as Record<string, number> };
+		return {
+			potholes: fixture,
+			wards: ALL_WARDS,
+			freezeThawByMonth: {} as Record<string, number>,
+		};
 	}
 
 	setHeaders({ 'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=300' });
@@ -53,13 +64,15 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
 	const [{ data, error }, freezeThawByMonth] = await Promise.all([
 		supabase
 			.from('potholes')
-			.select('id, created_at, lat, lng, status, filled_at, expired_at, address, confirmed_count')
+			.select(
+				'id, created_at, lat, lng, status, filled_at, expired_at, address, confirmed_count',
+			)
 			.neq('status', 'pending')
 			.order('created_at', { ascending: false }),
 		getFreezeThawByMonth(18),
 		fetchWards('kitchener'),
 		fetchWards('waterloo'),
-		fetchWards('cambridge')
+		fetchWards('cambridge'),
 	]);
 
 	if (error) {
@@ -67,13 +80,13 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
 		return {
 			potholes: [] as Array<Pothole & { ward_key: string | null }>,
 			wards: ALL_WARDS,
-			freezeThawByMonth
+			freezeThawByMonth,
 		};
 	}
 
 	const potholes = (data ?? []).map((p) => ({
 		...p,
-		address: p.address ? decodeHtmlEntities(p.address) : null
+		address: p.address ? decodeHtmlEntities(p.address) : null,
 	})) as Pothole[];
 
 	// Assign ward keys for all potholes in parallel.
@@ -81,7 +94,9 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
 	const councillors = await Promise.all(potholes.map((p) => lookupWard(p.lat, p.lng)));
 	const potholesWithWards = potholes.map((p, i) => ({
 		...p,
-		ward_key: councillors[i] ? `${councillors[i]!.city}-${councillors[i]!.ward}` : null
+		lat: roundPublicCoord(p.lat),
+		lng: roundPublicCoord(p.lng),
+		ward_key: councillors[i] ? `${councillors[i]!.city}-${councillors[i]!.ward}` : null,
 	}));
 
 	return { potholes: potholesWithWards, wards: ALL_WARDS, freezeThawByMonth };

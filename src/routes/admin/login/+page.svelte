@@ -26,7 +26,9 @@
 			<h1 class="text-lg font-semibold text-stone-100 mb-5">Sign in</h1>
 
 			{#if form?.error}
-				<div class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-sm">
+				<div
+					class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-sm"
+				>
 					{form.error}
 				</div>
 			{/if}
@@ -45,7 +47,9 @@
 
 				<div class="space-y-4">
 					<div>
-						<label for="email" class="block text-xs font-medium text-stone-400 mb-1.5">Email</label>
+						<label for="email" class="block text-xs font-medium text-stone-400 mb-1.5"
+							>Email</label
+						>
 						<input
 							id="email"
 							type="email"
@@ -59,8 +63,9 @@
 					</div>
 
 					<div>
-						<label for="password" class="block text-xs font-medium text-stone-400 mb-1.5"
-							>Password</label
+						<label
+							for="password"
+							class="block text-xs font-medium text-stone-400 mb-1.5">Password</label
 						>
 						<input
 							id="password"

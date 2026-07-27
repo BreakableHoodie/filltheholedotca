@@ -14,14 +14,14 @@
 		<meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
 		<meta name="theme-color" content="#191714" media="(prefers-color-scheme: dark)" />
 		<script type="application/ld+json">
-		{
-			"@context": "https://schema.org",
-			"@type": "WebSite",
-			"name": "FillTheHole.ca",
-			"url": "https://fillthehole.ca",
-			"description": "Track potholes in Kitchener, Waterloo, and Cambridge. Report, confirm, and hold the city accountable.",
-			"inLanguage": "en-CA"
-		}
+			{
+				"@context": "https://schema.org",
+				"@type": "WebSite",
+				"name": "FillTheHole.ca",
+				"url": "https://fillthehole.ca",
+				"description": "Track potholes in Kitchener, Waterloo, and Cambridge. Report, confirm, and hold the city accountable.",
+				"inLanguage": "en-CA"
+			}
 		</script>
 		<script nonce="%sveltekit.nonce%">
 			// Svelte 5 caches Node.prototype.firstChild/.nextSibling getters at startup via
@@ -38,7 +38,11 @@
 						while (p) {
 							var pd = Object.getOwnPropertyDescriptor(p, prop);
 							if (pd && pd.get) {
-								Object.defineProperty(proto, prop, { get: pd.get, configurable: true, enumerable: false });
+								Object.defineProperty(proto, prop, {
+									get: pd.get,
+									configurable: true,
+									enumerable: false,
+								});
 								break;
 							}
 							p = Object.getPrototypeOf(p);

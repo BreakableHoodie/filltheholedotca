@@ -23,8 +23,8 @@ const responseSchema = z.object({
 	daily: z.object({
 		time: z.array(z.string()),
 		temperature_2m_max: z.array(z.number().nullable()),
-		temperature_2m_min: z.array(z.number().nullable())
-	})
+		temperature_2m_min: z.array(z.number().nullable()),
+	}),
 });
 
 function isoDate(d: Date): string {
@@ -59,10 +59,16 @@ export async function getFreezeThawByMonth(months: number): Promise<Record<strin
 	try {
 		const controller = new AbortController();
 		const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-		const res = await fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+		const res = await fetch(url, { signal: controller.signal }).finally(() =>
+			clearTimeout(timer),
+		);
 
 		if (!res.ok) {
-			logError('weather', 'Open-Meteo archive request failed', new Error(`HTTP ${res.status}`));
+			logError(
+				'weather',
+				'Open-Meteo archive request failed',
+				new Error(`HTTP ${res.status}`),
+			);
 			return zero;
 		}
 
@@ -75,7 +81,7 @@ export async function getFreezeThawByMonth(months: number): Promise<Record<strin
 		const d = parsed.data.daily;
 		const data = computeFreezeThawByMonth(
 			{ time: d.time, tmax: d.temperature_2m_max, tmin: d.temperature_2m_min },
-			monthKeys
+			monthKeys,
 		);
 		cache = { key: cacheKey, data, expiresAt: Date.now() + CACHE_TTL_MS };
 		return data;

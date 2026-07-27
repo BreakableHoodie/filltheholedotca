@@ -29,13 +29,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	// Specific IDs take priority over filters
 	const idsParam = url.searchParams.getAll('ids');
 	const specificIds = idsParam.filter((id) =>
-		/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id),
 	);
 
 	let query = getAdminClient()
 		.from('potholes')
 		.select(
-			'id, created_at, address, status, confirmed_count, lat, lng, filled_at, expired_at, photos_published'
+			'id, created_at, address, status, confirmed_count, lat, lng, filled_at, expired_at, photos_published',
 		)
 		.order('created_at', { ascending: false })
 		.limit(10_000);
@@ -65,7 +65,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 		if (filterStatus) query = query.eq('status', filterStatus);
 		if (search) query = query.ilike('address', `%${search}%`);
-		if (filterPhotosPublished !== null) query = query.eq('photos_published', filterPhotosPublished);
+		if (filterPhotosPublished !== null)
+			query = query.eq('photos_published', filterPhotosPublished);
 		if (dateFrom) query = query.gte('created_at', dateFrom);
 		if (dateTo) {
 			const dateToEnd = new Date(dateTo);
@@ -87,8 +88,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		return new Response(JSON.stringify(rows, null, 2), {
 			headers: {
 				'Content-Type': 'application/json',
-				'Content-Disposition': `attachment; filename="${filename}.json"`
-			}
+				'Content-Disposition': `attachment; filename="${filename}.json"`,
+			},
 		});
 	}
 
@@ -103,20 +104,18 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		'photos_published',
 		'created_at',
 		'filled_at',
-		'expired_at'
+		'expired_at',
 	];
 
 	const lines = [
 		headers.join(','),
-		...rows.map((r) =>
-			headers.map((h) => escapeCSV(r[h as keyof typeof r])).join(',')
-		)
+		...rows.map((r) => headers.map((h) => escapeCSV(r[h as keyof typeof r])).join(',')),
 	];
 
 	return new Response(lines.join('\n'), {
 		headers: {
 			'Content-Type': 'text/csv',
-			'Content-Disposition': `attachment; filename="${filename}.csv"`
-		}
+			'Content-Disposition': `attachment; filename="${filename}.csv"`,
+		},
 	});
 };

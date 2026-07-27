@@ -57,7 +57,9 @@
 	</div>
 
 	{#if form?.success}
-		<div class="mb-4 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm">
+		<div
+			class="mb-4 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm"
+		>
 			Other sessions revoked.
 		</div>
 	{/if}
@@ -66,9 +68,21 @@
 		{#each data.sessions as session (session.id)}
 			<div class="px-4 py-4 flex items-start gap-3">
 				<!-- Browser icon -->
-				<div class="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center flex-shrink-0 mt-0.5">
-					<svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+				<div
+					class="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center flex-shrink-0 mt-0.5"
+				>
+					<svg
+						class="w-4 h-4 text-stone-400"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+						/>
 					</svg>
 				</div>
 
@@ -78,7 +92,9 @@
 							{parseUA(session.user_agent)}
 						</p>
 						{#if session.isCurrent}
-							<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-amber-400 bg-amber-500/10">
+							<span
+								class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-amber-400 bg-amber-500/10"
+							>
 								This session
 							</span>
 						{/if}
@@ -86,7 +102,9 @@
 
 					<div class="flex items-center gap-3 mt-0.5 flex-wrap">
 						<span class="text-stone-500 text-xs">
-							Active {formatDistanceToNow(new Date(session.last_activity_at), { addSuffix: true })}
+							Active {formatDistanceToNow(new Date(session.last_activity_at), {
+								addSuffix: true,
+							})}
 						</span>
 						<span class="text-stone-700">·</span>
 						<span class="text-stone-600 text-xs">

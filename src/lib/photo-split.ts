@@ -6,7 +6,7 @@
  */
 export function splitByFill<T extends { created_at: string }>(
 	photos: T[],
-	filledAt: string | null
+	filledAt: string | null,
 ): { before: T[]; after: T[] } {
 	if (!filledAt) return { before: [...photos], after: [] };
 	const fill = new Date(filledAt).getTime();

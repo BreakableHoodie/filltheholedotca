@@ -7,10 +7,10 @@ test.describe('Stats page', () => {
 			origins: [
 				{
 					origin: 'http://localhost:4173',
-					localStorage: [{ name: 'fth-home-intro-dismissed', value: '1' }]
-				}
-			]
-		}
+					localStorage: [{ name: 'fth-home-intro-dismissed', value: '1' }],
+				},
+			],
+		},
 	});
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/stats');
@@ -33,13 +33,22 @@ test.describe('Stats page', () => {
 	});
 
 	test('"All time" is selected by default (aria-pressed)', async ({ page }) => {
-		await expect(page.getByRole('button', { name: 'All time' })).toHaveAttribute('aria-pressed', 'true');
+		await expect(page.getByRole('button', { name: 'All time' })).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
 	});
 
 	test('clicking a time filter updates aria-pressed state', async ({ page }) => {
 		await page.getByRole('button', { name: '30 days' }).click();
-		await expect(page.getByRole('button', { name: '30 days' })).toHaveAttribute('aria-pressed', 'true');
-		await expect(page.getByRole('button', { name: 'All time' })).toHaveAttribute('aria-pressed', 'false');
+		await expect(page.getByRole('button', { name: '30 days' })).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
+		await expect(page.getByRole('button', { name: 'All time' })).toHaveAttribute(
+			'aria-pressed',
+			'false',
+		);
 	});
 
 	test('summary section has stat cards', async ({ page }) => {
@@ -53,11 +62,13 @@ test.describe('Stats page', () => {
 		// The chart has role="img" with an aria-label. Match the stable phrase in
 		// the label so adding the freeze–thaw line to the description doesn't break it.
 		await expect(
-			page.getByRole('img', { name: /monthly pothole reports and fills/i })
+			page.getByRole('img', { name: /monthly pothole reports and fills/i }),
 		).toBeVisible();
 	});
 
-	test('monthly activity chart has a screen-reader accessible table (WCAG 1.1.1)', async ({ page }) => {
+	test('monthly activity chart has a screen-reader accessible table (WCAG 1.1.1)', async ({
+		page,
+	}) => {
 		// The sr-only table is the accessible equivalent of the visual bar chart.
 		// It must be in the DOM (visually hidden, not display:none) so screen readers can reach it.
 		const table = page.getByRole('table', { name: /Monthly pothole reports/i });
@@ -81,27 +92,37 @@ test.describe('Stats page', () => {
 		await expect(page).toHaveTitle(/Stats — fillthehole\.ca/i);
 	});
 
-	test('ward section resolves from loading into table or empty state', async ({ page }) => {
-		// The ward section passes through wardLoading=true ("Assigning wards…")
-		// before settling. Wait for the spinner to disappear, then check that
-		// either the grade-column table or the empty-state message is present.
-		// Both are valid outcomes — no live DB means empty state.
-		await page.locator('[aria-busy="true"]').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {
-			// aria-busy element may already be gone if GeoJSON loaded quickly
-		});
-		const hasTable = (await page.locator('th[title*="Accountability grade"]').count()) > 0;
-		const hasEmptyState = (await page.getByText(/No ward data available/i).count()) > 0;
-		expect(hasTable || hasEmptyState).toBe(true);
+	test('ward section shows the "No ward data" empty state without the fixture query param', async ({
+		page,
+	}) => {
+		// beforeEach navigates to bare /stats. Without ?__fixture=1 the load
+		// function always returns potholes: [] (see
+		// src/routes/stats/+page.server.ts), so wardRows is always empty and the
+		// only reachable branch is the "No ward data" empty state — never the
+		// table, and (since filtered.length is 0) never the "ward lookup
+		// failed" banner either. The stats page has no client-side ward loading
+		// state to wait for — ward assignment happens server-side in the load
+		// function — so the SSR'd HTML already reflects this by the time
+		// beforeEach's goto() resolves.
+		await expect(
+			page.getByText('No ward data available for the selected window.'),
+		).toBeVisible();
+		await expect(page.locator('th[title*="Accountability grade"]')).toHaveCount(0);
 	});
 
-	test('ward table grade cells contain valid grade values (A–F or —)', async ({ page }) => {
-		// Grade cells carry a title attribute set by the wardGrade() function.
-		// Conditional: skipped when there are no ward rows (no live DB connection).
+	test('ward table shows the accountability grade for the fixture ward', async ({ page }) => {
+		// Override beforeEach's bare /stats navigation: only ?__fixture=1 makes
+		// the loader return E2E_STATS_FIXTURE (see
+		// src/routes/stats/+page.server.ts) — a single "reported" pothole in
+		// ward kitchener-6 — so this is the only way the ward table ever
+		// renders a real row in this test environment.
+		await page.goto('/stats?__fixture=1');
+
 		const gradeCells = page.locator('td[title^="Grade:"]');
-		const count = await gradeCells.count();
-		for (let i = 0; i < count; i++) {
-			const text = (await gradeCells.nth(i).innerText()).trim();
-			expect(text).toMatch(/^[A-F—]$/);
-		}
+		await expect(gradeCells).toHaveCount(1);
+		// Only 1 report for this ward — below wardGrade()'s 5-report minimum
+		// sample size, so the deterministic output is the placeholder dash,
+		// not a computed letter grade.
+		await expect(gradeCells).toHaveText('—');
 	});
 });

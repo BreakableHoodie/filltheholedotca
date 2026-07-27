@@ -37,16 +37,16 @@ Any of the following triggers this playbook:
 
 Understanding what was potentially exposed is required to assess harm.
 
-| Data | Where stored | Sensitivity | Notes |
-|------|-------------|-------------|-------|
-| IP address hashes | `pothole_confirmations`, `pothole_photos`, `api_rate_limit_events`, `admin_auth_attempts`, `admin_audit_log`, `admin_sessions`, `admin_trusted_devices` | Medium | HMAC-SHA-256; reversible only if `IP_HASH_SECRET` is also exposed |
-| Push subscription endpoints + keys | `push_subscriptions` | Medium | Device-specific; attacker with VAPID private key can push arbitrary notifications |
-| Pothole photos | Supabase Storage (`pothole-photos` bucket) | Medium–High | EXIF stripped server-side, but photo content may be identifiable (faces, vehicles, property) |
-| Admin email addresses | `admin_users` | Low–Medium | Small set; not public user data |
-| Admin password hashes | `admin_users` | Medium | PBKDF2; not plaintext, but exposed hashes are brute-forceable offline |
-| Admin TOTP secrets | `admin_users.totp_secret` | High | AES-GCM encrypted; reversible if `TOTP_ENCRYPTION_KEY` is also exposed |
-| User-agent strings | `admin_sessions`, `admin_trusted_devices`, `admin_auth_attempts` | Low | Device fingerprinting risk only |
-| Pothole location + description | `potholes` | Low | Public data by design; coords rounded to ~11 m |
+| Data                               | Where stored                                                                                                                                            | Sensitivity | Notes                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------- |
+| IP address hashes                  | `pothole_confirmations`, `pothole_photos`, `api_rate_limit_events`, `admin_auth_attempts`, `admin_audit_log`, `admin_sessions`, `admin_trusted_devices` | Medium      | HMAC-SHA-256; reversible only if `IP_HASH_SECRET` is also exposed                            |
+| Push subscription endpoints + keys | `push_subscriptions`                                                                                                                                    | Medium      | Device-specific; attacker with VAPID private key can push arbitrary notifications            |
+| Pothole photos                     | Supabase Storage (`pothole-photos` bucket)                                                                                                              | Medium–High | EXIF stripped server-side, but photo content may be identifiable (faces, vehicles, property) |
+| Admin email addresses              | `admin_users`                                                                                                                                           | Low–Medium  | Small set; not public user data                                                              |
+| Admin password hashes              | `admin_users`                                                                                                                                           | Medium      | PBKDF2; not plaintext, but exposed hashes are brute-forceable offline                        |
+| Admin TOTP secrets                 | `admin_users.totp_secret`                                                                                                                               | High        | AES-GCM encrypted; reversible if `TOTP_ENCRYPTION_KEY` is also exposed                       |
+| User-agent strings                 | `admin_sessions`, `admin_trusted_devices`, `admin_auth_attempts`                                                                                        | Low         | Device fingerprinting risk only                                                              |
+| Pothole location + description     | `potholes`                                                                                                                                              | Low         | Public data by design; coords rounded to ~11 m                                               |
 
 **Public users submit no account data.** There is no email, name, or profile linked
 to a report. The only personal information from public users is the hashed IP address
@@ -63,23 +63,23 @@ the probability a malicious actor could use it to cause harm.
 
 ### RROSH = YES — report to OPC
 
-| Trigger | Why |
-|---------|-----|
-| `IP_HASH_SECRET` exposed | Attacker can reverse all stored ip_hash values to real IP addresses. IP addresses are personal information under PIPEDA. All users who reported, confirmed, or uploaded a photo are affected. |
-| `SUPABASE_SERVICE_ROLE_KEY` exposed (with evidence of access) | Full read access to all tables and storage. Scope includes push subscriptions, photos, and all ip_hash rows. |
-| `TOTP_ENCRYPTION_KEY` exposed alongside admin TOTP secrets | Admin TOTP secrets are decryptable → account takeover risk. Limited to admin accounts, but severity is high. |
-| Push subscriptions accessed + `VAPID_PRIVATE_KEY` exposed | Attacker can send arbitrary push notifications to all subscribed devices; endpoints also enable device fingerprinting. |
-| Unmoderated photo served publicly containing identifiable content | Photo content (faces, licence plates) disclosed without consent. |
+| Trigger                                                           | Why                                                                                                                                                                                           |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IP_HASH_SECRET` exposed                                          | Attacker can reverse all stored ip_hash values to real IP addresses. IP addresses are personal information under PIPEDA. All users who reported, confirmed, or uploaded a photo are affected. |
+| `SUPABASE_SERVICE_ROLE_KEY` exposed (with evidence of access)     | Full read access to all tables and storage. Scope includes push subscriptions, photos, and all ip_hash rows.                                                                                  |
+| `TOTP_ENCRYPTION_KEY` exposed alongside admin TOTP secrets        | Admin TOTP secrets are decryptable → account takeover risk. Limited to admin accounts, but severity is high.                                                                                  |
+| Push subscriptions accessed + `VAPID_PRIVATE_KEY` exposed         | Attacker can send arbitrary push notifications to all subscribed devices; endpoints also enable device fingerprinting.                                                                        |
+| Unmoderated photo served publicly containing identifiable content | Photo content (faces, licence plates) disclosed without consent.                                                                                                                              |
 
 ### RROSH = PROBABLY NOT — record, no OPC report required
 
-| Trigger | Why |
-|---------|-----|
+| Trigger                                                    | Why                                                                                     |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | `SUPABASE_SERVICE_ROLE_KEY` exposed, no evidence of access | Immediate rotation; assess access logs before closing. Record the breach for 24 months. |
 | `ADMIN_SESSION_SECRET` or `ADMIN_BOOTSTRAP_SECRET` exposed | CSRF forgery risk but no personal data directly exposed. Invalidate all admin sessions. |
-| `SIGHTENGINE_*` keys exposed | Third-party moderation API; no personal data stored server-side by this integration. |
-| `PUSHOVER_*` keys exposed | Notification sending only; no personal data exposed. |
-| Admin password hash for a single account exposed | Offline brute-force risk only. Rotate credential, record breach. |
+| `SIGHTENGINE_*` keys exposed                               | Third-party moderation API; no personal data stored server-side by this integration.    |
+| `PUSHOVER_*` keys exposed                                  | Notification sending only; no personal data exposed.                                    |
+| Admin password hash for a single account exposed           | Offline brute-force risk only. Rotate credential, record breach.                        |
 
 **When in doubt, report.** The OPC is not punitive about over-reporting. The cost
 of failing to report when RROSH exists is much higher.
@@ -91,6 +91,7 @@ of failing to report when RROSH exists is much higher.
 Rotate in this order (most critical first):
 
 ### `IP_HASH_SECRET`
+
 - **Impact if exposed**: All stored ip_hash values become reversible to real IPs.
 - **Rotate**: Generate a new 32-byte hex secret → update Netlify env var → redeploy.
 - **Note**: After rotation, all existing ip_hash values are no longer valid for dedup.
@@ -98,23 +99,27 @@ Rotate in this order (most critical first):
   old hashed data should be considered personal information and noted in the incident record.
 
 ### `SUPABASE_SERVICE_ROLE_KEY`
+
 - **Impact if exposed**: Full DB and storage read/write.
 - **Rotate**: Supabase dashboard → Settings → API → Regenerate service role key →
   update Netlify env var → redeploy.
 - **After rotation**: Audit Supabase logs for unexpected queries in the exposure window.
 
 ### `TOTP_ENCRYPTION_KEY`
+
 - **Impact if exposed**: Admin TOTP secrets decryptable → bypass MFA.
 - **Rotate**: Generate new 32-byte hex key → update Netlify env var → redeploy.
   All admins must re-enroll TOTP (existing encrypted secrets are useless with the new key).
 - **Action**: Force-invalidate all admin sessions and MFA challenges after rotation.
 
 ### `ADMIN_SESSION_SECRET`
+
 - **Impact if exposed**: Attacker can forge valid CSRF tokens for any session.
 - **Rotate**: Generate new 32-byte hex secret → update Netlify env var → redeploy.
   All existing CSRF tokens are immediately invalidated → admins re-login.
 
 ### `VAPID_PRIVATE_KEY` / `VAPID_PUBLIC_KEY` / `PUBLIC_VAPID_PUBLIC_KEY`
+
 - **Impact if exposed**: Attacker can push arbitrary notifications to all subscribers.
 - **Rotate**: Generate new VAPID key pair → update all three env vars → redeploy.
   Existing push subscriptions are no longer valid (tied to the old public key); users
@@ -122,10 +127,12 @@ Rotate in this order (most critical first):
   users revisit the site.
 
 ### `BLUESKY_APP_PASSWORD`
+
 - **Impact if exposed**: Attacker can post as the bot account.
 - **Rotate**: Bluesky settings → App Passwords → revoke + generate new.
 
 ### `SIGHTENGINE_API_SECRET`
+
 - **Impact if exposed**: Attacker can use the moderation quota.
 - **Rotate**: SightEngine dashboard → regenerate → update Netlify env var.
 
@@ -142,6 +149,7 @@ the point you conclude personal information was exposed with RROSH.
 `https://www.priv.gc.ca/en/report-a-concern/file-a-formal-privacy-complaint/file-a-privacy-breach-report/`
 
 **What to include**:
+
 - Date the breach was discovered and (if known) when it occurred
 - Description of the personal information involved
 - Number of individuals affected (or best estimate)
@@ -157,6 +165,7 @@ where RROSH applies.
 
 **Challenge for this app**: Public users are anonymous — there is no email address
 to reach them. Practicable notification options:
+
 1. **Site banner** on fillthehole.ca for 30+ days describing the breach and steps taken
 2. **Push notification** to subscribed devices (if push infrastructure is intact)
 3. **OPC guidance** — contact the OPC if anonymous user notification is not practicable;
@@ -172,6 +181,7 @@ for questions.
 from the date the organization determines that a breach has occurred.
 
 Maintain a private breach log (not in the public repo) with:
+
 - Date of breach / Date of discovery
 - Description of what happened
 - Personal information involved
@@ -189,12 +199,12 @@ Maintain a private breach log (not in the public repo) with:
 - [ ] Rotate / revoke the affected secret(s) (see §4)
 - [ ] Redeploy to ensure rotated secrets are live
 - [ ] Invalidate admin sessions if admin infrastructure was involved:
-  ```sql
-  -- Run in Supabase SQL editor (service role)
-  delete from admin_sessions;
-  delete from admin_mfa_challenges;
-  delete from admin_trusted_devices;
-  ```
+    ```sql
+    -- Run in Supabase SQL editor (service role)
+    delete from admin_sessions;
+    delete from admin_mfa_challenges;
+    delete from admin_trusted_devices;
+    ```
 - [ ] Check Supabase logs for unexpected access during the exposure window
 - [ ] Check Netlify access logs for unexpected traffic patterns
 - [ ] Open a private incident record (date, what happened, what was rotated)
@@ -206,7 +216,7 @@ Maintain a private breach log (not in the public repo) with:
 - [ ] Assess RROSH (see §3)
 - [ ] If RROSH: begin drafting OPC report
 - [ ] If photos may have been accessed without moderation: identify which potholes
-  and document photo content
+      and document photo content
 
 ### 24–72 Hours: Notify
 

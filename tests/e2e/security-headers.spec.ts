@@ -59,7 +59,7 @@ test.describe('Security headers — API responses', () => {
 	test('JSON API endpoints also carry security headers', async ({ request }) => {
 		// Geofence-rejected report — fast to execute, exercises the early-return path
 		const response = await request.post('/api/report', {
-			data: { lat: 99, lng: 99, description: 'test' }
+			data: { lat: 99, lng: 99, description: 'test' },
 		});
 		const h = response.headers();
 		expect(h['x-frame-options']).toBe('DENY');
@@ -67,7 +67,7 @@ test.describe('Security headers — API responses', () => {
 	});
 
 	test('open data feed carries cross-origin resource policy for cross-origin access', async ({
-		request
+		request,
 	}) => {
 		const response = await request.get('/api/feed.json');
 		// Feed endpoint opts out of same-site CORP so data consumers can fetch it cross-origin

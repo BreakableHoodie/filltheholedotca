@@ -9,8 +9,18 @@ export const actions: Actions = {
 		if (sessionId) {
 			await invalidateSession(sessionId);
 		}
-		cookies.set(SESSION_COOKIE, '', { path: '/', expires: new Date(0), httpOnly: true, sameSite: 'strict' });
-		cookies.set(CSRF_COOKIE, '', { path: '/', expires: new Date(0), httpOnly: false, sameSite: 'strict' });
+		cookies.set(SESSION_COOKIE, '', {
+			path: '/',
+			expires: new Date(0),
+			httpOnly: true,
+			sameSite: 'strict',
+		});
+		cookies.set(CSRF_COOKIE, '', {
+			path: '/',
+			expires: new Date(0),
+			httpOnly: false,
+			sameSite: 'strict',
+		});
 		throw redirect(302, '/admin/login');
-	}
+	},
 };

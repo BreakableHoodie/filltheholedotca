@@ -23,7 +23,7 @@ async function getHmacKey(): Promise<CryptoKey> {
 		new TextEncoder().encode(secret),
 		{ name: 'HMAC', hash: 'SHA-256' },
 		false,
-		['sign']
+		['sign'],
 	);
 	return _key;
 }

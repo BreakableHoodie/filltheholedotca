@@ -47,8 +47,12 @@ function buildDescription(p: {
 	if (p.description) {
 		parts.push(`Severity: ${decodeHtmlEntities(p.description)}`);
 	}
-	parts.push(`Confirmed by ${p.confirmed_count} independent report${p.confirmed_count === 1 ? '' : 's'}.`);
-	parts.push(`Location: ${roundPublicCoord(p.lat).toFixed(PUBLIC_COORD_DECIMALS)}, ${roundPublicCoord(p.lng).toFixed(PUBLIC_COORD_DECIMALS)}`);
+	parts.push(
+		`Confirmed by ${p.confirmed_count} independent report${p.confirmed_count === 1 ? '' : 's'}.`,
+	);
+	parts.push(
+		`Location: ${roundPublicCoord(p.lat).toFixed(PUBLIC_COORD_DECIMALS)}, ${roundPublicCoord(p.lng).toFixed(PUBLIC_COORD_DECIMALS)}`,
+	);
 	if (p.filled_at) {
 		parts.push(`Filled: ${new Date(p.filled_at).toUTCString()}`);
 	}
@@ -68,20 +72,28 @@ export const GET: RequestHandler = async ({ request }) => {
 	const [reportedResult, filledResult] = await Promise.all([
 		supabase
 			.from('potholes')
-			.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at')
+			.select(
+				'id, created_at, lat, lng, address, description, status, confirmed_count, filled_at',
+			)
 			.eq('status', 'reported')
 			.order('created_at', { ascending: false })
 			.limit(50),
 		supabase
 			.from('potholes')
-			.select('id, created_at, lat, lng, address, description, status, confirmed_count, filled_at')
+			.select(
+				'id, created_at, lat, lng, address, description, status, confirmed_count, filled_at',
+			)
 			.eq('status', 'filled')
 			.order('filled_at', { ascending: false })
-			.limit(50)
+			.limit(50),
 	]);
 
 	if (reportedResult.error || filledResult.error) {
-		logError('api/feed.xml', 'Failed to load potholes for feed', reportedResult.error ?? filledResult.error);
+		logError(
+			'api/feed.xml',
+			'Failed to load potholes for feed',
+			reportedResult.error ?? filledResult.error,
+		);
 		throw error(500, 'Failed to load data');
 	}
 
@@ -95,13 +107,13 @@ export const GET: RequestHandler = async ({ request }) => {
 	});
 
 	// Sort unified timeline by event time (fill date for filled, creation for reported).
-	merged.sort(
-		(a, b) => new Date(eventTime(b)).getTime() - new Date(eventTime(a)).getTime()
-	);
+	merged.sort((a, b) => new Date(eventTime(b)).getTime() - new Date(eventTime(a)).getTime());
 
 	const potholes = merged.slice(0, 100);
 	// Use epoch when empty so Last-Modified is stable and 304s remain effective.
-	const lastBuild = potholes[0] ? new Date(eventTime(potholes[0])).toUTCString() : new Date(0).toUTCString();
+	const lastBuild = potholes[0]
+		? new Date(eventTime(potholes[0])).toUTCString()
+		: new Date(0).toUTCString();
 
 	const items = potholes
 		.map((p) => {
@@ -144,8 +156,8 @@ ${items}
 				'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600',
 				'Last-Modified': lastBuild,
 				'Access-Control-Allow-Origin': '*',
-				'Cross-Origin-Resource-Policy': 'cross-origin'
-			}
+				'Cross-Origin-Resource-Policy': 'cross-origin',
+			},
 		});
 	}
 
@@ -155,7 +167,7 @@ ${items}
 			'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600',
 			'Last-Modified': lastBuild,
 			'Access-Control-Allow-Origin': '*',
-			'Cross-Origin-Resource-Policy': 'cross-origin'
-		}
+			'Cross-Origin-Resource-Policy': 'cross-origin',
+		},
 	});
 };

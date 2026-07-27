@@ -73,7 +73,7 @@ async function sendPushover(opts: PushoverMessage): Promise<void> {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8' },
 			body,
-			signal: AbortSignal.timeout(5_000)
+			signal: AbortSignal.timeout(5_000),
 		});
 
 		if (!res.ok) {

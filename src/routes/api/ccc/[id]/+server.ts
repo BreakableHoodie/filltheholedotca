@@ -48,12 +48,12 @@ export const GET: RequestHandler = async ({ params }) => {
 		orderByFields: 'CREATE_DATE DESC',
 		resultRecordCount: '5',
 		returnGeometry: 'false',
-		f: 'json'
+		f: 'json',
 	});
 
 	try {
 		const res = await fetch(`${CCC_URL}?${params2}`, {
-			signal: AbortSignal.timeout(5000)
+			signal: AbortSignal.timeout(5000),
 		});
 		if (!res.ok) return json([]);
 		const body = await res.json();
@@ -75,7 +75,14 @@ export const GET: RequestHandler = async ({ params }) => {
 			if (isNaN(date.getTime())) return [];
 			return [{ intersection, date: date.toISOString().slice(0, 10) }];
 		});
-		return json(requests);
+		// City repair records change on the order of days, and this is an uncached
+		// per-request hop to ArcGIS. Cache the success path only — caching the
+		// `json([])` fallbacks would pin a transient outage for the whole window.
+		return json(requests, {
+			headers: {
+				'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+			},
+		});
 	} catch (err) {
 		logError('api/ccc', 'ArcGIS CCC fetch failed', err, { potholeId: parsed.data.id });
 		return json([]);

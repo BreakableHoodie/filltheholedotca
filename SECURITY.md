@@ -54,9 +54,9 @@ We follow a coordinated disclosure model. Once a fix is deployed, we are happy t
 2. Update `IP_HASH_SECRET` in all deployment environments.
 3. After the new key is live, flush the rate-limit window by running:
 
-   ```sql
-   DELETE FROM api_rate_limit_events WHERE created_at < now();
-   ```
+    ```sql
+    DELETE FROM api_rate_limit_events WHERE created_at < now();
+    ```
 
 4. Acceptably, `pothole_confirmations` deduplication records are invalidated — users may confirm the same hole again, but the 3-confirmation threshold still applies.
 5. Document the rotation date and reason in your incident log.

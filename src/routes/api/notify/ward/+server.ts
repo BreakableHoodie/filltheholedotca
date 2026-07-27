@@ -11,7 +11,7 @@ import { isKnownWardKey } from '$lib/wards';
 const subscribeSchema = z.object({
 	ward_key: z.string().max(64).refine(isKnownWardKey, 'Unknown ward'),
 	endpoint: z.string().url().max(2048),
-	keys: z.object({ p256dh: z.string().min(1).max(512), auth: z.string().min(1).max(256) })
+	keys: z.object({ p256dh: z.string().min(1).max(512), auth: z.string().min(1).max(256) }),
 });
 
 const RATE_LIMIT = 10;
@@ -36,7 +36,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		'Too many requests. Please wait before trying again.',
 		'api/notify/ward',
 		'Failed to check rate limit',
-		{ wardKey: parsed.data.ward_key }
+		{ wardKey: parsed.data.ward_key },
 	);
 
 	const { error: dbError } = await db.from('ward_subscriptions').upsert(
@@ -44,12 +44,14 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			ward_key: parsed.data.ward_key,
 			endpoint: parsed.data.endpoint,
 			p256dh: parsed.data.keys.p256dh,
-			auth: parsed.data.keys.auth
+			auth: parsed.data.keys.auth,
 		},
-		{ onConflict: 'ward_key,endpoint' }
+		{ onConflict: 'ward_key,endpoint' },
 	);
 	if (dbError) {
-		logError('api/notify/ward', 'Failed to save ward subscription', dbError, { wardKey: parsed.data.ward_key });
+		logError('api/notify/ward', 'Failed to save ward subscription', dbError, {
+			wardKey: parsed.data.ward_key,
+		});
 		throw error(500, 'Failed to save subscription');
 	}
 
@@ -70,7 +72,9 @@ export const DELETE: RequestHandler = async ({ request }) => {
 		.eq('ward_key', parsed.data.ward_key)
 		.eq('endpoint', parsed.data.endpoint);
 	if (delErr) {
-		logError('api/notify/ward', 'Failed to remove ward subscription', delErr, { wardKey: parsed.data.ward_key });
+		logError('api/notify/ward', 'Failed to remove ward subscription', delErr, {
+			wardKey: parsed.data.ward_key,
+		});
 		throw error(500, 'Failed to remove subscription');
 	}
 

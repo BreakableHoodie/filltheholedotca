@@ -22,15 +22,15 @@ const reportSchema = z.object({
 	lat: z.number().finite().min(-90).max(90),
 	lng: z.number().finite().min(-180).max(180),
 	address: z.string().trim().max(255).nullable().optional(),
-	description: z.enum(SEVERITY_VALUES).nullable().optional()
+	description: z.enum(SEVERITY_VALUES).nullable().optional(),
 });
 
 type ConfirmationResult =
-	| { duplicate: true }
-	| { duplicate: false; confirmed_count: number; status: string };
+	{ duplicate: true } | { duplicate: false; confirmed_count: number; status: string };
 
 export const DELETE: RequestHandler = async () => {
-	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true' || process.env.CI !== 'true') throw error(405, 'Method not allowed');
+	if (process.env.PLAYWRIGHT_E2E_FIXTURES !== 'true' || process.env.CI !== 'true')
+		throw error(405, 'Method not allowed');
 	fixturePotholes.clear();
 	return json({ ok: true });
 };
@@ -54,7 +54,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	) {
 		throw error(
 			422,
-			"That location isn't in the Waterloo Region. This tool covers Kitchener, Waterloo, and Cambridge."
+			"That location isn't in the Waterloo Region. This tool covers Kitchener, Waterloo, and Cambridge.",
 		);
 	}
 
@@ -81,18 +81,23 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 					confirmed,
 					message: confirmed
 						? '✅ Confirmed — pothole is now live on the map!'
-						: `📍 Confirmation noted (${confirmed_count}/${confirmationsRequired} needed).`
+						: `📍 Confirmation noted (${confirmed_count}/${confirmationsRequired} needed).`,
 				});
 			}
 		}
 
-
 		const id = crypto.randomUUID();
-		fixturePotholes.set(id, { id, lat: roundPublicCoord(lat), lng: roundPublicCoord(lng), confirmed_count: 1 });
+		fixturePotholes.set(id, {
+			id,
+			lat: roundPublicCoord(lat),
+			lng: roundPublicCoord(lng),
+			confirmed_count: 1,
+		});
 		return json({
 			id,
 			confirmed: false,
-			message: '📍 Pothole logged. More independent reports from this location will put it on the map.'
+			message:
+				'📍 Pothole logged. More independent reports from this location will put it on the map.',
 		});
 	}
 
@@ -107,7 +112,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		REPORT_RATE_WINDOW_MS,
 		'Too many report attempts. Please wait before trying again.',
 		'api/report',
-		'Failed to check report rate limit'
+		'Failed to check report rate limit',
 	);
 
 	// Search for existing pending potholes nearby using a bounding box
@@ -140,14 +145,19 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		// C1 fix: use service-role client so this RPC is unreachable via the public anon key.
 		// Calling via the anon client exposes it to the public Supabase REST API, allowing
 		// anyone to supply an arbitrary p_ip_hash or p_threshold and bypass all guards.
-		const { data: result, error: rpcError } = await getAdminClient().rpc('increment_confirmation', {
-			p_pothole_id: match.id,
-			p_ip_hash: ipHash,
-			p_threshold: confirmationsRequired
-		});
+		const { data: result, error: rpcError } = await getAdminClient().rpc(
+			'increment_confirmation',
+			{
+				p_pothole_id: match.id,
+				p_ip_hash: ipHash,
+				p_threshold: confirmationsRequired,
+			},
+		);
 
 		if (rpcError) {
-			logError('api/report', 'increment_confirmation RPC failed', rpcError, { potholeId: match.id });
+			logError('api/report', 'increment_confirmation RPC failed', rpcError, {
+				potholeId: match.id,
+			});
 			throw error(500, 'Failed to update report');
 		}
 
@@ -157,7 +167,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			return json({
 				id: match.id,
 				confirmed: false,
-				message: "📍 You've already reported this one. Thanks though!"
+				message: "📍 You've already reported this one. Thanks though!",
 			});
 		}
 
@@ -178,7 +188,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				message: `Pothole at ${locationLabel} reached the confirmation threshold and is now on the public map.`,
 				url: `https://fillthehole.ca/hole/${match.id}`,
 				urlTitle: 'View pothole',
-				priority: -1
+				priority: -1,
 			});
 			void postConfirmed(match.id, null);
 
@@ -189,9 +199,16 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			// the neighbourhood-loop spec.
 			try {
 				const ward = await lookupWard(match.lat, match.lng);
-				if (ward) await notifyWardSubscribers(`${ward.city}-${ward.ward}`, match.id, match.address);
+				if (ward)
+					await notifyWardSubscribers(
+						`${ward.city}-${ward.ward}`,
+						match.id,
+						match.address,
+					);
 			} catch (err) {
-				logError('report/ward-fanout', 'Ward alert fan-out failed', err, { potholeId: match.id });
+				logError('report/ward-fanout', 'Ward alert fan-out failed', err, {
+					potholeId: match.id,
+				});
 			}
 		}
 
@@ -201,7 +218,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			message:
 				rpc.status === 'reported'
 					? '✅ Confirmed — pothole is now live on the map!'
-					: `📍 Confirmation noted (${rpc.confirmed_count}/${confirmationsRequired} needed).`
+					: `📍 Confirmation noted (${rpc.confirmed_count}/${confirmationsRequired} needed).`,
 		});
 	}
 
@@ -218,7 +235,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			address: address ?? null,
 			description: description ?? null,
 			status: 'pending',
-			confirmed_count: 1
+			confirmed_count: 1,
 		})
 		.select('id')
 		.single();
@@ -233,11 +250,25 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		.from('pothole_confirmations')
 		.insert({ pothole_id: data.id, ip_hash: ipHash });
 	if (confirmInsertError) {
-		logError('report/confirmation', 'Failed to record first confirmation — attempting pothole cleanup', confirmInsertError, { potholeId: data.id });
+		logError(
+			'report/confirmation',
+			'Failed to record first confirmation — attempting pothole cleanup',
+			confirmInsertError,
+			{ potholeId: data.id },
+		);
 		// Best-effort rollback: remove the orphaned pothole so the reporter can retry
 		// and dedup stays consistent. If this also fails the row expires in 14 days.
-		const { error: cleanupErr } = await getAdminClient().from('potholes').delete().eq('id', data.id);
-		if (cleanupErr) logError('report/confirmation-cleanup', 'Failed to clean up orphaned pothole', cleanupErr, { potholeId: data.id });
+		const { error: cleanupErr } = await getAdminClient()
+			.from('potholes')
+			.delete()
+			.eq('id', data.id);
+		if (cleanupErr)
+			logError(
+				'report/confirmation-cleanup',
+				'Failed to clean up orphaned pothole',
+				cleanupErr,
+				{ potholeId: data.id },
+			);
 		throw error(500, 'Failed to submit report');
 	}
 
@@ -245,6 +276,6 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		id: data.id,
 		confirmed: false,
 		message:
-			'📍 Pothole logged. More independent reports from this location will put it on the map.'
+			'📍 Pothole logged. More independent reports from this location will put it on the map.',
 	});
 };

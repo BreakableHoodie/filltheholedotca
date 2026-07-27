@@ -10,6 +10,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	if (!since || isNaN(Date.parse(since))) {
 		return json({ potholes: [] });
 	}
+	const sinceIso = new Date(since).toISOString();
 
 	const cacheHeaders = {
 		'Cache-Control': 'public, s-maxage=55, stale-while-revalidate=60',
@@ -22,7 +23,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		)
 		.neq('status', 'pending')
 		.or(
-			`created_at.gt.${since},reported_at.gt.${since},filled_at.gt.${since},expired_at.gt.${since}`,
+			`created_at.gt.${sinceIso},reported_at.gt.${sinceIso},filled_at.gt.${sinceIso},expired_at.gt.${sinceIso}`,
 		)
 		.order('created_at', { ascending: false })
 		.limit(100);

@@ -7,7 +7,7 @@ test.describe('computeFreezeThawByMonth', () => {
 			time: ['2026-03-01', '2026-03-02', '2026-03-03', '2026-03-04', '2026-03-05'],
 			//      hard freeze    hard freeze    freeze–thaw    fully thawed   freeze–thaw
 			tmax: [-7.8, -4.3, 0.4, 8.0, 2.1],
-			tmin: [-16.6, -21.6, -10.5, 1.0, -3.0]
+			tmin: [-16.6, -21.6, -10.5, 1.0, -3.0],
 		};
 		const out = computeFreezeThawByMonth(daily, ['2026-03']);
 		// Only 03-03 (0.4 / -10.5) and 03-05 (2.1 / -3.0) qualify.
@@ -15,7 +15,10 @@ test.describe('computeFreezeThawByMonth', () => {
 	});
 
 	test('seeds every requested month with zero', () => {
-		const out = computeFreezeThawByMonth({ time: [], tmax: [], tmin: [] }, ['2026-01', '2026-02']);
+		const out = computeFreezeThawByMonth({ time: [], tmax: [], tmin: [] }, [
+			'2026-01',
+			'2026-02',
+		]);
 		expect(out).toEqual({ '2026-01': 0, '2026-02': 0 });
 	});
 
@@ -23,7 +26,7 @@ test.describe('computeFreezeThawByMonth', () => {
 		const daily = {
 			time: ['2025-12-31', '2026-01-01', '2026-01-02'],
 			tmax: [1.0, 0.5, 3.0],
-			tmin: [-2.0, -1.0, -0.5]
+			tmin: [-2.0, -1.0, -0.5],
 		};
 		const out = computeFreezeThawByMonth(daily, ['2025-12', '2026-01']);
 		expect(out['2025-12']).toBe(1);
@@ -34,7 +37,7 @@ test.describe('computeFreezeThawByMonth', () => {
 		const daily = {
 			time: ['2026-02-01', '2026-02-02'],
 			tmax: [2.0, null],
-			tmin: [-3.0, -5.0]
+			tmin: [-3.0, -5.0],
 		};
 		const out = computeFreezeThawByMonth(daily, ['2026-02']);
 		expect(out['2026-02']).toBe(1);
@@ -44,7 +47,7 @@ test.describe('computeFreezeThawByMonth', () => {
 		const daily = {
 			time: ['2026-02-10', '2026-03-10'],
 			tmax: [1.0, 1.0],
-			tmin: [-1.0, -1.0]
+			tmin: [-1.0, -1.0],
 		};
 		const out = computeFreezeThawByMonth(daily, ['2026-03']);
 		expect(out).toEqual({ '2026-03': 1 });

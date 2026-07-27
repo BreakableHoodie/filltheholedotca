@@ -19,14 +19,14 @@ const querySchema = z.object({
 			s
 				.split(',')
 				.map((id) => id.trim())
-				.filter(Boolean)
+				.filter(Boolean),
 		)
 		.pipe(
 			z
 				.array(z.string().uuid('Each id must be a valid UUID'))
 				.min(1, 'Provide at least one id')
-				.max(50, 'Maximum 50 ids per request')
-		)
+				.max(50, 'Maximum 50 ids per request'),
+		),
 });
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -51,13 +51,13 @@ export const GET: RequestHandler = async ({ url }) => {
 	const rounded = (potholes ?? []).map((p) => ({
 		...p,
 		lat: roundPublicCoord(p.lat),
-		lng: roundPublicCoord(p.lng)
+		lng: roundPublicCoord(p.lng),
 	}));
 
 	return json(rounded, {
 		headers: {
 			// Short cache — statuses change; but allow brief CDN caching to reduce load
-			'Cache-Control': 'private, max-age=30'
-		}
+			'Cache-Control': 'private, max-age=30',
+		},
 	});
 };

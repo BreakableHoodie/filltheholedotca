@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	if (error)
 		return json(
 			{ error: 'Failed to load' },
-			{ status: 500, headers: { 'Cross-Origin-Resource-Policy': 'cross-origin' } }
+			{ status: 500, headers: { 'Cross-Origin-Resource-Policy': 'cross-origin' } },
 		);
 
 	const potholes = (data ?? []).map((p) => ({
@@ -28,7 +28,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		lat: roundPublicCoord(p.lat),
 		lng: roundPublicCoord(p.lng),
 		address: p.address ? decodeHtmlEntities(p.address) : null,
-		description: p.description ? decodeHtmlEntities(p.description) : null
+		description: p.description ? decodeHtmlEntities(p.description) : null,
 	}));
 
 	// Compute Last-Modified from the most-recent event in this response.
@@ -38,8 +38,8 @@ export const GET: RequestHandler = async ({ request }) => {
 	const lastModifiedMs = potholes.reduce((max, p) => {
 		const t = Math.max(
 			new Date(p.created_at).getTime(),
-			p.filled_at   ? new Date(p.filled_at).getTime()   : 0,
-			p.expired_at  ? new Date(p.expired_at).getTime()  : 0
+			p.filled_at ? new Date(p.filled_at).getTime() : 0,
+			p.expired_at ? new Date(p.expired_at).getTime() : 0,
 		);
 		return t > max ? t : max;
 	}, 0);
@@ -54,8 +54,8 @@ export const GET: RequestHandler = async ({ request }) => {
 				'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=600',
 				'Last-Modified': lastModified,
 				'Access-Control-Allow-Origin': '*',
-				'Cross-Origin-Resource-Policy': 'cross-origin'
-			}
+				'Cross-Origin-Resource-Policy': 'cross-origin',
+			},
 		});
 	}
 
@@ -63,7 +63,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		{
 			generated: new Date().toISOString(),
 			source: 'fillthehole.ca',
-			potholes
+			potholes,
 		},
 		{
 			headers: {
@@ -72,8 +72,8 @@ export const GET: RequestHandler = async ({ request }) => {
 				'Access-Control-Allow-Origin': '*',
 				// L8: This feed is intentionally public/cross-origin (CORS * above).
 				// Opt out of the same-site default set in hooks.server.ts.
-				'Cross-Origin-Resource-Policy': 'cross-origin'
-			}
-		}
+				'Cross-Origin-Resource-Policy': 'cross-origin',
+			},
+		},
 	);
 };

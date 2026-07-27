@@ -30,7 +30,8 @@ export function haversineMetres(lat1: number, lng1: number, lat2: number, lng2: 
 export function pipRing(lng: number, lat: number, ring: number[][]): boolean {
 	let inside = false;
 	for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-		const [xi, yi] = ring[i], [xj, yj] = ring[j];
+		const [xi, yi] = ring[i],
+			[xj, yj] = ring[j];
 		if (yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi)
 			inside = !inside;
 	}
@@ -46,7 +47,8 @@ type WardGeometry = PolygonGeometry | MultiPolygonGeometry | { type: string };
  * MultiPolygon geometry.
  */
 export function inWardFeature(lng: number, lat: number, geometry: WardGeometry): boolean {
-	if (geometry.type === 'Polygon') return pipRing(lng, lat, (geometry as PolygonGeometry).coordinates[0]);
+	if (geometry.type === 'Polygon')
+		return pipRing(lng, lat, (geometry as PolygonGeometry).coordinates[0]);
 	if (geometry.type === 'MultiPolygon')
 		return (geometry as MultiPolygonGeometry).coordinates.some((p) => pipRing(lng, lat, p[0]));
 	return false;

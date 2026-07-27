@@ -1,11 +1,11 @@
-import { json, error } from '@sveltejs/kit';
+import { json, error, isHttpError } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { z } from 'zod';
 import { logError } from '$lib/server/observability';
 
 const coordSchema = z.object({
 	lat: z.coerce.number().min(43.32).max(43.53),
-	lon: z.coerce.number().min(-80.59).max(-80.22)
+	lon: z.coerce.number().min(-80.59).max(-80.22),
 });
 
 // Server-side proxy so the identifying User-Agent header can be set
@@ -13,28 +13,41 @@ const coordSchema = z.object({
 export const GET: RequestHandler = async ({ url }) => {
 	const parsed = coordSchema.safeParse({
 		lat: url.searchParams.get('lat'),
-		lon: url.searchParams.get('lon')
+		lon: url.searchParams.get('lon'),
 	});
 	if (!parsed.success) throw error(400, 'Invalid coordinates');
 
 	const params = new URLSearchParams({
 		lat: String(parsed.data.lat),
 		lon: String(parsed.data.lon),
-		format: 'json'
+		format: 'json',
 	});
 
-	const res = await fetch(`https://nominatim.openstreetmap.org/reverse?${params}`, {
-		headers: {
-			'User-Agent': 'fillthehole.ca/1.0 (https://fillthehole.ca)',
-			Referer: 'https://fillthehole.ca'
+	try {
+		const res = await fetch(`https://nominatim.openstreetmap.org/reverse?${params}`, {
+			headers: {
+				'User-Agent': 'fillthehole.ca/1.0 (https://fillthehole.ca)',
+				Referer: 'https://fillthehole.ca',
+			},
+			signal: AbortSignal.timeout(5000),
+		});
+
+		if (!res.ok) {
+			logError(
+				'api/geocode/reverse',
+				'Nominatim reverse geocode returned non-OK response',
+				new Error(`Nominatim upstream ${res.status}`),
+				{ status: res.status },
+			);
+			throw error(502, 'Reverse geocode failed');
 		}
-	});
 
-	if (!res.ok) {
-		logError('api/geocode/reverse', 'Nominatim reverse geocode returned non-OK response', new Error(`Nominatim upstream ${res.status}`), { status: res.status });
-		throw error(502, 'Reverse geocode failed');
+		const data = await res.json();
+		return json(data);
+	} catch (err) {
+		if (isHttpError(err)) throw err;
+		logError('api/geocode/reverse', 'Nominatim request failed', err);
+		// Honest 503 rather than an empty body — see the matching note in ../search.
+		throw error(503, 'Reverse geocoding unavailable');
 	}
-
-	const data = await res.json();
-	return json(data);
 };

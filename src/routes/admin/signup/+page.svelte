@@ -10,7 +10,9 @@
 	let { data, form }: Props = $props();
 
 	let submitting = $state(false);
-	const createdRole = $derived(form?.role ?? data.invite?.role ?? (data.bootstrap ? 'admin' : 'editor'));
+	const createdRole = $derived(
+		form?.role ?? data.invite?.role ?? (data.bootstrap ? 'admin' : 'editor'),
+	);
 </script>
 
 <svelte:head>
@@ -48,7 +50,9 @@
 			</div>
 		{:else if data.bootstrap}
 			<div class="bg-stone-900 border border-stone-800 rounded-md p-8">
-				<h1 class="text-xl font-semibold text-stone-100 mb-1">Create first admin account</h1>
+				<h1 class="text-xl font-semibold text-stone-100 mb-1">
+					Create first admin account
+				</h1>
 				<p class="text-stone-500 text-sm mb-6">
 					Bootstrap mode is only available while no admin users exist.
 				</p>
@@ -62,8 +66,12 @@
 				{/if}
 
 				{#if !data.bootstrapConfigured}
-					<div class="px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-300 text-sm">
-						Bootstrap is disabled. Set <code class="text-amber-200">ADMIN_BOOTSTRAP_SECRET</code>
+					<div
+						class="px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-300 text-sm"
+					>
+						Bootstrap is disabled. Set <code class="text-amber-200"
+							>ADMIN_BOOTSTRAP_SECRET</code
+						>
 						in your environment to a long random value, then reload this page.
 					</div>
 				{:else}
@@ -80,7 +88,9 @@
 					>
 						<div class="grid grid-cols-2 gap-3">
 							<div>
-								<label for="firstName" class="block text-xs text-stone-500 mb-1.5">First name</label>
+								<label for="firstName" class="block text-xs text-stone-500 mb-1.5"
+									>First name</label
+								>
 								<input
 									id="firstName"
 									name="firstName"
@@ -92,7 +102,9 @@
 								/>
 							</div>
 							<div>
-								<label for="lastName" class="block text-xs text-stone-500 mb-1.5">Last name</label>
+								<label for="lastName" class="block text-xs text-stone-500 mb-1.5"
+									>Last name</label
+								>
 								<input
 									id="lastName"
 									name="lastName"
@@ -106,7 +118,9 @@
 						</div>
 
 						<div>
-							<label for="email" class="block text-xs text-stone-500 mb-1.5">Email</label>
+							<label for="email" class="block text-xs text-stone-500 mb-1.5"
+								>Email</label
+							>
 							<input
 								id="email"
 								name="email"
@@ -119,7 +133,9 @@
 						</div>
 
 						<div>
-							<label for="password" class="block text-xs text-stone-500 mb-1.5">Password</label>
+							<label for="password" class="block text-xs text-stone-500 mb-1.5"
+								>Password</label
+							>
 							<input
 								id="password"
 								name="password"
@@ -205,7 +221,9 @@
 
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="firstName" class="block text-xs text-stone-500 mb-1.5">First name</label>
+							<label for="firstName" class="block text-xs text-stone-500 mb-1.5"
+								>First name</label
+							>
 							<input
 								id="firstName"
 								name="firstName"
@@ -217,7 +235,9 @@
 							/>
 						</div>
 						<div>
-							<label for="lastName" class="block text-xs text-stone-500 mb-1.5">Last name</label>
+							<label for="lastName" class="block text-xs text-stone-500 mb-1.5"
+								>Last name</label
+							>
 							<input
 								id="lastName"
 								name="lastName"
@@ -249,7 +269,9 @@
 					</div>
 
 					<div>
-						<label for="password" class="block text-xs text-stone-500 mb-1.5">Password</label>
+						<label for="password" class="block text-xs text-stone-500 mb-1.5"
+							>Password</label
+						>
 						<input
 							id="password"
 							name="password"

@@ -11,8 +11,10 @@
     "prepare": "husky && (svelte-kit sync || echo '')",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "lint": "eslint --config eslint.config.js src/",
+    "lint": "eslint --config eslint.config.js src/ tests/",
     "lint:a11y": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --threshold warning",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "playwright test",
     "test:a11y": "playwright test tests/a11y"
   },

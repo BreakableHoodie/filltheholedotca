@@ -4,13 +4,20 @@
 
 <svelte:head>
 	<title>How to use — FillTheHole.ca</title>
-	<meta name="description" content="Learn how to report potholes, confirm others, track fixes, and get the most out of FillTheHole.ca." />
+	<meta
+		name="description"
+		content="Learn how to report potholes, confirm others, track fixes, and get the most out of FillTheHole.ca."
+	/>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-12 space-y-10">
 	<div>
-		<h1 class="page-title text-4xl sm:text-5xl text-stone-900 dark:text-white mb-2">How to use</h1>
-		<p class="page-intro text-stone-600 dark:text-stone-400 text-lg">Everything you can do on FillTheHole.ca.</p>
+		<h1 class="page-title text-4xl sm:text-5xl text-stone-900 dark:text-white mb-2">
+			How to use
+		</h1>
+		<p class="page-intro text-stone-600 dark:text-stone-400 text-lg">
+			Everything you can do on FillTheHole.ca.
+		</p>
 	</div>
 
 	<!-- Reading the map -->
@@ -21,29 +28,46 @@
 		</h2>
 		<div class="space-y-3 text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
 			<p>
-				The map shows every active pothole in Waterloo Region. Pins are colour-coded by status:
+				The map shows every active pothole in Waterloo Region. Pins are colour-coded by
+				status:
 			</p>
 			<div class="grid gap-2">
-				<div class="flex items-center gap-3 border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3">
+				<div
+					class="flex items-center gap-3 border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3"
+				>
 					<span class="w-3 h-3 rounded-full bg-orange-500 shrink-0"></span>
-					<span><strong class="text-stone-700 dark:text-stone-200">Orange</strong> — reported and confirmed, waiting for the city to fix it</span>
+					<span
+						><strong class="text-stone-700 dark:text-stone-200">Orange</strong> — reported
+						and confirmed, waiting for the city to fix it</span
+					>
 				</div>
-				<div class="flex items-center gap-3 border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3">
+				<div
+					class="flex items-center gap-3 border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3"
+				>
 					<span class="w-3 h-3 rounded-full bg-green-500 shrink-0"></span>
-					<span><strong class="text-stone-700 dark:text-stone-200">Green</strong> — filled! The city patched it</span>
+					<span
+						><strong class="text-stone-700 dark:text-stone-200">Green</strong> — filled! The
+						city patched it</span
+					>
 				</div>
-				<div class="flex items-center gap-3 border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3">
+				<div
+					class="flex items-center gap-3 border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3"
+				>
 					<span class="w-3 h-3 rounded-full bg-zinc-500 shrink-0"></span>
-					<span><strong class="text-stone-700 dark:text-stone-200">Grey</strong> — expired after 90 days with no fill event</span>
+					<span
+						><strong class="text-stone-700 dark:text-stone-200">Grey</strong> — expired after
+						90 days with no fill event</span
+					>
 				</div>
 			</div>
 			<p>
-				When many potholes are close together, they cluster into a numbered circle. Zoom in or tap
-				the cluster to expand it and see individual pins.
+				When many potholes are close together, they cluster into a numbered circle. Zoom in
+				or tap the cluster to expand it and see individual pins.
 			</p>
 			<p>
-				Toggle the <strong class="text-stone-700 dark:text-stone-200">ward heatmap</strong> from the map controls to see
-				pothole density by ward. Hover a ward to see the councillor's name and the active hole count.
+				Toggle the <strong class="text-stone-700 dark:text-stone-200">ward heatmap</strong> from
+				the map controls to see pothole density by ward. Hover a ward to see the councillor's
+				name and the active hole count.
 			</p>
 		</div>
 	</section>
@@ -55,33 +79,72 @@
 			Reporting a pothole
 		</h2>
 
-		<div class="flex gap-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/40 rounded-md p-4 text-sm text-amber-900 dark:text-amber-200/90">
-			<Icon name="alert-triangle" size={18} class="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+		<div
+			class="flex gap-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/40 rounded-md p-4 text-sm text-amber-900 dark:text-amber-200/90"
+		>
+			<Icon
+				name="alert-triangle"
+				size={18}
+				class="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+			/>
 			<p>
 				<strong class="text-amber-900 dark:text-amber-300">Stay safe.</strong>
-				Never stop in traffic or step onto a road to report. Report from the sidewalk or parking lot,
-				or let a passenger report while you drive. No pothole is worth an injury.
+				Never stop in traffic or step onto a road to report. Report from the sidewalk or parking
+				lot, or let a passenger report while you drive. No pothole is worth an injury.
 			</p>
 		</div>
 
 		<div class="space-y-3 text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-			<p>Tap <strong class="text-stone-700 dark:text-stone-200">Report a pothole</strong> in the top-right corner.</p>
+			<p>
+				Tap <strong class="text-stone-700 dark:text-stone-200">Report a pothole</strong> in the
+				top-right corner.
+			</p>
 			<ol class="space-y-3 list-none">
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5">1</span>
-					<span><strong class="text-stone-700 dark:text-stone-200">Set the location.</strong> Use GPS for the fastest report, or switch to the address or map tab to search or drop a pin.</span>
+					<span
+						class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5"
+						>1</span
+					>
+					<span
+						><strong class="text-stone-700 dark:text-stone-200"
+							>Set the location.</strong
+						> Use GPS for the fastest report, or switch to the address or map tab to search
+						or drop a pin.</span
+					>
 				</li>
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5">2</span>
-					<span><strong class="text-stone-700 dark:text-stone-200">Pick severity</strong> (optional). Minor, Moderate, Severe, or Hazardous. This helps prioritise which holes need attention first.</span>
+					<span
+						class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5"
+						>2</span
+					>
+					<span
+						><strong class="text-stone-700 dark:text-stone-200">Pick severity</strong> (optional).
+						Minor, Moderate, Severe, or Hazardous. This helps prioritise which holes need
+						attention first.</span
+					>
 				</li>
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5">3</span>
-					<span><strong class="text-stone-700 dark:text-stone-200">Attach a photo</strong> (optional). Photos are compressed automatically. They go through moderation before appearing publicly.</span>
+					<span
+						class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5"
+						>3</span
+					>
+					<span
+						><strong class="text-stone-700 dark:text-stone-200">Attach a photo</strong> (optional).
+						Photos are compressed automatically. They go through moderation before appearing
+						publicly.</span
+					>
 				</li>
 				<li class="flex gap-3">
-					<span class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5">4</span>
-					<span><strong class="text-stone-700 dark:text-stone-200">Submit.</strong> Your report is logged immediately. It needs one more independent confirmation — a second person reporting the same spot from their own device — before it shows up on the public map.</span>
+					<span
+						class="shrink-0 w-6 h-6 rounded-full bg-amber-500 text-stone-900 text-xs font-bold flex items-center justify-center mt-0.5"
+						>4</span
+					>
+					<span
+						><strong class="text-stone-700 dark:text-stone-200">Submit.</strong> Your report
+						is logged immediately. It needs one more independent confirmation — a second person
+						reporting the same spot from their own device — before it shows up on the public
+						map.</span
+					>
 				</li>
 			</ol>
 		</div>
@@ -94,14 +157,14 @@
 			Confirming others' reports
 		</h2>
 		<p class="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-			Walk past a pothole that's already been reported nearby? Submit another report at the same
-			location — the app will detect the match and count your submission as a confirmation.
-			Once a pothole reaches the confirmation threshold (default: 2 independent reports), it
-			goes live on the public map.
+			Walk past a pothole that's already been reported nearby? Submit another report at the
+			same location — the app will detect the match and count your submission as a
+			confirmation. Once a pothole reaches the confirmation threshold (default: 2 independent
+			reports), it goes live on the public map.
 		</p>
 		<p class="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-			Each IP address can only confirm a given pothole once, so duplicate taps from the same device
-			won't inflate the count.
+			Each IP address can only confirm a given pothole once, so duplicate taps from the same
+			device won't inflate the count.
 		</p>
 	</section>
 
@@ -112,13 +175,14 @@
 			Watchlist
 		</h2>
 		<p class="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-			On any pothole detail page, tap <strong class="text-stone-700 dark:text-stone-200">Watch</strong> to save
-			it to your watchlist. Watched holes appear in a section on the homepage so you can quickly
-			see whether they've been filled.
+			On any pothole detail page, tap <strong class="text-stone-700 dark:text-stone-200"
+				>Watch</strong
+			> to save it to your watchlist. Watched holes appear in a section on the homepage so you can
+			quickly see whether they've been filled.
 		</p>
 		<p class="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-			Your watchlist is stored in your browser's local storage — no account needed,
-			but it only persists on the device and browser you used to save it.
+			Your watchlist is stored in your browser's local storage — no account needed, but it
+			only persists on the device and browser you used to save it.
 		</p>
 	</section>
 
@@ -129,28 +193,51 @@
 			Pothole detail page
 		</h2>
 		<div class="space-y-3 text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-			<p>Tap any pin on the map, or the pothole list, to open its detail page. From there you can:</p>
+			<p>
+				Tap any pin on the map, or the pothole list, to open its detail page. From there you
+				can:
+			</p>
 			<ul class="space-y-2 list-none">
 				<li class="flex gap-2.5">
 					<Icon name="zap" size={15} class="text-amber-500 shrink-0 mt-0.5" />
-					<span><strong class="text-stone-700 dark:text-stone-200">I hit this</strong> — signal that you physically drove over the pothole. Hit counts are shown publicly and help surface the most dangerous holes.</span>
+					<span
+						><strong class="text-stone-700 dark:text-stone-200">I hit this</strong> — signal
+						that you physically drove over the pothole. Hit counts are shown publicly and
+						help surface the most dangerous holes.</span
+					>
 				</li>
 				<li class="flex gap-2.5">
 					<Icon name="check-circle" size={15} class="text-green-400 shrink-0 mt-0.5" />
-					<span><strong class="text-stone-700 dark:text-stone-200">Mark as filled</strong> — if you can see the city has patched it, let the community know.</span>
+					<span
+						><strong class="text-stone-700 dark:text-stone-200">Mark as filled</strong> —
+						if you can see the city has patched it, let the community know.</span
+					>
 				</li>
 				<li class="flex gap-2.5">
 					<Icon name="mail" size={15} class="text-amber-500 shrink-0 mt-0.5" />
-					<span><strong class="text-stone-700 dark:text-stone-200">Contact your councillor</strong> — each pothole shows the ward councillor's name and a direct email link pre-filled with the pothole address.</span>
+					<span
+						><strong class="text-stone-700 dark:text-stone-200"
+							>Contact your councillor</strong
+						> — each pothole shows the ward councillor's name and a direct email link pre-filled
+						with the pothole address.</span
+					>
 				</li>
 				<li class="flex gap-2.5">
 					<Icon name="share-2" size={15} class="text-amber-500 shrink-0 mt-0.5" />
-					<span><strong class="text-stone-700 dark:text-stone-200">Share</strong> — every pothole has a permanent URL. Share it to Reddit, Bluesky, Facebook, or copy the link to send directly.</span>
+					<span
+						><strong class="text-stone-700 dark:text-stone-200">Share</strong> — every pothole
+						has a permanent URL. Share it to Reddit, Bluesky, Facebook, or copy the link to
+						send directly.</span
+					>
 				</li>
 			</ul>
-			<p class="text-xs text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3">
-				If a pothole was recently filled nearby once before and re-opened, the detail page will flag it
-				as a <strong class="text-stone-600 dark:text-stone-400">repeat pothole</strong> — useful for escalating recurring road issues to the city.
+			<p
+				class="text-xs text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3"
+			>
+				If a pothole was recently filled nearby once before and re-opened, the detail page
+				will flag it as a <strong class="text-stone-600 dark:text-stone-400"
+					>repeat pothole</strong
+				> — useful for escalating recurring road issues to the city.
 			</p>
 		</div>
 	</section>
@@ -162,32 +249,51 @@
 			Pothole statuses
 		</h2>
 		<div class="grid gap-2 text-sm">
-			<div class="border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3 flex gap-3 items-start">
+			<div
+				class="border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3 flex gap-3 items-start"
+			>
 				<span class="w-2.5 h-2.5 rounded-full bg-zinc-500 shrink-0 mt-1.5"></span>
 				<div>
 					<div class="font-semibold text-stone-700 dark:text-stone-200">Pending</div>
-					<p class="text-stone-600 dark:text-stone-400 mt-0.5">Only one report so far. Not yet on the public map. Expires in 14 days if no confirmation arrives.</p>
+					<p class="text-stone-600 dark:text-stone-400 mt-0.5">
+						Only one report so far. Not yet on the public map. Expires in 14 days if no
+						confirmation arrives.
+					</p>
 				</div>
 			</div>
-			<div class="border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3 flex gap-3 items-start">
+			<div
+				class="border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3 flex gap-3 items-start"
+			>
 				<span class="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0 mt-1.5"></span>
 				<div>
 					<div class="font-semibold text-stone-700 dark:text-stone-200">Reported</div>
-					<p class="text-stone-600 dark:text-stone-400 mt-0.5">Confirmed by multiple people. Live on the public map. Waiting for the city to fix it.</p>
+					<p class="text-stone-600 dark:text-stone-400 mt-0.5">
+						Confirmed by multiple people. Live on the public map. Waiting for the city
+						to fix it.
+					</p>
 				</div>
 			</div>
-			<div class="border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3 flex gap-3 items-start">
+			<div
+				class="border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3 flex gap-3 items-start"
+			>
 				<span class="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0 mt-1.5"></span>
 				<div>
 					<div class="font-semibold text-stone-700 dark:text-stone-200">Filled</div>
-					<p class="text-stone-600 dark:text-stone-400 mt-0.5">Community confirmed the city patched it. Still on the map for accountability tracking.</p>
+					<p class="text-stone-600 dark:text-stone-400 mt-0.5">
+						Community confirmed the city patched it. Still on the map for accountability
+						tracking.
+					</p>
 				</div>
 			</div>
-			<div class="border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3 flex gap-3 items-start">
+			<div
+				class="border border-stone-200 dark:border-stone-700 rounded-md px-4 py-3 flex gap-3 items-start"
+			>
 				<span class="w-2.5 h-2.5 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
 				<div>
 					<div class="font-semibold text-stone-700 dark:text-stone-200">Expired</div>
-					<p class="text-stone-600 dark:text-stone-400 mt-0.5">No fill event after 90 days. Automatically closed to keep the map current.</p>
+					<p class="text-stone-600 dark:text-stone-400 mt-0.5">
+						No fill event after 90 days. Automatically closed to keep the map current.
+					</p>
 				</div>
 			</div>
 		</div>
@@ -200,13 +306,13 @@
 			Push notifications
 		</h2>
 		<p class="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-			Tap the bell icon in the top nav to subscribe to browser push notifications.
-			You'll get a ping whenever a pothole in the region gets filled — no app install required,
-			works on Android and desktop browsers that support web push.
+			Tap the bell icon in the top nav to subscribe to browser push notifications. You'll get
+			a ping whenever a pothole in the region gets filled — no app install required, works on
+			Android and desktop browsers that support web push.
 		</p>
 		<p class="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-			Tap the bell again to unsubscribe at any time. Notifications are sent server-side —
-			no personal data is stored beyond the push endpoint your browser provides.
+			Tap the bell again to unsubscribe at any time. Notifications are sent server-side — no
+			personal data is stored beyond the push endpoint your browser provides.
 		</p>
 	</section>
 
@@ -217,14 +323,30 @@
 			Stats page
 		</h2>
 		<p class="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-			The <a href="/stats" class="text-amber-500 underline hover:text-amber-400 transition-colors">Stats page</a>
+			The <a
+				href="/stats"
+				class="text-amber-500 underline hover:text-amber-400 transition-colors"
+				>Stats page</a
+			>
 			shows accountability data across the whole region:
 		</p>
 		<ul class="space-y-1.5 text-sm text-stone-600 dark:text-stone-400 list-none">
-			<li class="flex gap-2"><Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Ward leaderboards and letter grades (A–F) based on fill rate and response time</li>
-			<li class="flex gap-2"><Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Average time from report to fill, across the whole dataset</li>
-			<li class="flex gap-2"><Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Hotspot streets with the most active potholes</li>
-			<li class="flex gap-2"><Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Monthly fill rate trends over time</li>
+			<li class="flex gap-2">
+				<Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Ward leaderboards
+				and letter grades (A–F) based on fill rate and response time
+			</li>
+			<li class="flex gap-2">
+				<Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Average time from
+				report to fill, across the whole dataset
+			</li>
+			<li class="flex gap-2">
+				<Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Hotspot streets
+				with the most active potholes
+			</li>
+			<li class="flex gap-2">
+				<Icon name="check" size={14} class="text-amber-500 shrink-0 mt-0.5" /> Monthly fill rate
+				trends over time
+			</li>
 		</ul>
 	</section>
 
@@ -244,8 +366,14 @@
 			>
 				<Icon name="globe" size={18} class="text-amber-500 shrink-0 mt-0.5" />
 				<div>
-					<div class="font-semibold text-stone-900 dark:text-white text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">JSON feed</div>
-					<p class="text-xs text-stone-600 dark:text-stone-400 mt-0.5">Recent confirmed potholes with coordinates, address, and status.</p>
+					<div
+						class="font-semibold text-stone-900 dark:text-white text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors"
+					>
+						JSON feed
+					</div>
+					<p class="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
+						Recent confirmed potholes with coordinates, address, and status.
+					</p>
 				</div>
 			</a>
 			<a
@@ -254,8 +382,14 @@
 			>
 				<Icon name="download" size={18} class="text-amber-500 shrink-0 mt-0.5" />
 				<div>
-					<div class="font-semibold text-stone-900 dark:text-white text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">CSV export</div>
-					<p class="text-xs text-stone-600 dark:text-stone-400 mt-0.5">Full dataset — id, lat/lng, address, status, dates. Opens in Excel or R.</p>
+					<div
+						class="font-semibold text-stone-900 dark:text-white text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors"
+					>
+						CSV export
+					</div>
+					<p class="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
+						Full dataset — id, lat/lng, address, status, dates. Opens in Excel or R.
+					</p>
 				</div>
 			</a>
 			<a
@@ -264,18 +398,30 @@
 			>
 				<Icon name="rss" size={18} class="text-amber-500 shrink-0 mt-0.5" />
 				<div>
-					<div class="font-semibold text-stone-900 dark:text-white text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">RSS feed</div>
-					<p class="text-xs text-stone-600 dark:text-stone-400 mt-0.5">Subscribe in any RSS reader to get notified of new confirmations and fills.</p>
+					<div
+						class="font-semibold text-stone-900 dark:text-white text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors"
+					>
+						RSS feed
+					</div>
+					<p class="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
+						Subscribe in any RSS reader to get notified of new confirmations and fills.
+					</p>
 				</div>
 			</a>
-			<div class="flex items-start gap-3 border border-stone-200 dark:border-stone-700 rounded-md p-4">
+			<div
+				class="flex items-start gap-3 border border-stone-200 dark:border-stone-700 rounded-md p-4"
+			>
 				<Icon name="code" size={18} class="text-amber-500 shrink-0 mt-0.5" />
 				<div>
-					<div class="font-semibold text-stone-900 dark:text-white text-sm">Embed widget</div>
+					<div class="font-semibold text-stone-900 dark:text-white text-sm">
+						Embed widget
+					</div>
 					<p class="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
 						Embed any pothole card on your site via
-						<code class="text-stone-600 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 px-1 rounded">/api/embed/[id]</code>.
-						Returns a self-contained iframe-friendly card.
+						<code
+							class="text-stone-600 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 px-1 rounded"
+							>/api/embed/[id]</code
+						>. Returns a self-contained iframe-friendly card.
 					</p>
 				</div>
 			</div>
@@ -283,11 +429,17 @@
 	</section>
 
 	<div class="flex flex-wrap gap-4 pt-2">
-		<a href="/" class="inline-flex items-center gap-1.5 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white text-sm transition-colors">
+		<a
+			href="/"
+			class="inline-flex items-center gap-1.5 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white text-sm transition-colors"
+		>
 			<Icon name="arrow-left" size={14} />
 			Back to the map
 		</a>
-		<a href="/about" class="inline-flex items-center gap-1.5 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white text-sm transition-colors">
+		<a
+			href="/about"
+			class="inline-flex items-center gap-1.5 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white text-sm transition-colors"
+		>
 			About this project
 		</a>
 	</div>

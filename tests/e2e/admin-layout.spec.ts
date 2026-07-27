@@ -69,7 +69,7 @@ test.describe('Admin login page — mobile viewport', () => {
 	});
 
 	test('no mobile top-bar / hamburger button is rendered for unauthenticated routes', async ({
-		page
+		page,
 	}) => {
 		await page.goto('/admin/login');
 		// Hamburger toggle only renders inside the {#if user} branch

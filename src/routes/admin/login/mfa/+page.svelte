@@ -43,7 +43,9 @@
 			</p>
 
 			{#if form?.error}
-				<div class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-sm">
+				<div
+					class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-sm"
+				>
 					{form.error}
 				</div>
 			{/if}

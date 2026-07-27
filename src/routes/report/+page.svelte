@@ -9,10 +9,34 @@
 	import { toast } from 'svelte-sonner';
 
 	const SEVERITY_OPTIONS = [
-		{ value: 'Minor damage',    level: 1, label: 'Minor damage',    sub: 'visible, but not urgent',             barColor: 'bg-yellow-400' },
-		{ value: 'Moderate damage', level: 2, label: 'Moderate damage', sub: 'drivers or cyclists will feel it',    barColor: 'bg-orange-400' },
-		{ value: 'Severe damage',   level: 3, label: 'Severe damage',   sub: 'likely to damage a tire or wheel',    barColor: 'bg-red-400'    },
-		{ value: 'Hazardous',       level: 4, label: 'Hazardous',       sub: 'dangerous and needs quick attention', barColor: 'bg-rose-400'   },
+		{
+			value: 'Minor damage',
+			level: 1,
+			label: 'Minor damage',
+			sub: 'visible, but not urgent',
+			barColor: 'bg-yellow-400',
+		},
+		{
+			value: 'Moderate damage',
+			level: 2,
+			label: 'Moderate damage',
+			sub: 'drivers or cyclists will feel it',
+			barColor: 'bg-orange-400',
+		},
+		{
+			value: 'Severe damage',
+			level: 3,
+			label: 'Severe damage',
+			sub: 'likely to damage a tire or wheel',
+			barColor: 'bg-red-400',
+		},
+		{
+			value: 'Hazardous',
+			level: 4,
+			label: 'Hazardous',
+			sub: 'dangerous and needs quick attention',
+			barColor: 'bg-rose-400',
+		},
 	] as const;
 
 	let { data }: { data: { confirmationThreshold: number } } = $props();
@@ -27,9 +51,7 @@
 	let submitting = $state(false);
 	let hasLocation = $derived(lat !== null && lng !== null);
 	let locationSummary = $derived(
-		hasLocation
-			? (address ?? `${lat?.toFixed(5)}, ${lng?.toFixed(5)}`)
-			: null
+		hasLocation ? (address ?? `${lat?.toFixed(5)}, ${lng?.toFixed(5)}`) : null,
 	);
 
 	// Photo upload state
@@ -55,9 +77,9 @@
 	}
 
 	const LOCATION_TABS = [
-		{ mode: 'gps',     label: 'GPS' },
+		{ mode: 'gps', label: 'GPS' },
 		{ mode: 'address', label: 'Address' },
-		{ mode: 'map',     label: 'Pin on map' }
+		{ mode: 'map', label: 'Pin on map' },
 	] as const;
 	type LocationMode = (typeof LOCATION_TABS)[number]['mode'];
 	let locationMode = $state<LocationMode>('gps');
@@ -72,7 +94,10 @@
 	let reverseGeocodeAbortController: AbortController | null = null;
 
 	// Reset keyboard-active option whenever the suggestion list changes.
-	$effect(() => { void addressSuggestions; addressActiveIndex = -1; });
+	$effect(() => {
+		void addressSuggestions;
+		addressActiveIndex = -1;
+	});
 
 	function onAddressKeydown(e: KeyboardEvent) {
 		if (addressSuggestions.length === 0) return;
@@ -81,7 +106,8 @@
 			addressActiveIndex = (addressActiveIndex + 1) % addressSuggestions.length;
 		} else if (e.key === 'ArrowUp') {
 			e.preventDefault();
-			addressActiveIndex = (addressActiveIndex - 1 + addressSuggestions.length) % addressSuggestions.length;
+			addressActiveIndex =
+				(addressActiveIndex - 1 + addressSuggestions.length) % addressSuggestions.length;
 		} else if (e.key === 'Enter' && addressActiveIndex >= 0) {
 			e.preventDefault();
 			selectSuggestion(addressSuggestions[addressActiveIndex]);
@@ -112,7 +138,7 @@
 		try {
 			const params = new URLSearchParams({ q: trimmedQuery, limit: '5' });
 			const res = await fetch(`/api/geocode/search?${params}`, {
-				signal: controller.signal
+				signal: controller.signal,
 			});
 			if (!res.ok) throw new Error(`Address search failed: ${res.status}`);
 			const suggestions = await res.json();
@@ -171,7 +197,9 @@
 		const nextMode = LOCATION_TABS[nextIndex].mode;
 		locationMode = nextMode;
 		queueMicrotask(() => {
-			const tab = document.getElementById(`location-tab-${nextMode}`) as HTMLButtonElement | null;
+			const tab = document.getElementById(
+				`location-tab-${nextMode}`,
+			) as HTMLButtonElement | null;
 			tab?.focus();
 		});
 	}
@@ -199,20 +227,22 @@
 			if (!active) return; // guard after async imports
 			const L = leafletModule.default ?? leafletModule;
 
-			const center: [number, number] = lat !== null && lng !== null ? [lat, lng] : [43.425, -80.42];
+			const center: [number, number] =
+				lat !== null && lng !== null ? [lat, lng] : [43.425, -80.42];
 			const map = L.map(miniMapEl, { center, zoom: lat !== null ? 16 : 13 });
 			miniMapRef = map;
 
 			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-				maxZoom: 19
+				attribution:
+					'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+				maxZoom: 19,
 			}).addTo(map);
 
 			const pinIcon = L.divIcon({
 				html: `<div style="display:flex;align-items:center;justify-content:center;color:#f97316;width:32px;height:32px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS['map-pin']}</svg></div>`,
 				className: '',
 				iconSize: [32, 32],
-				iconAnchor: [16, 32]
+				iconAnchor: [16, 32],
 			});
 
 			if (lat !== null && lng !== null) {
@@ -301,7 +331,7 @@
 		const controller = reverseGeocodeAbortController;
 		try {
 			const res = await fetch(`/api/geocode/reverse?lat=${lat}&lon=${lng}`, {
-				signal: controller.signal
+				signal: controller.signal,
 			});
 			const data = await res.json();
 			if (controller.signal.aborted) return;
@@ -360,17 +390,19 @@
 					if (fallbackErr.code === 2) {
 						toastError('Could not determine your location. Try moving outside.');
 					} else {
-						toastError('Location request timed out. Try moving outside or use the map tab.');
+						toastError(
+							'Location request timed out. Try moving outside or use the map tab.',
+						);
 					}
 				},
-				{ enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+				{ enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
 			);
 		}
 
 		navigator.geolocation.getCurrentPosition(onSuccess, onError, {
 			enableHighAccuracy: true,
 			timeout: 15000,
-			maximumAge: 30000
+			maximumAge: 30000,
 		});
 	}
 
@@ -383,7 +415,7 @@
 			const res = await fetch('/api/report', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ lat, lng, address, description: severity })
+				body: JSON.stringify({ lat, lng, address, description: severity }),
 			});
 
 			const result = await res.json();
@@ -399,24 +431,30 @@
 					if (!photoRes.ok) {
 						let uploadMessage: string;
 						if (photoRes.status === 422) {
-							uploadMessage = 'Photo flagged by content moderation — please upload a photo of the pothole only.';
+							uploadMessage =
+								'Photo flagged by content moderation — please upload a photo of the pothole only.';
 						} else if (photoRes.status === 429) {
 							uploadMessage = 'Too many photo uploads this hour — try again later.';
 						} else {
 							try {
 								const photoResult = await photoRes.json();
 								uploadMessage =
-									typeof photoResult?.message === 'string' && photoResult.message.length > 0
+									typeof photoResult?.message === 'string' &&
+									photoResult.message.length > 0
 										? photoResult.message
 										: 'Upload failed — try again in a moment.';
 							} catch {
 								uploadMessage = 'Upload failed — try again in a moment.';
 							}
 						}
-						toastError(`Your report was saved, but the photo wasn't uploaded. ${uploadMessage}`);
+						toastError(
+							`Your report was saved, but the photo wasn't uploaded. ${uploadMessage}`,
+						);
 					}
 				} catch {
-					toastError('Your report was saved, but the photo wasn\'t uploaded due to a network error — try again in a moment.');
+					toastError(
+						"Your report was saved, but the photo wasn't uploaded due to a network error — try again in a moment.",
+					);
 				}
 			}
 
@@ -432,14 +470,24 @@
 
 <svelte:head>
 	<title>Report a Pothole — FillTheHole.ca</title>
-	<meta name="description" content="Report a pothole in Kitchener, Waterloo, or Cambridge in about 30 seconds. No account required." />
+	<meta
+		name="description"
+		content="Report a pothole in Kitchener, Waterloo, or Cambridge in about 30 seconds. No account required."
+	/>
 </svelte:head>
 
 <div class="max-w-lg mx-auto px-4 py-8">
 	<div class="mb-6">
-		<h1 class="page-title text-3xl sm:text-4xl text-stone-900 dark:text-white mb-1">Report a pothole</h1>
-		<p class="page-intro text-stone-600 dark:text-stone-400 text-sm">Report the location in about 30 seconds. No account required.</p>
-		<p class="text-xs text-stone-600 dark:text-stone-400 mt-2">Independent community tracker for Waterloo Region. For official repair action, report to the city too.</p>
+		<h1 class="page-title text-3xl sm:text-4xl text-stone-900 dark:text-white mb-1">
+			Report a pothole
+		</h1>
+		<p class="page-intro text-stone-600 dark:text-stone-400 text-sm">
+			Report the location in about 30 seconds. No account required.
+		</p>
+		<p class="text-xs text-stone-600 dark:text-stone-400 mt-2">
+			Independent community tracker for Waterloo Region. For official repair action, report to
+			the city too.
+		</p>
 		<p class="flex items-start gap-1.5 text-xs text-stone-600 dark:text-stone-400 mt-2">
 			<Icon name="alert-triangle" size={13} class="text-amber-500 shrink-0 mt-0.5" />
 			Stay safe — report from the sidewalk or after pulling over. Never stop in a live traffic lane.
@@ -448,15 +496,26 @@
 
 	<form onsubmit={handleSubmit} class="space-y-5">
 		<!-- Location -->
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
-			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3"
+		>
+			<div
+				class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400"
+			>
 				<Icon name="crosshair" size={14} class="text-amber-500 dark:text-amber-400" />
 				Location
 			</div>
-			<p class="text-xs text-stone-600 dark:text-stone-400">Use your current location for the fastest report, or switch to address search or map pin if needed.</p>
+			<p class="text-xs text-stone-600 dark:text-stone-400">
+				Use your current location for the fastest report, or switch to address search or map
+				pin if needed.
+			</p>
 
 			<!-- Tab bar -->
-			<div role="tablist" aria-label="Choose a location source" class="flex gap-1 bg-stone-100 dark:bg-stone-800 rounded-md p-1">
+			<div
+				role="tablist"
+				aria-label="Choose a location source"
+				class="flex gap-1 bg-stone-100 dark:bg-stone-800 rounded-md p-1"
+			>
 				{#each LOCATION_TABS as tab (tab.mode)}
 					<button
 						id={`location-tab-${tab.mode}`}
@@ -469,8 +528,8 @@
 						onkeydown={(event) => handleLocationTabKeydown(event, tab.mode)}
 						class="flex-1 min-h-[44px] py-1.5 px-2 rounded-md text-xs font-semibold transition-colors
 							{locationMode === tab.mode
-								? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-sm'
-								: 'text-stone-600 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200'}"
+							? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-sm'
+							: 'text-stone-600 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200'}"
 					>
 						{tab.label}
 					</button>
@@ -491,8 +550,8 @@
 					disabled={gpsStatus === 'loading'}
 					class="w-full py-3 rounded-md border-2 border-dashed font-semibold text-sm transition-colors flex items-center justify-center gap-2
 						{gpsStatus === 'got'
-							? 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400'
-							: gpsStatus === 'error'
+						? 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400'
+						: gpsStatus === 'error'
 							? 'border-red-500 bg-red-500/10 text-red-700 dark:text-red-400'
 							: 'border-stone-300 dark:border-stone-600 hover:border-amber-500 hover:bg-amber-500/5 text-stone-600 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-400'}"
 				>
@@ -513,22 +572,48 @@
 
 				{#if gpsStatus === 'error'}
 					<p class="text-xs text-red-700 dark:text-red-400" role="alert">
-						Could not get your location — signal may be weak. Try moving outside, or use address or map mode instead.
+						Could not get your location — signal may be weak. Try moving outside, or use
+						address or map mode instead.
 					</p>
 					<p class="text-xs text-stone-600 dark:text-stone-400">
-						No GPS? <button type="button" onclick={() => (locationMode = 'address')} class="underline hover:text-stone-900 dark:hover:text-white transition-colors">Enter an address</button>
-						or <button type="button" onclick={() => (locationMode = 'map')} class="underline hover:text-stone-900 dark:hover:text-white transition-colors">pin on the map</button>.
+						No GPS? <button
+							type="button"
+							onclick={() => (locationMode = 'address')}
+							class="underline hover:text-stone-900 dark:hover:text-white transition-colors"
+							>Enter an address</button
+						>
+						or
+						<button
+							type="button"
+							onclick={() => (locationMode = 'map')}
+							class="underline hover:text-stone-900 dark:hover:text-white transition-colors"
+							>pin on the map</button
+						>.
 					</p>
 				{/if}
 
 				{#if address}
 					<p class="flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-400">
-						<Icon name="map-pin" size={11} class="shrink-0 text-stone-500 dark:text-stone-400" />
+						<Icon
+							name="map-pin"
+							size={11}
+							class="shrink-0 text-stone-500 dark:text-stone-400"
+						/>
 						{address}
-						<span>· via <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="underline hover:text-stone-900 dark:hover:text-white">OpenStreetMap</a></span>
+						<span
+							>· via <a
+								href="https://nominatim.openstreetmap.org"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="underline hover:text-stone-900 dark:hover:text-white"
+								>OpenStreetMap</a
+							></span
+						>
 					</p>
 				{:else if gpsStatus === 'got'}
-					<p class="text-xs text-stone-600 dark:text-stone-400">Looking up address via OpenStreetMap…</p>
+					<p class="text-xs text-stone-600 dark:text-stone-400">
+						Looking up address via OpenStreetMap…
+					</p>
 				{/if}
 			</div>
 
@@ -540,7 +625,11 @@
 				hidden={locationMode !== 'address'}
 				class="space-y-2"
 			>
-				<label for="address-search-input" class="block text-xs font-medium text-stone-600 dark:text-stone-400">Address or intersection</label>
+				<label
+					for="address-search-input"
+					class="block text-xs font-medium text-stone-600 dark:text-stone-400"
+					>Address or intersection</label
+				>
 				<div class="relative">
 					<input
 						id="address-search-input"
@@ -549,8 +638,12 @@
 						role="combobox"
 						aria-autocomplete="list"
 						aria-expanded={addressSuggestions.length > 0}
-						aria-controls={addressSuggestions.length > 0 ? 'address-suggestions-list' : undefined}
-						aria-activedescendant={addressActiveIndex >= 0 ? `address-suggestion-${addressActiveIndex}` : undefined}
+						aria-controls={addressSuggestions.length > 0
+							? 'address-suggestions-list'
+							: undefined}
+						aria-activedescendant={addressActiveIndex >= 0
+							? `address-suggestion-${addressActiveIndex}`
+							: undefined}
 						aria-haspopup="listbox"
 						placeholder="Enter an address or intersection…"
 						bind:value={addressQuery}
@@ -568,7 +661,13 @@
 					{#if addressSearching}
 						<p class="text-xs text-stone-600 dark:text-stone-400 mt-1">Searching…</p>
 					{:else if addressQuery.length > 2 && addressSuggestions.length === 0 && lat === null}
-						<p class="text-xs text-stone-600 dark:text-stone-400 mt-1" role="status" aria-live="polite">No results found — try a different address or street name.</p>
+						<p
+							class="text-xs text-stone-600 dark:text-stone-400 mt-1"
+							role="status"
+							aria-live="polite"
+						>
+							No results found — try a different address or street name.
+						</p>
 					{/if}
 					{#if addressSuggestions.length > 0}
 						<ul
@@ -579,11 +678,18 @@
 							class="absolute z-10 w-full mt-1 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md shadow-xl overflow-hidden"
 						>
 							{#each addressSuggestions as s, i (s.display_name)}
-								<li id="address-suggestion-{i}" role="option" aria-selected={i === addressActiveIndex}>
+								<li
+									id="address-suggestion-{i}"
+									role="option"
+									aria-selected={i === addressActiveIndex}
+								>
 									<button
 										type="button"
 										tabindex="-1"
-										class="w-full text-left px-3 py-2.5 min-h-[44px] text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-700 {i === addressActiveIndex ? 'bg-stone-200 dark:bg-stone-700' : ''}"
+										class="w-full text-left px-3 py-2.5 min-h-[44px] text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-700 {i ===
+										addressActiveIndex
+											? 'bg-stone-200 dark:bg-stone-700'
+											: ''}"
 										onclick={() => selectSuggestion(s)}
 									>
 										{s.display_name}
@@ -595,7 +701,11 @@
 				</div>
 				{#if lat !== null && addressQuery && addressSuggestions.length === 0}
 					<p class="flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-400">
-						<Icon name="map-pin" size={11} class="shrink-0 text-stone-500 dark:text-stone-400" />
+						<Icon
+							name="map-pin"
+							size={11}
+							class="shrink-0 text-stone-500 dark:text-stone-400"
+						/>
 						{address}
 					</p>
 				{/if}
@@ -609,61 +719,90 @@
 				hidden={locationMode !== 'map'}
 				class="space-y-2"
 			>
-				<div bind:this={miniMapEl} class="w-full rounded-md overflow-hidden" style="height: 260px;"></div>
+				<div
+					bind:this={miniMapEl}
+					class="w-full rounded-md overflow-hidden"
+					style="height: 260px;"
+				></div>
 				{#if lat !== null}
 					<p class="flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-400">
-						<Icon name="map-pin" size={11} class="shrink-0 text-stone-500 dark:text-stone-400" />
+						<Icon
+							name="map-pin"
+							size={11}
+							class="shrink-0 text-stone-500 dark:text-stone-400"
+						/>
 						{address ?? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`} — drag the pin to adjust
 					</p>
 				{:else}
-					<p class="text-xs text-stone-600 dark:text-stone-400">Tap the map to place a pin</p>
+					<p class="text-xs text-stone-600 dark:text-stone-400">
+						Tap the map to place a pin
+					</p>
 				{/if}
 			</div>
 		</div>
 
 		<!-- Severity -->
-		<fieldset class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
-			<legend class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400 mb-2">
+		<fieldset
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3"
+		>
+			<legend
+				class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400 mb-2"
+			>
 				<Icon name="alert-triangle" size={14} class="text-stone-500 dark:text-stone-400" />
-				How severe is the damage? <span class="text-stone-600 dark:text-stone-400 font-normal">(optional)</span>
+				How severe is the damage?
+				<span class="text-stone-600 dark:text-stone-400 font-normal">(optional)</span>
 			</legend>
-			<p class="text-xs text-stone-600 dark:text-stone-400">This helps other residents understand urgency at a glance.</p>
+			<p class="text-xs text-stone-600 dark:text-stone-400">
+				This helps other residents understand urgency at a glance.
+			</p>
 			<div class="grid grid-cols-2 gap-2">
 				{#each SEVERITY_OPTIONS as opt (opt.value)}
 					<label
 						class="flex flex-col items-start gap-1.5 p-3 rounded-md border text-left cursor-pointer transition-colors
 							has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-amber-500 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-white dark:has-[:focus-visible]:ring-offset-stone-900
 							{severity === opt.value
-								? 'border-amber-500 bg-amber-500/10'
-								: 'border-stone-300 dark:border-stone-600 hover:border-stone-400 dark:hover:border-stone-500'}"
+							? 'border-amber-500 bg-amber-500/10'
+							: 'border-stone-300 dark:border-stone-600 hover:border-stone-400 dark:hover:border-stone-500'}"
 					>
 						<input
 							type="radio"
 							name="severity"
 							value={opt.value}
 							checked={severity === opt.value}
-							onchange={() => severity = opt.value}
+							onchange={() => (severity = opt.value)}
 							class="sr-only"
 						/>
 						<!-- Signal-strength damage indicator -->
 						<div class="flex items-end gap-0.5 h-4" aria-hidden="true">
 							{#each [1, 2, 3, 4] as i (i)}
 								<div
-									class="w-1.5 rounded-t-sm transition-colors {i <= opt.level ? opt.barColor : 'bg-stone-300 dark:bg-stone-600'}"
+									class="w-1.5 rounded-t-sm transition-colors {i <= opt.level
+										? opt.barColor
+										: 'bg-stone-300 dark:bg-stone-600'}"
 									style="height: {i * 25}%"
 								></div>
 							{/each}
 						</div>
-						<span class="text-sm font-semibold text-stone-900 dark:text-white leading-tight">{opt.label}</span>
-						<span class="text-xs text-stone-600 dark:text-stone-400 leading-tight">{opt.sub}</span>
+						<span
+							class="text-sm font-semibold text-stone-900 dark:text-white leading-tight"
+							>{opt.label}</span
+						>
+						<span class="text-xs text-stone-600 dark:text-stone-400 leading-tight"
+							>{opt.sub}</span
+						>
 					</label>
 				{/each}
 			</div>
 		</fieldset>
 
 		<!-- Photo (optional) -->
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3">
-			<label for="photo-input" class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400">
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3"
+		>
+			<label
+				for="photo-input"
+				class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400"
+			>
 				<Icon name="camera" size={14} class="text-amber-500 dark:text-amber-400" />
 				Photo <span class="text-stone-600 dark:text-stone-400 font-normal">(optional)</span>
 			</label>
@@ -678,7 +817,11 @@
 			/>
 			{#if photoPreview}
 				<div class="relative">
-					<img src={photoPreview} alt="Selected" class="w-full rounded-md object-cover aspect-video" />
+					<img
+						src={photoPreview}
+						alt="Selected"
+						class="w-full rounded-md object-cover aspect-video"
+					/>
 					<button
 						type="button"
 						onclick={clearPhoto}
@@ -699,51 +842,92 @@
 				</button>
 			{/if}
 
-			<p class="text-xs text-stone-600 dark:text-stone-400">Photos are reviewed before appearing publicly — usually within a few hours. Only take one if you're safely off the road.</p>
+			<p class="text-xs text-stone-600 dark:text-stone-400">
+				Photos are reviewed before appearing publicly — usually within a few hours. Only
+				take one if you're safely off the road.
+			</p>
 		</div>
 
-		<div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3" role="status" aria-live="polite" aria-atomic="true">
-			<div class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400">
-				<Icon name="check-circle" size={14} class={hasLocation ? 'text-green-700 dark:text-green-400' : 'text-stone-500 dark:text-stone-400'} />
+		<div
+			class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-4 space-y-3"
+			role="status"
+			aria-live="polite"
+			aria-atomic="true"
+		>
+			<div
+				class="flex items-center gap-2 text-sm font-semibold text-stone-600 dark:text-stone-400"
+			>
+				<Icon
+					name="check-circle"
+					size={14}
+					class={hasLocation
+						? 'text-green-700 dark:text-green-400'
+						: 'text-stone-500 dark:text-stone-400'}
+				/>
 				Ready to submit
 			</div>
 
 			{#if hasLocation}
 				<div class="space-y-2">
 					<div class="rounded-md bg-stone-100/80 dark:bg-stone-800/80 p-3 space-y-1.5">
-						<p class="flex items-center gap-1.5 text-xs font-semibold text-green-700 dark:text-green-400">
+						<p
+							class="flex items-center gap-1.5 text-xs font-semibold text-green-700 dark:text-green-400"
+						>
 							<Icon name="map-pin" size={12} class="shrink-0" />
 							Location locked in
 						</p>
-						<p class="text-sm text-stone-700 dark:text-stone-200 break-words overflow-wrap-anywhere">{locationSummary}</p>
+						<p
+							class="text-sm text-stone-700 dark:text-stone-200 break-words overflow-wrap-anywhere"
+						>
+							{locationSummary}
+						</p>
 					</div>
 					<div class="grid gap-2 sm:grid-cols-2">
 						<div class="rounded-md bg-stone-100/60 dark:bg-stone-800/60 p-3">
-							<p class="text-[11px] font-semibold text-stone-600 dark:text-stone-400">Severity</p>
-							<p class="mt-1 text-sm text-stone-600 dark:text-stone-400">{severity ?? 'Optional — not added yet'}</p>
+							<p class="text-[11px] font-semibold text-stone-600 dark:text-stone-400">
+								Severity
+							</p>
+							<p class="mt-1 text-sm text-stone-600 dark:text-stone-400">
+								{severity ?? 'Optional — not added yet'}
+							</p>
 						</div>
 						<div class="rounded-md bg-stone-100/60 dark:bg-stone-800/60 p-3">
-							<p class="text-[11px] font-semibold text-stone-600 dark:text-stone-400">Photo</p>
-							<p class="mt-1 text-sm text-stone-600 dark:text-stone-400">{photoFile ? 'Attached and ready to upload' : 'Optional — not added yet'}</p>
+							<p class="text-[11px] font-semibold text-stone-600 dark:text-stone-400">
+								Photo
+							</p>
+							<p class="mt-1 text-sm text-stone-600 dark:text-stone-400">
+								{photoFile
+									? 'Attached and ready to upload'
+									: 'Optional — not added yet'}
+							</p>
 						</div>
 					</div>
 				</div>
 				<p class="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-					After you submit, a pothole page is created right away. It appears on the public map after
-					{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location.
+					After you submit, a pothole page is created right away. It appears on the public
+					map after
+					{confirmationThreshold} independent report{confirmationThreshold === 1
+						? ''
+						: 's'} from the same location.
 				</p>
 			{:else}
 				<p class="text-sm text-stone-600 dark:text-stone-400">
 					Choose a location above to unlock the report button.
 				</p>
 				<p class="text-xs text-stone-600 dark:text-stone-400">
-					Use GPS for the fastest report, or switch to address search or map pin if location access fails.
+					Use GPS for the fastest report, or switch to address search or map pin if
+					location access fails.
 				</p>
 			{/if}
 		</div>
 
 		<p class="text-xs text-stone-600 dark:text-stone-400 text-center">
-			By submitting you consent to collection of your rounded GPS location (±11 m), a hashed IP address for deduplication, and any photos you attach (reviewed before publishing). No account required. <a href="/about#privacy" class="underline hover:text-stone-900 dark:hover:text-white">Privacy policy →</a>
+			By submitting you consent to collection of your rounded GPS location (±11 m), a hashed
+			IP address for deduplication, and any photos you attach (reviewed before publishing). No
+			account required. <a
+				href="/about#privacy"
+				class="underline hover:text-stone-900 dark:hover:text-white">Privacy policy →</a
+			>
 		</p>
 
 		<button
@@ -761,10 +945,14 @@
 		</button>
 
 		<p class="text-xs text-stone-600 dark:text-stone-400 text-center">
-			{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the same location are needed before a pothole appears on the public map.
+			{confirmationThreshold} independent report{confirmationThreshold === 1 ? '' : 's'} from the
+			same location are needed before a pothole appears on the public map.
 		</p>
 		<p class="text-xs text-stone-600 dark:text-stone-400 text-center">
-			On a major road? It may be maintained by the Region of Waterloo, not the city. <a href="/about" class="underline hover:text-stone-900 dark:hover:text-white">Learn more →</a>
+			On a major road? It may be maintained by the Region of Waterloo, not the city. <a
+				href="/about"
+				class="underline hover:text-stone-900 dark:hover:text-white">Learn more →</a
+			>
 		</p>
 	</form>
 </div>

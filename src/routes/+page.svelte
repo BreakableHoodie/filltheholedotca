@@ -107,8 +107,9 @@
 				for (const p of updated) {
 					const existing = markersById[p.id];
 					if (existing) {
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						const oldStatus = ((existing as any)._status as string | undefined) ?? 'reported';
+						const oldStatus =
+							// eslint-disable-next-line @typescript-eslint/no-explicit-any
+							((existing as any)._status as string | undefined) ?? 'reported';
 						if (oldStatus !== p.status) {
 							const layerKey = p.status in clusterGroups ? p.status : 'reported';
 							const oldLayerKey = oldStatus in clusterGroups ? oldStatus : 'reported';
@@ -160,8 +161,7 @@
 						// New pothole — create a marker on the fly
 						const layerKey = p.status in clusterGroups ? p.status : 'reported';
 						const group = clusterGroups[layerKey] as
-							| { addLayer: (m: typeof existing) => void }
-							| undefined;
+							{ addLayer: (m: typeof existing) => void } | undefined;
 						if (!group) continue;
 						const info =
 							STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG] ??
@@ -188,6 +188,10 @@
 								: p.status === 'filled'
 									? 'Marked filled by the community. Open details to review the timeline.'
 									: 'Archived after no action. Open details if you need the full history.';
+						const fixedBtn =
+							p.status === 'reported'
+								? `<button class="popup-fix-btn" data-action="mark-filled" data-pothole-id="${p.id}">✓ It's fixed!</button>`
+								: '';
 						marker.bindPopup(
 							`<div class="popup-content">
 								<div class="popup-header"><strong>${address}</strong><span class="popup-status popup-status--${p.status}">${info.label}</span></div>
@@ -196,6 +200,7 @@
 								<div class="popup-actions">
 									<a href="${detailHref}" class="popup-primary-link">Open details</a>
 									<button class="popup-secondary-btn" data-action="share-link" data-pothole-id="${p.id}">Share or copy link</button>
+									${fixedBtn}
 								</div>
 							</div>`,
 							{ maxWidth: 240 },
@@ -251,7 +256,8 @@
 		[...potholes]
 			.filter((pothole) => listStatusFilter === 'all' || pothole.status === listStatusFilter)
 			.sort((left, right) => {
-				if (listSort === 'oldest') return Date.parse(left.created_at) - Date.parse(right.created_at);
+				if (listSort === 'oldest')
+					return Date.parse(left.created_at) - Date.parse(right.created_at);
 				if (listSort === 'status') {
 					const statusOrder = { reported: 0, expired: 1, filled: 2, pending: 3 };
 					return statusOrder[left.status] - statusOrder[right.status];
@@ -864,17 +870,22 @@
 		bind:this={mapEl}
 		aria-hidden={viewMode === 'list'}
 		inert={viewMode === 'list'}
-		class="w-full h-full bg-white dark:bg-stone-900 {viewMode === 'list' ? 'pointer-events-none' : ''}"
+		class="w-full h-full bg-white dark:bg-stone-900 {viewMode === 'list'
+			? 'pointer-events-none'
+			: ''}"
 	></div>
 
-	<div class="absolute top-4 right-4 z-[1002] rounded-md border border-stone-200 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 p-1 shadow-lg">
+	<div
+		class="absolute top-4 right-4 z-[1002] rounded-md border border-stone-200 dark:border-stone-700 bg-white/95 dark:bg-stone-900/95 p-1 shadow-lg"
+	>
 		<div class="flex" role="group" aria-label="Choose map or list view">
 			{#each [['map', 'Map'], ['list', 'List']] as const as [mode, label] (mode)}
 				<button
 					type="button"
 					aria-pressed={viewMode === mode}
 					onclick={() => (viewMode = mode)}
-					class="rounded px-3 py-2 text-sm font-semibold transition-colors {viewMode === mode
+					class="rounded px-3 py-2 text-sm font-semibold transition-colors {viewMode ===
+					mode
 						? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900'
 						: 'text-stone-600 hover:text-stone-900 dark:text-stone-300 dark:hover:text-white'}"
 				>
@@ -891,16 +902,26 @@
 			aria-labelledby="pothole-list-heading"
 		>
 			<div class="mx-auto max-w-5xl space-y-4">
-				<div class="rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-4 shadow-sm">
+				<div
+					class="rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-4 shadow-sm"
+				>
 					<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
 						<div>
-							<p class="text-xs font-semibold uppercase tracking-wide text-amber-500">List view</p>
-							<h2 id="pothole-list-heading" class="mt-1 font-brand text-3xl font-bold leading-none text-stone-900 dark:text-white">
+							<p class="text-xs font-semibold uppercase tracking-wide text-amber-500">
+								List view
+							</p>
+							<h2
+								id="pothole-list-heading"
+								class="mt-1 font-brand text-3xl font-bold leading-none text-stone-900 dark:text-white"
+							>
 								Potholes without the map
 							</h2>
-							<p class="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-stone-300">
-								Use filters and keyboard-reachable actions to open details, share a report,
-								or mark a live pothole fixed without interacting with map markers.
+							<p
+								class="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-stone-300"
+							>
+								Use filters and keyboard-reachable actions to open details, share a
+								report, or mark a live pothole fixed without interacting with map
+								markers.
 							</p>
 						</div>
 
@@ -933,65 +954,118 @@
 					</div>
 				</div>
 
-				<div class="text-sm text-stone-600 dark:text-stone-300" role="status" aria-live="polite">
-					Showing {visibleListPotholes.length} pothole{visibleListPotholes.length === 1 ? '' : 's'}.
+				<div
+					class="text-sm text-stone-600 dark:text-stone-300"
+					role="status"
+					aria-live="polite"
+				>
+					Showing {visibleListPotholes.length} pothole{visibleListPotholes.length === 1
+						? ''
+						: 's'}.
 				</div>
 
 				{#if visibleListPotholes.length === 0}
-					<div class="rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-6 text-center text-sm text-stone-600 dark:text-stone-300">
+					<div
+						class="rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-6 text-center text-sm text-stone-600 dark:text-stone-300"
+					>
 						No potholes match this filter.
 					</div>
 				{:else}
 					<ul class="space-y-3" aria-label="Pothole reports">
 						{#each visibleListPotholes as pothole (pothole.id)}
-							{@const info = STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.reported}
-							<li class="rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-4 shadow-sm">
-								<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+							{@const info =
+								STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ??
+								STATUS_CONFIG.reported}
+							<li
+								class="rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-4 shadow-sm"
+							>
+								<div
+									class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"
+								>
 									<div class="min-w-0 space-y-2">
 										<div class="flex flex-wrap items-center gap-2">
-											<span class="inline-flex items-center gap-1.5 rounded border border-stone-200 dark:border-stone-700 px-2 py-1 text-xs font-semibold text-stone-600 dark:text-stone-300">
-												<Icon name={info.icon} size={12} class={info.colorClass} />
+											<span
+												class="inline-flex items-center gap-1.5 rounded border border-stone-200 dark:border-stone-700 px-2 py-1 text-xs font-semibold text-stone-600 dark:text-stone-300"
+											>
+												<Icon
+													name={info.icon}
+													size={12}
+													class={info.colorClass}
+												/>
 												{info.label}
 											</span>
-											<span class="text-xs text-stone-500 dark:text-stone-400">Reported {formattedDate(pothole.created_at)}</span>
+											<span class="text-xs text-stone-500 dark:text-stone-400"
+												>Reported {formattedDate(pothole.created_at)}</span
+											>
 											{#if pothole.photos_published}
-												<span class="inline-flex items-center gap-1 text-xs text-stone-500 dark:text-stone-400">
+												<span
+													class="inline-flex items-center gap-1 text-xs text-stone-500 dark:text-stone-400"
+												>
 													<Icon name="camera" size={12} />
 													Photo
 												</span>
 											{/if}
 										</div>
 
-										<h3 class="text-lg font-semibold text-stone-900 dark:text-white">
-											<a href="/hole/{pothole.id}" class="underline-offset-4 hover:underline">
+										<h3
+											class="text-lg font-semibold text-stone-900 dark:text-white"
+										>
+											<a
+												href="/hole/{pothole.id}"
+												class="underline-offset-4 hover:underline"
+											>
 												{potholeLabel(pothole)}
 											</a>
 										</h3>
 
-										<p class="text-sm leading-relaxed text-stone-600 dark:text-stone-300">
+										<p
+											class="text-sm leading-relaxed text-stone-600 dark:text-stone-300"
+										>
 											{pothole.description || 'No description provided.'}
 										</p>
 
 										<p class="text-xs text-stone-500 dark:text-stone-400">
-											Confirmed by {pothole.confirmed_count} report{pothole.confirmed_count === 1 ? '' : 's'} · {pothole.lat.toFixed(4)}, {pothole.lng.toFixed(4)}
+											Confirmed by {pothole.confirmed_count} report{pothole.confirmed_count ===
+											1
+												? ''
+												: 's'} · {pothole.lat.toFixed(4)}, {pothole.lng.toFixed(
+												4,
+											)}
 										</p>
 									</div>
 
-									<div class="flex shrink-0 flex-wrap gap-2 md:max-w-[280px] md:justify-end">
-										<a href="/hole/{pothole.id}" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-stone-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200">
+									<div
+										class="flex shrink-0 flex-wrap gap-2 md:max-w-[280px] md:justify-end"
+									>
+										<a
+											href="/hole/{pothole.id}"
+											class="inline-flex items-center justify-center gap-1.5 rounded-md bg-stone-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
+										>
 											Open details
 										</a>
-										<button type="button" onclick={() => sharePothole(pothole)} class="inline-flex items-center justify-center gap-1.5 rounded-md border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm font-semibold text-stone-600 transition-colors hover:border-stone-400 hover:text-stone-900 dark:text-stone-300 dark:hover:border-stone-500 dark:hover:text-white">
+										<button
+											type="button"
+											onclick={() => sharePothole(pothole)}
+											class="inline-flex items-center justify-center gap-1.5 rounded-md border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm font-semibold text-stone-600 transition-colors hover:border-stone-400 hover:text-stone-900 dark:text-stone-300 dark:hover:border-stone-500 dark:hover:text-white"
+										>
 											<Icon name="share-2" size={14} />
 											Share
 										</button>
 										{#if pothole.status === 'reported'}
-											<button type="button" onclick={() => markPotholeFilled(pothole.id)} class="inline-flex items-center justify-center gap-1.5 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm font-semibold text-green-800 transition-colors hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900">
+											<button
+												type="button"
+												onclick={() => markPotholeFilled(pothole.id)}
+												class="inline-flex items-center justify-center gap-1.5 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm font-semibold text-green-800 transition-colors hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900"
+											>
 												<Icon name="check-circle" size={14} />
 												It's fixed
 											</button>
 										{/if}
-										<button type="button" onclick={() => showPotholeOnMap(pothole.id)} class="inline-flex items-center justify-center gap-1.5 rounded-md border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm font-semibold text-stone-600 transition-colors hover:border-stone-400 hover:text-stone-900 dark:text-stone-300 dark:hover:border-stone-500 dark:hover:text-white">
+										<button
+											type="button"
+											onclick={() => showPotholeOnMap(pothole.id)}
+											class="inline-flex items-center justify-center gap-1.5 rounded-md border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm font-semibold text-stone-600 transition-colors hover:border-stone-400 hover:text-stone-900 dark:text-stone-300 dark:hover:border-stone-500 dark:hover:text-white"
+										>
 											<Icon name="map" size={14} />
 											Show on map
 										</button>

@@ -8,7 +8,7 @@ import {
 	createAdminSession,
 	validateAdminSession,
 	SESSION_COOKIE,
-	TRUSTED_DEVICE_COOKIE
+	TRUSTED_DEVICE_COOKIE,
 } from '$lib/server/admin-auth';
 import { generateCsrfToken, CSRF_COOKIE } from '$lib/server/admin-csrf';
 import { hashIp } from '$lib/hash';
@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 	const token = cookies.get('admin_mfa_pending');
 	if (!token) throw redirect(302, '/admin/login');
 	return {
-		next: url.searchParams.get('next') ?? '/admin/photos'
+		next: url.searchParams.get('next') ?? '/admin/photos',
 	};
 };
 
@@ -50,17 +50,39 @@ export const actions: Actions = {
 			return fail(400, { error: 'Verification code is required', next });
 		}
 
-		if (process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' && process.env.CI === 'true' && mfaToken === 'e2e-mfa-challenge-token') {
+		if (
+			process.env.PLAYWRIGHT_E2E_FIXTURES === 'true' &&
+			process.env.CI === 'true' &&
+			mfaToken === 'e2e-mfa-challenge-token'
+		) {
 			if (code !== '000000') {
 				return fail(401, { error: 'Invalid code. Please try again.', next });
 			}
 			cookies.delete('admin_mfa_pending', { path: '/admin/login' });
 			const isSecure = import.meta.env.PROD;
 			const csrfToken = await generateCsrfToken('e2e-session-id');
-			cookies.set(SESSION_COOKIE, 'e2e-session-id', { httpOnly: true, sameSite: 'strict', path: '/', secure: isSecure, maxAge: 24 * 60 * 60 });
-			cookies.set(CSRF_COOKIE, csrfToken, { httpOnly: false, sameSite: 'strict', path: '/', secure: isSecure, maxAge: 24 * 60 * 60 });
+			cookies.set(SESSION_COOKIE, 'e2e-session-id', {
+				httpOnly: true,
+				sameSite: 'strict',
+				path: '/',
+				secure: isSecure,
+				maxAge: 24 * 60 * 60,
+			});
+			cookies.set(CSRF_COOKIE, csrfToken, {
+				httpOnly: false,
+				sameSite: 'strict',
+				path: '/',
+				secure: isSecure,
+				maxAge: 24 * 60 * 60,
+			});
 			if (rememberDevice) {
-				cookies.set(TRUSTED_DEVICE_COOKIE, 'e2e-trusted-device-token', { httpOnly: true, sameSite: 'strict', path: '/', secure: isSecure, maxAge: 30 * 24 * 60 * 60 });
+				cookies.set(TRUSTED_DEVICE_COOKIE, 'e2e-trusted-device-token', {
+					httpOnly: true,
+					sameSite: 'strict',
+					path: '/',
+					secure: isSecure,
+					maxAge: 30 * 24 * 60 * 60,
+				});
 			}
 			throw redirect(302, next);
 		}
@@ -86,7 +108,7 @@ export const actions: Actions = {
 			.from('admin_mfa_challenges')
 			.select(
 				`id, user_id, ip_address, user_agent,
-       admin_users!inner ( id, email, is_active, totp_enabled, totp_secret, backup_codes, last_used_totp_code, last_used_totp_at )`
+       admin_users!inner ( id, email, is_active, totp_enabled, totp_secret, backup_codes, last_used_totp_code, last_used_totp_at )`,
 			)
 			.eq('token', mfaToken)
 			.eq('used', false)
@@ -96,7 +118,7 @@ export const actions: Actions = {
 		if (!challenge) {
 			return fail(401, {
 				error: 'Invalid or expired MFA session. Please log in again.',
-				next
+				next,
 			});
 		}
 
@@ -111,7 +133,7 @@ export const actions: Actions = {
 		if (ipMismatch || uaMismatch) {
 			return fail(401, {
 				error: 'Session mismatch. Please log in again.',
-				next
+				next,
 			});
 		}
 
@@ -123,7 +145,7 @@ export const actions: Actions = {
 		if (!rateCheck.allowed) {
 			return fail(429, {
 				error: `Too many failed attempts. Try again in ${rateCheck.remainingMinutes} minutes.`,
-				next
+				next,
 			});
 		}
 
@@ -150,7 +172,7 @@ export const actions: Actions = {
 							userAgent,
 							attemptType: 'mfa',
 							success: false,
-							failureReason: 'totp_replay'
+							failureReason: 'totp_replay',
 						});
 						return fail(401, { error: 'Invalid code. Please try again.', next });
 					}
@@ -183,7 +205,7 @@ export const actions: Actions = {
 				userAgent,
 				attemptType: 'mfa',
 				success: false,
-				failureReason: 'invalid_code'
+				failureReason: 'invalid_code',
 			});
 			return fail(401, { error: 'Invalid code. Please try again.', next });
 		}
@@ -199,7 +221,7 @@ export const actions: Actions = {
 		if (!updated || updated.length === 0) {
 			return fail(401, {
 				error: 'MFA session already completed. Please log in again.',
-				next
+				next,
 			});
 		}
 
@@ -218,7 +240,10 @@ export const actions: Actions = {
 			await getAdminClient()
 				.from('admin_users')
 				.update({
-					backup_codes: remainingBackupCodes.length > 0 ? JSON.stringify(remainingBackupCodes) : null
+					backup_codes:
+						remainingBackupCodes.length > 0
+							? JSON.stringify(remainingBackupCodes)
+							: null,
 				})
 				.eq('id', row.user_id);
 		}
@@ -230,14 +255,14 @@ export const actions: Actions = {
 			sameSite: 'strict',
 			path: '/',
 			secure: isSecure,
-			maxAge: 24 * 60 * 60
+			maxAge: 24 * 60 * 60,
 		});
 		cookies.set(CSRF_COOKIE, csrfToken, {
 			httpOnly: false,
 			sameSite: 'strict',
 			path: '/',
 			secure: isSecure,
-			maxAge: 24 * 60 * 60
+			maxAge: 24 * 60 * 60,
 		});
 		await getAdminClient()
 			.from('admin_users')
@@ -249,7 +274,7 @@ export const actions: Actions = {
 			ipHash,
 			userAgent,
 			attemptType: 'mfa',
-			success: true
+			success: true,
 		});
 
 		if (rememberDevice) {
@@ -264,14 +289,15 @@ export const actions: Actions = {
 					user_id: row.user_id,
 					ip_address: ipHash,
 					user_agent: userAgent,
-					expires_at: expiresAt
+					expires_at: expiresAt,
 				});
-				cookies.set(TRUSTED_DEVICE_COOKIE, rawToken, { // raw value goes to cookie
+				cookies.set(TRUSTED_DEVICE_COOKIE, rawToken, {
+					// raw value goes to cookie
 					httpOnly: true,
 					sameSite: 'strict',
 					path: '/',
 					secure: isSecure,
-					maxAge: 30 * 24 * 60 * 60
+					maxAge: 30 * 24 * 60 * 60,
 				});
 			} catch (e) {
 				logError('admin/mfa', 'Failed to create trusted device', e);
@@ -279,5 +305,5 @@ export const actions: Actions = {
 		}
 
 		throw redirect(302, next);
-	}
+	},
 };

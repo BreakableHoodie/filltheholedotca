@@ -1,57 +1,57 @@
-import type { City } from "$lib/wards";
+import type { City } from '$lib/wards';
 
 export interface OfficialReportLink {
-  id: "kitchener" | "waterloo" | "cambridge" | "region" | "mto";
-  label: string;
-  href: string;
-  scope: "city" | "region" | "province";
+	id: 'kitchener' | 'waterloo' | 'cambridge' | 'region' | 'mto';
+	label: string;
+	href: string;
+	scope: 'city' | 'region' | 'province';
 }
 
 export const CITY_LABELS: Record<City, string> = {
-  kitchener: "City of Kitchener",
-  waterloo: "City of Waterloo",
-  cambridge: "City of Cambridge",
+	kitchener: 'City of Kitchener',
+	waterloo: 'City of Waterloo',
+	cambridge: 'City of Cambridge',
 } as const;
 
 export const CITY_REPORT_LINKS: Record<City, OfficialReportLink> = {
-  kitchener: {
-    id: "kitchener",
-    label: CITY_LABELS.kitchener,
-    href: "https://form.kitchener.ca/CSD/CCS/Report-a-problem",
-    scope: "city",
-  },
-  waterloo: {
-    id: "waterloo",
-    label: CITY_LABELS.waterloo,
-    href: "https://www.waterloo.ca/roads-and-cycling/report-a-road-trail-or-sidewalk-issue/",
-    scope: "city",
-  },
-  cambridge: {
-    id: "cambridge",
-    label: CITY_LABELS.cambridge,
-    href: "https://maps.cambridge.ca/gis/ServiceRequests/Pothole/",
-    scope: "city",
-  },
+	kitchener: {
+		id: 'kitchener',
+		label: CITY_LABELS.kitchener,
+		href: 'https://form.kitchener.ca/CSD/CCS/Report-a-problem',
+		scope: 'city',
+	},
+	waterloo: {
+		id: 'waterloo',
+		label: CITY_LABELS.waterloo,
+		href: 'https://www.waterloo.ca/roads-and-cycling/report-a-road-trail-or-sidewalk-issue/',
+		scope: 'city',
+	},
+	cambridge: {
+		id: 'cambridge',
+		label: CITY_LABELS.cambridge,
+		href: 'https://maps.cambridge.ca/gis/ServiceRequests/Pothole/',
+		scope: 'city',
+	},
 } as const;
 
 export const REGION_REPORT_LINK: OfficialReportLink = {
-  id: "region",
-  label: "Region of Waterloo",
-  href: "https://www.regionofwaterloo.ca/en/regional-government/submit-a-claim.aspx",
-  scope: "region",
+	id: 'region',
+	label: 'Region of Waterloo',
+	href: 'https://www.regionofwaterloo.ca/en/regional-government/submit-a-claim.aspx',
+	scope: 'region',
 };
 
 export const MTO_REPORT_LINK: OfficialReportLink = {
-  id: "mto",
-  label: "Ontario Ministry of Transportation",
-  href: "https://www.ontario.ca/page/report-problem-provincial-highway",
-  scope: "province",
+	id: 'mto',
+	label: 'Ontario Ministry of Transportation',
+	href: 'https://www.ontario.ca/page/report-problem-provincial-highway',
+	scope: 'province',
 };
 
 export const ABOUT_REPORT_LINKS: readonly OfficialReportLink[] = [
-  CITY_REPORT_LINKS.kitchener,
-  CITY_REPORT_LINKS.waterloo,
-  CITY_REPORT_LINKS.cambridge,
-  REGION_REPORT_LINK,
-  MTO_REPORT_LINK,
+	CITY_REPORT_LINKS.kitchener,
+	CITY_REPORT_LINKS.waterloo,
+	CITY_REPORT_LINKS.cambridge,
+	REGION_REPORT_LINK,
+	MTO_REPORT_LINK,
 ];

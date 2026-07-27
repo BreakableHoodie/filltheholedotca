@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		reportedPotholesRes,
 		filledPotholesRes,
 		expiredPotholesRes,
-		recentAuditRes
+		recentAuditRes,
 	] = await Promise.all([
 		getAdminClient()
 			.from('pothole_photos')
@@ -55,11 +55,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 			? getAdminClient()
 					.from('admin_audit_log')
 					.select(
-						'id, action, resource_type, resource_id, created_at, admin_users(first_name, last_name, email)'
+						'id, action, resource_type, resource_id, created_at, admin_users(first_name, last_name, email)',
 					)
 					.order('created_at', { ascending: false })
 					.limit(8)
-			: Promise.resolve({ data: null })
+			: Promise.resolve({ data: null }),
 	]);
 
 	return {
@@ -68,8 +68,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			pendingPotholes: pendingPotholesRes.count ?? 0,
 			reportedPotholes: reportedPotholesRes.count ?? 0,
 			filledPotholes: filledPotholesRes.count ?? 0,
-			expiredPotholes: expiredPotholesRes.count ?? 0
+			expiredPotholes: expiredPotholesRes.count ?? 0,
 		},
-		recentAudit: (recentAuditRes.data ?? []) as unknown as RecentEntry[]
+		recentAudit: (recentAuditRes.data ?? []) as unknown as RecentEntry[],
 	};
 };

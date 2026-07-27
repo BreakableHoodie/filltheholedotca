@@ -6,9 +6,18 @@ type LogContext = Record<string, unknown>;
 // Keys are normalized (lowercased, separators stripped) and blocked if they
 // contain any of these tokens as a substring — catches variants like ipHashPrefix.
 const BLOCKED_KEY_TOKENS = [
-	'lat', 'lng', 'latitude', 'longitude',
-	'email', 'address',
-	'ip', 'iphash', 'password', 'token', 'secret', 'key',
+	'lat',
+	'lng',
+	'latitude',
+	'longitude',
+	'email',
+	'address',
+	'ip',
+	'iphash',
+	'password',
+	'token',
+	'secret',
+	'key',
 ];
 
 function normalizeKey(key: string): string {
@@ -20,7 +29,7 @@ function sanitizeContext(ctx: LogContext): LogContext {
 		Object.entries(ctx).filter(([k]) => {
 			const norm = normalizeKey(k);
 			return !BLOCKED_KEY_TOKENS.some((token) => norm.includes(token));
-		})
+		}),
 	);
 }
 
@@ -37,6 +46,6 @@ export function logError(area: string, message: string, err: unknown, context?: 
 	console.error('[%s] %s:', area, message, err);
 	Sentry.captureException(err, {
 		tags: { area },
-		extra: { message, ...(context ? sanitizeContext(context) : {}) }
+		extra: { message, ...(context ? sanitizeContext(context) : {}) },
 	});
 }

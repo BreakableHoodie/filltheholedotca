@@ -5,7 +5,7 @@
 		name,
 		size = 16,
 		strokeWidth = 2,
-		class: className = ''
+		class: className = '',
 	}: {
 		name: IconName;
 		size?: number;

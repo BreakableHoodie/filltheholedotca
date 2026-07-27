@@ -5,12 +5,17 @@ export const GEOFENCE = {
 	latMin: 43.32,
 	latMax: 43.53,
 	lngMin: -80.59,
-	lngMax: -80.22
+	lngMax: -80.22,
 } as const;
 
 /** Radius within which two reports are merged into a single pothole (metres). */
 export const MERGE_RADIUS_M = 25;
 
+// The column alignment below is deliberate: it makes a colour or label drifting
+// out of step with its siblings visible at a glance during review. The directive
+// must be exactly "prettier-ignore" on its own line — any trailing text and
+// Prettier silently ignores it and reflows the table.
+// prettier-ignore
 export const STATUS_CONFIG: Record<
 	string,
 	{ icon: IconName; label: string; colorClass: string; hex: string }
