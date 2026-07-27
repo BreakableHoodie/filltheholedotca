@@ -21,6 +21,15 @@ export const POST: RequestHandler = async ({ request, locals, getClientAddress }
 	const { action, ids } = parsed.data;
 	const moderation_status = action === 'approve' ? 'approved' : 'rejected';
 
+	// Capture storage paths before the flip. The pothole-photos bucket is public,
+	// so a rejected image keeps serving from its object URL unless removed too.
+	// This is the fourth reject path in the codebase — the other three live in
+	// admin/photos/+page.server.ts (reject, bulkReject) and api/admin/photo/[id].
+	const { data: photos } =
+		moderation_status === 'rejected'
+			? await getAdminClient().from('pothole_photos').select('storage_path').in('id', ids)
+			: { data: null };
+
 	const { error: updateError } = await getAdminClient()
 		.from('pothole_photos')
 		.update({ moderation_status })
@@ -32,6 +41,20 @@ export const POST: RequestHandler = async ({ request, locals, getClientAddress }
 			count: ids.length,
 		});
 		throw error(500, 'Failed to bulk update photos');
+	}
+
+	// Best-effort: the moderation flag is what gates display, so a storage failure
+	// must not fail the whole reject. It is logged so a leftover object is
+	// recoverable rather than silent.
+	const paths = (photos ?? []).map((p) => p.storage_path).filter(Boolean);
+	if (paths.length > 0) {
+		const { error: storageErr } = await getAdminClient()
+			.storage.from('pothole-photos')
+			.remove(paths);
+		if (storageErr)
+			logError('admin/photos-bulk', 'Storage cleanup failed after bulk reject', storageErr, {
+				count: paths.length,
+			});
 	}
 
 	await writeAuditLog(

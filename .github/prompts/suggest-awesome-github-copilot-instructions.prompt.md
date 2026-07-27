@@ -1,23 +1,8 @@
 ---
 agent: 'agent'
 description: 'Suggest relevant GitHub Copilot instruction files from the awesome-copilot repository based on current repository context and chat history, avoiding duplicates with existing instructions in this repository, and identifying outdated instructions that need updates.'
-tools:
-    [
-        'edit',
-        'search',
-        'runCommands',
-        'runTasks',
-        'think',
-        'changes',
-        'testFailure',
-        'openSimpleBrowser',
-        'web/fetch',
-        'githubRepo',
-        'todos',
-        'search',
-    ]
+tools: ['edit', 'search', 'runCommands', 'runTasks', 'think', 'changes', 'testFailure', 'openSimpleBrowser', 'web/fetch', 'githubRepo', 'todos', 'search']
 ---
-
 # Suggest Awesome GitHub Copilot Instructions
 
 Analyze current repository context and suggest relevant copilot-instruction files from the [GitHub awesome-copilot repository](https://github.com/github/awesome-copilot/blob/main/docs/README.instructions.md) that are not already available in this repository.
@@ -29,16 +14,16 @@ Analyze current repository context and suggest relevant copilot-instruction file
 3. **Extract Descriptions**: Read front matter from local instruction files to get descriptions and `applyTo` patterns
 4. **Fetch Remote Versions**: For each local instruction, fetch the corresponding version from awesome-copilot repository using raw GitHub URLs (e.g., `https://raw.githubusercontent.com/github/awesome-copilot/main/instructions/<filename>`)
 5. **Compare Versions**: Compare local instruction content with remote versions to identify:
-    - Instructions that are up-to-date (exact match)
-    - Instructions that are outdated (content differs)
-    - Key differences in outdated instructions (description, applyTo patterns, content)
+   - Instructions that are up-to-date (exact match)
+   - Instructions that are outdated (content differs)
+   - Key differences in outdated instructions (description, applyTo patterns, content)
 6. **Analyze Context**: Review chat history, repository files, and current project needs
 7. **Compare Existing**: Check against instructions already available in this repository
 8. **Match Relevance**: Compare available instructions against identified patterns and requirements
 9. **Present Options**: Display relevant instructions with descriptions, rationale, and availability status including outdated instructions
 10. **Validate**: Ensure suggested instructions would add value not already covered by existing instructions
 11. **Output**: Provide structured table with suggestions, descriptions, and links to both awesome-copilot instructions and similar local instructions
-    **AWAIT** user request to proceed with installation or updates of specific instructions. DO NOT INSTALL OR UPDATE UNLESS DIRECTED TO DO SO.
+   **AWAIT** user request to proceed with installation or updates of specific instructions. DO NOT INSTALL OR UPDATE UNLESS DIRECTED TO DO SO.
 12. **Download/Update Assets**: For requested instructions, automatically:
     - Download new instructions to `.github/instructions/` folder
     - Update outdated instructions by replacing with latest version from awesome-copilot
@@ -49,14 +34,12 @@ Analyze current repository context and suggest relevant copilot-instruction file
 ## Context Analysis Criteria
 
 🔍 **Repository Patterns**:
-
 - Programming languages used (.cs, .js, .py, .ts, etc.)
 - Framework indicators (ASP.NET, React, Azure, Next.js, etc.)
 - Project types (web apps, APIs, libraries, tools)
 - Development workflow requirements (testing, CI/CD, deployment)
 
 🗨️ **Chat History Context**:
-
 - Recent discussions and pain points
 - Technology-specific questions
 - Coding standards discussions
@@ -66,11 +49,11 @@ Analyze current repository context and suggest relevant copilot-instruction file
 
 Display analysis results in structured table comparing awesome-copilot instructions with existing repository instructions:
 
-| Awesome-Copilot Instruction                                                                                         | Description                     | Already Installed | Similar Local Instruction | Suggestion Rationale                                                                        |
-| ------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ----------------- | ------------------------- | ------------------------------------------------------------------------------------------- |
-| [blazor.instructions.md](https://github.com/github/awesome-copilot/blob/main/instructions/blazor.instructions.md)   | Blazor development guidelines   | ✅ Yes            | blazor.instructions.md    | Already covered by existing Blazor instructions                                             |
-| [reactjs.instructions.md](https://github.com/github/awesome-copilot/blob/main/instructions/reactjs.instructions.md) | ReactJS development standards   | ❌ No             | None                      | Would enhance React development with established patterns                                   |
-| [java.instructions.md](https://github.com/github/awesome-copilot/blob/main/instructions/java.instructions.md)       | Java development best practices | ⚠️ Outdated       | java.instructions.md      | applyTo pattern differs: remote uses `'**/*.java'` vs local `'*.java'` - Update recommended |
+| Awesome-Copilot Instruction | Description | Already Installed | Similar Local Instruction | Suggestion Rationale |
+|------------------------------|-------------|-------------------|---------------------------|---------------------|
+| [blazor.instructions.md](https://github.com/github/awesome-copilot/blob/main/instructions/blazor.instructions.md) | Blazor development guidelines | ✅ Yes | blazor.instructions.md | Already covered by existing Blazor instructions |
+| [reactjs.instructions.md](https://github.com/github/awesome-copilot/blob/main/instructions/reactjs.instructions.md) | ReactJS development standards | ❌ No | None | Would enhance React development with established patterns |
+| [java.instructions.md](https://github.com/github/awesome-copilot/blob/main/instructions/java.instructions.md) | Java development best practices | ⚠️ Outdated | java.instructions.md | applyTo pattern differs: remote uses `'**/*.java'` vs local `'*.java'` - Update recommended |
 
 ## Local Instructions Discovery Process
 
@@ -82,19 +65,18 @@ Display analysis results in structured table comparing awesome-copilot instructi
 ## Version Comparison Process
 
 1. For each local instruction file, construct the raw GitHub URL to fetch the remote version:
-    - Pattern: `https://raw.githubusercontent.com/github/awesome-copilot/main/instructions/<filename>`
+   - Pattern: `https://raw.githubusercontent.com/github/awesome-copilot/main/instructions/<filename>`
 2. Fetch the remote version using the `#fetch` tool
 3. Compare entire file content (including front matter and body)
 4. Identify specific differences:
-    - **Front matter changes** (description, applyTo patterns)
-    - **Content updates** (guidelines, examples, best practices)
+   - **Front matter changes** (description, applyTo patterns)
+   - **Content updates** (guidelines, examples, best practices)
 5. Document key differences for outdated instructions
 6. Calculate similarity to determine if update is needed
 
 ## File Structure Requirements
 
 Based on GitHub documentation, copilot-instructions files should be:
-
 - **Repository-wide instructions**: `.github/copilot-instructions.md` (applies to entire repository)
 - **Path-specific instructions**: `.github/instructions/NAME.instructions.md` (applies to specific file patterns via `applyTo` frontmatter)
 - **Community instructions**: `instructions/NAME.instructions.md` (for sharing and distribution)
@@ -102,7 +84,6 @@ Based on GitHub documentation, copilot-instructions files should be:
 ## Front Matter Structure
 
 Instructions files in awesome-copilot use this front matter format:
-
 ```markdown
 ---
 description: 'Brief description of what this instruction provides'
@@ -134,7 +115,6 @@ applyTo: '**/*.js,**/*.ts' # Optional: glob patterns for file matching
 ## Update Handling
 
 When outdated instructions are identified:
-
 1. Include them in the output table with ⚠️ status
 2. Document specific differences in the "Suggestion Rationale" column
 3. Provide recommendation to update with key changes noted

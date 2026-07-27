@@ -118,15 +118,11 @@ test.describe('Feed API', () => {
 		expect(Array.isArray(body.potholes)).toBe(true);
 	});
 
-	test('GET /api/wards.geojson returns valid GeoJSON', async ({ request }) => {
-		// /api/wards.geojson proxies real, reachable ArcGIS services and has no
-		// Supabase dependency at all — DISABLE_API_RATE_LIMIT is set for every
-		// Playwright run (see playwright.config.ts), so a 429 here would
-		// indicate a real regression, not test-environment noise.
-		const response = await request.get('/api/wards.geojson');
-		expect(response.status()).toBe(200);
-		const body = await response.json();
-		expect(body.type).toBe('FeatureCollection');
-		expect(Array.isArray(body.features)).toBe(true);
-	});
+	// /api/wards.geojson intentionally has no test here. It proxies three live
+	// ArcGIS services and returns 502 when all are down with no cache, so a
+	// direct request would red-fail CI on an upstream outage rather than an
+	// application regression. open-data.spec.ts covers the same endpoint with a
+	// page.route() mock and stronger structural assertions — adding bounded
+	// retries here would only reintroduce the failure-masking this suite just
+	// removed.
 });

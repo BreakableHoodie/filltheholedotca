@@ -2135,32 +2135,32 @@ git config --global credential.helper github
 
 1. **Authentication**: Use environment variables for automation
 
-    ```bash
-    export GH_TOKEN=$(gh auth token)
-    ```
+   ```bash
+   export GH_TOKEN=$(gh auth token)
+   ```
 
 2. **Default Repository**: Set default to avoid repetition
 
-    ```bash
-    gh repo set-default owner/repo
-    ```
+   ```bash
+   gh repo set-default owner/repo
+   ```
 
 3. **JSON Parsing**: Use jq for complex data extraction
 
-    ```bash
-    gh pr list --json number,title --jq '.[] | select(.title | contains("fix"))'
-    ```
+   ```bash
+   gh pr list --json number,title --jq '.[] | select(.title | contains("fix"))'
+   ```
 
 4. **Pagination**: Use --paginate for large result sets
 
-    ```bash
-    gh issue list --state all --paginate
-    ```
+   ```bash
+   gh issue list --state all --paginate
+   ```
 
 5. **Caching**: Use cache control for frequently accessed data
-    ```bash
-    gh api /user --cache force
-    ```
+   ```bash
+   gh api /user --cache force
+   ```
 
 ## Getting Help
 

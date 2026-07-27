@@ -8,7 +8,6 @@ applyTo: '**/*.svelte, **/*.ts, **/*.js, **/*.css, **/*.scss, **/*.json'
 Instructions for building high-quality Svelte 5 and SvelteKit applications with modern runes-based reactivity, TypeScript, and performance optimization.
 
 ## Project Context
-
 - Svelte 5.x with runes system ($state, $derived, $effect, $props, $bindable)
 - SvelteKit for full-stack applications with file-based routing
 - TypeScript for type safety and better developer experience
@@ -19,7 +18,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 ## Core Concepts
 
 ### Architecture
-
 - Use Svelte 5 runes system for all reactivity instead of legacy stores
 - Organize components by feature or domain for scalability
 - Separate presentation components from logic-heavy components
@@ -28,7 +26,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 - Use SvelteKit's file-based routing with proper load functions
 
 ### Component Design
-
 - Follow single responsibility principle for components
 - Use `<script lang="ts">` with runes syntax as default
 - Keep components small and focused on one concern
@@ -41,7 +38,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 ## Reactivity and State
 
 ### Svelte 5 Runes System
-
 - Use `$state()` for reactive local state management
 - Implement `$derived()` for computed values and expensive calculations
 - Use `$derived.by()` for complex computations beyond simple expressions
@@ -54,7 +50,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 - Override derived values directly for optimistic UI patterns (Svelte 5.25+)
 
 ### State Management
-
 - Use `$state()` for local component state
 - Implement type-safe context with `createContext()` helper over raw `setContext`/`getContext`
 - Use context API for sharing reactive state down component trees
@@ -65,7 +60,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 - Implement proper state persistence for client-side data
 
 ### Effect Best Practices
-
 - **Avoid** using `$effect()` to synchronize state - use `$derived()` instead
 - **Do** use `$effect()` for side effects: analytics, logging, DOM manipulation
 - **Do** return cleanup functions from effects for proper teardown
@@ -77,13 +71,11 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 ## SvelteKit Patterns
 
 ### Routing and Layouts
-
 - Use `+page.svelte` for page components with proper SEO
 - Implement `+layout.svelte` for shared layouts and navigation
 - Handle routing with SvelteKit's file-based system
 
 ### Data Loading and Mutations
-
 - Use `+page.server.ts` for server-side data loading and API calls
 - Implement form actions in `+page.server.ts` for data mutations
 - Use `+server.ts` for API endpoints and server-side logic
@@ -95,7 +87,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 - Handle offline scenarios and network errors gracefully
 
 ### Forms and Validation
-
 - Use SvelteKit's form actions for server-side form handling
 - Implement progressive enhancement with `use:enhance`
 - Use `bind:value` for controlled form inputs
@@ -106,7 +97,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 ## UI and Styling
 
 ### Styling
-
 - Use component-scoped styles with `<style>` blocks
 - Implement CSS custom properties for theming and design systems
 - Use `class:` directive for conditional styling
@@ -115,7 +105,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 - Use `:global()` sparingly for truly global styles
 
 ### Transitions and Animations
-
 - Use `transition:` directive for enter/exit animations (fade, slide, scale, fly)
 - Use `in:` and `out:` for separate enter/exit transitions
 - Implement `animate:` directive with `flip` for smooth list reordering
@@ -126,7 +115,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 ## TypeScript and Tooling
 
 ### TypeScript Integration
-
 - Enable strict mode in `tsconfig.json` for maximum type safety
 - Annotate props with TypeScript: `let { name }: { name: string } = $props()`
 - Type event handlers, refs, and SvelteKit's generated types
@@ -136,7 +124,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 - Use type inference where possible to reduce boilerplate
 
 ### Development Tools
-
 - Use ESLint with eslint-plugin-svelte and Prettier for code consistency
 - Use Svelte DevTools for debugging and performance analysis
 - Keep dependencies up to date and audit for security vulnerabilities
@@ -146,7 +133,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 ## Production Readiness
 
 ### Performance Optimization
-
 - Use keyed `{#each}` blocks for efficient list rendering
 - Implement lazy loading with dynamic imports and `<svelte:component>`
 - Use `$derived()` for expensive computations to avoid unnecessary recalculations
@@ -158,7 +144,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 - Use `$effect.tracking()` in abstractions to conditionally create reactive listeners
 
 ### Error Handling
-
 - Implement `+error.svelte` pages for route-level error boundaries
 - Use try/catch blocks in load functions and form actions
 - Provide meaningful error messages and fallback UI
@@ -168,7 +153,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 - Track pending promises with `$effect.pending()` for loading states
 
 ### Testing
-
 - Write unit tests for components using Vitest and Testing Library
 - Test component behavior, not implementation details
 - Use Playwright for end-to-end testing of user workflows
@@ -177,7 +161,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 - Implement accessibility testing with axe-core
 
 ### Security
-
 - Sanitize user inputs to prevent XSS attacks
 - Use `@html` directive carefully and validate HTML content
 - Implement proper CSRF protection with SvelteKit
@@ -186,7 +169,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 - Store sensitive data securely with proper session management
 
 ### Accessibility
-
 - Use semantic HTML elements and proper heading hierarchy
 - Implement keyboard navigation for all interactive elements
 - Provide proper ARIA labels and descriptions
@@ -195,13 +177,11 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 - Implement focus management for dynamic content
 
 ### Deployment
-
 - Use environment variables for configuration across different deployment stages
 - Implement proper SEO with SvelteKit's meta tags and structured data
 - Deploy with appropriate SvelteKit adapter based on hosting platform
 
 ## Implementation Process
-
 1. Initialize SvelteKit project with TypeScript and desired adapters
 2. Set up project structure with proper folder organization
 3. Define TypeScript interfaces and component props
@@ -216,7 +196,6 @@ Instructions for building high-quality Svelte 5 and SvelteKit applications with 
 12. Deploy with appropriate SvelteKit adapter
 
 ## Common Patterns
-
 - Renderless components with slots for flexible UI composition
 - Custom actions (`use:` directives) for cross-cutting concerns and DOM manipulation
 - `{#snippet}` blocks for reusable template logic within components

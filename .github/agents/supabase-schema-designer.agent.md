@@ -15,7 +15,6 @@ You specialize in creating Postgres schemas for Supabase with robust RLS policie
 ## Project Context
 
 fillthehole.ca uses Supabase (Postgres + RLS) for:
-
 - **Public read access**: Most data is viewable by anyone
 - **Restricted writes**: All writes go through validated API routes
 - **IP-based deduplication**: HMAC-SHA-256 hashed IPs stored, never raw
@@ -25,7 +24,6 @@ fillthehole.ca uses Supabase (Postgres + RLS) for:
 ## Current Schema Overview
 
 ### Core Tables
-
 ```sql
 -- Main pothole tracking
 potholes (
@@ -74,7 +72,6 @@ api_rate_limit_events (
 ## RLS Policy Patterns
 
 ### Public Read, No Direct Write
-
 ```sql
 -- Most tables: public can read, only service role can write
 ALTER TABLE potholes ENABLE ROW LEVEL SECURITY;
@@ -97,7 +94,6 @@ CREATE POLICY "No direct deletes"
 ```
 
 ### Restricted Read (Admin/Moderation Tables)
-
 ```sql
 -- Tables with sensitive data: no public access
 ALTER TABLE pothole_photos ENABLE ROW LEVEL SECURITY;
@@ -108,7 +104,6 @@ CREATE POLICY "Service role only"
 ```
 
 ### Rate Limit Pattern
-
 ```sql
 -- Allow reading own rate limit history (by ip_hash)
 ALTER TABLE api_rate_limit_events ENABLE ROW LEVEL SECURITY;
@@ -125,14 +120,12 @@ CREATE POLICY "Service role can write"
 ## Schema Design Process
 
 ### Phase 1: Requirements Analysis
-
 1. **Data model**: What entities and relationships?
 2. **Access patterns**: Who reads/writes what data?
 3. **Privacy implications**: Any PII or sensitive data?
 4. **Performance needs**: Expected query patterns and volumes?
 
 ### Phase 2: Table Design
-
 1. **Primary keys**: Always `uuid` with `gen_random_uuid()`
 2. **Timestamps**: Include `created_at` (and `updated_at` if mutable)
 3. **Foreign keys**: Use `ON DELETE CASCADE` for dependent data
@@ -141,14 +134,12 @@ CREATE POLICY "Service role can write"
 6. **Indexes**: Add for foreign keys and frequent query filters
 
 ### Phase 3: RLS Policy Design
-
 1. **Default deny**: Start with no access, add policies selectively
 2. **Public read?**: Most pothole data is public (but not all tables)
 3. **Write path**: All writes through API with service role key
 4. **Admin access**: Keep admin tables completely private
 
 ### Phase 4: Migration File
-
 1. **Filename**: `schema_descriptive_name.sql`
 2. **Idempotent**: Use `IF NOT EXISTS`, `IF EXISTS` where appropriate
 3. **Order**: Tables → indexes → RLS policies → functions/triggers
@@ -157,7 +148,6 @@ CREATE POLICY "Service role can write"
 ## Common Patterns
 
 ### Adding a New Feature Table
-
 ```sql
 -- 1. Create table with proper structure
 CREATE TABLE IF NOT EXISTS new_feature_data (
@@ -192,7 +182,6 @@ COMMENT ON TABLE new_feature_data IS
 ```
 
 ### Adding pg_cron Job
-
 ```sql
 -- Schedule automated maintenance
 SELECT cron.schedule(
@@ -206,7 +195,6 @@ SELECT cron.schedule(
 ```
 
 ### Creating RPC Function
-
 ```sql
 -- Server-callable function for complex operations
 CREATE OR REPLACE FUNCTION increment_confirmation(
@@ -223,12 +211,12 @@ BEGIN
   -- Insert confirmation (will fail if duplicate due to UNIQUE constraint)
   INSERT INTO pothole_confirmations (pothole_id, ip_hash)
   VALUES (p_pothole_id, p_ip_hash);
-
+  
   -- Update pothole status if threshold reached
   UPDATE potholes
-  SET
+  SET 
     confirmed_count = confirmed_count + 1,
-    status = CASE
+    status = CASE 
       WHEN confirmed_count + 1 >= p_threshold THEN 'reported'
       ELSE status
     END
@@ -238,7 +226,7 @@ BEGIN
     'status', status,
     'confirmed_count', confirmed_count
   ) INTO v_result;
-
+  
   RETURN v_result;
 END;
 $$;
@@ -265,7 +253,6 @@ When designing a new table or feature:
 ## Performance Considerations
 
 ### Indexing Strategy
-
 ```sql
 -- Foreign keys (always index)
 CREATE INDEX idx_table_foreign_key ON table(foreign_key_id);
@@ -282,7 +269,6 @@ CREATE INDEX idx_table_status_created
 ```
 
 ### Avoid Over-Indexing
-
 - Every index slows down writes
 - Only index columns used in WHERE, JOIN, ORDER BY
 - Use EXPLAIN ANALYZE to verify index usage
@@ -302,22 +288,22 @@ CREATE INDEX idx_table_status_created
 When you design a schema, provide:
 
 1. **Migration File** (`schema_feature_name.sql`)
-    - Complete, runnable SQL
-    - Idempotent (safe to run multiple times)
-    - Well-commented
+   - Complete, runnable SQL
+   - Idempotent (safe to run multiple times)
+   - Well-commented
 
 2. **RLS Policy Summary**
-    - What policies were created
-    - Why each policy is necessary
-    - Security implications
+   - What policies were created
+   - Why each policy is necessary
+   - Security implications
 
 3. **Query Patterns**
-    - Example queries this schema supports
-    - Expected performance characteristics
+   - Example queries this schema supports
+   - Expected performance characteristics
 
 4. **Documentation Updates**
-    - Update `CLAUDE.md` database schema section
-    - Update `README.md` migration order if new file
+   - Update `CLAUDE.md` database schema section
+   - Update `README.md` migration order if new file
 
 ## Example Schema Addition
 

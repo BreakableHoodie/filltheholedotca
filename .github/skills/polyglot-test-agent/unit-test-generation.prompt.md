@@ -28,14 +28,14 @@ Generate concise, parameterized, and effective unit tests using discovered conve
 
 ### Key Testing Goals
 
-| Goal                          | Description                                                                                          |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **Minimal but Comprehensive** | Avoid redundant tests                                                                                |
-| **Logical Coverage**          | Focus on meaningful edge cases, domain-specific inputs, boundary values, and bug-revealing scenarios |
-| **Core Logic Focus**          | Test positive cases and actual execution logic; avoid low-value tests for language features          |
-| **Balanced Coverage**         | Don't let negative/edge cases outnumber tests of actual logic                                        |
-| **Best Practices**            | Use Arrange-Act-Assert pattern and proper naming (`Method_Condition_ExpectedResult`)                 |
-| **Buildable & Complete**      | Tests must compile, run, and contain no hallucinated or missed logic                                 |
+| Goal | Description |
+|------|-------------|
+| **Minimal but Comprehensive** | Avoid redundant tests |
+| **Logical Coverage** | Focus on meaningful edge cases, domain-specific inputs, boundary values, and bug-revealing scenarios |
+| **Core Logic Focus** | Test positive cases and actual execution logic; avoid low-value tests for language features |
+| **Balanced Coverage** | Don't let negative/edge cases outnumber tests of actual logic |
+| **Best Practices** | Use Arrange-Act-Assert pattern and proper naming (`Method_Condition_ExpectedResult`) |
+| **Buildable & Complete** | Tests must compile, run, and contain no hallucinated or missed logic |
 
 ## Parameterization
 
@@ -59,12 +59,12 @@ Apply this analysis to the **entire** code scope, not just a portion.
 
 ## Coverage Types
 
-| Type                  | Examples                                                            |
-| --------------------- | ------------------------------------------------------------------- |
-| **Happy Path**        | Valid inputs produce expected outputs                               |
-| **Edge Cases**        | Empty values, boundaries, special characters, zero/negative numbers |
-| **Error Cases**       | Invalid inputs, null handling, exceptions, timeouts                 |
-| **State Transitions** | Before/after operations, initialization, cleanup                    |
+| Type | Examples |
+|------|----------|
+| **Happy Path** | Valid inputs produce expected outputs |
+| **Edge Cases** | Empty values, boundaries, special characters, zero/negative numbers |
+| **Error Cases** | Invalid inputs, null handling, exceptions, timeouts |
+| **State Transitions** | Before/after operations, initialization, cleanup |
 
 ## Language-Specific Examples
 
@@ -102,23 +102,23 @@ public sealed class CalculatorTests
 
 ```typescript
 describe('Calculator', () => {
-	let sut: Calculator;
+    let sut: Calculator;
 
-	beforeEach(() => {
-		sut = new Calculator();
-	});
+    beforeEach(() => {
+        sut = new Calculator();
+    });
 
-	it.each([
-		[2, 3, 5],
-		[-1, 1, 0],
-		[0, 0, 0],
-	])('add(%i, %i) returns %i', (a, b, expected) => {
-		expect(sut.add(a, b)).toBe(expected);
-	});
+    it.each([
+        [2, 3, 5],
+        [-1, 1, 0],
+        [0, 0, 0],
+    ])('add(%i, %i) returns %i', (a, b, expected) => {
+        expect(sut.add(a, b)).toBe(expected);
+    });
 
-	it('divide by zero throws error', () => {
-		expect(() => sut.divide(10, 0)).toThrow('Division by zero');
-	});
+    it('divide by zero throws error', () => {
+        expect(() => sut.divide(10, 0)).toThrow('Division by zero');
+    });
 });
 ```
 

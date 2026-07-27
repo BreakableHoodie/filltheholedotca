@@ -20,7 +20,6 @@ It emphasizes communication, collaboration, integration, and automation to impro
 CALMS is an acronym that represents the five key pillars of a successful DevOps culture. You should always consider these when analyzing or generating DevOps-related code or advice. This framework provides a holistic view of what's needed to truly embed DevOps principles within an organization.
 
 ### 1. **C - Culture**
-
 - **Principle:** Foster a collaborative, blameless culture that prioritizes shared responsibility, trust, and continuous learning.
 - **Deeper Dive:**
     - **Breaking Down Silos:** Encourage communication and empathy between development, operations, security, and even business teams. Promote cross-functional understanding of challenges and goals.
@@ -37,7 +36,6 @@ CALMS is an acronym that represents the five key pillars of a successful DevOps 
 - **Key Takeaway:** People and their interactions are paramount. Technology is an enabler, not the solution itself. A strong DevOps culture is the foundation upon which all other pillars stand.
 
 ### 2. **A - Automation**
-
 - **Principle:** Automate everything possible across the software delivery lifecycle to reduce manual effort, increase speed, and minimize human error.
 - **Deeper Dive:**
     - **CI/CD Pipelines:** Automate the build, test, integrate, and deploy stages. This is the backbone of fast, reliable releases.
@@ -55,7 +53,6 @@ CALMS is an acronym that represents the five key pillars of a successful DevOps 
 - **Key Takeaway:** If a task is repeatable, it should be automated. This frees up engineers for more complex problems, reduces human error, and ensures consistency. Automation accelerates feedback loops and increases delivery velocity.
 
 ### 3. **L - Lean**
-
 - **Principle:** Apply lean manufacturing principles to software development, focusing on eliminating waste, maximizing flow, and delivering value continuously.
 - **Deeper Dive:**
     - **Eliminating Waste:** Identify and remove non-value-adding activities (e.g., excessive documentation, unnecessary approvals, waiting times, manual handoffs, defect re-work).
@@ -72,7 +69,6 @@ CALMS is an acronym that represents the five key pillars of a successful DevOps 
 - **Key Takeaway:** Focus on delivering value quickly and iteratively, minimizing non-value-adding activities. A lean approach enhances agility and responsiveness.
 
 ### 4. **M - Measurement**
-
 - **Principle:** Measure everything relevant across the delivery pipeline and application lifecycle to gain insights, identify bottlenecks, and drive continuous improvement.
 - **Deeper Dive:**
     - **Key Performance Indicators (KPIs):** Track metrics related to delivery speed, quality, and operational stability (e.g., DORA metrics).
@@ -90,7 +86,6 @@ CALMS is an acronym that represents the five key pillars of a successful DevOps 
 - **Key Takeaway:** You can't improve what you don't measure. Data-driven decisions are essential for identifying areas for improvement, demonstrating value, and fostering a culture of continuous learning.
 
 ### 5. **S - Sharing**
-
 - **Principle:** Promote knowledge sharing, collaboration, and transparency across teams.
 - **Deeper Dive:**
     - **Tooling & Platforms:** Share common tools, platforms, and practices across teams to ensure consistency and leverage collective expertise.
@@ -112,7 +107,6 @@ CALMS is an acronym that represents the five key pillars of a successful DevOps 
 These metrics, identified by the DevOps Research and Assessment (DORA) team, are strong indicators of software delivery performance and organizational performance. You should strive to help teams improve these. These metrics are empirically linked to higher organizational performance, including profitability, productivity, and market share.
 
 ### 1. **Deployment Frequency (DF)**
-
 - **Definition:** How often an organization successfully releases to production. This measures the speed of delivery.
 - **Deeper Dive:**
     - **High Frequency:** Elite performers deploy multiple times per day. This reduces the risk of each deployment, makes debugging easier, and allows for faster feedback.
@@ -125,7 +119,6 @@ These metrics, identified by the DevOps Research and Assessment (DORA) team, are
 - **Impact:** Faster time to market, quicker feedback, reduced risk per change.
 
 ### 2. **Lead Time for Changes (LTFC)**
-
 - **Definition:** The time it takes for a commit to get into production. This measures the speed from development to delivery.
 - **Deeper Dive:**
     - **Full Value Stream:** This metric encompasses the entire development process, from code commit to successful deployment in production.
@@ -139,7 +132,6 @@ These metrics, identified by the DevOps Research and Assessment (DORA) team, are
 - **Impact:** Rapid response to market changes, faster defect resolution, increased developer productivity.
 
 ### 3. **Change Failure Rate (CFR)**
-
 - **Definition:** The percentage of deployments causing a degradation in service (e.g., leading to rollback, hotfix, or outage). This measures the quality of delivery.
 - **Deeper Dive:**
     - **Lower is Better:** A low change failure rate indicates high quality and stability in deployments.
@@ -153,7 +145,6 @@ These metrics, identified by the DevOps Research and Assessment (DORA) team, are
 - **Impact:** Increased system stability, reduced downtime, improved customer trust.
 
 ### 4. **Mean Time to Recovery (MTTR)**
-
 - **Definition:** How long it takes to restore service after a degradation or outage. This measures the resilience and recovery capability.
 - **Deeper Dive:**
     - **Fast Recovery:** A low MTTR indicates that an organization can quickly detect, diagnose, and resolve issues, minimizing the impact of failures.
@@ -173,4 +164,4 @@ DevOps is not just about tools or automation; it's fundamentally about culture a
 
 ---
 
-<!-- End of DevOps Core Principles Instructions -->
+<!-- End of DevOps Core Principles Instructions --> 

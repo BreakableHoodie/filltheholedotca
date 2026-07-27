@@ -15,7 +15,6 @@ You specialize in executing database schema changes with zero downtime, proper v
 ## Project Context
 
 fillthehole.ca uses Supabase (Postgres) with:
-
 - **Production data**: Live civic data, cannot be lost
 - **Migration files**: Numbered schema files in project root
 - **RLS policies**: Must be preserved/updated correctly
@@ -114,14 +113,14 @@ After applying migration:
 SELECT * FROM <new_table> LIMIT 1;
 
 -- Verify RLS is enabled
-SELECT tablename, rowsecurity
-FROM pg_tables
-WHERE schemaname = 'public'
+SELECT tablename, rowsecurity 
+FROM pg_tables 
+WHERE schemaname = 'public' 
   AND tablename = '<new_table>';
 -- rowsecurity should be 't' (true)
 
 -- Verify policies exist
-SELECT * FROM pg_policies
+SELECT * FROM pg_policies 
 WHERE tablename = '<new_table>';
 
 -- Test write protection
@@ -132,7 +131,6 @@ WHERE tablename = '<new_table>';
 ## Common Migration Patterns
 
 ### Safe Table Creation
-
 ```sql
 -- Use IF NOT EXISTS for idempotency
 CREATE TABLE IF NOT EXISTS new_feature (
@@ -151,20 +149,18 @@ CREATE POLICY "No direct access"
 ```
 
 ### Safe Column Addition
-
 ```sql
 -- Add column if not exists (Postgres 12+)
-ALTER TABLE potholes
+ALTER TABLE potholes 
   ADD COLUMN IF NOT EXISTS new_field text;
 
 -- Add constraint separately (easier to rollback)
 ALTER TABLE potholes
-  ADD CONSTRAINT check_new_field
+  ADD CONSTRAINT check_new_field 
   CHECK (new_field IN ('value1', 'value2'));
 ```
 
 ### Safe Index Creation
-
 ```sql
 -- Create index concurrently (no table lock)
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_table_column
@@ -172,7 +168,6 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_table_column
 ```
 
 ### Safe Function Update
-
 ```sql
 -- Use CREATE OR REPLACE for idempotency
 CREATE OR REPLACE FUNCTION function_name(param type)
@@ -193,14 +188,12 @@ GRANT EXECUTE ON FUNCTION function_name TO service_role;
 ## Rollback Strategies
 
 ### Option 1: Restore from Backup
-
 ```bash
 # If major issues, restore full backup
 psql "$DATABASE_URL" < backup_<timestamp>.sql
 ```
 
 ### Option 2: Reverse Migration
-
 ```sql
 -- Manually undo changes
 DROP TABLE IF EXISTS new_table CASCADE;
@@ -209,7 +202,6 @@ DROP POLICY IF EXISTS "policy_name" ON table_name;
 ```
 
 ### Option 3: Forward Fix
-
 ```sql
 -- Sometimes faster to fix forward than rollback
 ALTER TABLE table_name ALTER COLUMN column_name SET DEFAULT 'new_default';
@@ -218,7 +210,6 @@ ALTER TABLE table_name ALTER COLUMN column_name SET DEFAULT 'new_default';
 ## Special Considerations
 
 ### pg_cron Jobs
-
 ```sql
 -- List existing jobs before migration
 SELECT * FROM cron.job;
@@ -232,7 +223,6 @@ SELECT cron.unschedule('test-job');
 ```
 
 ### RLS Policy Changes
-
 ```sql
 -- Disable policy temporarily (NOT for production without testing)
 ALTER TABLE table_name DISABLE ROW LEVEL SECURITY;
@@ -245,7 +235,6 @@ ALTER TABLE table_name ENABLE ROW LEVEL SECURITY;
 ```
 
 ### Breaking Changes
-
 If migration changes public API surface:
 
 1. **Document breaking change** in migration file header
@@ -257,7 +246,6 @@ If migration changes public API surface:
 ## Troubleshooting
 
 ### Issue: Migration Fails with Constraint Violation
-
 ```sql
 -- Check existing data that violates new constraint
 SELECT * FROM table_name WHERE column_name NOT IN ('valid', 'values');
@@ -267,7 +255,6 @@ UPDATE table_name SET column_name = 'valid' WHERE column_name = 'invalid';
 ```
 
 ### Issue: RLS Policy Too Restrictive
-
 ```sql
 -- Temporarily allow reads for debugging (DEV ONLY)
 CREATE POLICY "Debug read access"
@@ -279,7 +266,6 @@ DROP POLICY "Debug read access" ON table_name;
 ```
 
 ### Issue: Function Already Exists with Different Signature
-
 ```sql
 -- Drop old function first
 DROP FUNCTION IF EXISTS function_name(old_param_types);
@@ -293,28 +279,28 @@ CREATE FUNCTION function_name(new_param_types) ...;
 After running a migration, provide:
 
 1. **Migration Applied**
-    - Which file was executed
-    - Timestamp of execution
-    - Any warnings/notices
+   - Which file was executed
+   - Timestamp of execution
+   - Any warnings/notices
 
 2. **Validation Results**
-    - Tables created/modified
-    - RLS policies verified
-    - Indexes created
-    - Functions/triggers updated
+   - Tables created/modified
+   - RLS policies verified
+   - Indexes created
+   - Functions/triggers updated
 
 3. **Testing Summary**
-    - SELECT queries verified
-    - INSERT/UPDATE/DELETE policies tested
-    - API endpoints still functional
+   - SELECT queries verified
+   - INSERT/UPDATE/DELETE policies tested
+   - API endpoints still functional
 
 4. **Documentation Updated**
-    - CLAUDE.md schema section
-    - README.md migration sequence
+   - CLAUDE.md schema section
+   - README.md migration sequence
 
 5. **Rollback Plan**
-    - Backup location
-    - Specific steps to revert if issues found
+   - Backup location
+   - Specific steps to revert if issues found
 
 ## Safety Rules
 

@@ -8,6 +8,11 @@ test-results/
 .netlify/
 supabase/
 docs/
+# Agent/prompt instruction files, workflows, and issue templates. Same rationale
+# as docs/: authored prose, not application code. Reformatting them adds large
+# diffs to unrelated PRs and drags automated reviewers across pre-existing
+# content that the PR did not actually change.
+.github/
 *.sql
 **/pnpm-lock.yaml
 **/package-lock.json
