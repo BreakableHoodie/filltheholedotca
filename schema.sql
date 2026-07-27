@@ -192,16 +192,30 @@ create policy "Public read approved photos"
     and (select photos_published from potholes where id = pothole_id)
   );
 
--- Storage bucket: create a public bucket called 'pothole-photos'
--- In Supabase dashboard: Storage → New Bucket → Name: pothole-photos → Public: ON
--- Then add these storage policies:
+-- Storage bucket: create a PRIVATE bucket called 'pothole-photos'
+-- In Supabase dashboard: Storage → New Bucket → Name: pothole-photos → Public: OFF
+--
+-- Private is deliberate (#245). A public object URL is permanent and, once
+-- shared or scraped, keeps serving after a photo is unpublished or rejected —
+-- it outlives the moderation decision entirely. Every read path now mints a
+-- short-lived signed URL via the service-role client instead:
+--   - src/routes/hole/[id]/+page.server.ts            (public detail page, 1h)
+--   - src/routes/admin/photos/+page.server.ts         (moderation queue, 1h)
+--   - src/routes/admin/potholes/[id]/+page.server.ts  (admin detail, 1h)
+-- The detail-page TTL must stay comfortably above that page's own Cache-Control
+-- window (max-age=300 + stale-while-revalidate=600) or cached HTML will
+-- reference already-expired URLs.
+--
+-- No SELECT policy is needed for anon: signed URLs are minted server-side with
+-- the service-role key, which bypasses RLS. Granting anon SELECT here would
+-- re-open the direct-object-access hole this change closes.
 --
 -- Policy: Allow public uploads
 --   Operation: INSERT
 --   Target roles: anon, authenticated
 --   Policy: true
 --
--- Policy: Allow public reads
---   Operation: SELECT
---   Target roles: anon, authenticated
---   Policy: true
+-- MIGRATION NOTE — order matters. Signed URLs work against a public bucket, so
+-- deploy the application code FIRST, verify photos still render, and only then
+-- flip the bucket to Public: OFF. Flipping first breaks every image on the live
+-- site until the deploy lands.
