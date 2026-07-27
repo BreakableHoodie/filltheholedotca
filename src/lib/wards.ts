@@ -270,7 +270,52 @@ function pointInRing(lng: number, lat: number, ring: number[][]): boolean {
 	return inside;
 }
 
+// Bounding boxes derive purely from a geometry's ring coordinates, which never
+// change for a given object, so they are cached by object identity. Ward
+// geometry is fetched once and reused from the module-level cache, making this
+// a one-time cost per city rather than per lookup.
+const bboxCache = new WeakMap<object, [number, number, number, number]>();
+
+function geometryBbox(geometry: GeoJSONFeature['geometry']): [number, number, number, number] {
+	const cached = bboxCache.get(geometry as object);
+	if (cached) return cached;
+
+	const rings: number[][][] =
+		geometry.type === 'Polygon'
+			? [(geometry.coordinates as number[][][])[0]]
+			: geometry.type === 'MultiPolygon'
+				? (geometry.coordinates as number[][][][]).map((poly) => poly[0])
+				: [];
+
+	let minX = Infinity;
+	let minY = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+	for (const ring of rings) {
+		for (const [x, y] of ring) {
+			if (x < minX) minX = x;
+			if (x > maxX) maxX = x;
+			if (y < minY) minY = y;
+			if (y > maxY) maxY = y;
+		}
+	}
+
+	const box: [number, number, number, number] = [minX, minY, maxX, maxY];
+	bboxCache.set(geometry as object, box);
+	return box;
+}
+
 function pointInPolygon(lng: number, lat: number, geometry: GeoJSONFeature['geometry']): boolean {
+	// O(1) rejection before the O(vertices) ray cast. A point outside the
+	// bounding box cannot be inside the polygon, so this only skips work — it
+	// cannot change a result. Ward lookup tests each point against every feature
+	// of all three cities (25 features, ~10k ring vertices in total) while at
+	// most one can match, so rejection is overwhelmingly the common case.
+	// An unknown geometry type yields no rings and an inverted box, which
+	// rejects here and matches the `return false` fallback below.
+	const [minX, minY, maxX, maxY] = geometryBbox(geometry);
+	if (lng < minX || lng > maxX || lat < minY || lat > maxY) return false;
+
 	if (geometry.type === 'Polygon') {
 		return pointInRing(lng, lat, (geometry.coordinates as number[][][])[0]);
 	}
