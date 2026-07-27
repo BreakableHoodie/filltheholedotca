@@ -260,8 +260,29 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
 				count: photoPaths.length,
 			});
 		}
+
+		// createSignedUrls resolves with a batch-level error of null even when
+		// individual entries failed — each item carries its own `error` and a
+		// nullable `signedUrl`. Without this, a partial failure would drop photos
+		// from the gallery below with no signal at all, because the batch check
+		// above never fires. Aggregated into one log rather than one per photo.
+		const failed: string[] = [];
 		for (const item of signed ?? []) {
-			if (item.signedUrl && item.path) signedUrlByPath[item.path] = item.signedUrl;
+			if (item.signedUrl && item.path) {
+				signedUrlByPath[item.path] = item.signedUrl;
+			} else {
+				failed.push(
+					`${item.path ?? '(unknown path)'}: ${item.error ?? 'no signedUrl returned'}`,
+				);
+			}
+		}
+		if (failed.length > 0) {
+			logError(
+				'hole/detail',
+				'Some photos could not be signed and were omitted from the gallery',
+				new Error(failed.join('; ')),
+				{ potholeId: params.id, failedCount: failed.length, requested: photoPaths.length },
+			);
 		}
 	}
 
