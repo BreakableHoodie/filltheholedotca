@@ -192,8 +192,12 @@ create policy "Public read approved photos"
     and (select photos_published from potholes where id = pothole_id)
   );
 
--- Storage bucket: create a PRIVATE bucket called 'pothole-photos'
--- In Supabase dashboard: Storage → New Bucket → Name: pothole-photos → Public: OFF
+-- Storage bucket: 'pothole-photos', PRIVATE.
+--
+-- Created by the statement below, so a from-scratch environment needs no
+-- dashboard step. An EXISTING environment may still have a public bucket until
+-- schema_private_photo_bucket.sql (#32) has been applied — do not assume direct
+-- object access is blocked before then.
 --
 -- Private is deliberate (#245). A public object URL is permanent and, once
 -- shared or scraped, keeps serving after a photo is unpublished or rejected —
@@ -215,7 +219,23 @@ create policy "Public read approved photos"
 --   Target roles: anon, authenticated
 --   Policy: true
 --
--- MIGRATION NOTE — order matters. Signed URLs work against a public bucket, so
--- deploy the application code FIRST, verify photos still render, and only then
--- flip the bucket to Public: OFF. Flipping first breaks every image on the live
--- site until the deploy lands.
+-- MIGRATION NOTE — order matters for EXISTING environments. Signed URLs work
+-- against a public bucket, so deploy the application code FIRST, verify photos
+-- still render, and only then apply schema_private_photo_bucket.sql (#32).
+-- Flipping first breaks every image on the live site until the deploy lands.
+-- A from-scratch environment has no such constraint: there is nothing serving
+-- yet, so the statement below can simply run in order.
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'pothole-photos',
+  'pothole-photos',
+  false,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp']
+)
+on conflict (id) do update
+set
+  public = false,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
