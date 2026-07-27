@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	import type { Pothole } from '$lib/types';
 	import { STATUS_CONFIG } from '$lib/constants';
-	import { escapeHtml } from '$lib/escape';
+	import { buildAdminPotholePopupHtml } from '$lib/map/popup';
 	import type * as Leaflet from 'leaflet';
 	import { onMount } from 'svelte';
 
@@ -91,38 +91,11 @@
 			const layerKey = pothole.status in clusterGroups ? pothole.status : 'reported';
 			if (!(layerKey in clusterGroups)) continue;
 
-			const info =
-				STATUS_CONFIG[pothole.status as keyof typeof STATUS_CONFIG] ??
-				STATUS_CONFIG.reported;
 			const icon = markerIcons[pothole.status] ?? markerIcons['reported'];
 			const marker = L.marker([pothole.lat, pothole.lng], { icon });
 			markersById[pothole.id] = marker;
 
-			const address = escapeHtml(
-				pothole.address || `${pothole.lat.toFixed(5)}, ${pothole.lng.toFixed(5)}`,
-			);
-			const description = pothole.description ? escapeHtml(pothole.description) : null;
-			const manageHref = `/admin/potholes/${pothole.id}`;
-			const statusLabel = info.label;
-
-			marker.bindPopup(
-				`<div class="popup-content">
-					<div class="popup-header">
-						<strong>${address}</strong>
-					</div>
-					<p style="margin:2px 0 4px;font-size:11px;color:#52525b">
-						<span class="popup-status popup-status--${pothole.status}">${statusLabel}</span>
-						<span style="margin-left:6px">${pothole.confirmed_count} conf.</span>
-					</p>
-					${description ? `<em style="display:block;margin-bottom:4px;font-size:12px;color:#52525b">${description}</em>` : ''}
-					<p style="font-size:11px;color:#71717a;margin:0 0 6px">
-						${new Date(pothole.created_at).toLocaleDateString()}
-						${pothole.filled_at ? `· Filled ${new Date(pothole.filled_at).toLocaleDateString()}` : ''}
-					</p>
-					<a href="${manageHref}" class="popup-primary-link" style="display:block;text-align:center">Manage →</a>
-				</div>`,
-				{ maxWidth: 240 },
-			);
+			marker.bindPopup(buildAdminPotholePopupHtml(pothole), { maxWidth: 240 });
 
 			(clusterGroups[layerKey] as Leaflet.LayerGroup).addLayer(marker);
 		}
