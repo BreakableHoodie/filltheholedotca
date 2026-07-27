@@ -82,18 +82,20 @@ npm run dev          # http://localhost:5173
 
 ## Tooling
 
-| Script                | Purpose                                                                                                               |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`         | Development server                                                                                                    |
-| `npm run build`       | Production build                                                                                                      |
-| `npm run preview`     | Preview the production build                                                                                          |
-| `npm run check`       | Type checking (svelte-check)                                                                                          |
-| `npm run check:watch` | Type checking in watch mode                                                                                           |
-| `npm run lint`        | ESLint (TS + Svelte files)                                                                                            |
-| `npm run lint:a11y`   | svelte-check at warning threshold — a CI gate, not just local a11y hygiene (see `.github/workflows/ci.yml`)           |
-| `npm run test`        | Playwright — runs every `.spec.ts` under `tests/` (E2E, unit, a11y; `playwright.config.ts` sets `testDir: "./tests"`) |
-| `npm run test:a11y`   | axe-core a11y tests (Playwright, scoped to `tests/a11y`)                                                              |
-| `npm run prepare`     | Husky install (`husky && (svelte-kit sync \|\| echo '')`) — runs automatically after `npm install`                    |
+| Script                 | Purpose                                                                                                               |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`          | Development server                                                                                                    |
+| `npm run build`        | Production build                                                                                                      |
+| `npm run preview`      | Preview the production build                                                                                          |
+| `npm run check`        | Type checking (svelte-check)                                                                                          |
+| `npm run check:watch`  | Type checking in watch mode                                                                                           |
+| `npm run lint`         | ESLint over `src/` **and** `tests/` (TS + Svelte files)                                                               |
+| `npm run format`       | Prettier write across the repo                                                                                        |
+| `npm run format:check` | Prettier check — a CI gate (see `.github/workflows/ci.yml`); fails the build on any drift                             |
+| `npm run lint:a11y`    | svelte-check at warning threshold — a CI gate, not just local a11y hygiene (see `.github/workflows/ci.yml`)           |
+| `npm run test`         | Playwright — runs every `.spec.ts` under `tests/` (E2E, unit, a11y; `playwright.config.ts` sets `testDir: "./tests"`) |
+| `npm run test:a11y`    | axe-core a11y tests (Playwright, scoped to `tests/a11y`)                                                              |
+| `npm run prepare`      | Husky install (`husky && (svelte-kit sync \|\| echo '')`) — runs automatically after `npm install`                    |
 
 ### Makefile
 
@@ -104,15 +106,27 @@ A root `Makefile` wraps the npm scripts above as `make` targets for contributors
 - **`.husky/pre-commit`** runs `lint-staged` on every commit
 - Staged `.ts`/`.svelte` files: ESLint fix + Prettier write
 - Staged `.css`/`.json`/`.md` files: Prettier write only
-- CI will catch what hooks miss — this is a safety net, not a gatekeeper
+- The hook only touches **staged** files. Anything landing outside it (a rebase,
+  an editor write, a merge) is not formatted by the hook — which is how 118 files
+  once drifted. `npm run format:check` in CI is the actual gatekeeper.
 
 ### Formatting (Prettier)
 
 - **`.prettierrc`** at project root — tabs, single quotes, trailing commas, 100-char print width
 - **`.prettierignore`** mirrors `.gitignore` for build/test artifacts
-- Formatted files: `src/**/*.ts`, `src/**/*.svelte`, `src/**/*.css`, plus root config files
+- Formatted files: the whole repo minus `.prettierignore` (which excludes `docs/`,
+  `*.sql`, and build artifacts) — `src/`, `tests/`, and root config files
 - `prettier-plugin-svelte` handles Svelte files
 - **eslint-config-prettier** disables ESLint rules that conflict with Prettier
+- **Two tables are deliberately exempt** — `STATUS_CONFIG` (`src/lib/constants.ts`)
+  and `STATUS_STYLES` (`src/routes/api/og/[id]/+server.ts`). Their column alignment
+  makes a colour or label drifting out of step with its siblings obvious at review.
+- **Gotcha:** the directive must be exactly `// prettier-ignore` alone on its line.
+  Adding an explanatory suffix (`// prettier-ignore — because …`) is **silently
+  ignored** and Prettier reflows the table anyway. Put the reasoning on the line above.
+- **Gotcha:** `prettier-plugin-svelte` is not always idempotent on prose-heavy markup —
+  one `--write` pass can leave a file that `--check` still rejects. Run `npm run format`
+  twice if CI disagrees with a fresh local format.
 
 ### Unit tests
 
