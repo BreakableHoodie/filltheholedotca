@@ -195,9 +195,15 @@ create policy "Public read approved photos"
 -- Storage bucket: 'pothole-photos', PRIVATE.
 --
 -- Created by the statement below, so a from-scratch environment needs no
--- dashboard step. An EXISTING environment may still have a public bucket until
--- schema_private_photo_bucket.sql (#32) has been applied — do not assume direct
--- object access is blocked before then.
+-- dashboard step. Production was flipped private on 2026-07-27 (migration #32);
+-- direct object access now returns 400. An environment that has not yet applied
+-- #32 still has a public bucket — do not assume access is blocked there.
+--
+-- CDN NOTE: flipping the bucket does not purge Cloudflare's edge cache. Objects
+-- fetched over a public URL before the flip continue serving from cache until
+-- their `cache-control: public, max-age=3600` expires — up to 1h. The origin
+-- rejects immediately (verified: cache-busted URL and never-cached object both
+-- return 400). Budget for that tail when reasoning about takedown timelines.
 --
 -- Private is deliberate (#245). A public object URL is permanent and, once
 -- shared or scraped, keeps serving after a photo is unpublished or rejected —
