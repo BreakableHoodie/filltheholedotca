@@ -1,7 +1,9 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import SocialShare from '$lib/components/SocialShare.svelte';
-	import { ABOUT_REPORT_LINKS } from '$lib/official-reporting';
+	// Bind the prose link to the same constant the list uses — this URL was previously
+	// hardcoded here and rotted independently of $lib/official-reporting.
+	import { ABOUT_REPORT_LINKS, MTO_REPORT_LINK } from '$lib/official-reporting';
 </script>
 
 <svelte:head>
@@ -84,7 +86,7 @@
 					>Provincial highways (401, 7/8, 85) are MTO's responsibility</strong
 				>, not the city or Region. Report those to the
 				<a
-					href="https://www.ontario.ca/page/report-problem-provincial-highway"
+					href={MTO_REPORT_LINK.href}
 					target="_blank"
 					rel="noopener noreferrer"
 					class="text-amber-700 dark:text-amber-400 underline"

@@ -5,10 +5,17 @@ Users report potholes, the community confirms them, and the system tracks them t
 
 ## ⏸️ Project Status: PARKED (2026-09-03)
 
-**The site is not serving the app.** A Cloudflare Worker (`parked/`, worker name
-`fillthehole-parked`) intercepts the whole zone and serves a static paused notice for
-every path. The SvelteKit app is untouched and still deployed on Netlify — un-parking is
-removing the worker's routes, not a redeploy. Full status, resume steps and the
+The parking machinery is committed, but **whether the site is actually dark depends on
+one thing: are the zone routes in `parked/wrangler.toml` uncommented?** They ship
+commented out, so merging this alone leaves fillthehole.ca serving the normal Netlify
+app. Check the routes — or just load the site — before trusting either state.
+
+- **Routes commented out** → the SvelteKit app is live and serving normally.
+- **Routes active** → the `fillthehole-parked` Worker intercepts the whole zone and
+  serves a static notice for every path.
+
+Either way the SvelteKit app stays deployed and untouched on Netlify; un-parking is
+removing the Worker's routes, not a redeploy. Full status, resume steps and the
 outstanding items live in **issue #268** (pinned).
 
 Things that are easy to get wrong while parked:

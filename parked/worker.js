@@ -44,6 +44,9 @@ export default {
 		const snapshot = SNAPSHOTS[path];
 		if (snapshot) {
 			const res = await env.ASSETS.fetch(assetUrl(snapshot.asset));
+			// Same reasoning as below — a missing snapshot must not read as an empty
+			// but successful dataset to an open-data consumer.
+			if (!res.ok) return res;
 			return new Response(res.body, {
 				status: 200,
 				headers: {
@@ -57,10 +60,16 @@ export default {
 
 		// Everything else — the map, /hole/[id] permalinks, /stats, /admin — gets the notice.
 		const page = await env.ASSETS.fetch(assetUrl('/index.html'));
+		// Never dress a failed asset fetch up as a successful parked page: a missing
+		// index.html would otherwise serve an empty body with a 200.
+		if (!page.ok) return page;
 		return new Response(page.body, {
 			status: 200,
 			headers: {
 				'content-type': 'text/html; charset=utf-8',
+				// This is the parked page's own TTL. Not to be confused with the live app's
+				// s-maxage=60 + stale-while-revalidate=300, which is what produces the ~6
+				// minute tail at cutover and un-park — purge the zone cache to skip it.
 				'cache-control': 'public, max-age=300',
 				'x-fillthehole-status': 'parked',
 			},

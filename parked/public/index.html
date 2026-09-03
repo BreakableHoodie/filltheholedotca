@@ -16,12 +16,12 @@
 		/>
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content="https://fillthehole.ca/" />
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Public+Sans:wght@400;500;600&display=swap"
-			rel="stylesheet"
-		/>
+		<!--
+			No webfonts on purpose. The app self-hosts via @fontsource; loading Google Fonts
+			here would leak every visitor's IP and user agent to a third party from a site
+			whose whole privacy posture is "we hash IPs and never store raw ones". Condensed
+			headings degrade to Arial Narrow, which is near-universally present.
+		-->
 		<style>
 			:root {
 				--bg: #fafaf9;
@@ -31,8 +31,11 @@
 				--muted: #57534e;
 				--faint: #a8a29e;
 				--accent: #f59e0b;
-				--font-sans: 'Public Sans', system-ui, -apple-system, sans-serif;
-				--font-brand: 'Barlow Condensed', system-ui, sans-serif;
+				--font-sans:
+					'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+				--font-brand:
+					'Barlow Condensed', 'Arial Narrow', 'Helvetica Neue Condensed', system-ui,
+					sans-serif;
 			}
 
 			@media (prefers-color-scheme: dark) {
@@ -83,7 +86,9 @@
 				font-weight: 600;
 				letter-spacing: 0.08em;
 				text-transform: uppercase;
-				color: var(--accent);
+				/* Amber on the light ground is ~2:1 and fails WCAG AA for text, so the
+				   accent carries the dot and border only; the label uses body text. */
+				color: var(--text);
 				border: 1px solid var(--accent);
 				border-radius: 999px;
 				padding: 0.3rem 0.75rem;
@@ -273,8 +278,9 @@
 
 			<h2>The data stays open</h2>
 			<p class="sub">
-				Every confirmed report is archived in the public repository, under the same AGPL-3.0
-				licence as the code.
+				These endpoints still answer, from a snapshot frozen the day the site was paused.
+				Everything is archived in the public repository too, under the same AGPL-3.0 licence
+				as the code.
 			</p>
 
 			<div class="stats">
@@ -290,6 +296,17 @@
 					<div class="n">2026</div>
 					<div class="l">Since</div>
 				</div>
+			</div>
+
+			<div class="card" style="margin-top: 1.5rem">
+				<a class="row" href="/api/export.csv">
+					<span class="name">Download the full dataset</span>
+					<span class="scope">CSV &nbsp;<span class="arrow">↓</span></span>
+				</a>
+				<a class="row" href="/api/feed.json">
+					<span class="name">Machine-readable feed</span>
+					<span class="scope">JSON &nbsp;<span class="arrow">↓</span></span>
+				</a>
 			</div>
 
 			<footer>

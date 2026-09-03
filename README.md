@@ -1,10 +1,12 @@
 # 🕳️ fillthehole.ca
 
 > [!NOTE]
-> **This project is parked (2026-09-03).** The site is serving a paused notice rather
-> than the app, and new reports aren't being accepted. Nothing has been deleted — the
-> 74 reports collected so far are archived in [`docs/archive/`](docs/archive/) and stay
-> available at `/api/export.csv`. The hiatus is not necessarily permanent.
+> **This project is being parked (2026-09-03).** Development is stopping and the site is
+> going on hiatus — load [fillthehole.ca](https://fillthehole.ca) to see whether the
+> cutover has happened yet; until it does, the app is still running normally. Nothing has
+> been deleted: the 74 reports collected so far are archived in
+> [`docs/archive/`](docs/archive/) and stay available at `/api/export.csv` either way.
+> The hiatus is not necessarily permanent.
 >
 > See **[#268](https://github.com/BreakableHoodie/filltheholedotca/issues/268)** for
 > current status and how to bring it back.
