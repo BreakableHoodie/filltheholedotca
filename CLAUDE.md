@@ -14,9 +14,11 @@ app. Check the routes — or just load the site — before trusting either state
 - **Routes active** → the `fillthehole-parked` Worker intercepts the whole zone and
   serves a static notice for every path.
 
-Either way the SvelteKit app stays deployed and untouched on Netlify; un-parking is
-removing the Worker's routes, not a redeploy. Full status, resume steps and the
-outstanding items live in **issue #268** (pinned).
+Either way the SvelteKit app stays deployed and untouched on Netlify. Un-parking needs no
+Netlify redeploy and no DNS change — but it is not zero-action: comment the routes out and
+run `wrangler deploy` from `parked/` (or delete the routes under Workers Routes in the
+Cloudflare dashboard), then purge the zone cache to skip the ~6 minute tail. Full status,
+resume steps and the outstanding items live in **issue #268** (pinned).
 
 Things that are easy to get wrong while parked:
 
