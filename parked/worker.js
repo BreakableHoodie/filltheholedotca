@@ -14,7 +14,10 @@ const SNAPSHOTS = {
 	'/api/feed.json': { asset: '/api/feed.json', type: 'application/json; charset=utf-8' },
 };
 
-const ROBOTS = 'User-agent: *\nAllow: /\n';
+// Only the root is crawlable. Every other path serves the same notice, so leaving the
+// zone open would let crawlers refresh their index with paused content across every
+// permalink — cheap to do, slow and annoying to undo when the site comes back.
+const ROBOTS = 'User-agent: *\nAllow: /$\nDisallow: /\n';
 
 // The ASSETS binding is addressed by path only. Resolving against the incoming
 // request's own origin risks a self-referential subrequest (Cloudflare 1042), so

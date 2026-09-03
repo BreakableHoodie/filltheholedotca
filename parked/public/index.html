@@ -17,6 +17,12 @@
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content="https://fillthehole.ca/" />
 		<!--
+			Every path serves this same page, so without a canonical every /hole/[id]
+			permalink and route would be indexed as duplicate paused content — hard to
+			unwind on un-park. Pair with the root-only robots.txt in worker.js.
+		-->
+		<link rel="canonical" href="https://fillthehole.ca/" />
+		<!--
 			No webfonts on purpose. The app self-hosts via @fontsource; loading Google Fonts
 			here would leak every visitor's IP and user agent to a third party from a site
 			whose whole privacy posture is "we hash IPs and never store raw ones". Condensed
@@ -29,7 +35,10 @@
 				--border: #e7e5e4;
 				--text: #1c1917;
 				--muted: #57534e;
-				--faint: #a8a29e;
+				/* Small text token. #a8a29e here was ~2.3:1 on the light ground and failed
+				   WCAG AA; the light and dark values are effectively swapped so the same
+				   token stays legible in both themes. */
+				--faint: #78716c;
 				--accent: #f59e0b;
 				--font-sans:
 					'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -45,7 +54,7 @@
 					--border: #3a332c;
 					--text: #f5f5f4;
 					--muted: #b8b0a6;
-					--faint: #78716c;
+					--faint: #a8a29e;
 				}
 			}
 
