@@ -3,6 +3,31 @@
 Pothole reporting & accountability app for **Waterloo Region, Ontario**.
 Users report potholes, the community confirms them, and the system tracks them through to resolution.
 
+## ⏸️ Project Status: PARKED (2026-09-03)
+
+**The site is not serving the app.** A Cloudflare Worker (`parked/`, worker name
+`fillthehole-parked`) intercepts the whole zone and serves a static paused notice for
+every path. The SvelteKit app is untouched and still deployed on Netlify — un-parking is
+removing the worker's routes, not a redeploy. Full status, resume steps and the
+outstanding items live in **issue #268** (pinned).
+
+Things that are easy to get wrong while parked:
+
+- **The domain renews at Cloudflare**, under the zone's Domain Registration panel
+  ("Registrar/Reseller: Cloudflare" → _Manage domain registration_). `fillthehole.ca`
+  expires **2027-02-22**. Note that WHOIS reports the registrar of record as
+  **CentralNic Canada Inc**, not Cloudflare — that is the usual arrangement when
+  Cloudflare resells a ccTLD it is not directly accredited for, and it is not a sign
+  anything is wrong. Don't go looking for a separate registrar account.
+  Zone ID `9317349b900caea27a7f9ac2d2a54d08`, account `afa2fcdb5eb112bdff8dc1fac50aa16a`.
+- **Dependabot is disabled** (`.github/dependabot.yml` removed) — dependencies will drift.
+  Expect a large update pass, and re-read the lockfile-regeneration notes below, before
+  trusting a build after a long gap.
+- **The personal-data purge described in #268 may not have run yet.** Check #268's
+  checklist before assuming the retention state of any table.
+- `/api/export.csv` and `/api/feed.json` still answer, but from a **frozen snapshot** in
+  `parked/public/api/`, not from Supabase. Don't mistake them for live data.
+
 ## Security — Non-Negotiable
 
 Security is critical at every juncture. This app accepts untrusted public input and exposes data publicly — treat every boundary as hostile.

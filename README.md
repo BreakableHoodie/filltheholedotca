@@ -1,8 +1,24 @@
 # 🕳️ fillthehole.ca
 
+> [!NOTE]
+> **This project is parked (2026-09-03).** The site is serving a paused notice rather
+> than the app, and new reports aren't being accepted. Nothing has been deleted — the
+> 74 reports collected so far are archived in [`docs/archive/`](docs/archive/) and stay
+> available at `/api/export.csv`. The hiatus is not necessarily permanent.
+>
+> See **[#268](https://github.com/BreakableHoodie/filltheholedotca/issues/268)** for
+> current status and how to bring it back.
+>
+> **Reporting a pothole today:** use your city's own channel —
+> [Kitchener](https://form.kitchener.ca/CSD/CCS/Report-a-problem) ·
+> [Waterloo](https://www.waterloo.ca/roads-and-cycling/report-a-road-trail-or-sidewalk-issue/) ·
+> [Cambridge](https://maps.cambridge.ca/gis/ServiceRequests/Pothole/) ·
+> [Region of Waterloo](https://www.regionofwaterloo.ca/programs-and-services/roads-and-transportation/road-and-winter-maintenance/) ·
+> [Ontario 511](https://511on.ca/contact)
+
 **Waterloo Region pothole tracker.** Report a pothole, confirm others, and track it through to resolution.
 
-Live at **[fillthehole.ca](https://fillthehole.ca)**
+Normally live at **[fillthehole.ca](https://fillthehole.ca)**
 
 [![CI](https://github.com/BreakableHoodie/filltheholedotca/actions/workflows/ci.yml/badge.svg)](https://github.com/BreakableHoodie/filltheholedotca/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/BreakableHoodie/filltheholedotca/actions/workflows/codeql.yml/badge.svg)](https://github.com/BreakableHoodie/filltheholedotca/actions/workflows/codeql.yml)

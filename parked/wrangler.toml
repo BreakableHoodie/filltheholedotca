@@ -1,0 +1,33 @@
+name = "fillthehole-parked"
+main = "worker.js"
+compatibility_date = "2026-09-03"
+
+# Deployed WITHOUT zone routes on purpose. This publishes to the workers.dev
+# preview URL only, so the notice page can be reviewed before it replaces the
+# live site.
+#
+# THE CUTOVER: uncomment the routes below and re-run `wrangler deploy`. That is
+# the single step that takes fillthehole.ca offline.
+#
+# TO UN-PARK: comment the routes out again and `wrangler deploy` (or delete the
+# routes in the Cloudflare dashboard). Netlify still holds the real app, so it
+# starts serving again immediately. Purge the Cloudflare cache to skip the
+# ~6 minute s-maxage=60 + stale-while-revalidate=300 tail.
+#
+# [[routes]]
+# pattern = "fillthehole.ca/*"
+# zone_name = "fillthehole.ca"
+#
+# [[routes]]
+# pattern = "www.fillthehole.ca/*"
+# zone_name = "fillthehole.ca"
+
+workers_dev = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+# Without this, Cloudflare matches a static asset BEFORE invoking the worker, so
+# unmatched paths (/hole/[id] permalinks, /stats) fall through to a 404 and the
+# routing below never runs. The worker must own every request.
+run_worker_first = true
