@@ -6,10 +6,18 @@ Users report potholes, the community confirms them, and the system tracks them t
 ## ⏸️ Project Status: PARKED (2026-09-03)
 
 **The site is parked as of 2026-09-03.** The zone routes in `parked/wrangler.toml` are
-ACTIVE, so the `fillthehole-parked` Worker intercepts fillthehole.ca and www and serves
-the notice for every path. Requests no longer reach Netlify at all — the `x-nf-request-id`
-header is absent. Whether the site is dark always comes down to those routes, so check
-them (or just load the site) rather than trusting any doc, this one included.
+ACTIVE, so the `fillthehole-parked` Worker intercepts `fillthehole.ca/*` and
+`www.fillthehole.ca/*` and serves the notice for every path on those two hostnames —
+requests through the domain no longer reach Netlify (`x-nf-request-id` is absent).
+Whether the site is dark always comes down to those routes, so check them (or just load
+the site) rather than trusting any doc, this one included.
+
+**The park is domain-scoped, not app-scoped.** The Netlify origin
+(`filltthehole.netlify.app`) still serves the complete, working app, because that is the
+un-park path and the fallback if the domain is ever released. Consequence worth knowing:
+`POST /api/report` there is _not_ covered by the Worker's 405, so a well-formed request
+to the origin would still write to Supabase and reintroduce IP hashes into a database
+that was deliberately purged. See #268.
 
 - **Routes commented out** → the SvelteKit app is live and serving normally.
 - **Routes active** → the `fillthehole-parked` Worker intercepts the whole zone and
