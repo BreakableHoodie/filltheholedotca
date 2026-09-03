@@ -16,3 +16,6 @@ docs/
 *.sql
 **/pnpm-lock.yaml
 **/package-lock.json
+
+# Frozen open-data snapshots served by the parked worker — archives, do not reformat.
+parked/public/api/

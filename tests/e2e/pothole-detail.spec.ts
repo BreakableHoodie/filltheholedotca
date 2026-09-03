@@ -65,17 +65,20 @@ test.describe('Pothole detail page', () => {
 		await expect(
 			page.getByRole('link', { name: /File with City of Kitchener/i }),
 		).toHaveAttribute('href', 'https://form.kitchener.ca/CSD/CCS/Report-a-problem');
+		// These mirror $lib/official-reporting. Both previously pinned URLs that had gone
+		// 404 in production — the assertions passed while real users hit dead ends, so
+		// re-verify the destinations resolve when touching them, not just that they match.
 		await expect(
 			page.getByRole('link', { name: /Submit a claim — Region of Waterloo/i }),
 		).toHaveAttribute(
 			'href',
-			'https://www.regionofwaterloo.ca/en/regional-government/submit-a-claim.aspx',
+			'https://www.regionofwaterloo.ca/government-and-council/contact-us/submit-a-claim/',
 		);
 		await expect(
 			page.getByRole('link', {
 				name: /Report those to the Ontario Ministry of Transportation/i,
 			}),
-		).toHaveAttribute('href', 'https://www.ontario.ca/page/report-problem-provincial-highway');
+		).toHaveAttribute('href', 'https://511on.ca/contact');
 
 		// Seeded councillor actions should remain available without external ward lookups.
 		await expect(page.getByRole('link', { name: /Email /i })).toBeVisible();

@@ -1,0 +1,76 @@
+id,created_at,lat,lng,address,description,status,confirmed_count,filled_at,expired_at
+030ccca5-2cc7-4365-a9a3-05d6486b44fb,2026-06-20T16:06:21.042927+00:00,43.4032,-80.3267,"580 Hespeler Rd., Hespeler Road, Cambridge, Region of Waterloo, Southwestern Ontario, Ontario, N1R 6J8, Canada",Severe damage,reported,1,,
+6b558428-4b3c-4478-b1bc-2829dd0aa7e5,2026-06-12T23:51:56.239346+00:00,43.4298,-80.432,Fairway Road North Centreville Chicopee,Minor damage,reported,1,,
+398f9eb1-aea9-4253-94e3-1cc0a9c389af,2026-06-12T23:47:09.560139+00:00,43.4315,-80.431,178 Jansen Avenue Centreville Chicopee,Moderate damage,reported,1,,
+8dafbe90-7220-4edb-b5b3-1312d3366a50,2026-06-12T14:01:04.778481+00:00,43.507,-80.4019,1180 Hopewell Creek Road,Severe damage,reported,1,,
+bb315e42-619e-427a-9fb4-11ae6559c710,2026-06-09T01:20:15.074877+00:00,43.4465,-80.4774,"51, Pandora Avenue North, King East, Kitchener, Region of Waterloo, Southwestern Ontario, Ontario, N2H 1E2, Canada",Moderate damage,reported,1,,
+4dae7749-d02b-4224-ab07-fc3232d447c2,2026-06-08T11:03:55.714522+00:00,43.4345,-80.4391,29 Falesy Avenue Centreville Chicopee,Moderate damage,reported,1,,
+0e7e87b1-e955-42c0-8fe6-c9880310ac42,2026-06-07T18:45:08.881454+00:00,43.4952,-80.5767,"Coldstream Drive, Waterloo, Region of Waterloo, Southwestern Ontario, Ontario, N2V 2A4, Canada",Severe damage,reported,1,,
+dea3593a-4fe2-4718-be21-567721833d1a,2026-06-04T16:43:11.762292+00:00,43.4348,-80.434,220 Kinzie Avenue Centreville Chicopee,Minor damage,expired,1,,2026-09-03T03:00:00.235968+00:00
+32c356d0-3920-4027-88a0-0ec4ee0e7bd2,2026-05-30T02:06:41.938497+00:00,43.4556,-80.5017,46 Moore Avenue Mt. Hope,Hazardous,expired,1,,2026-08-28T03:00:00.30999+00:00
+2ee2e84e-635e-477a-8101-fd6cdae00722,2026-05-29T21:04:34.133685+00:00,43.4735,-80.4429,569 Bingemans Centre Drive Victoria North,Severe damage,expired,1,,2026-08-28T03:00:00.30999+00:00
+f83356c7-1caa-47af-9edf-d238011f250c,2026-05-28T16:51:27.243188+00:00,43.3973,-80.3175,"495, Conestoga Boulevard, Cambridge, Region of Waterloo, Southwestern Ontario, Ontario, N1R 7H7, Canada",Moderate damage,expired,1,,2026-08-27T03:00:00.257829+00:00
+e65d9d5f-0879-4da3-be46-6f8c6aa5ff91,2026-05-07T15:27:17.925549+00:00,43.4213,-80.4425,298 Fairway Road South Vanier,Hazardous,expired,1,,2026-08-06T03:00:00.26519+00:00
+d9d47269-1c67-40d8-9d34-33519b291057,2026-05-04T21:36:30.287005+00:00,43.4536,-80.4933,67 Water Street North City Commercial Core,Moderate damage,expired,1,,2026-08-03T03:00:00.246893+00:00
+e2e1da42-9f35-46b6-897c-c57ff9c2983d,2026-05-04T15:28:52.401665+00:00,43.385,-80.3012,Franklin Boulevard,Severe damage,expired,1,,2026-08-03T03:00:00.246893+00:00
+b5fe3833-b0c3-4057-b668-1aff0d077c33,2026-05-04T15:26:47.42127+00:00,43.3584,-80.297,1 Monroe Street Galt,Moderate damage,expired,1,,2026-08-03T03:00:00.246893+00:00
+914d9a0e-1b87-448d-b0fa-72f380ec0005,2026-05-02T19:38:27.807463+00:00,43.4518,-80.4623,"Ada Street, Rosemount, Kitchener, Region of Waterloo, Ontario, N2B 1G7, Canada",Severe damage,expired,1,,2026-08-01T03:00:00.312079+00:00
+2bb583af-9a7c-4398-b3c3-2be0dfceb29f,2026-04-29T20:38:13.793891+00:00,43.4436,-80.4885,118 Courtland Avenue East Mill Courtland Woodside Park,Severe damage,expired,1,,2026-07-29T03:00:00.248062+00:00
+642a7469-5965-44a5-b97e-a2779402d56c,2026-04-24T00:35:46.988671+00:00,43.4364,-80.4338,55 Thaler Avenue Centreville Chicopee,Moderate damage,expired,1,,2026-07-23T03:00:00.211756+00:00
+3c156b5e-9dbb-437b-aab4-e913355e444d,2026-04-24T00:17:12.509243+00:00,43.4371,-80.4343,52 Thaler Avenue Centreville Chicopee,Moderate damage,expired,1,,2026-07-23T03:00:00.211756+00:00
+3f4a6553-034d-42ac-aa20-aba1401da6d6,2026-04-23T20:01:18.190597+00:00,43.4385,-80.5062,"98, Belmont Avenue West, St. Mary's, Kitchener, Region of Waterloo, Ontario, N2M 1J3, Canada",Hazardous,expired,1,,2026-07-23T03:00:00.211756+00:00
+8756bccb-6c98-48d2-aa16-df0101263677,2026-04-20T23:01:13.162756+00:00,43.4301,-80.5619,Glasgow Street Highland West,,expired,1,,2026-07-20T03:00:00.266863+00:00
+7dd1f8a3-8efd-4b86-8079-a9e3680b3a87,2026-04-20T23:00:04.571348+00:00,43.4284,-80.5629,1522 Glasgow Street Highland West,,expired,1,,2026-07-20T03:00:00.266863+00:00
+7eb60f46-6486-4fc6-9763-995fd89f72f5,2026-04-20T22:58:53.95473+00:00,43.4303,-80.5612,Glasgow Street Highland West,,expired,1,,2026-07-20T03:00:00.266863+00:00
+d666d11c-70d3-429e-8359-a0f24791bc80,2026-04-20T01:06:22.004569+00:00,43.4004,-80.4563,Homer Watson Boulevard Trillium Industrial Park,Hazardous,expired,1,,2026-07-19T03:00:00.334465+00:00
+15420074-d322-43ec-950a-8f68fec307d2,2026-04-20T00:55:08.247576+00:00,43.4168,-80.5113,Fischer-Hallman Road Laurentian Hills,Severe damage,expired,1,,2026-07-19T03:00:00.334465+00:00
+17d0e7dc-71ce-474d-9ead-39ab1b94eab2,2026-04-19T22:28:35.861668+00:00,43.4387,-80.5067,109 Belmont Avenue West St. Mary's,Severe damage,expired,1,,2026-07-19T03:00:00.334465+00:00
+eae1a5bc-56d7-4559-b2c0-d487080a8b38,2026-04-19T00:17:03.766806+00:00,43.4431,-80.4149,900 Fairway Crescent Grand River South,,expired,1,,2026-07-18T03:00:00.27156+00:00
+f85e4d56-e112-4b86-99bc-9cf4f3e1e551,2026-04-19T00:16:14.884371+00:00,43.44,-80.4203,Fairway Road North Idlewood,,expired,1,,2026-07-18T03:00:00.27156+00:00
+9ea4e534-28cd-4297-9bf3-2f4b219cc73e,2026-04-19T00:15:41.336912+00:00,43.4357,-80.4275,317 Fairway Road North Centreville Chicopee,,expired,1,,2026-07-18T03:00:00.27156+00:00
+b063c687-6f70-4802-b029-8c105dab588a,2026-04-19T00:14:59.219226+00:00,43.4323,-80.4299,163 Fairway Road North Centreville Chicopee,,expired,1,,2026-07-18T03:00:00.27156+00:00
+c4088859-8b76-4c63-bb83-ad97a3c77be4,2026-04-19T00:14:23.499488+00:00,43.4299,-80.432,Fairway Road North Centreville Chicopee,,expired,1,,2026-07-18T03:00:00.27156+00:00
+48a4c38c-17e0-4270-99aa-146238f75433,2026-04-19T00:13:51.311884+00:00,43.4276,-80.4327,16 Fairway Road South Centreville Chicopee,,filled,1,2026-04-25T07:35:34.486+00:00,
+6c6daa4f-db06-4797-bc35-58c74aa081b4,2026-04-19T00:13:12.356917+00:00,43.424,-80.4348,105 Fairway Road South Trillium Industrial Park,,expired,1,,2026-07-18T03:00:00.27156+00:00
+b7482e9b-ed98-476a-a563-c7887b5beff2,2026-04-19T00:12:26.414771+00:00,43.4214,-80.44,309 Fairway Road South Trillium Industrial Park,,expired,1,,2026-07-18T03:00:00.27156+00:00
+eb1a2212-0bd2-40a9-add8-358ca4f7c48d,2026-04-19T00:11:38.483351+00:00,43.4212,-80.4423,300 Fairway Road South Vanier,,expired,1,,2026-07-18T03:00:00.27156+00:00
+26635c27-0996-47e5-a488-e9d69ee583f3,2026-04-19T00:09:58.281412+00:00,43.4199,-80.4493,Fairway Road South Vanier,,expired,1,,2026-07-18T03:00:00.27156+00:00
+af6469e6-48c8-4abd-b93a-076aa4b0be06,2026-04-19T00:09:28.484647+00:00,43.419,-80.453,10 Manitou Drive Trillium Industrial Park,,expired,1,,2026-07-18T03:00:00.27156+00:00
+73b4057d-8c0b-4d0c-adab-15edb13682ab,2026-04-19T00:08:48.17995+00:00,43.4197,-80.4556,Wilson/Traynor Trail Vanier,,expired,1,,2026-07-18T03:00:00.27156+00:00
+f6b2960b-cc6c-447e-8199-e1cb3b247026,2026-04-19T00:07:24.055927+00:00,43.4195,-80.465,Block Line Road,,expired,1,,2026-07-18T03:00:00.27156+00:00
+56b1c0e8-9e49-4b59-a14b-26976a23fed9,2026-04-19T00:06:45.299649+00:00,43.4184,-80.4703,,,expired,1,,2026-07-18T03:00:00.27156+00:00
+77171ddd-55a5-4758-bfc8-29d9191f05ad,2026-04-19T00:05:56.918043+00:00,43.4136,-80.4844,Block Line Road Laurentian Hills,,expired,1,,2026-07-18T03:00:00.27156+00:00
+bab29d2f-abd2-48b4-be3a-4b201da9567a,2026-04-18T13:30:51.628018+00:00,43.4432,-80.4149,Fairway Road North Grand River South,,expired,1,,2026-07-18T03:00:00.27156+00:00
+995875ed-7605-4666-96d3-0f36213e763e,2026-04-15T22:29:19.347459+00:00,43.512,-80.5467,Conestoga Parkway,Severe damage,expired,1,,2026-07-15T03:00:00.295085+00:00
+43095914-7ade-4dc0-9c4d-7f0a7616f110,2026-04-10T21:02:52.208155+00:00,43.471,-80.4408,Lackner Boulevard Grand River North,Hazardous,expired,1,,2026-07-10T03:00:00.249528+00:00
+698e83d2-6600-4b2f-aee7-b336c4d84330,2026-04-10T16:52:41.871705+00:00,43.4353,-80.4304,191 Grulke Street Centreville Chicopee,Severe damage,filled,1,2026-06-11T17:02:58.479+00:00,
+11c788f6-b4e4-469e-b73e-5ba1dcc8298c,2026-04-10T15:42:14.982081+00:00,43.4209,-80.4425,385 Fairway Road South Trillium Industrial Park,Severe damage,expired,1,,2026-07-10T03:00:00.249528+00:00
+5c4a453d-c80f-43c9-aa49-86e28861e29e,2026-04-07T15:59:04.579567+00:00,43.4054,-80.5525,Highway 7/8,Severe damage,expired,1,,2026-07-07T03:00:00.2218+00:00
+beadd048-8991-4007-8835-bbaea7c6be42,2026-04-07T11:53:19.189161+00:00,43.5072,-80.5493,Trans Canada/Market Trail,Hazardous,expired,1,,2026-07-07T03:00:00.2218+00:00
+558da94f-cd0f-4d85-bbd5-5f4d45aab1d5,2026-03-25T21:03:51.133596+00:00,43.4358,-80.431,172 Grulke Street Centreville Chicopee,Moderate damage,expired,1,,2026-06-24T03:00:00.254075+00:00
+2fd2bfdf-eff1-4d4b-99a6-f6bb63a74541,2026-03-21T16:48:22.910526+00:00,43.4326,-80.4373,76 Kinzie Avenue Centreville Chicopee,Severe damage,filled,1,2026-05-17T16:42:53.013+00:00,
+2689cee2-e1fa-4ce6-b248-9582fffd7b7b,2026-03-21T01:41:28.913444+00:00,43.4101,-80.4611,300 Bleams Road Trillium Industrial Park,Moderate damage,expired,1,,2026-06-19T03:00:00.22418+00:00
+bea3d098-a7a4-4bdf-9a32-20eaaffc2cb0,2026-03-20T19:01:03.884038+00:00,43.4403,-80.4796,118 Kent Avenue Mill Courtland Woodside Park,Moderate damage,filled,1,2026-03-29T22:55:36.158+00:00,
+438dc3c8-f3a0-4a7d-8a04-8933e8184585,2026-03-18T12:23:12.641214+00:00,43.4471,-80.504,210 Victoria Street South Cherry Hill,Hazardous,filled,1,2026-03-29T22:55:17.367+00:00,
+802349bb-240f-4fb5-a342-6c6347c7aeee,2026-03-18T03:51:41.624242+00:00,43.4545,-80.5729,Erbsville Road,Hazardous,expired,1,,2026-06-17T03:00:00.221661+00:00
+759ab8d8-3faa-41b9-8bf7-a6955c9e240d,2026-03-18T03:50:32.063517+00:00,43.462,-80.5809,361 Erbsville Road,Severe damage,expired,1,,2026-06-17T03:00:00.221661+00:00
+0170b4b0-d672-4a22-9afe-0b0bee279cae,2026-03-18T03:50:06.621021+00:00,43.4676,-80.566,Columbia Street West,Severe damage,expired,1,,2026-06-17T03:00:00.221661+00:00
+0b2380c8-62fb-420a-b305-293372880f02,2026-03-17T12:29:24.668802+00:00,43.431,-80.5544,Ira Needles Boulevard Highland West,Severe damage,expired,1,,2026-06-16T03:00:00.216722+00:00
+d9701514-53ac-4f44-8e69-ce3ddf84731f,2026-03-17T12:28:12.940156+00:00,43.4274,-80.5271,1700 Queen's Boulevard Forest Heights,Moderate damage,expired,1,,2026-06-16T03:00:00.216722+00:00
+68ba1b92-1b34-4028-ada4-ad36694e3991,2026-03-17T11:21:58.393713+00:00,43.4002,-80.4677,1538 Strasburg Road Huron Park,Hazardous,expired,1,,2026-06-16T03:00:00.216722+00:00
+a31849b5-b8b7-4e6b-9c70-ecbdc3d9bee4,2026-03-17T11:21:18.159866+00:00,43.3993,-80.4673,1583 Strasburg Road Trillium Industrial Park,Hazardous,expired,1,,2026-06-16T03:00:00.216722+00:00
+e120403f-baa5-4465-af41-01766646ec60,2026-03-17T08:32:09.762656+00:00,43.3972,-80.3646,231 Eagle Street South Preston,Severe damage,expired,1,,2026-06-16T03:00:00.216722+00:00
+f316d390-6b03-4aba-973f-b6bd73ea2a29,2026-03-17T07:22:22.735638+00:00,43.4573,-80.4315,Ottawa Street North Idlewood,Hazardous,expired,1,,2026-06-16T03:00:00.216722+00:00
+acdf43f0-294e-409f-8d9c-4b83c7aeb2d7,2026-03-17T07:10:58.097383+00:00,43.4109,-80.3996,"4220, King Street East, Pioneer Tower East, Kitchener, Region of Waterloo, Southwestern Ontario, Ontario, N2P 0C9, Canada",Hazardous,expired,1,,2026-06-16T03:00:00.216722+00:00
+005e7053-5941-4e0c-b7cf-c62bb9532dbc,2026-03-15T17:20:08.279992+00:00,43.4506,-80.4442,River Road East Stanley Park,Hazardous,expired,1,,2026-06-14T03:00:00.254656+00:00
+da6eb3db-14f8-433a-bb4b-5607eff1d07d,2026-03-12T13:59:08.128284+00:00,43.4331,-80.4365,94 Kinzie Avenue Centreville Chicopee,Minor damage,filled,1,2026-05-17T16:42:53.013+00:00,
+6280d5e1-9766-4ea6-a863-68b9337a71c3,2026-03-07T16:47:30.955961+00:00,43.4239,-80.4349,111 Fairway Road South Trillium Industrial Park,Spilled my coffee,expired,1,,2026-06-06T03:00:00.182622+00:00
+4fe31b99-3a7a-4d3d-931e-c074fa2c8580,2026-03-06T23:24:27.072118+00:00,43.4346,-80.448,1136 Weber Street East Stanley Park,Bent a rim,expired,1,,2026-06-05T03:00:00.177249+00:00
+7887f31f-5995-41cb-ba99-31a6a1adb887,2026-03-06T23:23:44.12391+00:00,43.436,-80.4525,1006 Weber Street East Stanley Park,,expired,1,,2026-06-05T03:00:00.177249+00:00
+0f7ca399-9864-4185-92c2-70a0d8e4ac6c,2026-03-06T23:22:55.823778+00:00,43.4382,-80.4587,823 Weber Street East Eastwood,Bent a rim,expired,1,,2026-06-05T03:00:00.177249+00:00
+829adab6-24c0-4db0-9403-360b3a760da2,2026-03-06T12:12:06.049943+00:00,43.4533,-80.4903,"56, Weber Street West, Downtown, City Commercial Core, Kitchener, Region of Waterloo, Southwestern Ontario, Ontario, N2H 4Z1, Canada",RIP,filled,1,2026-03-29T22:55:28.019+00:00,
+22a0d96c-5103-4bd9-b104-a19dafddaa0d,2026-02-26T00:58:22.838239+00:00,43.422,-80.4104,King Street East Pioneer Tower East,Spilled my coffee,expired,1,,2026-05-27T03:00:00.185466+00:00
+654bcd74-1ee3-44ba-980a-a216256ec37b,2026-02-25T21:58:55.599511+00:00,43.4483,-80.4826,39 Cedar Street North King East,,filled,1,2026-03-29T22:55:28.614+00:00,
+32fcd864-675b-4afe-a9d6-0fda8d0dca2c,2026-02-25T21:58:22.90801+00:00,43.4485,-80.4824,45 Cedar Street North King East,,filled,1,2026-03-29T22:55:30.264+00:00,
+3f6ae145-e2ed-4b93-90fc-90070862d010,2026-02-25T00:50:19.014829+00:00,43.4431,-80.5042,61 West Avenue Victoria Park,Caused real damage,filled,1,2026-03-29T22:55:19.245+00:00,
+271e59e7-f994-42ac-b88b-36d0c0c4d90d,2026-02-23T18:32:49.326897+00:00,43.4416,-80.4472,301 Franklin Street North Stanley Park,Spilled my coffee,expired,1,,2026-05-25T03:00:00.174605+00:00

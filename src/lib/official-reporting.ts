@@ -34,17 +34,29 @@ export const CITY_REPORT_LINKS: Record<City, OfficialReportLink> = {
 	},
 } as const;
 
+// NOTE: these URLs are asserted verbatim in tests/e2e/pothole-detail.spec.ts. Both of
+// them silently 404'd in production for some time because the test pinned the dead
+// values and kept passing. If you change one, change it there too — and re-check that
+// the destination still matches the scope copy rendered in about/+page.svelte.
+
 export const REGION_REPORT_LINK: OfficialReportLink = {
 	id: 'region',
 	label: 'Region of Waterloo',
-	href: 'https://www.regionofwaterloo.ca/en/regional-government/submit-a-claim.aspx',
+	// scope 'region' renders as "Submit a claim for damages", so this must stay a CLAIMS
+	// page, not a reporting page. The Region moved /en/regional-government/*.aspx to
+	// /government-and-council/; the old path now 404s.
+	href: 'https://www.regionofwaterloo.ca/government-and-council/contact-us/submit-a-claim/',
 	scope: 'region',
 };
 
 export const MTO_REPORT_LINK: OfficialReportLink = {
 	id: 'mto',
 	label: 'Ontario Ministry of Transportation',
-	href: 'https://www.ontario.ca/page/report-problem-provincial-highway',
+	// ontario.ca/page/report-problem-provincial-highway is gone. Ontario 511 is MTO's own
+	// intake for highway condition problems, which matches the "Report a provincial
+	// highway problem" copy. Deliberately NOT ontario.ca/page/submit-claim-damaged-vehicle
+	// — that is compensation, not reporting.
+	href: 'https://511on.ca/contact',
 	scope: 'province',
 };
 

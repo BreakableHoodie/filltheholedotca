@@ -1,0 +1,32 @@
+name = "fillthehole-parked"
+main = "worker.js"
+compatibility_date = "2026-09-03"
+workers_dev = true
+
+# NOTE: every top-level key must stay ABOVE the [[routes]] blocks. TOML binds a bare
+# key to the most recent table, so `workers_dev` placed after them silently becomes a
+# key of the last route and wrangler rejects the whole config.
+
+# THE PARK SWITCH — these two routes are the only thing taking fillthehole.ca dark.
+#
+# TO UN-PARK: comment both blocks out and run `wrangler deploy` from this directory
+# (or delete the routes under Workers Routes in the Cloudflare dashboard), then purge
+# the zone cache to skip the ~6 minute tail from the live app's
+# s-maxage=60 + stale-while-revalidate=300. Netlify still holds the real app, so it
+# starts serving again as soon as the routes are gone — no redeploy, no DNS change.
+
+[[routes]]
+pattern = "fillthehole.ca/*"
+zone_name = "fillthehole.ca"
+
+[[routes]]
+pattern = "www.fillthehole.ca/*"
+zone_name = "fillthehole.ca"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+# Without this, Cloudflare matches a static asset BEFORE invoking the worker, so
+# unmatched paths (/hole/[id] permalinks, /stats) fall through to a 404 and the
+# routing below never runs. The worker must own every request.
+run_worker_first = true

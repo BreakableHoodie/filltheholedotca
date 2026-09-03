@@ -3,6 +3,53 @@
 Pothole reporting & accountability app for **Waterloo Region, Ontario**.
 Users report potholes, the community confirms them, and the system tracks them through to resolution.
 
+## ⏸️ Project Status: PARKED (2026-09-03)
+
+**The site is parked as of 2026-09-03.** The zone routes in `parked/wrangler.toml` are
+ACTIVE, so the `fillthehole-parked` Worker intercepts `fillthehole.ca/*` and
+`www.fillthehole.ca/*` and serves the notice for every path on those two hostnames —
+requests through the domain no longer reach Netlify (`x-nf-request-id` is absent).
+Whether the site is dark always comes down to those routes, so check them (or just load
+the site) rather than trusting any doc, this one included.
+
+**The park is domain-scoped, not app-scoped.** The Netlify origin
+(`filltthehole.netlify.app`) still serves the complete, working app, because that is the
+un-park path and the fallback if the domain is ever released. Consequence worth knowing:
+`POST /api/report` there is _not_ covered by the Worker's 405, so a well-formed request
+to the origin would still write to Supabase and reintroduce IP hashes into a database
+that was deliberately purged. See #268.
+
+- **Routes commented out** → the SvelteKit app is live and serving normally.
+- **Routes active** → the `fillthehole-parked` Worker intercepts the whole zone and
+  serves a static notice for every path.
+
+Either way the SvelteKit app stays deployed and untouched on Netlify. Un-parking needs no
+Netlify redeploy and no DNS change — but it is not zero-action: comment the routes out and
+run `wrangler deploy` from `parked/` (or delete the routes under Workers Routes in the
+Cloudflare dashboard), then purge the zone cache to skip the ~6 minute tail. Full status,
+resume steps and the outstanding items live in **issue #268** (pinned).
+
+Things that are easy to get wrong while parked:
+
+- **The domain renews at Cloudflare**, under the zone's Domain Registration panel
+  ("Registrar/Reseller: Cloudflare" → _Manage domain registration_). `fillthehole.ca`
+  expires **2027-02-22**. Note that WHOIS reports the registrar of record as
+  **CentralNic Canada Inc**, not Cloudflare — that is the usual arrangement when
+  Cloudflare resells a ccTLD it is not directly accredited for, and it is not a sign
+  anything is wrong. Don't go looking for a separate registrar account.
+  Zone ID `9317349b900caea27a7f9ac2d2a54d08`, account `afa2fcdb5eb112bdff8dc1fac50aa16a`.
+- **Dependabot is disabled** (`.github/dependabot.yml` removed) — dependencies will drift.
+  Expect a large update pass, and re-read the lockfile-regeneration notes below, before
+  trusting a build after a long gap.
+- **The personal-data purge ran on 2026-09-03.** IP hashes, confirmations, sessions,
+  rate-limit events, auth attempts, hits, votes and every subscription table were emptied,
+  and `pothole_photos.ip_hash` was set to NULL; `potholes`, photo rows, `site_settings`,
+  `admin_users` and `admin_audit_log` were kept. Nothing personal now depends on the
+  nightly `pg_cron` retention jobs, so the Supabase project can idle or pause freely.
+  #268 carries the per-table record.
+- `/api/export.csv` and `/api/feed.json` still answer, but from a **frozen snapshot** in
+  `parked/public/api/`, not from Supabase. Don't mistake them for live data.
+
 ## Security — Non-Negotiable
 
 Security is critical at every juncture. This app accepts untrusted public input and exposes data publicly — treat every boundary as hostile.
