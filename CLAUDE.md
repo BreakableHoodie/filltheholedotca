@@ -33,8 +33,12 @@ Things that are easy to get wrong while parked:
 - **Dependabot is disabled** (`.github/dependabot.yml` removed) — dependencies will drift.
   Expect a large update pass, and re-read the lockfile-regeneration notes below, before
   trusting a build after a long gap.
-- **The personal-data purge described in #268 may not have run yet.** Check #268's
-  checklist before assuming the retention state of any table.
+- **The personal-data purge ran on 2026-09-03.** IP hashes, confirmations, sessions,
+  rate-limit events, auth attempts, hits, votes and every subscription table were emptied,
+  and `pothole_photos.ip_hash` was set to NULL; `potholes`, photo rows, `site_settings`,
+  `admin_users` and `admin_audit_log` were kept. Nothing personal now depends on the
+  nightly `pg_cron` retention jobs, so the Supabase project can idle or pause freely.
+  #268 carries the per-table record.
 - `/api/export.csv` and `/api/feed.json` still answer, but from a **frozen snapshot** in
   `parked/public/api/`, not from Supabase. Don't mistake them for live data.
 
