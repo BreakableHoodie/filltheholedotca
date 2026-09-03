@@ -5,10 +5,11 @@ Users report potholes, the community confirms them, and the system tracks them t
 
 ## ⏸️ Project Status: PARKED (2026-09-03)
 
-The parking machinery is committed, but **whether the site is actually dark depends on
-one thing: are the zone routes in `parked/wrangler.toml` uncommented?** They ship
-commented out, so merging this alone leaves fillthehole.ca serving the normal Netlify
-app. Check the routes — or just load the site — before trusting either state.
+**The site is parked as of 2026-09-03.** The zone routes in `parked/wrangler.toml` are
+ACTIVE, so the `fillthehole-parked` Worker intercepts fillthehole.ca and www and serves
+the notice for every path. Requests no longer reach Netlify at all — the `x-nf-request-id`
+header is absent. Whether the site is dark always comes down to those routes, so check
+them (or just load the site) rather than trusting any doc, this one included.
 
 - **Routes commented out** → the SvelteKit app is live and serving normally.
 - **Routes active** → the `fillthehole-parked` Worker intercepts the whole zone and
